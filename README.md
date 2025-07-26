@@ -67,7 +67,7 @@ pnpm dev
 
 ## Screenshot
 
-![Screenshot](./ss.png)
+![Screenshot](./ss.jpg)
 
 ## 🎯 Usage
 
