@@ -140,21 +140,29 @@ The application uses a custom theme system built with React Context:
 
 The application can be deployed on any platform that supports Next.js:
 
-### Vercel (Recommended)
+### Docker Compose (Recommended)
 ```bash
-npx vercel --prod
+# version: "3.8"
+# services:
+#   markitup:
+#     container_name: markitup-app
+#     image: markitup:latest
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#       - ./markdown:/app/markdown
+#     environment:
+#       - NODE_ENV=production
+#       - PORT=3000
+#       - HOSTNAME=0.0.0.0
+#     restart: unless-stopped
+
+docker compose up -d
 ```
 
-### Docker
+### Docker Run
 ```bash
-docker build -t markitup .
-docker run -p 3000:3000 markitup
-```
-
-### Self-hosted
-```bash
-npm run build
-npm start
+docker run -p 3000:3000 -v ./markdown:/app/markdown markitup:latest
 ```
 
 ## 🤝 Contributing
