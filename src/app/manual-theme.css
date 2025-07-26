@@ -1,0 +1,175 @@
+/* Manual theme system - fallback if Tailwind dark mode fails */
+
+/* Light theme (default) */
+:root {
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+}
+
+/* Dark theme */
+html.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-primary: #374151;
+  --border-secondary: #4b5563;
+}
+
+/* Force main backgrounds to use theme colors */
+html.dark body {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+html.dark .main-bg {
+  background-color: var(--bg-primary) !important;
+}
+
+html.dark .secondary-bg {
+  background-color: var(--bg-secondary) !important;
+}
+
+html.dark .tertiary-bg {
+  background-color: var(--bg-tertiary) !important;
+}
+
+html.dark .primary-text {
+  color: var(--text-primary) !important;
+}
+
+html.dark .secondary-text {
+  color: var(--text-secondary) !important;
+}
+
+html.dark .primary-border {
+  border-color: var(--border-primary) !important;
+}
+
+/* Ensure Tailwind dark mode classes work with higher specificity */
+html.dark .dark\:bg-gray-900 {
+  background-color: #111827 !important;
+}
+
+html.dark .dark\:bg-gray-800 {
+  background-color: #1f2937 !important;
+}
+
+html.dark .dark\:bg-gray-700 {
+  background-color: #374151 !important;
+}
+
+html.dark .dark\:text-white {
+  color: #f9fafb !important;
+}
+
+html.dark .dark\:text-gray-300 {
+  color: #d1d5db !important;
+}
+
+html.dark .dark\:text-gray-400 {
+  color: #9ca3af !important;
+}
+
+html.dark .dark\:border-gray-700 {
+  border-color: #374151 !important;
+}
+
+html.dark .dark\:border-gray-600 {
+  border-color: #4b5563 !important;
+}
+
+/* Force form elements to respect theme */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark textarea {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+  border-color: #4b5563 !important;
+}
+
+html.dark input[type="text"]::placeholder,
+html.dark input[type="email"]::placeholder,
+html.dark input[type="password"]::placeholder,
+html.dark textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+html:not(.dark) input[type="text"],
+html:not(.dark) input[type="email"],
+html:not(.dark) input[type="password"],
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+html:not(.dark) input[type="text"]::placeholder,
+html:not(.dark) input[type="email"]::placeholder,
+html:not(.dark) input[type="password"]::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Specific targeting for file items */
+html.dark .bg-gray-50 {
+  background-color: #374151 !important;
+}
+
+html.dark .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+html.dark .border-gray-200 {
+  border-color: #374151 !important;
+}
+
+/* Apply theme variables */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-border-primary {
+  border-color: var(--border-primary);
+}
+
+.theme-border-secondary {
+  border-color: var(--border-secondary);
+}
+
+/* Force theme application with higher specificity */
+html.dark .theme-force-dark {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+html.light .theme-force-light,
+html:not(.dark) .theme-force-light {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
