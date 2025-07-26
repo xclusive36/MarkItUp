@@ -173,3 +173,36 @@ html:not(.dark) .theme-force-light {
   color: var(--text-primary) !important;
   border-color: var(--border-primary) !important;
 }
+
+/* Force markdown headers, lists, and paragraphs to use theme-appropriate colors */
+/* Light mode - dark text */
+html.light .prose h1,
+html.light .prose h2,
+html.light .prose h3,
+html.light .prose h4,
+html.light .prose ul,
+html.light .prose ol,
+html.light .prose li,
+html.light .prose p,
+html:not(.dark) .prose h1,
+html:not(.dark) .prose h2,
+html:not(.dark) .prose h3,
+html:not(.dark) .prose h4,
+html:not(.dark) .prose ul,
+html:not(.dark) .prose ol,
+html:not(.dark) .prose li,
+html:not(.dark) .prose p {
+  color: rgb(23, 23, 23) !important; /* dark color for light theme */
+}
+
+/* Dark mode - light text */
+html.dark .prose h1,
+html.dark .prose h2,
+html.dark .prose h3,
+html.dark .prose h4,
+html.dark .prose ul,
+html.dark .prose ol,
+html.dark .prose li,
+html.dark .prose p {
+  color: rgb(249, 250, 251) !important; /* very light gray for better contrast */
+}

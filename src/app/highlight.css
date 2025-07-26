@@ -1,3 +1,56 @@
+/* Header styles for markdown content */
+.prose h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-foreground);
+}
+
+.prose h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+  color: var(--color-foreground);
+}
+
+.prose h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.3em;
+  margin-bottom: 0.4em;
+  color: var(--color-foreground);
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.3em;
+  color: var(--color-foreground);
+}
+
+/* Ensure dark mode variant colors */
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4 {
+  color: var(--color-foreground);
+}
+
+/* High specificity rules for light and dark modes */
+html.light .prose h1,
+html.light .prose h2,
+html.light .prose h3,
+html.light .prose h4 {
+  color: var(--color-foreground) !important;
+}
+
+html.dark .prose h1,
+html.dark .prose h2,
+html.dark .prose h3,
+html.dark .prose h4 {
+  color: var(--color-foreground) !important;
+}
+
 /* Light theme syntax highlighting */
 .hljs {
   background: #f6f8fa !important;
@@ -50,6 +103,10 @@
   color: #569cd6 !important;
 }
 
+.dark .hljs-subst {
+  color: #d4d4d4 !important;
+}
+
 /* Ensure code blocks are visible in both themes */
 pre code {
   display: block;
@@ -82,4 +139,34 @@ code:not(pre code) {
 .dark code:not(pre code) {
   background-color: #374151;
   color: #fbbf24;
+}
+
+/* List styles for markdown content */
+.prose ul {
+  list-style-type: disc;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+  color: var(--color-foreground);
+}
+
+.prose ol {
+  list-style-type: decimal;
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+  padding-left: 1.5em;
+  color: var(--color-foreground);
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  line-height: 1.5;
+}
+
+/* Dark mode variants */
+.dark .prose ul,
+.dark .prose ol,
+.dark .prose li {
+  color: var(--color-foreground);
 }
