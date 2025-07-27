@@ -41,23 +41,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # For releases (semver tags)
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            
-            # Latest tag for stable releases only
-            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
-            
-            # Pre-release tag for pre-releases
-            type=raw,value=pre-release,enable=${{ github.event.release.prerelease }}
-            
             # Manual dispatch tag
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
             
-            # Fallback for branch builds
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
+            # For stable releases only (semver tags)
+            type=semver,pattern={{version}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            type=semver,pattern={{major}},enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
+            
+            # Latest tag for stable releases only
+            type=raw,value=latest,enable=${{ github.event_name == 'release' && !github.event.release.prerelease }}
           labels: |
             org.opencontainers.image.title=MarkItUp
             org.opencontainers.image.description=A modern markdown editor and viewer
