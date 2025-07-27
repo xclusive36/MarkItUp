@@ -1,174 +1,96 @@
-# MarkItUp - Markdown Editor
+# MarkItUp – Markdown Editor
 
-A powerful, modern markdown editor built with Next.js, featuring live preview, file management, and both light and dark mode support.
+***MarkItUp** is a lightweight, modern Markdown editor built with Next.js. It features live preview, file storage, dark/light themes, and responsive design — all self-hosted and privacy-respecting.*
 
-## ✨ Features
+![Screenshot](/docs/screenshot.png)
 
-### 📝 **Markdown Editing**
-- Real-time markdown editor with syntax highlighting
-- Live preview with GitHub Flavored Markdown (GFM) support
-- Split-view interface (edit/preview toggle)
-- Monospace font for optimal code editing experience
+## 🚀 Features
 
-### 🎨 **Theme Support**
-- **Light Mode**: Clean, bright interface perfect for daytime use
-- **Dark Mode**: Eye-friendly dark theme for low-light environments
-- **Auto Detection**: Respects system theme preference on first visit
-- **Persistent**: Theme choice saved in localStorage
-- **Smooth Transitions**: Animated theme switching
+### Markdown Editing
 
-### 💾 **File Management**
-- Save markdown files to server (`/markdown` directory)
-- Load existing files from server
-- Delete files with one-click
-- Auto-generated `.md` file extensions
-- File list sidebar with creation timestamps
+* Real-time editor with syntax highlighting
+* GitHub Flavored Markdown (GFM) support
+* Split view: edit and preview side by side
+* Clean, monospace editing experience
 
-### 🔧 **Technical Features**
-- **SSR Safe**: Proper hydration handling for Next.js 15
-- **TypeScript**: Fully typed for better development experience
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Code Highlighting**: Syntax highlighting for code blocks in both themes
-- **Accessibility**: ARIA labels and keyboard navigation support
+### Theme Support
 
-## 🚀 Getting Started
+* Light and dark modes with smooth transitions
+* Auto-detects system theme on first load
+* Respects system theme preference on first visit
 
-### Prerequisites
-- Node.js 18+ 
-- npm, yarn, or pnpm
+### File Management
 
-### Installation
+* Save/load/delete `.md` files from the `/markdown` directory
+* Auto-generated file list with timestamps
+* Server-side storage with secure access
 
-1. Clone the repository:
-```bash
-git clone [repository-url]
-cd markitup
-```
+### Technical Highlights
 
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
+* Built with **Next.js 15** and **TypeScript**
+* Fully responsive across devices
+* Syntax highlighting for code blocks
+* Accessible via ARIA labels and keyboard navigation
 
-3. Run the development server:
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## Screenshot
-
-![Screenshot](./ss.jpg)
-
-## 🎯 Usage
-
-### Writing Markdown
-1. Click in the editor area to start writing
-2. Use standard Markdown syntax for formatting
-3. Toggle between "Edit" and "Preview" modes using the button in the header
-
-### Theme Switching
-- Click the theme toggle button (🌙/☀️) in the header
-- The theme will switch instantly and be saved for future visits
-- The syntax highlighting in code blocks adapts to the selected theme
-
-### File Operations
-1. **Save**: Enter a filename and click "Save" to store your markdown
-2. **Load**: Click on any file in the "Saved Files" list to load it
-3. **Delete**: Click the "×" button next to a file to delete it
-
-## 🛠 Tech Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS with Typography plugin
-- **Markdown**: react-markdown with remark-gfm and rehype-highlight
-- **Theme**: Custom React Context with localStorage persistence
-- **File Storage**: Node.js filesystem API
-
-## 📁 Project Structure
+## 📁 File Structure
 
 ```
 markitup/
+├── markdown/                  # Server-side Markdown file storage
+├── public/                    # Static assets
 ├── src/
-│   ├── app/
-│   │   ├── api/files/           # File management API routes
-│   │   ├── highlight.css        # Custom syntax highlighting styles
-│   │   ├── page.tsx             # Main application component
-│   │   └── layout.tsx           # Root layout with ThemeProvider
-│   ├── components/
-│   │   └── ThemeToggle.tsx      # Theme switcher component
-│   └── contexts/
-│       └── ThemeContext.tsx     # Theme management context
-├── markdown/                    # Server-side markdown file storage
-├── tailwind.config.js          # Tailwind configuration
-└── package.json
+│   ├── app/                   # App and API routes
+│   ├── components/            # Reusable UI components
+│   └── contexts/              # Theme context
+├── docker-compose.yml         # Docker Compose configuration
+├── Dockerfile                 # Dockerfile for building the image
+├── package.json
+└── tailwind.config.js
 ```
 
-## 🎨 Theme Implementation
+## ⚙️ Getting Started
 
-The application uses a custom theme system built with React Context:
+### Requirements
 
-- **ThemeProvider**: Manages theme state and localStorage persistence
-- **useTheme Hook**: Provides theme access throughout the app
-- **CSS Classes**: Tailwind's `dark:` prefix for theme-specific styles
-- **Syntax Highlighting**: Custom CSS for code block theming
+* Node.js 18+
+* npm / yarn / pnpm
 
-## 📱 Responsive Design
+### Setup
 
-- **Desktop**: Full sidebar with file management
-- **Tablet**: Collapsible sidebar layout
-- **Mobile**: Stack layout with touch-friendly controls
+```bash
+git clone https://github.com/xclusive36/MarkItUp.git
+cd MarkItUp
+npm install
+npm run dev
+```
 
-## 🔒 Security Features
+Visit [http://localhost:3000](http://localhost:3000)
 
-- Server-side file validation
-- Path traversal protection
-- Input sanitization
-- CORS protection
-
-## 🚀 Deployment
-
-The application can be deployed on any platform that supports Next.js:
+## 🐳 Deployment
 
 ### Docker Compose (Recommended)
-```bash
-# version: "3.8"
-# services:
-#   markitup:
-#     container_name: markitup-app
-#     image: markitup:latest
-#     ports:
-#       - "3000:3000"
-#     volumes:
-#       - ./markdown:/app/markdown
-#     environment:
-#       - NODE_ENV=production
-#       - PORT=3000
-#       - HOSTNAME=0.0.0.0
-#     restart: unless-stopped
 
+```bash
+# Copy the example compose file
 docker compose up -d
 ```
 
-### Docker Run
+### Docker CLI
+
 ```bash
-docker run -p 3000:3000 -v ./markdown:/app/markdown markitup:latest
+docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart unless-stopped -e PORT=3000 -e HOSTNAME=0.0.0.0 ghcr.io/xclusive36/markitup:latest
 ```
+
+## 🔐 Security
+
+* File path validation
+* Input sanitization
+* Basic CORS protection
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+Contributions are welcome via issues or pull requests.
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+MIT – see `LICENSE` file for details.

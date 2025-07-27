@@ -1,18 +1,18 @@
-# Archivos y directorios de Node.js
+# Node.js files and directories
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Archivos de Next.js
+# Next.js files
 .next/
 out/
 
-# Archivos de producción
+# Production files
 build/
 dist/
 
-# Variables de entorno locales
+# Local environment variables
 .env*.local
 .env
 
@@ -20,10 +20,10 @@ dist/
 logs
 *.log
 
-# Archivos de desarrollo
+# Development files
 .vercel
 
-# Archivos de sistema
+# System files
 .DS_Store
 *.pem
 
@@ -41,11 +41,11 @@ coverage
 # Git
 .git
 .gitignore
+.github
 
 # Docker
-Dockerfile*
-docker-compose*
 
-# README y documentación
+# README and documentation
 README.md
 LICENSE
+docs/

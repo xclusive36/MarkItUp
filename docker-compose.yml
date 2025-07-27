@@ -2,14 +2,13 @@ version: "3.8"
 
 services:
   markitup:
-    container_name: markitup-app
-    image: markitup:latest
+    container_name: markitup
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - ./markdown:/app/markdown
     environment:
-      - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
     restart: unless-stopped
+    image: ghcr.io/xclusive36/markitup:latest
