@@ -71,13 +71,14 @@ Visit [http://localhost:3000](http://localhost:3000)
 ### Docker Compose (Recommended)
 
 ```bash
+# Copy the example compose file
 docker compose up -d
 ```
 
 ### Docker CLI
 
 ```bash
-docker run -p 3000:3000 -v ./markdown:/app/markdown markitup:latest
+docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart unless-stopped -e NODE_ENV=production -e PORT=3000 -e HOSTNAME=0.0.0.0 markitup:latest
 ```
 
 ## 🔐 Security

@@ -2,10 +2,9 @@ version: "3.8"
 
 services:
   markitup:
-    container_name: markitup-app
-    image: markitup:latest
+    container_name: markitup
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - ./markdown:/app/markdown
     environment:
@@ -13,3 +12,4 @@ services:
       - PORT=3000
       - HOSTNAME=0.0.0.0
     restart: unless-stopped
+    image: markitup:latest
