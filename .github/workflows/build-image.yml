@@ -41,20 +41,21 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            # For stable releases (without prerelease)
-            type=semver,pattern={{version}},enable={{is_default_branch}}
-            type=semver,pattern={{major}}.{{minor}},enable={{is_default_branch}}
-            type=semver,pattern={{major}},enable={{is_default_branch}}
-            type=raw,value=latest,enable={{is_default_branch}}
+            # For releases (semver tags)
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             
-            # For pre-releases (beta, alpha, rc, etc.)
-            type=semver,pattern={{version}},enable=${{ github.event.release.prerelease }}
+            # Latest tag for stable releases only
+            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
+            
+            # Pre-release tag for pre-releases
             type=raw,value=pre-release,enable=${{ github.event.release.prerelease }}
             
-            # For manual dispatch
+            # Manual dispatch tag
             type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
             
-            # Fallback for development
+            # Fallback for branch builds
             type=ref,event=branch
             type=sha,prefix={{branch}}-
           labels: |
