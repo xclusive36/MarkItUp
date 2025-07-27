@@ -78,7 +78,7 @@ docker compose up -d
 ### Docker CLI
 
 ```bash
-docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart unless-stopped -e NODE_ENV=production -e PORT=3000 -e HOSTNAME=0.0.0.0 markitup:latest
+docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart unless-stopped -e PORT=3000 -e HOSTNAME=0.0.0.0 ghcr.io/xclusive36/markitup:latest
 ```
 
 ## 🔐 Security

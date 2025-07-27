@@ -8,8 +8,7 @@ services:
     volumes:
       - ./markdown:/app/markdown
     environment:
-      - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
     restart: unless-stopped
-    image: markitup:latest
+    image: ghcr.io/xclusive36/markitup:latest
