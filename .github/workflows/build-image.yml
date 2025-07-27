@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   release:
-    types: [published, prereleased]
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
