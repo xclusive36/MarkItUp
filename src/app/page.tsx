@@ -119,9 +119,15 @@ export default function Home() {
     setSaveStatus('');
   };
 
+  // Folder tree type definition
+  interface FolderTree {
+    _files: MarkdownFile[];
+    _folders: { [folder: string]: FolderTree };
+  }
+
   // Helper: Build folder tree from savedFiles
-  function buildFolderTree(files: MarkdownFile[]) {
-    const tree: any = { _files: [], _folders: {} };
+  function buildFolderTree(files: MarkdownFile[]): FolderTree {
+    const tree: FolderTree = { _files: [], _folders: {} };
     files.forEach(file => {
       const folderPath = file.folder ? file.folder.split('/') : [];
       let current = tree;
@@ -135,13 +141,13 @@ export default function Home() {
   }
 
   // Helper: Render folder tree recursively
-  function renderFolderTree(tree: any, parentPath = '') {
+  function renderFolderTree(tree: FolderTree, parentPath = '') {
     const folderEntries = Object.entries(tree._folders || {});
     const files = tree._files || [];
     return (
       <div>
         {/* Folders */}
-        {folderEntries.map(([folder, value]: any) => {
+        {folderEntries.map(([folder, value]: [string, FolderTree]) => {
           const fullPath = parentPath ? `${parentPath}/${folder}` : folder;
           const isOpen = openFolders[fullPath] || false;
           return (
