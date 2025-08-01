@@ -148,7 +148,7 @@ export default function Home() {
             <div key={fullPath} className="mb-1">
               <button
                 onClick={() => setOpenFolders(f => ({ ...f, [fullPath]: !isOpen }))}
-                className="flex items-center w-full text-left text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded"
+                className="flex items-center w-full text-left text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded"
                 style={{ backgroundColor: isOpen ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' }}
               >
                 <span className="mr-1">{isOpen ? '▼' : '▶'}</span>
