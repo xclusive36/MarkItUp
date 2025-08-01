@@ -27,6 +27,7 @@ export default function Home() {
   const [savedFiles, setSavedFiles] = useState<MarkdownFile[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [openFolders, setOpenFolders] = useState<{ [folder: string]: boolean }>({});
 
   // Handle hydration
   useEffect(() => {
@@ -118,6 +119,75 @@ export default function Home() {
     setSaveStatus('');
   };
 
+  // Helper: Build folder tree from savedFiles
+  function buildFolderTree(files: MarkdownFile[]) {
+    const tree: any = { _files: [], _folders: {} };
+    files.forEach(file => {
+      const folderPath = file.folder ? file.folder.split('/') : [];
+      let current = tree;
+      for (const folder of folderPath) {
+        if (!current._folders[folder]) current._folders[folder] = { _files: [], _folders: {} };
+        current = current._folders[folder];
+      }
+      current._files.push(file);
+    });
+    return tree;
+  }
+
+  // Helper: Render folder tree recursively
+  function renderFolderTree(tree: any, parentPath = '') {
+    const folderEntries = Object.entries(tree._folders || {});
+    const files = tree._files || [];
+    return (
+      <div>
+        {/* Folders */}
+        {folderEntries.map(([folder, value]: any) => {
+          const fullPath = parentPath ? `${parentPath}/${folder}` : folder;
+          const isOpen = openFolders[fullPath] || false;
+          return (
+            <div key={fullPath} className="mb-1">
+              <button
+                onClick={() => setOpenFolders(f => ({ ...f, [fullPath]: !isOpen }))}
+                className="flex items-center w-full text-left text-sm font-semibold text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded"
+                style={{ backgroundColor: isOpen ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' }}
+              >
+                <span className="mr-1">{isOpen ? '▼' : '▶'}</span>
+                {folder}
+              </button>
+              {isOpen && (
+                <div className="ml-4 border-l border-gray-300 dark:border-gray-600 pl-2">
+                  {renderFolderTree(value, fullPath)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {/* Files in this folder */}
+        {files.map((file: MarkdownFile) => (
+          <div key={file.folder ? `${file.folder}/${file.name}` : file.name} className={`flex items-center justify-between ${parentPath ? 'p-1' : 'p-2'} bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 my-1`}
+            style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb', borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb' }}>
+            <button
+              onClick={() => loadFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
+              className={`text-left flex-1 ${parentPath ? 'text-xs' : 'text-sm'} text-blue-600 dark:text-blue-400 hover:underline`}
+              style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
+            >
+              {file.name}
+            </button>
+            <button
+              onClick={() => deleteFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
+              className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
+              style={{ color: theme === 'dark' ? '#f87171' : '#dc2626' }}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const folderTree = buildFolderTree(savedFiles);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 main-bg" style={{backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb'}}>
       {/* Header */}
@@ -190,49 +260,15 @@ export default function Home() {
 
               <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-900 dark:text-white primary-text" style={{color: theme === 'dark' ? '#f9fafb' : '#111827'}}>Saved Files</h2>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {savedFiles.map((file) => {
-                  // Show folder/name if folder exists
-                  const displayPath = file.folder ? `${file.folder}/${file.name}` : file.name;
-                  const filePath = file.folder ? `${file.folder}/${file.name}` : file.name;
-                  return (
-                    <div 
-                      key={filePath} 
-                      className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600"
-                      style={{
-                        backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                        borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb'
-                      }}
-                    >
-                      <button
-                        onClick={() => loadFile(filePath)}
-                        className="text-left flex-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                        style={{
-                          color: theme === 'dark' ? '#60a5fa' : '#2563eb'
-                        }}
-                      >
-                        {displayPath}
-                      </button>
-                      <button
-                        onClick={() => deleteFile(filePath)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
-                        style={{
-                          color: theme === 'dark' ? '#f87171' : '#dc2626'
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  );
-                })}
-                {savedFiles.length === 0 && (
+                {savedFiles.length === 0 ? (
                   <p 
                     className="text-sm text-gray-500 dark:text-gray-400"
-                    style={{
-                      color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-                    }}
+                    style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                   >
                     No saved files
                   </p>
+                ) : (
+                  renderFolderTree(folderTree)
                 )}
               </div>
             </div>
