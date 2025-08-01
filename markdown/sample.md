@@ -1,6 +1,4 @@
-# Welcome to MarkItUp
-
-Start writing your markdown here...# Sample Markdown File
+# Sample Markdown File
 
 This is a sample markdown file to demonstrate the **MarkItUp** application.
 
