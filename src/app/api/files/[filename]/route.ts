@@ -37,13 +37,26 @@ export async function DELETE(
   try {
     const { filename } = await params;
     const filePath = path.join(MARKDOWN_DIR, filename);
-    
+
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
-    
+
     fs.unlinkSync(filePath);
-    
+
+    // Remove empty parent folders up to MARKDOWN_DIR
+    let dir = path.dirname(filePath);
+    while (dir !== MARKDOWN_DIR) {
+      const files = fs.readdirSync(dir);
+      // Only remove if no files or folders left
+      if (files.length === 0) {
+        fs.rmdirSync(dir);
+        dir = path.dirname(dir);
+      } else {
+        break;
+      }
+    }
+
     return NextResponse.json({ message: 'File deleted successfully' });
   } catch (error) {
     console.error('Error deleting file:', error);
