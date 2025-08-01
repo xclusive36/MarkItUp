@@ -51,29 +51,42 @@ export default function Home() {
     }
   };
 
-  const saveFile = async () => {
+  const saveFile = async (forceOverwrite = false) => {
     if (!fileName.trim()) {
       setSaveStatus('Please enter a filename');
       return;
     }
+    // Compose the full path (with folder if provided)
+    const fullPath = folder.trim() ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md` : `${fileName.trim().replace(/\/+$/, '')}.md`;
     try {
-      const response = await fetch('/api/files', {
-        method: 'POST',
+      const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: fileName,
           content: markdown,
-          folder: folder.trim(),
+          overwrite: forceOverwrite,
         }),
       });
       if (response.ok) {
-        setSaveStatus('File saved successfully!');
+        setSaveStatus(forceOverwrite ? 'File overwritten!' : 'File saved successfully!');
         setFileName('');
         setFolder('');
         fetchSavedFiles();
         setTimeout(() => setSaveStatus(''), 3000);
+      } else if (response.status === 409) {
+        const data = await response.json();
+        if (data.requiresOverwrite) {
+          if (window.confirm(data.prompt || 'File exists. Overwrite?')) {
+            // Retry with overwrite flag
+            await saveFile(true);
+          } else {
+            setSaveStatus('File not overwritten.');
+          }
+        } else {
+          setSaveStatus(data.error || 'Error saving file');
+        }
       } else {
         setSaveStatus('Error saving file');
       }
@@ -248,7 +261,7 @@ export default function Home() {
                   }}
                 />
                 <button
-                  onClick={saveFile}
+                  onClick={() => saveFile()}
                   className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Save

@@ -1,3 +1,36 @@
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ filename: string }> }
+) {
+  try {
+    const { filename } = await params;
+    const filePath = safeJoinMarkdownDir(filename);
+    if (!filePath) {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
+    }
+    const body = await request.json();
+    const { content, overwrite } = body;
+    if (typeof content !== 'string') {
+      return NextResponse.json({ error: 'Missing or invalid content' }, { status: 400 });
+    }
+    const fileExists = fs.existsSync(filePath);
+    if (fileExists && !overwrite) {
+      // Prompt user for overwrite confirmation
+      return NextResponse.json({
+        error: 'File already exists',
+        prompt: 'File exists. Are you sure you want to overwrite it?',
+        requiresOverwrite: true
+      }, { status: 409 });
+    }
+    // Ensure parent directory exists
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, content, 'utf-8');
+    return NextResponse.json({ message: fileExists ? 'File overwritten' : 'File created' });
+  } catch (error) {
+    console.error('Error writing file:', error);
+    return NextResponse.json({ error: 'Failed to write file' }, { status: 500 });
+  }
+}
 
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
