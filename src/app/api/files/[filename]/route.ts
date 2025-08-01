@@ -1,8 +1,17 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
 const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
+
+
+function safeJoinMarkdownDir(filename: string): string | null {
+  // Allow subfolders, but prevent traversal outside MARKDOWN_DIR
+  const filePath = path.resolve(MARKDOWN_DIR, filename);
+  if (!filePath.startsWith(MARKDOWN_DIR)) return null;
+  return filePath;
+}
 
 export async function GET(
   request: NextRequest,
@@ -10,15 +19,15 @@ export async function GET(
 ) {
   try {
     const { filename } = await params;
-    const filePath = path.join(MARKDOWN_DIR, filename);
-    
+    const filePath = safeJoinMarkdownDir(filename);
+    if (!filePath) {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
+    }
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
-    
     const content = fs.readFileSync(filePath, 'utf-8');
     const stats = fs.statSync(filePath);
-    
     return NextResponse.json({
       name: filename,
       content,
@@ -36,8 +45,10 @@ export async function DELETE(
 ) {
   try {
     const { filename } = await params;
-    const filePath = path.join(MARKDOWN_DIR, filename);
-
+    const filePath = safeJoinMarkdownDir(filename);
+    if (!filePath) {
+      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
+    }
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
