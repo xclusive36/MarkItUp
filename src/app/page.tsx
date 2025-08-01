@@ -99,6 +99,8 @@ export default function Home() {
   };
 
   const deleteFile = async (fileName: string) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this markdown file? This action cannot be undone.');
+    if (!confirmDelete) return;
     try {
       const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
