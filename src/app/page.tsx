@@ -11,9 +11,10 @@ import './highlight.css';
 import './manual-theme.css';
 
 interface MarkdownFile {
-  name: string;
-  content: string;
-  createdAt: string;
+name: string;
+folder?: string;
+content: string;
+createdAt: string;
 }
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [markdown, setMarkdown] = useState('# Welcome to MarkItUp\n\nStart writing your markdown here...');
   const [fileName, setFileName] = useState('');
+  const [folder, setFolder] = useState('');
   const [savedFiles, setSavedFiles] = useState<MarkdownFile[]>([]);
   const [isPreview, setIsPreview] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
@@ -53,7 +55,6 @@ export default function Home() {
       setSaveStatus('Please enter a filename');
       return;
     }
-
     try {
       const response = await fetch('/api/files', {
         method: 'POST',
@@ -63,12 +64,13 @@ export default function Home() {
         body: JSON.stringify({
           name: fileName,
           content: markdown,
+          folder: folder.trim(),
         }),
       });
-
       if (response.ok) {
         setSaveStatus('File saved successfully!');
         setFileName('');
+        setFolder('');
         fetchSavedFiles();
         setTimeout(() => setSaveStatus(''), 3000);
       } else {
@@ -82,11 +84,13 @@ export default function Home() {
 
   const loadFile = async (fileName: string) => {
     try {
-      const response = await fetch(`/api/files/${fileName}`);
+      // fileName can be just name or folder/name
+      const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`);
       if (response.ok) {
         const file = await response.json();
         setMarkdown(file.content);
         setFileName(file.name.replace('.md', ''));
+        setFolder(file.folder || '');
       }
     } catch (error) {
       console.error('Error loading file:', error);
@@ -153,6 +157,18 @@ export default function Home() {
                     borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db'
                   }}
                 />
+                <input
+                  type="text"
+                  value={folder}
+                  onChange={(e) => setFolder(e.target.value)}
+                  placeholder="Enter folder (optional, e.g. notes/personal)"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                    borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  }}
+                />
                 <button
                   onClick={saveFile}
                   className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -174,35 +190,40 @@ export default function Home() {
 
               <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-900 dark:text-white primary-text" style={{color: theme === 'dark' ? '#f9fafb' : '#111827'}}>Saved Files</h2>
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {savedFiles.map((file) => (
-                  <div 
-                    key={file.name} 
-                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                      borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb'
-                    }}
-                  >
-                    <button
-                      onClick={() => loadFile(file.name)}
-                      className="text-left flex-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                {savedFiles.map((file) => {
+                  // Show folder/name if folder exists
+                  const displayPath = file.folder ? `${file.folder}/${file.name}` : file.name;
+                  const filePath = file.folder ? `${file.folder}/${file.name}` : file.name;
+                  return (
+                    <div 
+                      key={filePath} 
+                      className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600"
                       style={{
-                        color: theme === 'dark' ? '#60a5fa' : '#2563eb'
+                        backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
+                        borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb'
                       }}
                     >
-                      {file.name}
-                    </button>
-                    <button
-                      onClick={() => deleteFile(file.name)}
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
-                      style={{
-                        color: theme === 'dark' ? '#f87171' : '#dc2626'
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={() => loadFile(filePath)}
+                        className="text-left flex-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        style={{
+                          color: theme === 'dark' ? '#60a5fa' : '#2563eb'
+                        }}
+                      >
+                        {displayPath}
+                      </button>
+                      <button
+                        onClick={() => deleteFile(filePath)}
+                        className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
+                        style={{
+                          color: theme === 'dark' ? '#f87171' : '#dc2626'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
                 {savedFiles.length === 0 && (
                   <p 
                     className="text-sm text-gray-500 dark:text-gray-400"
