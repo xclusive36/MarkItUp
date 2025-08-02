@@ -1,12 +1,23 @@
 'use client';
 
+// React and markdown imports
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+
+// Component imports
 import ThemeToggle from '@/components/ThemeToggle';
+import LaTeXRenderer from '@/components/LaTeXRenderer';
+import TikZRenderer from '@/components/TikZRenderer';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
+
+// Styles
 import 'highlight.js/styles/github.css';
+import 'katex/dist/katex.min.css';
 import './highlight.css';
 import './manual-theme.css';
 
@@ -297,7 +308,43 @@ export default function Home() {
               {isPreview ? (
                 <div className="h-full p-6 overflow-y-auto">
                   <div className="prose prose-slate dark:prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{markdown}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
+                      components={{
+                        code(props) {
+                          const { className, children } = props;
+                          const match = /language-(\w+)/.exec(className || '');
+                          const content = String(children).replace(/\n$/, '');
+
+                          if (match) {
+                            const lang = match[1];
+                            switch (lang) {
+                              case 'tikz':
+                                return <TikZRenderer content={content} />;
+                              case 'latex':
+                                return <LaTeXRenderer content={content} displayMode={true} />;
+                              default:
+                                return (
+                                  <div className="relative group">
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                    <span className="absolute top-0 right-0 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-bl opacity-75">
+                                      {lang}
+                                    </span>
+                                  </div>
+                                );
+                            }
+                          }
+
+                          // Default code block without language
+                          return <code className={className}>{children}</code>;
+                        },
+                      }}
+                    >
+                      {markdown}
+                    </ReactMarkdown>
                   </div>
                 </div>
               ) : (
