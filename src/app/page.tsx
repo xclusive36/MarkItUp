@@ -10,17 +10,99 @@ import 'highlight.js/styles/github.css';
 import './highlight.css';
 import './manual-theme.css';
 
+
+// Types
 interface MarkdownFile {
-name: string;
-folder?: string;
-content: string;
-createdAt: string;
+  name: string;
+  folder?: string;
+  content: string;
+  createdAt: string;
 }
 
+interface FolderTree {
+  _files: MarkdownFile[];
+  _folders: { [folder: string]: FolderTree };
+}
+
+// Helper: Build folder tree from savedFiles
+function buildFolderTree(files: MarkdownFile[]): FolderTree {
+  const tree: FolderTree = { _files: [], _folders: {} };
+  files.forEach(file => {
+    const folderPath = file.folder ? file.folder.split('/') : [];
+    let current = tree;
+    for (const folder of folderPath) {
+      if (!current._folders[folder]) current._folders[folder] = { _files: [], _folders: {} };
+      current = current._folders[folder];
+    }
+    current._files.push(file);
+  });
+  return tree;
+}
+
+// Helper: Render folder tree recursively
+function renderFolderTree(
+  tree: FolderTree,
+  parentPath = '',
+  openFolders: { [folder: string]: boolean },
+  theme: string,
+  loadFile: (fileName: string) => void,
+  deleteFile: (fileName: string) => void,
+  setOpenFolders: React.Dispatch<React.SetStateAction<{ [folder: string]: boolean }>>
+) {
+  const folderEntries = Object.entries(tree._folders || {});
+  const files = tree._files || [];
+  return (
+    <div>
+      {/* Folders */}
+      {folderEntries.map(([folder, value]: [string, FolderTree]) => {
+        const fullPath = parentPath ? `${parentPath}/${folder}` : folder;
+        const isOpen = openFolders[fullPath] || false;
+        return (
+          <div key={fullPath} className="mb-1">
+            <button
+              onClick={() => setOpenFolders(f => ({ ...f, [fullPath]: !isOpen }))}
+              className="flex items-center w-full text-left text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded"
+              style={{ backgroundColor: isOpen ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' }}
+            >
+              <span className="mr-1">{isOpen ? '▼' : '▶'}</span>
+              {folder}
+            </button>
+            {isOpen && (
+              <div className="ml-4 border-l border-gray-300 dark:border-gray-600 pl-2">
+                {renderFolderTree(value, fullPath, openFolders, theme, loadFile, deleteFile, setOpenFolders)}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {/* Files in this folder */}
+      {files.map((file: MarkdownFile) => (
+        <div key={file.folder ? `${file.folder}/${file.name}` : file.name} className={`flex items-center justify-between ${parentPath ? 'p-1' : 'p-2'} bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 my-1`}
+          style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb', borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb' }}>
+          <button
+            onClick={() => loadFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
+            className={`text-left flex-1 ${parentPath ? 'text-xs' : 'text-sm'} text-blue-600 dark:text-blue-400 hover:underline`}
+            style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
+          >
+            {file.name}
+          </button>
+          <button
+            onClick={() => deleteFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
+            className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
+            style={{ color: theme === 'dark' ? '#f87171' : '#dc2626' }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 export default function Home() {
-  const { theme, forceUpdate } = useSimpleTheme();
-  
-  const [mounted, setMounted] = useState(false);
+  const { theme } = useSimpleTheme();
+  // Removed unused mounted state
   const [markdown, setMarkdown] = useState('# Welcome to MarkItUp\n\nStart writing your markdown here...');
   const [fileName, setFileName] = useState('');
   const [folder, setFolder] = useState('');
@@ -29,16 +111,14 @@ export default function Home() {
   const [saveStatus, setSaveStatus] = useState('');
   const [openFolders, setOpenFolders] = useState<{ [folder: string]: boolean }>({});
 
-  // Handle hydration
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // ...existing code...
 
-  // Load saved files on component mount
+  // Load files on mount
   useEffect(() => {
     fetchSavedFiles();
   }, []);
 
+  // Fetch all saved markdown files
   const fetchSavedFiles = async () => {
     try {
       const response = await fetch('/api/files');
@@ -51,23 +131,20 @@ export default function Home() {
     }
   };
 
+  // Save file (with optional overwrite)
   const saveFile = async (forceOverwrite = false) => {
     if (!fileName.trim()) {
       setSaveStatus('Please enter a filename');
       return;
     }
-    // Compose the full path (with folder if provided)
-    const fullPath = folder.trim() ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md` : `${fileName.trim().replace(/\/+$/, '')}.md`;
+    const fullPath = folder.trim()
+      ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+      : `${fileName.trim().replace(/\/+$/, '')}.md`;
     try {
       const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: markdown,
-          overwrite: forceOverwrite,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: markdown, overwrite: forceOverwrite }),
       });
       if (response.ok) {
         setSaveStatus(forceOverwrite ? 'File overwritten!' : 'File saved successfully!');
@@ -79,7 +156,6 @@ export default function Home() {
         const data = await response.json();
         if (data.requiresOverwrite) {
           if (window.confirm(data.prompt || 'File exists. Overwrite?')) {
-            // Retry with overwrite flag
             await saveFile(true);
           } else {
             setSaveStatus('File not overwritten.');
@@ -96,9 +172,9 @@ export default function Home() {
     }
   };
 
+  // Load file by name (can be folder/name)
   const loadFile = async (fileName: string) => {
     try {
-      // fileName can be just name or folder/name
       const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`);
       if (response.ok) {
         const file = await response.json();
@@ -111,13 +187,11 @@ export default function Home() {
     }
   };
 
+  // Delete file by name (can be folder/name)
   const deleteFile = async (fileName: string) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this markdown file? This action cannot be undone.');
-    if (!confirmDelete) return;
+    if (!window.confirm('Are you sure you want to delete this markdown file? This action cannot be undone.')) return;
     try {
-      const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(`/api/files/${encodeURIComponent(fileName)}`, { method: 'DELETE' });
       if (response.ok) {
         fetchSavedFiles();
       } else {
@@ -128,98 +202,27 @@ export default function Home() {
     }
   };
 
+  // Reset editor to initial state
   const resetToInitial = () => {
     setMarkdown('# Welcome to MarkItUp\n\nStart writing your markdown here...');
     setFileName('');
     setSaveStatus('');
   };
 
-  // Folder tree type definition
-  interface FolderTree {
-    _files: MarkdownFile[];
-    _folders: { [folder: string]: FolderTree };
-  }
-
-  // Helper: Build folder tree from savedFiles
-  function buildFolderTree(files: MarkdownFile[]): FolderTree {
-    const tree: FolderTree = { _files: [], _folders: {} };
-    files.forEach(file => {
-      const folderPath = file.folder ? file.folder.split('/') : [];
-      let current = tree;
-      for (const folder of folderPath) {
-        if (!current._folders[folder]) current._folders[folder] = { _files: [], _folders: {} };
-        current = current._folders[folder];
-      }
-      current._files.push(file);
-    });
-    return tree;
-  }
-
-  // Helper: Render folder tree recursively
-  function renderFolderTree(tree: FolderTree, parentPath = '') {
-    const folderEntries = Object.entries(tree._folders || {});
-    const files = tree._files || [];
-    return (
-      <div>
-        {/* Folders */}
-        {folderEntries.map(([folder, value]: [string, FolderTree]) => {
-          const fullPath = parentPath ? `${parentPath}/${folder}` : folder;
-          const isOpen = openFolders[fullPath] || false;
-          return (
-            <div key={fullPath} className="mb-1">
-              <button
-                onClick={() => setOpenFolders(f => ({ ...f, [fullPath]: !isOpen }))}
-                className="flex items-center w-full text-left text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 px-2 py-1 rounded"
-                style={{ backgroundColor: isOpen ? (theme === 'dark' ? '#374151' : '#e5e7eb') : 'transparent' }}
-              >
-                <span className="mr-1">{isOpen ? '▼' : '▶'}</span>
-                {folder}
-              </button>
-              {isOpen && (
-                <div className="ml-4 border-l border-gray-300 dark:border-gray-600 pl-2">
-                  {renderFolderTree(value, fullPath)}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        {/* Files in this folder */}
-        {files.map((file: MarkdownFile) => (
-          <div key={file.folder ? `${file.folder}/${file.name}` : file.name} className={`flex items-center justify-between ${parentPath ? 'p-1' : 'p-2'} bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 my-1`}
-            style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb', borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb' }}>
-            <button
-              onClick={() => loadFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
-              className={`text-left flex-1 ${parentPath ? 'text-xs' : 'text-sm'} text-blue-600 dark:text-blue-400 hover:underline`}
-              style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-            >
-              {file.name}
-            </button>
-            <button
-              onClick={() => deleteFile(file.folder ? `${file.folder}/${file.name}` : file.name)}
-              className="text-red-600 dark:text-red-400 hover:text-red-700 ml-2"
-              style={{ color: theme === 'dark' ? '#f87171' : '#dc2626' }}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
+  // Build folder tree for sidebar
   const folderTree = buildFolderTree(savedFiles);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 main-bg" style={{backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb'}}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 main-bg" style={{ backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb' }}>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 secondary-bg" style={{backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb'}}>
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 secondary-bg" style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white primary-text" style={{color: theme === 'dark' ? '#f9fafb' : '#111827'}}>MarkItUp</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white primary-text" style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>MarkItUp</h1>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               <button
-                onClick={() => setIsPreview(!isPreview)}
+                onClick={() => setIsPreview(prev => !prev)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 {isPreview ? 'Edit' : 'Preview'}
@@ -233,25 +236,25 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 secondary-bg primary-border" style={{backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb'}}>
-              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white primary-text" style={{color: theme === 'dark' ? '#f9fafb' : '#111827'}}>Save File</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 secondary-bg primary-border" style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}>
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white primary-text" style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>Save File</h2>
               <div className="space-y-4">
                 <input
                   type="text"
                   value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
+                  onChange={e => setFileName(e.target.value)}
                   placeholder="Enter filename..."
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   style={{
                     backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
                     color: theme === 'dark' ? '#f9fafb' : '#111827',
-                    borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db'
+                    borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
                   }}
                 />
                 <input
                   type="text"
                   value={folder}
-                  onChange={(e) => setFolder(e.target.value)}
+                  onChange={e => setFolder(e.target.value)}
                   placeholder="Enter folder (optional, e.g. notes/personal)"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   style={{
@@ -267,9 +270,7 @@ export default function Home() {
                   Save
                 </button>
                 {saveStatus && (
-                  <p className={`text-sm ${saveStatus.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>
-                    {saveStatus}
-                  </p>
+                  <p className={`text-sm ${saveStatus.includes('Error') ? 'text-red-600' : 'text-green-600'}`}>{saveStatus}</p>
                 )}
                 <button
                   onClick={resetToInitial}
@@ -279,17 +280,12 @@ export default function Home() {
                 </button>
               </div>
 
-              <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-900 dark:text-white primary-text" style={{color: theme === 'dark' ? '#f9fafb' : '#111827'}}>Saved Files</h2>
+              <h2 className="text-lg font-semibold mt-8 mb-4 text-gray-900 dark:text-white primary-text" style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>Saved Files</h2>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {savedFiles.length === 0 ? (
-                  <p 
-                    className="text-sm text-gray-500 dark:text-gray-400"
-                    style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                  >
-                    No saved files
-                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400" style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>No saved files</p>
                 ) : (
-                  renderFolderTree(folderTree)
+                  renderFolderTree(folderTree, '', openFolders, theme, loadFile, deleteFile, setOpenFolders)
                 )}
               </div>
             </div>
@@ -297,28 +293,23 @@ export default function Home() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-200px)] secondary-bg primary-border" style={{backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb'}}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-200px)] secondary-bg primary-border" style={{ backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff', borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}>
               {isPreview ? (
                 <div className="h-full p-6 overflow-y-auto">
                   <div className="prose prose-slate dark:prose-invert max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeHighlight]}
-                    >
-                      {markdown}
-                    </ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>{markdown}</ReactMarkdown>
                   </div>
                 </div>
               ) : (
                 <textarea
                   value={markdown}
-                  onChange={(e) => setMarkdown(e.target.value)}
+                  onChange={e => setMarkdown(e.target.value)}
                   className="w-full h-full p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="Start writing your markdown here..."
                   style={{
                     backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
                     color: theme === 'dark' ? '#f9fafb' : '#111827',
-                    borderColor: 'transparent'
+                    borderColor: 'transparent',
                   }}
                 />
               )}
