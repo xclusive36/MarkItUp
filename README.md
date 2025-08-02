@@ -12,6 +12,8 @@
 * GitHub Flavored Markdown (GFM) support
 * Split view: edit and preview side by side
 * Clean, monospace editing experience
+* Math equation rendering with LaTeX syntax
+* SVG generation with colors and shapes with TikzJax syntax
 
 ### Theme Support
 
@@ -31,6 +33,21 @@
 * Fully responsive across devices
 * Syntax highlighting for code blocks
 * Accessible via ARIA labels and keyboard navigation
+
+### Math Equations
+
+* LaTeX syntax support for mathematical equations
+* Real-time rendering of inline math using `$...$`
+* Block math using `$$...$$`
+* Support for complex mathematical notations and symbols
+
+### SVG Generation
+
+* Create vector graphics directly in markdown
+* Customizable shapes (circles, rectangles, paths)
+* Color support for fills and strokes
+* Responsive and scalable graphics
+* Perfect for diagrams and illustrations
 
 ## 📁 File Structure
 
