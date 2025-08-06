@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.16",
+    "d3": "^7.9.0",
     "katex": "^0.16.22",
+    "lucide-react": "^0.469.0",
     "next": "15.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/d3": "^7.4.3",
     "@types/mathjax": "^0.0.40",
     "@types/node": "^20",
     "@types/react": "^19",

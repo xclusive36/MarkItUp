@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { Note } from '@/lib/types';
+import { MarkdownParser } from '@/lib/parser';
 
 const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
 
@@ -11,36 +13,45 @@ if (!fs.existsSync(MARKDOWN_DIR)) {
 
 export async function GET() {
   try {
-    // Recursively find markdown files in all subfolders
-    interface MarkdownFile {
-      name: string;
-      folder: string;
-      content: string;
-      createdAt: string;
-    }
-    function findMarkdownFiles(dir: string, folderPrefix: string = ''): MarkdownFile[] {
-      let results: MarkdownFile[] = [];
+    // Recursively find markdown files and convert to Note objects
+    function findNotesRecursive(dir: string, folderPrefix: string = ''): Note[] {
+      let results: Note[] = [];
       const items = fs.readdirSync(dir);
       for (const item of items) {
         const itemPath = path.join(dir, item);
-        const relFolder = folderPrefix;
         const stats = fs.statSync(itemPath);
         if (stats.isDirectory()) {
-          results = results.concat(findMarkdownFiles(itemPath, path.join(folderPrefix, item)));
+          results = results.concat(findNotesRecursive(itemPath, path.join(folderPrefix, item)));
         } else if (item.endsWith('.md')) {
           const content = fs.readFileSync(itemPath, 'utf-8');
-          results.push({
+          const parsed = MarkdownParser.parseNote(content);
+          const wordCount = MarkdownParser.calculateWordCount(content);
+          const readingTime = MarkdownParser.calculateReadingTime(wordCount);
+          
+          const note: Note = {
+            id: MarkdownParser.generateNoteId(item.replace('.md', ''), folderPrefix || undefined),
             name: item,
-            folder: folderPrefix,
             content,
+            folder: folderPrefix || undefined,
             createdAt: stats.ctime.toISOString(),
-          });
+            updatedAt: stats.mtime.toISOString(),
+            tags: parsed.tags,
+            metadata: parsed.frontmatter,
+            wordCount,
+            readingTime
+          };
+          
+          results.push(note);
         }
       }
       return results;
     }
-    const markdownFiles = findMarkdownFiles(MARKDOWN_DIR, '').sort((a: MarkdownFile, b: MarkdownFile) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return NextResponse.json(markdownFiles);
+    
+    const notes = findNotesRecursive(MARKDOWN_DIR, '').sort((a: Note, b: Note) => 
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+    
+    return NextResponse.json(notes);
   } catch (error) {
     console.error('Error reading files:', error);
     return NextResponse.json({ error: 'Failed to read files' }, { status: 500 });
