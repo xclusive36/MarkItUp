@@ -225,7 +225,7 @@ export class MarkdownParser {
   static calculateWordCount(content: string): number {
     const plainText = content
       .replace(/^---[\s\S]*?---\n/, '') // Remove frontmatter
-      .replace(/\[\[([^\]|]+)(\|([^\]]+))?\]\]/g, '$3' || '$1') // Replace wikilinks with display text
+      .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, p1, p2) => p2 || p1) // Replace wikilinks with display text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Replace markdown links with display text
       .replace(/#[a-zA-Z0-9_/-]+/g, '') // Remove tags
       .replace(/```[\s\S]*?```/g, '') // Remove code blocks

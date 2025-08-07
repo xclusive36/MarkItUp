@@ -5,8 +5,15 @@ import { Search, X, Hash, Folder, FileText, Clock } from 'lucide-react';
 import { SearchResult, SearchMatch } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 
+interface SearchOptions {
+  limit?: number;
+  includeContent?: boolean;
+  tags?: string[];
+  folders?: string[];
+}
+
 interface SearchBoxProps {
-  onSearch: (query: string, options?: any) => Promise<SearchResult[]>;
+  onSearch: (query: string, options?: SearchOptions) => Promise<SearchResult[]>;
   onSelectNote: (noteId: string) => void;
   placeholder?: string;
   className?: string;
@@ -49,6 +56,14 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     return () => clearTimeout(timeoutId);
   }, [query, onSearch]);
 
+  const handleSelectNote = (noteId: string) => {
+    onSelectNote(noteId);
+    setQuery('');
+    setResults([]);
+    setIsOpen(false);
+    searchRef.current?.blur();
+  };
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,7 +96,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex]);
+  }, [isOpen, results, selectedIndex, handleSelectNote]);
 
   // Scroll selected item into view
   useEffect(() => {
@@ -95,14 +110,6 @@ const SearchBox: React.FC<SearchBoxProps> = ({
       }
     }
   }, [selectedIndex]);
-
-  const handleSelectNote = (noteId: string) => {
-    onSelectNote(noteId);
-    setQuery('');
-    setResults([]);
-    setIsOpen(false);
-    searchRef.current?.blur();
-  };
 
   const handleClear = () => {
     setQuery('');

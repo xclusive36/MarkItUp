@@ -371,7 +371,7 @@ export class PKMSystem {
     console.log('PKM System initialized with', this.notes.size, 'notes');
   }
 
-  async destroy(): void {
+  async destroy(): Promise<void> {
     this.notes.clear();
     this.eventListeners.clear();
     this.commands.clear();

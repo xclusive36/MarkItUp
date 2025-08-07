@@ -2,17 +2,13 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { select } from 'd3-selection';
+import * as d3Force from 'd3-force';
+import { D3DragEvent } from 'd3';
 import { Graph, GraphNode, GraphEdge } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 
-interface GraphViewProps {
-  graph: Graph;
-  centerNode?: string;
-  onNodeClick?: (nodeId: string) => void;
-  onNodeHover?: (nodeId: string | null) => void;
-  className?: string;
-}
-
+// Define a proper D3Node type that extends GraphNode and includes simulation properties
 interface D3Node extends GraphNode {
   x?: number;
   y?: number;
@@ -20,11 +16,22 @@ interface D3Node extends GraphNode {
   vy?: number;
   fx?: number | null;
   fy?: number | null;
+  index?: number;
 }
 
-interface D3Edge extends GraphEdge {
+// Properly type the D3Edge to work with D3's force simulation
+interface D3Edge extends Omit<GraphEdge, 'source' | 'target'> {
   source: D3Node;
   target: D3Node;
+  index?: number;
+}
+
+interface GraphViewProps {
+  graph: Graph;
+  centerNode?: string;
+  onNodeClick?: (nodeId: string) => void;
+  onNodeHover?: (nodeId: string | null) => void;
+  className?: string;
 }
 
 const GraphView: React.FC<GraphViewProps> = ({
@@ -37,7 +44,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useSimpleTheme();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const simulationRef = useRef<d3.Simulation<D3Node, D3Edge> | null>(null);
+  const simulationRef = useRef<ReturnType<typeof d3Force.forceSimulation<D3Node>> | null>(null);
 
   // Handle resize
   useEffect(() => {
@@ -79,14 +86,14 @@ const GraphView: React.FC<GraphViewProps> = ({
     }));
 
     // Create force simulation
-    const simulation = d3.forceSimulation<D3Node>(nodes)
-      .force('link', d3.forceLink<D3Node, D3Edge>(edges)
-        .id(d => d.id)
-        .distance(d => d.type === 'tag' ? 100 : 150)
-        .strength(d => d.type === 'tag' ? 0.3 : 0.8))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius(d => d.size + 5));
+        const simulation = d3Force.forceSimulation<D3Node>(nodes)
+      .force('link', d3Force.forceLink<D3Node, D3Edge>(edges)
+        .id((d: D3Node) => d.id)
+        .distance((d: D3Edge) => d.type === 'tag' ? 100 : 150)
+        .strength((d: D3Edge) => d.type === 'tag' ? 0.3 : 0.8))
+      .force('charge', d3Force.forceManyBody<D3Node>().strength(-300))
+      .force('center', d3Force.forceCenter<D3Node>(width / 2, height / 2))
+      .force('collision', d3Force.forceCollide<D3Node>().radius((d: D3Node) => (d.size || 5) + 5));
 
     simulationRef.current = simulation;
 
@@ -140,22 +147,23 @@ const GraphView: React.FC<GraphViewProps> = ({
       .style('pointer-events', 'none');
 
     // Drag behavior
-    const drag = d3.drag<SVGGElement, D3Node>()
-      .on('start', (event, d) => {
+    const drag = d3.drag<any, D3Node>()
+      .on('start', (event: any, d: D3Node) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
       })
-      .on('drag', (event, d) => {
+      .on('drag', (event: any, d: D3Node) => {
         d.fx = event.x;
         d.fy = event.y;
       })
-      .on('end', (event, d) => {
+      .on('end', (event: any, d: D3Node) => {
         if (!event.active) simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
       });
 
+    // @ts-ignore - d3 types are not fully compatible
     node.call(drag);
 
     // Event handlers
@@ -192,7 +200,7 @@ const GraphView: React.FC<GraphViewProps> = ({
     // Zoom behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
-      .on('zoom', (event) => {
+      .on('zoom', (event: any) => {
         container.attr('transform', event.transform);
       });
 

@@ -176,7 +176,7 @@ export class SearchEngine {
           candidates = new Set(noteSet);
         } else {
           // Intersection for AND behavior
-          candidates = new Set([...candidates].filter(id => noteSet.has(id)));
+          candidates = new Set([...candidates].filter((id: string) => noteSet.has(id)));
         }
       }
     }
