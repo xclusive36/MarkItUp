@@ -1,0 +1,327 @@
+import { Plugin, PluginManifest, PluginAPI, Command, PluginView, ContentProcessor } from './types';
+import { PKMSystem } from './pkm';
+
+export class PluginManager {
+  private plugins: Map<string, LoadedPlugin> = new Map();
+  private pkmSystem: PKMSystem;
+  private pluginSettings: Map<string, Record<string, any>> = new Map();
+  private eventListeners: Map<string, Array<(data: any) => void>> = new Map();
+
+  constructor(pkmSystem: PKMSystem) {
+    this.pkmSystem = pkmSystem;
+  }
+
+  // Load a plugin from a manifest
+  async loadPlugin(manifest: PluginManifest): Promise<boolean> {
+    try {
+      // Validate plugin
+      if (!this.validatePlugin(manifest)) {
+        throw new Error(`Invalid plugin manifest: ${manifest.id}`);
+      }
+
+      // Check if already loaded
+      if (this.plugins.has(manifest.id)) {
+        throw new Error(`Plugin ${manifest.id} is already loaded`);
+      }
+
+      // Check dependencies
+      if (manifest.dependencies) {
+        for (const depId of manifest.dependencies) {
+          if (!this.plugins.has(depId)) {
+            throw new Error(`Missing dependency: ${depId}`);
+          }
+        }
+      }
+
+      // Create plugin API
+      const api = this.createPluginAPI(manifest.id);
+
+      // Load plugin settings
+      const settings = this.getPluginSettings(manifest.id);
+
+      // Create loaded plugin instance
+      const loadedPlugin: LoadedPlugin = {
+        manifest,
+        api,
+        settings,
+        isActive: false,
+        commands: new Map(),
+        views: new Map(),
+        processors: new Map(),
+      };
+
+      // Execute onLoad if defined
+      if (manifest.onLoad) {
+        await manifest.onLoad();
+      }
+
+      // Register commands
+      if (manifest.commands) {
+        for (const command of manifest.commands) {
+          this.registerCommand(manifest.id, command);
+        }
+      }
+
+      // Register views
+      if (manifest.views) {
+        for (const view of manifest.views) {
+          this.registerView(manifest.id, view);
+        }
+      }
+
+      // Register processors
+      if (manifest.processors) {
+        for (const processor of manifest.processors) {
+          this.registerProcessor(manifest.id, processor);
+        }
+      }
+
+      // Store plugin
+      this.plugins.set(manifest.id, loadedPlugin);
+      loadedPlugin.isActive = true;
+
+      console.log(`Plugin ${manifest.id} loaded successfully`);
+      return true;
+    } catch (error) {
+      console.error(`Failed to load plugin ${manifest.id}:`, error);
+      return false;
+    }
+  }
+
+  // Unload a plugin
+  async unloadPlugin(pluginId: string): Promise<boolean> {
+    const plugin = this.plugins.get(pluginId);
+    if (!plugin) {
+      return false;
+    }
+
+    try {
+      // Execute onUnload if defined
+      if (plugin.manifest.onUnload) {
+        await plugin.manifest.onUnload();
+      }
+
+      // Unregister commands
+      for (const commandId of plugin.commands.keys()) {
+        this.pkmSystem.unregisterCommand(commandId);
+      }
+
+      // Unregister views and processors
+      plugin.views.clear();
+      plugin.processors.clear();
+
+      // Mark as inactive and remove
+      plugin.isActive = false;
+      this.plugins.delete(pluginId);
+
+      console.log(`Plugin ${pluginId} unloaded successfully`);
+      return true;
+    } catch (error) {
+      console.error(`Failed to unload plugin ${pluginId}:`, error);
+      return false;
+    }
+  }
+
+  // Get all loaded plugins
+  getLoadedPlugins(): Plugin[] {
+    return Array.from(this.plugins.values()).map(p => p.manifest);
+  }
+
+  // Get a specific plugin
+  getPlugin(pluginId: string): LoadedPlugin | null {
+    return this.plugins.get(pluginId) || null;
+  }
+
+  // Process content through registered processors
+  async processContent(content: string, type: string, context?: any): Promise<string> {
+    let processedContent = content;
+
+    for (const plugin of this.plugins.values()) {
+      for (const processor of plugin.processors.values()) {
+        if (processor.type === type) {
+          try {
+            processedContent = await processor.process(processedContent, context);
+          } catch (error) {
+            console.error(`Error processing content with ${processor.id}:`, error);
+          }
+        }
+      }
+    }
+
+    return processedContent;
+  }
+
+  // Plugin settings management
+  getPluginSettings(pluginId: string): Record<string, any> {
+    return this.pluginSettings.get(pluginId) || {};
+  }
+
+  setPluginSetting(pluginId: string, key: string, value: any): void {
+    const settings = this.getPluginSettings(pluginId);
+    settings[key] = value;
+    this.pluginSettings.set(pluginId, settings);
+    
+    // Persist settings (in a real implementation, this would save to disk/localStorage)
+    this.persistPluginSettings();
+  }
+
+  // Event system for plugins
+  emitPluginEvent(event: string, data: any): void {
+    const listeners = this.eventListeners.get(event) || [];
+    listeners.forEach(callback => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error(`Error in plugin event listener for ${event}:`, error);
+      }
+    });
+  }
+
+  // Private methods
+  private validatePlugin(manifest: PluginManifest): boolean {
+    return !!(
+      manifest.id &&
+      manifest.name &&
+      manifest.version &&
+      manifest.author &&
+      manifest.main
+    );
+  }
+
+  private createPluginAPI(pluginId: string): PluginAPI {
+    return {
+      notes: {
+        create: (name, content, folder) => this.pkmSystem.createNote(name, content, folder),
+        update: (id, updates) => this.pkmSystem.updateNote(id, updates),
+        delete: (id) => this.pkmSystem.deleteNote(id),
+        get: (id) => this.pkmSystem.getNote(id),
+        getAll: () => this.pkmSystem.getAllNotes(),
+        search: (query) => this.pkmSystem.search(query),
+      },
+      ui: {
+        showNotification: (message, type = 'info') => {
+          // Implementation would depend on your UI framework
+          console.log(`[${type}] ${message}`);
+        },
+        showModal: async (title, content) => {
+          // Implementation for modal display
+          return Promise.resolve();
+        },
+        addCommand: (command) => {
+          this.registerCommand(pluginId, command);
+        },
+        addView: (view) => {
+          this.registerView(pluginId, view);
+        },
+        setStatusBarText: (text) => {
+          // Implementation for status bar
+          console.log(`Status: ${text}`);
+        },
+      },
+      events: {
+        on: (event, callback) => {
+          if (!this.eventListeners.has(event)) {
+            this.eventListeners.set(event, []);
+          }
+          this.eventListeners.get(event)!.push(callback);
+        },
+        off: (event, callback) => {
+          const listeners = this.eventListeners.get(event);
+          if (listeners) {
+            const index = listeners.indexOf(callback);
+            if (index > -1) {
+              listeners.splice(index, 1);
+            }
+          }
+        },
+        emit: (event, data) => {
+          this.emitPluginEvent(event, data);
+        },
+      },
+      settings: {
+        get: (key) => this.getPluginSettings(pluginId)[key],
+        set: (key, value) => this.setPluginSetting(pluginId, key, value),
+      },
+    };
+  }
+
+  private registerCommand(pluginId: string, command: Command): void {
+    const plugin = this.plugins.get(pluginId);
+    if (plugin) {
+      plugin.commands.set(command.id, command);
+      this.pkmSystem.registerCommand(command);
+    }
+  }
+
+  private registerView(pluginId: string, view: PluginView): void {
+    const plugin = this.plugins.get(pluginId);
+    if (plugin) {
+      plugin.views.set(view.id, view);
+      // Implementation would register the view with the UI system
+    }
+  }
+
+  private registerProcessor(pluginId: string, processor: ContentProcessor): void {
+    const plugin = this.plugins.get(pluginId);
+    if (plugin) {
+      plugin.processors.set(processor.id, processor);
+    }
+  }
+
+  private persistPluginSettings(): void {
+    // In a real implementation, this would save to localStorage or a file
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('markitup-plugin-settings', JSON.stringify(Array.from(this.pluginSettings.entries())));
+    }
+  }
+
+  private loadPersistedSettings(): void {
+    // In a real implementation, this would load from localStorage or a file
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('markitup-plugin-settings');
+      if (saved) {
+        try {
+          const entries = JSON.parse(saved);
+          this.pluginSettings = new Map(entries);
+        } catch (error) {
+          console.error('Failed to load plugin settings:', error);
+        }
+      }
+    }
+  }
+}
+
+interface LoadedPlugin {
+  manifest: PluginManifest;
+  api: PluginAPI;
+  settings: Record<string, any>;
+  isActive: boolean;
+  commands: Map<string, Command>;
+  views: Map<string, PluginView>;
+  processors: Map<string, ContentProcessor>;
+}
+
+// Example plugin loader from URL/file
+export class PluginLoader {
+  static async loadFromUrl(url: string): Promise<PluginManifest | null> {
+    try {
+      const response = await fetch(url);
+      const manifest = await response.json();
+      return manifest as PluginManifest;
+    } catch (error) {
+      console.error(`Failed to load plugin from ${url}:`, error);
+      return null;
+    }
+  }
+
+  static async loadFromFile(file: File): Promise<PluginManifest | null> {
+    try {
+      const text = await file.text();
+      const manifest = JSON.parse(text);
+      return manifest as PluginManifest;
+    } catch (error) {
+      console.error('Failed to load plugin from file:', error);
+      return null;
+    }
+  }
+}

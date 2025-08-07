@@ -95,13 +95,89 @@ export interface Plugin {
   author: string;
   main: string;
   dependencies?: string[];
+  permissions?: PluginPermission[];
+  minVersion?: string; // Minimum MarkItUp version required
+  maxVersion?: string; // Maximum MarkItUp version supported
 }
 
 export interface PluginManifest extends Plugin {
   onLoad?: () => void | Promise<void>;
   onUnload?: () => void | Promise<void>;
   commands?: Command[];
-  views?: string[];
+  views?: PluginView[];
+  processors?: ContentProcessor[];
+  settings?: PluginSetting[];
+}
+
+export interface PluginPermission {
+  type: 'file-system' | 'network' | 'clipboard' | 'notifications';
+  description: string;
+}
+
+export interface PluginView {
+  id: string;
+  name: string;
+  type: 'sidebar' | 'modal' | 'statusbar' | 'toolbar';
+  component: React.ComponentType<any>;
+  icon?: string;
+}
+
+export interface ContentProcessor {
+  id: string;
+  name: string;
+  type: 'markdown' | 'export' | 'import' | 'transform';
+  process: (content: string, context?: any) => string | Promise<string>;
+  fileExtensions?: string[];
+}
+
+export interface PluginSetting {
+  id: string;
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'select' | 'file' | 'folder';
+  default: any;
+  description?: string;
+  options?: Array<{ label: string; value: any }>;
+}
+
+export interface PluginAPI {
+  // Core system access
+  notes: {
+    create: (name: string, content: string, folder?: string) => Promise<Note>;
+    update: (id: string, updates: Partial<Note>) => Promise<Note | null>;
+    delete: (id: string) => Promise<boolean>;
+    get: (id: string) => Note | null;
+    getAll: () => Note[];
+    search: (query: string) => SearchResult[];
+  };
+  
+  // UI interactions
+  ui: {
+    showNotification: (message: string, type?: 'info' | 'warning' | 'error') => void;
+    showModal: (title: string, content: React.ReactNode) => Promise<any>;
+    addCommand: (command: Command) => void;
+    addView: (view: PluginView) => void;
+    setStatusBarText: (text: string) => void;
+  };
+  
+  // Event system
+  events: {
+    on: (event: string, callback: (data: any) => void) => void;
+    off: (event: string, callback: (data: any) => void) => void;
+    emit: (event: string, data: any) => void;
+  };
+  
+  // Settings
+  settings: {
+    get: (key: string) => any;
+    set: (key: string, value: any) => void;
+  };
+  
+  // File system (if permitted)
+  fs?: {
+    readFile: (path: string) => Promise<string>;
+    writeFile: (path: string, content: string) => Promise<void>;
+    exists: (path: string) => Promise<boolean>;
+  };
 }
 
 // Frontmatter parsing

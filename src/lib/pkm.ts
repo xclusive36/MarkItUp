@@ -2,10 +2,12 @@ import { Note, SearchResult, Graph, Link, Command, ViewState, SystemEvent } from
 import { MarkdownParser } from './parser';
 import { SearchEngine } from './search';
 import { GraphBuilder } from './graph';
+import { PluginManager } from './plugin-manager';
 
 export class PKMSystem {
   private searchEngine: SearchEngine;
   private graphBuilder: GraphBuilder;
+  private pluginManager: PluginManager;
   private notes: Map<string, Note> = new Map();
   private eventListeners: Map<string, Array<(event: SystemEvent) => void>> = new Map();
   private commands: Map<string, Command> = new Map();
@@ -24,6 +26,7 @@ export class PKMSystem {
   constructor() {
     this.searchEngine = new SearchEngine();
     this.graphBuilder = new GraphBuilder();
+    this.pluginManager = new PluginManager(this);
     this.registerDefaultCommands();
   }
 
@@ -352,6 +355,16 @@ export class PKMSystem {
       const note = this.resolveWikilink(target);
       return note ? `#note/${note.id}` : null;
     });
+  }
+
+  // ===== PLUGINS =====
+
+  getPluginManager(): PluginManager {
+    return this.pluginManager;
+  }
+
+  async processContent(content: string, type: string, context?: any): Promise<string> {
+    return this.pluginManager.processContent(content, type, context);
   }
 
   // ===== LIFECYCLE =====

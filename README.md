@@ -58,6 +58,16 @@
 * Responsive and scalable graphics
 * Perfect for diagrams and illustrations
 
+### Plugin System
+
+* **Extensible Architecture** - Comprehensive plugin system for custom functionality
+* **Rich Plugin API** - Access to notes, UI, events, and file system
+* **Settings Management** - Configurable plugin settings with persistence
+* **Content Processors** - Transform content during import/export operations
+* **Custom Commands** - Add keyboard shortcuts and menu items
+* **Event System** - Plugin communication through events
+* **Security Model** - Permission-based access control for plugins
+
 ## 📁 File Structure
 
 ```
@@ -156,6 +166,211 @@ cssclass: "custom-style"
 ---
 ```
 
+## 🔌 Plugin System
+
+MarkItUp features a comprehensive plugin system that allows you to extend functionality and customize your workflow.
+
+### Available Example Plugins
+
+#### Core Plugins
+
+**Enhanced Word Count**
+* Detailed word count statistics and reading time estimates
+* Configurable reading speed (WPM)
+* Character count display option
+* Keyboard shortcut: `Cmd+Shift+S` for detailed stats
+
+**Markdown Export**
+* Export notes to PDF, HTML, and DOCX formats
+* Configurable default export format
+* Batch export capabilities
+* File system access for saving exports
+* Keyboard shortcut: `Cmd+E` for quick export
+
+#### Productivity Plugins
+
+**Daily Notes**
+* Automatically create and manage daily notes
+* Customizable templates with date variables
+* Auto-creation of today's note on startup
+* Quick navigation: `Cmd+T` (today), `Cmd+Shift+T` (yesterday)
+
+**Table of Contents**
+* Generate and insert table of contents for notes
+* Configurable maximum heading depth
+* Auto-update TOC when content changes
+* Optional section numbering
+* Keyboard shortcut: `Cmd+Shift+O` to insert TOC
+
+**Kanban Board**
+* Convert task lists into interactive kanban boards
+* Customizable column names
+* Auto-archive completed tasks option
+* Toggle between list and kanban view
+* Keyboard shortcut: `Cmd+K` to toggle views
+
+#### Utility Plugins
+
+**Auto Backup**
+* Automatic backup to cloud storage or local directory
+* Support for Google Drive, Dropbox, GitHub, and local backups
+* Configurable backup intervals
+* Maximum backup count management
+* Manual backup and restore commands
+
+**Citations & Bibliography**
+* Manage citations and generate bibliographies
+* Support for APA, MLA, Chicago, and Harvard styles
+* Insert citations with `@reference` syntax
+* Auto-generate bibliography sections
+* Keyboard shortcut: `Cmd+Shift+C` to insert citation
+
+#### Theming Plugins
+
+**Advanced Dark Theme**
+* Customizable dark theme with accent colors
+* Configurable sidebar opacity
+* Blue, green, purple, and orange accent options
+* Dynamic CSS injection for theming
+
+### Plugin Development
+
+#### Plugin Structure
+
+Each plugin follows a standardized manifest structure:
+
+```typescript
+export const examplePlugin: PluginManifest = {
+  id: 'plugin-id',
+  name: 'Plugin Name',
+  version: '1.0.0',
+  description: 'Plugin description',
+  author: 'Author Name',
+  main: 'plugin-file.js',
+  
+  // Optional: Required permissions
+  permissions: [
+    {
+      type: 'file-system',
+      description: 'Required to save files'
+    }
+  ],
+  
+  // Optional: Plugin settings
+  settings: [
+    {
+      id: 'setting-id',
+      name: 'Setting Name',
+      type: 'string', // 'string' | 'number' | 'boolean' | 'select' | 'file'
+      default: 'default-value',
+      description: 'Setting description'
+    }
+  ],
+  
+  // Optional: Custom commands
+  commands: [
+    {
+      id: 'command-id',
+      name: 'Command Name',
+      description: 'Command description',
+      keybinding: 'Cmd+X',
+      callback: async function() {
+        // Command implementation
+      }
+    }
+  ],
+  
+  // Optional: Content processors
+  processors: [
+    {
+      id: 'processor-id',
+      name: 'Processor Name',
+      type: 'transform', // 'transform' | 'export' | 'import'
+      process: async (content: string) => {
+        // Process content and return modified version
+        return content;
+      }
+    }
+  ],
+  
+  // Lifecycle hooks
+  onLoad: async function() {
+    console.log('Plugin loaded');
+  },
+  
+  onUnload: async function() {
+    console.log('Plugin unloaded');
+  }
+};
+```
+
+#### Plugin API
+
+Plugins have access to a comprehensive API:
+
+```typescript
+// Notes management
+api.notes.create(name, content, folder)
+api.notes.update(id, updates)
+api.notes.delete(id)
+api.notes.get(id)
+api.notes.getAll()
+api.notes.search(query)
+
+// UI interactions
+api.ui.showNotification(message, type)
+api.ui.showModal(title, content)
+api.ui.addCommand(command)
+api.ui.addView(view)
+api.ui.setStatusBarText(text)
+
+// Event system
+api.events.on(event, callback)
+api.events.off(event, callback)
+api.events.emit(event, data)
+
+// Settings management
+api.settings.get(key)
+api.settings.set(key, value)
+
+// File system (if permitted)
+api.fs.readFile(path)
+api.fs.writeFile(path, content)
+api.fs.exists(path)
+```
+
+#### Installing Plugins
+
+1. **Via Plugin Store UI**
+   * Open the plugin store from the main menu
+   * Browse available plugins or upload a manifest file
+   * Click "Install" to add the plugin
+
+2. **Programmatically**
+   ```typescript
+   const pluginManager = pkm.getPluginManager();
+   await pluginManager.loadPlugin(pluginManifest);
+   ```
+
+#### Plugin Security
+
+* **Permission System**: Plugins must declare required permissions
+* **Sandboxed API**: Controlled access to system functionality
+* **Version Compatibility**: Min/max version checking
+* **Runtime Validation**: Manifest validation and dependency checking
+
+### Creating Custom Plugins
+
+1. **Define the Plugin Manifest** following the structure above
+2. **Implement Required Functions** (onLoad, commands, processors, etc.)
+3. **Test the Plugin** in development mode
+4. **Package and Distribute** as a JSON manifest file
+
+For detailed plugin development documentation and examples, see the `/src/plugins/example-plugins.ts` file.
+
+## 🧠 Using the PKM Features
+```
+
 ## 🐳 Deployment
 
 ### Docker Compose (Recommended)
@@ -182,7 +397,7 @@ docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart un
 | **Advanced Search** | ✅ | ✅ | Basic |
 | **Bidirectional Links** | ✅ | ✅ | ❌ |
 | **Real-time Collaboration** | 🔄 | ❌ (Desktop only) | Varies |
-| **Plugin System** | 🔄 (Planned) | ✅ | Varies |
+| **Plugin System** | ✅ | ✅ | Varies |
 | **Privacy** | ✅ (Self-hosted) | ⚠️ (Desktop app) | Varies |
 | **Cross-platform** | ✅ (Web) | ✅ | Varies |
 | **Open Source** | ✅ | ❌ | Varies |
