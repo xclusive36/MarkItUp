@@ -333,6 +333,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Render wikilinks in markdown
   const processedMarkdown = pkm.renderContent(markdown);
+  
+  // Debug logging to see if wikilinks are being processed
+  if (markdown !== processedMarkdown) {
+    console.log('Original markdown:', markdown.substring(0, 200) + '...');
+    console.log('Processed markdown:', processedMarkdown.substring(0, 200) + '...');
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900" style={{ backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb' }}>
@@ -644,6 +650,52 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                             }
                             return <code className={className}>{children}</code>;
                           },
+                          a(props) {
+                            const { href, children } = props;
+                            // Handle wikilinks (internal links starting with #note/)
+                            if (href?.startsWith('#note/')) {
+                              const noteId = href.replace('#note/', '');
+                              return (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleNoteSelect(noteId);
+                                  }}
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
+                                >
+                                  {children}
+                                </button>
+                              );
+                            }
+                            // Handle broken wikilinks (starting with #broken:)
+                            if (href?.startsWith('#broken:')) {
+                              const target = href.replace('#broken:', '').replace(/-/g, ' ');
+                              return (
+                                <span className="text-red-500 dark:text-red-400 cursor-help underline decoration-dotted" title={`Note "${target}" doesn't exist. Click to create it.`}
+                                  onClick={() => {
+                                    if (window.confirm(`Create note "${target}"?`)) {
+                                      setFileName(target);
+                                      setMarkdown(`# ${target}\n\nStart writing...`);
+                                      setCurrentView('editor');
+                                      setViewMode('edit');
+                                    }
+                                  }}
+                                >
+                                  {children}
+                                </span>
+                              );
+                            }
+                            // Handle broken links (spans with broken-link class)
+                            if (props.className === 'broken-link') {
+                              return (
+                                <span className="text-red-500 dark:text-red-400 cursor-help" title="This link doesn't point to an existing note">
+                                  {children}
+                                </span>
+                              );
+                            }
+                            // Regular external links
+                            return <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
+                          },
                         }}
                       >
                         {processedMarkdown}
@@ -703,6 +755,34 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                                 }
                               }
                               return <code className={className}>{children}</code>;
+                            },
+                            a(props) {
+                              const { href, children } = props;
+                              // Handle wikilinks (internal links starting with #note/)
+                              if (href?.startsWith('#note/')) {
+                                const noteId = href.replace('#note/', '');
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleNoteSelect(noteId);
+                                    }}
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
+                                  >
+                                    {children}
+                                  </button>
+                                );
+                              }
+                              // Handle broken links (spans with broken-link class)
+                              if (props.className === 'broken-link') {
+                                return (
+                                  <span className="text-red-500 dark:text-red-400 cursor-help" title="This link doesn't point to an existing note">
+                                    {children}
+                                  </span>
+                                );
+                              }
+                              // Regular external links
+                              return <a {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
                             },
                           }}
                         >

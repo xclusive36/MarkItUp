@@ -1,7 +1,7 @@
 import { ParsedNote, ParsedLink, FrontMatter, Block } from './types';
 
 export class MarkdownParser {
-  private static readonly WIKILINK_REGEX = /\[\[([^\]|]+)(\|([^\]]+))?\]\]/g;
+  private static readonly WIKILINK_REGEX = /\[\[([^\]]+?)(?:\|([^\]]+?))?\]\]/g;
   private static readonly TAG_REGEX = /#([a-zA-Z0-9_/-]+)/g;
   private static readonly BLOCK_ID_REGEX = /\^([a-zA-Z0-9_-]+)$/gm;
   private static readonly FRONTMATTER_REGEX = /^---\n(.*?)\n---\n/s;
@@ -89,7 +89,7 @@ export class MarkdownParser {
       links.push({
         type: 'wikilink',
         target: match[1].trim(),
-        displayText: match[3] || match[1].trim(),
+        displayText: match[2] || match[1].trim(),
         start: match.index,
         end: match.index + match[0].length
       });
@@ -243,14 +243,23 @@ export class MarkdownParser {
   }
 
   static replaceWikilinks(content: string, linkResolver: (target: string) => string | null): string {
-    return content.replace(this.WIKILINK_REGEX, (match, target, pipe, displayText) => {
+    console.log('replaceWikilinks called with content containing wikilinks:', content.includes('[['));
+    const result = content.replace(this.WIKILINK_REGEX, (match, target, displayText) => {
+      console.log('Wikilink match found:', { match, target, displayText });
       const resolvedPath = linkResolver(target.trim());
       if (resolvedPath) {
         const text = displayText || target.trim();
-        return `[${text}](${resolvedPath})`;
+        const replacement = `[${text}](${resolvedPath})`;
+        console.log('Resolved wikilink:', replacement);
+        return replacement;
       }
-      // If link can't be resolved, leave as wikilink but mark as broken
-      return `<span class="broken-link">${match}</span>`;
+      // If link can't be resolved, create a special broken link markdown
+      const text = displayText || target.trim();
+      const brokenLink = `[${text}](#broken:${target.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')})`;
+      console.log('Broken wikilink:', brokenLink);
+      return brokenLink;
     });
+    console.log('replaceWikilinks result changed:', content !== result);
+    return result;
   }
 }
