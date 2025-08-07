@@ -55,6 +55,22 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
     };
   };
 
+  // Helper function to parse color with opacity (e.g., "blue!20")
+  const parseColorWithOpacity = (colorStr: string): { color: string; opacity: number } => {
+    if (colorStr.includes('!')) {
+      const [colorName, opacityStr] = colorStr.split('!');
+      const opacity = parseFloat(opacityStr) / 100; // Convert percentage to decimal
+      return {
+        color: getColor(colorName.trim()),
+        opacity: opacity
+      };
+    }
+    return {
+      color: getColor(colorStr),
+      opacity: 1
+    };
+  };
+
   // Helper function to parse TikZ style options
   const parseStyle = (styleStr?: string): StyleOptions => {
     if (!styleStr) return {};
@@ -66,16 +82,25 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
       if (option.includes('=')) {
         const [key, value] = option.split('=').map(s => s.trim());
         switch (key) {
-          case 'color':
-            style.stroke = getColor(value);
-            style.fill = getColor(value);
+          case 'color': {
+            const { color, opacity } = parseColorWithOpacity(value);
+            style.stroke = color;
+            style.fill = color;
+            if (opacity < 1) style.opacity = opacity;
             break;
-          case 'fill':
-            style.fill = getColor(value);
+          }
+          case 'fill': {
+            const { color, opacity } = parseColorWithOpacity(value);
+            style.fill = color;
+            if (opacity < 1 && !style.opacity) style.opacity = opacity;
             break;
-          case 'draw':
-            style.stroke = getColor(value);
+          }
+          case 'draw': {
+            const { color, opacity } = parseColorWithOpacity(value);
+            style.stroke = color;
+            if (opacity < 1 && !style.opacity) style.opacity = opacity;
             break;
+          }
           case 'line width':
             style.strokeWidth = parseFloat(value);
             break;
@@ -90,11 +115,12 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
             break;
         }
       } else {
-        // Handle simple color names directly
-        if (colorMap[option]) {
-          const themeColor = getColor(option);
-          style.stroke = themeColor;
-          style.fill = themeColor;
+        // Handle simple color names directly (including with opacity)
+        if (option.includes('!') || colorMap[option]) {
+          const { color, opacity } = parseColorWithOpacity(option);
+          style.stroke = color;
+          style.fill = color;
+          if (opacity < 1) style.opacity = opacity;
         } else {
           // Handle simple options
           switch (option) {

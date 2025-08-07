@@ -166,7 +166,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   }, []);
 
   // Handle search
-  const handleSearch = useCallback(async (query: string, options?: any): Promise<SearchResult[]> => {
+  type SearchOptions = {
+    limit?: number;
+    includeContent?: boolean;
+    tags?: string[];
+    folders?: string[];
+  };
+
+  const handleSearch = useCallback(async (query: string, options?: SearchOptions): Promise<SearchResult[]> => {
     try {
       const params = new URLSearchParams({
         q: query,
@@ -612,6 +619,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                                 case 'tikz':
                                   return <TikZRenderer content={content} />;
                                 case 'latex':
+                                  // For simple math expressions, render as KaTeX display math
+                                  const isSimpleMath = !content.includes('\\') && !content.includes('\begin') && content.trim().length < 200;
+                                  if (isSimpleMath) {
+                                    return (
+                                      <div className="my-4 text-center">
+                                        <div className="katex-display">{`$$${content.trim()}$$`}</div>
+                                      </div>
+                                    );
+                                  }
                                   return <LaTeXRenderer content={content} displayMode={true} />;
                                 default:
                                   return (
@@ -663,6 +679,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                                   case 'tikz':
                                     return <TikZRenderer content={content} />;
                                   case 'latex':
+                                    // For simple math expressions, render as KaTeX display math
+                                    const isSimpleMath = !content.includes('\\') && !content.includes('\begin') && content.trim().length < 200;
+                                    if (isSimpleMath) {
+                                      return (
+                                        <div className="my-4 text-center">
+                                          <div className="katex-display">{`$$${content.trim()}$$`}</div>
+                                        </div>
+                                      );
+                                    }
                                     return <LaTeXRenderer content={content} displayMode={true} />;
                                   default:
                                     return (
