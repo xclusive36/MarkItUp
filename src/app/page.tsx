@@ -19,6 +19,7 @@ import { CollaborativeEditor } from "@/components/CollaborativeEditor";
 import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import AIChat from "@/components/AIChat";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
 import { useCollaboration } from "@/contexts/CollaborationContext";
 
@@ -44,6 +45,7 @@ import {
   Settings,
   User,
   Activity,
+  Brain,
 } from "lucide-react";
 
 // Styles
@@ -59,6 +61,9 @@ export default function Home() {
   // Collaboration UI state
   const [showCollabSettings, setShowCollabSettings] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
+
+  // AI Chat state
+  const [showAIChat, setShowAIChat] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -160,6 +165,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         analytics.trackEvent('session_started', {
           timestamp: new Date().toISOString()
         });
+
+        // Initialize AI service with PKM system
+        const { initializeAIService } = await import('@/lib/ai/ai-service');
+        initializeAIService(pkm);
 
         // Load initial data directly
         await refreshData();
@@ -810,6 +819,38 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   title="Collaboration Settings"
                 >
                   <Settings className="w-4 h-4" />
+                </button>
+
+                {/* AI Chat Button */}
+                <button
+                  onClick={() => {
+                    setShowAIChat(true);
+                    analytics.trackEvent('ai_chat', {
+                      action: 'open_chat',
+                      noteContext: !!activeNote?.id
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showAIChat 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showAIChat) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showAIChat) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="AI Assistant"
+                >
+                  <Brain className="w-4 h-4" />
                 </button>
 
                 <ThemeToggle />
@@ -1473,6 +1514,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       {showUserProfile && (
         <UserProfile onClose={() => setShowUserProfile(false)} />
       )}
+
+      {/* AI Chat Panel */}
+      <AIChat
+        isOpen={showAIChat}
+        onClose={() => setShowAIChat(false)}
+        currentNoteId={activeNote?.id}
+      />
       </div>
     </>
   );

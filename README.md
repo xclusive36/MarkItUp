@@ -15,6 +15,15 @@
 * **Real-time Analytics** - Track notes, links, connections, and knowledge growth
 * **Frontmatter Support** - YAML metadata for advanced note properties
 
+### 🤖 AI-Powered Intelligence
+
+* **Context-Aware AI Chat** - AI assistant that understands your knowledge graph and note connections
+* **Smart Writing Assistant** - Get help with writing, editing, and content improvement
+* **Intelligent Note Analysis** - Automatic tag suggestions, summaries, and content insights
+* **Knowledge Discovery** - AI-powered suggestions for connecting ideas and finding related content
+* **Multi-Provider Support** - OpenAI GPT models with plans for local AI integration
+* **Privacy-First Design** - Optional AI features with full control over data sharing
+
 ### 📝 Advanced Markdown Editing
 
 * **Multi-mode Editor** - Edit, preview, or split-view modes
@@ -112,6 +121,22 @@ npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000)
+
+### AI Assistant Setup (Optional)
+
+To enable AI features:
+
+1. **Get an OpenAI API Key**
+   * Visit [OpenAI API](https://platform.openai.com/api-keys)
+   * Create an account and generate an API key
+
+2. **Configure in MarkItUp**
+   * Click the Brain icon (🧠) in the header
+   * Click Settings in the AI chat panel
+   * Enter your API key and choose a model
+   * Start chatting with your AI assistant!
+
+For detailed setup instructions, see [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md)
 
 ## 🧠 Using the PKM Features
 

@@ -31,7 +31,11 @@ export type AnalyticsEventType =
   | 'mode_switched'
   | 'theme_changed'
   | 'collaboration_joined'
-  | 'collaboration_left';
+  | 'collaboration_left'
+  | 'ai_chat'
+  | 'ai_error'
+  | 'ai_analysis'
+  | 'ai_settings_changed';
 
 export interface AnalyticsMetrics {
   // Writing & Content Metrics
