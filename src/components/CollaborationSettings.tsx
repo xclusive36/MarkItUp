@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useSimpleTheme } from '../contexts/SimpleThemeContext';
 import { CollaborativeSettings } from '../lib/types';
 
 interface CollaborationSettingsProps {
@@ -12,6 +13,7 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
   settings,
   onSettingsChange,
 }) => {
+  const { theme } = useSimpleTheme();
   const [localSettings, setLocalSettings] = useState<CollaborativeSettings>(settings);
 
   const handleChange = (key: keyof CollaborativeSettings, value: any) => {
@@ -24,12 +26,20 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div 
+      className="space-y-6 p-6 rounded-lg shadow-lg"
+      style={{ backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff" }}>
+      <div 
+        className="border-b pb-4"
+        style={{ borderColor: theme === "dark" ? "#374151" : "#e5e7eb" }}>
+        <h3 
+          className="text-lg font-semibold"
+          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
           Collaboration Settings
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p 
+          className="text-sm mt-1"
+          style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
           Configure how collaborative editing works for your documents.
         </p>
       </div>
@@ -37,10 +47,14 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
       {/* Enable Collaboration */}
       <div className="flex items-center justify-between">
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-white">
+          <label 
+            className="text-sm font-medium"
+            style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
             Enable Collaboration
           </label>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p 
+            className="text-sm"
+            style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
             Allow real-time collaborative editing with other users
           </p>
         </div>
@@ -51,13 +65,21 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
             onChange={(e) => handleChange('enableCollaboration', e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          <div 
+            className="w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+            style={{
+              backgroundColor: localSettings.enableCollaboration ? "#3b82f6" : (theme === "dark" ? "#374151" : "#e5e7eb"),
+              borderColor: theme === "dark" ? "#4b5563" : "#d1d5db"
+            }}>
+          </div>
         </label>
       </div>
 
       {/* Auto Save Interval */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+        <label 
+          className="block text-sm font-medium mb-2"
+          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
           Auto Save Interval (seconds)
         </label>
         <input
@@ -66,28 +88,44 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
           max="300"
           value={localSettings.autoSaveInterval / 1000}
           onChange={(e) => handleChange('autoSaveInterval', parseInt(e.target.value) * 1000)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          style={{
+            backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+            borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+            color: theme === "dark" ? "#f9fafb" : "#111827"
+          }}
         />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p 
+          className="text-sm mt-1"
+          style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
           How often to automatically save changes (5-300 seconds)
         </p>
       </div>
 
       {/* Conflict Resolution Strategy */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+        <label 
+          className="block text-sm font-medium mb-2"
+          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
           Conflict Resolution Strategy
         </label>
         <select
           value={localSettings.conflictResolutionStrategy}
           onChange={(e) => handleChange('conflictResolutionStrategy', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          style={{
+            backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+            borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+            color: theme === "dark" ? "#f9fafb" : "#111827"
+          }}
         >
           <option value="operational-transform">Operational Transform (Recommended)</option>
           <option value="last-write-wins">Last Write Wins</option>
           <option value="merge">Merge Conflicts</option>
         </select>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p 
+          className="text-sm mt-1"
+          style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
           How to handle conflicting edits from multiple users
         </p>
       </div>
@@ -95,10 +133,14 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
       {/* Show Other Cursors */}
       <div className="flex items-center justify-between">
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-white">
+          <label 
+            className="text-sm font-medium"
+            style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
             Show Other Users' Cursors
           </label>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p 
+            className="text-sm"
+            style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
             Display cursor positions of other collaborators
           </p>
         </div>
@@ -109,17 +151,27 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
             onChange={(e) => handleChange('showOtherCursors', e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          <div 
+            className="w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+            style={{
+              backgroundColor: localSettings.showOtherCursors ? "#3b82f6" : (theme === "dark" ? "#374151" : "#e5e7eb"),
+              borderColor: theme === "dark" ? "#4b5563" : "#d1d5db"
+            }}>
+          </div>
         </label>
       </div>
 
       {/* Show Other Selections */}
       <div className="flex items-center justify-between">
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-white">
+          <label 
+            className="text-sm font-medium"
+            style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
             Show Other Users' Selections
           </label>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p 
+            className="text-sm"
+            style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
             Highlight text selected by other collaborators
           </p>
         </div>
@@ -130,13 +182,21 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
             onChange={(e) => handleChange('showOtherSelections', e.target.checked)}
             className="sr-only peer"
           />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+          <div 
+            className="w-11 h-6 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+            style={{
+              backgroundColor: localSettings.showOtherSelections ? "#3b82f6" : (theme === "dark" ? "#374151" : "#e5e7eb"),
+              borderColor: theme === "dark" ? "#4b5563" : "#d1d5db"
+            }}>
+          </div>
         </label>
       </div>
 
       {/* Max Participants */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+        <label 
+          className="block text-sm font-medium mb-2"
+          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
           Maximum Participants
         </label>
         <input
@@ -145,16 +205,25 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
           max="50"
           value={localSettings.maxParticipants}
           onChange={(e) => handleChange('maxParticipants', parseInt(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          style={{
+            backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+            borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+            color: theme === "dark" ? "#f9fafb" : "#111827"
+          }}
         />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p 
+          className="text-sm mt-1"
+          style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
           Maximum number of users who can edit simultaneously (1-50)
         </p>
       </div>
 
       {/* Session Timeout */}
       <div>
-        <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
+        <label 
+          className="block text-sm font-medium mb-2"
+          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
           Session Timeout (minutes)
         </label>
         <input
@@ -163,16 +232,28 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
           max="1440"
           value={localSettings.sessionTimeout / (1000 * 60)}
           onChange={(e) => handleChange('sessionTimeout', parseInt(e.target.value) * 1000 * 60)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          style={{
+            backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+            borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+            color: theme === "dark" ? "#f9fafb" : "#111827"
+          }}
         />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p 
+          className="text-sm mt-1"
+          style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
           How long before inactive users are removed from sessions (1-1440 minutes)
         </p>
       </div>
 
       {/* Status Information */}
       {localSettings.enableCollaboration && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div 
+          className="border rounded-lg p-4"
+          style={{
+            backgroundColor: theme === "dark" ? "rgba(59, 130, 246, 0.1)" : "#eff6ff",
+            borderColor: theme === "dark" ? "#1e40af" : "#bfdbfe"
+          }}>
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -180,10 +261,14 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <h4 
+                className="text-sm font-medium"
+                style={{ color: theme === "dark" ? "#93c5fd" : "#1e40af" }}>
                 Collaboration Enabled
               </h4>
-              <div className="mt-2 text-sm text-blue-700 dark:text-blue-300">
+              <div 
+                className="mt-2 text-sm"
+                style={{ color: theme === "dark" ? "#bfdbfe" : "#1d4ed8" }}>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Real-time editing with conflict resolution</li>
                   <li>Automatic synchronization across all participants</li>
@@ -198,7 +283,12 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
 
       {/* Warning for disabling collaboration */}
       {!localSettings.enableCollaboration && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+        <div 
+          className="border rounded-lg p-4"
+          style={{
+            backgroundColor: theme === "dark" ? "rgba(251, 191, 36, 0.1)" : "#fffbeb",
+            borderColor: theme === "dark" ? "#d97706" : "#fde68a"
+          }}>
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -206,10 +296,14 @@ export const CollaborationSettings: React.FC<CollaborationSettingsProps> = ({
               </svg>
             </div>
             <div className="ml-3">
-              <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+              <h4 
+                className="text-sm font-medium"
+                style={{ color: theme === "dark" ? "#fbbf24" : "#d97706" }}>
                 Collaboration Disabled
               </h4>
-              <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+              <p 
+                className="mt-1 text-sm"
+                style={{ color: theme === "dark" ? "#fde68a" : "#b45309" }}>
                 Documents will be edited in single-user mode. Enable collaboration to work with others in real-time.
               </p>
             </div>

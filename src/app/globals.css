@@ -24,3 +24,24 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Override manual-theme.css for editor textareas to match card backgrounds */
+.editor-textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: transparent !important;
+}
+
+html.dark .editor-textarea {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+  border-color: transparent !important;
+}
+
+html.dark .editor-textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+html:not(.dark) .editor-textarea::placeholder {
+  color: #6b7280 !important;
+}

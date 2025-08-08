@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCollaboration } from '../contexts/CollaborationContext';
+import { useSimpleTheme } from '../contexts/SimpleThemeContext';
 import { Participant } from '../lib/types';
 
 interface UserProfileProps {
@@ -10,6 +11,7 @@ interface UserProfileProps {
 
 export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const { currentUser, setCurrentUser, generateUserColor } = useCollaboration();
+  const { theme } = useSimpleTheme();
   const [name, setName] = useState(currentUser?.name || '');
   const [email, setEmail] = useState(currentUser?.email || '');
   const [color, setColor] = useState(currentUser?.color || '#3B82F6');
@@ -43,14 +45,27 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div 
+        className="rounded-lg shadow-xl max-w-md w-full mx-4"
+        style={{ backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff" }}>
+        <div 
+          className="flex items-center justify-between p-6 border-b"
+          style={{ borderColor: theme === "dark" ? "#374151" : "#e5e7eb" }}>
+          <h2 
+            className="text-lg font-semibold"
+            style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
             User Profile
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="transition-colors"
+            style={{ color: theme === "dark" ? "#9ca3af" : "#9ca3af" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#9ca3af";
+            }}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,7 +76,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
         <div className="p-6 space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Display Name *
             </label>
             <input
@@ -69,13 +86,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+                borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+                color: theme === "dark" ? "#f9fafb" : "#111827"
+              }}
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Email (Optional)
             </label>
             <input
@@ -83,13 +107,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+                borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+                color: theme === "dark" ? "#f9fafb" : "#111827"
+              }}
             />
           </div>
 
           {/* Avatar URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Avatar URL (Optional)
             </label>
             <input
@@ -97,29 +128,50 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
               value={avatar}
               onChange={(e) => setAvatar(e.target.value)}
               placeholder="https://example.com/avatar.jpg"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
+                borderColor: theme === "dark" ? "#4b5563" : "#d1d5db",
+                color: theme === "dark" ? "#f9fafb" : "#111827"
+              }}
             />
           </div>
 
           {/* Color Picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Cursor Color
             </label>
             <div className="flex items-center space-x-3">
               <div
-                className="w-10 h-10 rounded-full border-2 border-gray-300 dark:border-gray-600"
-                style={{ backgroundColor: color }}
+                className="w-10 h-10 rounded-full border-2"
+                style={{ 
+                  backgroundColor: color,
+                  borderColor: theme === "dark" ? "#4b5563" : "#d1d5db"
+                }}
               />
               <input
                 type="color"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
-                className="w-16 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                className="w-16 h-10 border rounded cursor-pointer"
+                style={{ borderColor: theme === "dark" ? "#4b5563" : "#d1d5db" }}
               />
               <button
                 onClick={handleRandomColor}
-                className="px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="px-3 py-2 text-sm rounded-lg transition-colors"
+                style={{
+                  backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
+                  color: theme === "dark" ? "#d1d5db" : "#374151"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === "dark" ? "#4b5563" : "#e5e7eb";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                }}
               >
                 Random
               </button>
@@ -128,7 +180,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
           {/* Predefined Colors */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Quick Colors
             </label>
             <div className="flex flex-wrap gap-2">
@@ -138,10 +192,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                   onClick={() => setColor(presetColor)}
                   className={`w-8 h-8 rounded-full border-2 transition-all ${
                     color === presetColor 
-                      ? 'border-gray-800 dark:border-white scale-110' 
-                      : 'border-gray-300 dark:border-gray-600 hover:scale-105'
+                      ? 'scale-110' 
+                      : 'hover:scale-105'
                   }`}
-                  style={{ backgroundColor: presetColor }}
+                  style={{ 
+                    backgroundColor: presetColor,
+                    borderColor: color === presetColor 
+                      ? (theme === "dark" ? "#f9fafb" : "#111827")
+                      : (theme === "dark" ? "#4b5563" : "#d1d5db")
+                  }}
                   title={presetColor}
                 />
               ))}
@@ -149,8 +208,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           </div>
 
           {/* Preview */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <div 
+            className="rounded-lg p-4"
+            style={{ backgroundColor: theme === "dark" ? "#374151" : "#f9fafb" }}>
+            <label 
+              className="block text-sm font-medium mb-2"
+              style={{ color: theme === "dark" ? "#d1d5db" : "#374151" }}>
               Preview
             </label>
             <div className="flex items-center space-x-3">
@@ -175,11 +238,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 {name.charAt(0).toUpperCase() || '?'}
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                <div 
+                  className="text-sm font-medium"
+                  style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                   {name || 'Your Name'}
                 </div>
                 {email && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div 
+                    className="text-xs"
+                    style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
                     {email}
                   </div>
                 )}
@@ -188,10 +255,22 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+        <div 
+          className="flex items-center justify-end space-x-3 p-6 border-t"
+          style={{ borderColor: theme === "dark" ? "#374151" : "#e5e7eb" }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
+              color: theme === "dark" ? "#d1d5db" : "#374151"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme === "dark" ? "#4b5563" : "#e5e7eb";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+            }}
           >
             Cancel
           </button>

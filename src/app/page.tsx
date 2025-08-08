@@ -547,7 +547,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                 MarkItUp PKM
               </h1>
-              <div className="flex flex-wrap text-xs sm:text-sm text-gray-500 dark:text-gray-400 space-x-3 sm:space-x-4">
+              <div 
+                className="flex flex-wrap text-xs sm:text-sm space-x-3 sm:space-x-4"
+                style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
                 <span className="flex items-center gap-1">
                   <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                   {graphStats.totalNotes} notes
@@ -573,11 +575,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     setCurrentView("editor");
                     analytics.trackEvent('mode_switched', { view: 'editor' });
                   }}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                    currentView === "editor"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                  }`}>
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  style={currentView === "editor" ? {
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                    color: theme === "dark" ? "#f3f4f6" : "#111827"
+                  } : {
+                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentView !== "editor") {
+                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentView !== "editor") {
+                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                    }
+                  }}>
                   <Edit3 className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Edit</span>
                 </button>
@@ -587,11 +601,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     analytics.trackEvent('mode_switched', { view: 'graph' });
                     analytics.trackEvent('graph_viewed', {});
                   }}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                    currentView === "graph"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                  }`}>
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  style={currentView === "graph" ? {
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                    color: theme === "dark" ? "#f3f4f6" : "#111827"
+                  } : {
+                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentView !== "graph") {
+                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentView !== "graph") {
+                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                    }
+                  }}>
                   <Network className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Graph</span>
                 </button>
@@ -600,11 +626,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     setCurrentView("search");
                     analytics.trackEvent('mode_switched', { view: 'search' });
                   }}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                    currentView === "search"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                  }`}>
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  style={currentView === "search" ? {
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                    color: theme === "dark" ? "#f3f4f6" : "#111827"
+                  } : {
+                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentView !== "search") {
+                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentView !== "search") {
+                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                    }
+                  }}>
                   <Search className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Search</span>
                 </button>
@@ -613,11 +651,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     setCurrentView("analytics");
                     analytics.trackEvent('mode_switched', { view: 'analytics' });
                   }}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                    currentView === "analytics"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                  }`}>
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  style={currentView === "analytics" ? {
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                    color: theme === "dark" ? "#f3f4f6" : "#111827"
+                  } : {
+                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentView !== "analytics") {
+                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentView !== "analytics") {
+                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                    }
+                  }}>
                   <Activity className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Analytics</span>
                 </button>
@@ -632,11 +682,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("edit");
                       analytics.trackEvent('mode_switched', { mode: 'edit' });
                     }}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                      viewMode === "edit"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                    }`}>
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    style={viewMode === "edit" ? {
+                      backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                      color: theme === "dark" ? "#f3f4f6" : "#111827"
+                    } : {
+                      color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (viewMode !== "edit") {
+                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (viewMode !== "edit") {
+                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                      }
+                    }}>
                     Edit
                   </button>
                   <button
@@ -644,11 +706,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("preview");
                       analytics.trackEvent('mode_switched', { mode: 'preview' });
                     }}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                      viewMode === "preview"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                    }`}>
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    style={viewMode === "preview" ? {
+                      backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                      color: theme === "dark" ? "#f3f4f6" : "#111827"
+                    } : {
+                      color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (viewMode !== "preview") {
+                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (viewMode !== "preview") {
+                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                      }
+                    }}>
                     Preview
                   </button>
                   <button
@@ -656,11 +730,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("split");
                       analytics.trackEvent('mode_switched', { mode: 'split' });
                     }}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
-                      viewMode === "split"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-                    }`}>
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    style={viewMode === "split" ? {
+                      backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                      color: theme === "dark" ? "#f3f4f6" : "#111827"
+                    } : {
+                      color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (viewMode !== "split") {
+                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (viewMode !== "split") {
+                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                      }
+                    }}>
                     <span className="hidden sm:inline">Split</span>
                     <span className="sm:hidden">⧄</span>
                   </button>
@@ -671,11 +757,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               <div className="flex items-center space-x-1 w-full sm:w-auto">
                 {/* Collaboration Status */}
                 <div 
-                  className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none ${
-                    settings.enableCollaboration
-                      ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                  }`}>
+                  className="flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none"
+                  style={{
+                    backgroundColor: settings.enableCollaboration
+                      ? theme === "dark" ? "rgba(34, 197, 94, 0.2)" : "#dcfce7"
+                      : theme === "dark" ? "#374151" : "#f3f4f6",
+                    color: settings.enableCollaboration
+                      ? theme === "dark" ? "#86efac" : "#15803d"
+                      : theme === "dark" ? "#9ca3af" : "#6b7280"
+                  }}>
                   <Users className="w-3 h-3" />
                   <span className="text-xs">
                     {settings.enableCollaboration ? 'Collab' : 'Solo'}
@@ -685,7 +775,18 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 {/* User Profile Button */}
                 <button
                   onClick={() => setShowUserProfile(true)}
-                  className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                    e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                   title="User Profile"
                 >
                   <User className="w-4 h-4" />
@@ -694,7 +795,18 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 {/* Collaboration Settings Button */}
                 <button
                   onClick={() => setShowCollabSettings(true)}
-                  className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: theme === "dark" ? "#9ca3af" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                    e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                   title="Collaboration Settings"
                 >
                   <Settings className="w-4 h-4" />
@@ -849,31 +961,53 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
                 borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
               }}>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+              <h3 
+                className="text-sm font-semibold mb-3"
+                style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                 Recent Notes
               </h3>
               <div className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
                 {notes.length === 0 ? (
-                  <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p 
+                    className="text-xs lg:text-sm text-center py-4"
+                    style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
                     No notes yet. Create your first note above!
                   </p>
                 ) : (
                   notes.slice(0, 20).map((note) => (
                     <div
                       key={note.id}
-                      className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border ${
-                        activeNote?.id === note.id
-                          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-100 dark:border-gray-700"
-                      }`}
+                      className="p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border"
+                      style={{
+                        backgroundColor: activeNote?.id === note.id
+                          ? theme === "dark" ? "rgba(59, 130, 246, 0.1)" : "#eff6ff"
+                          : "transparent",
+                        borderColor: activeNote?.id === note.id
+                          ? theme === "dark" ? "#1e40af" : "#bfdbfe"
+                          : theme === "dark" ? "#374151" : "#f3f4f6"
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeNote?.id !== note.id) {
+                          e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f9fafb";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeNote?.id !== note.id) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }
+                      }}
                       onClick={() => handleNoteSelect(note.id)}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs lg:text-sm font-medium text-gray-900 dark:text-white truncate">
+                          <h4 
+                            className="text-xs lg:text-sm font-medium truncate"
+                            style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                             {note.name.replace(".md", "")}
                           </h4>
                           {note.folder && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <p 
+                              className="text-xs flex items-center gap-1"
+                              style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
                               <Folder className="w-3 h-3" />
                               {note.folder}
                             </p>
@@ -883,18 +1017,26 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                               {note.tags.slice(0, 2).map((tag) => (
                                 <span
                                   key={tag}
-                                  className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
+                                  className="text-xs px-1.5 py-0.5 rounded"
+                                  style={{
+                                    backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
+                                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                                  }}>
                                   #{tag}
                                 </span>
                               ))}
                               {note.tags.length > 2 && (
-                                <span className="text-xs text-gray-400">
+                                <span 
+                                  className="text-xs"
+                                  style={{ color: theme === "dark" ? "#9ca3af" : "#9ca3af" }}>
                                   +{note.tags.length - 2}
                                 </span>
                               )}
                             </div>
                           )}
-                          <div className="flex items-center gap-2 lg:gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          <div 
+                            className="flex items-center gap-2 lg:gap-3 mt-2 text-xs"
+                            style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {note.readingTime}m
@@ -907,7 +1049,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                             e.stopPropagation();
                             deleteNote(note.id);
                           }}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                          className="p-1 transition-colors"
+                          style={{ color: theme === "dark" ? "#9ca3af" : "#9ca3af" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = "#dc2626";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#9ca3af";
+                          }}>
                           <X className="w-3 lg:w-4 h-3 lg:h-4" />
                         </button>
                       </div>
@@ -931,7 +1080,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <textarea
                     value={markdown}
                     onChange={(e) => handleMarkdownChange(e.target.value)}
-                    className="w-full h-full p-4 lg:p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
+                    className="w-full h-full p-4 lg:p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg font-mono text-sm editor-textarea"
+                    style={{
+                      backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+                      color: theme === "dark" ? "#f9fafb" : "#111827",
+                      borderColor: "transparent"
+                    }}
                     placeholder="Start writing your markdown here..."
                   />
                 )}
@@ -1069,7 +1223,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       <textarea
                         value={markdown}
                         onChange={(e) => handleMarkdownChange(e.target.value)}
-                        className="w-full h-full p-3 lg:p-6 border-none resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full h-full p-3 lg:p-6 border-none resize-none focus:outline-none font-mono text-sm editor-textarea"
+                        style={{
+                          backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+                          color: theme === "dark" ? "#f9fafb" : "#111827",
+                          borderColor: "transparent"
+                        }}
                         placeholder="Start writing..."
                       />
                     </div>
@@ -1283,14 +1442,21 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       {/* Collaboration Settings Modal */}
       {showCollabSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div 
+            className="rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            style={{ backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff" }}>
+            <div 
+              className="flex items-center justify-between p-6 border-b"
+              style={{ borderColor: theme === "dark" ? "#374151" : "#e5e7eb" }}>
+              <h2 
+                className="text-lg font-semibold"
+                style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                 Collaboration Settings
               </h2>
               <button
                 onClick={() => setShowCollabSettings(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="hover:opacity-70"
+                style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}
               >
                 <X className="w-6 h-6" />
               </button>
