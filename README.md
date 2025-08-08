@@ -24,6 +24,17 @@
 * **LaTeX Math Rendering** - Inline `$math$` and block `$$math$$` equations
 * **TikZ Diagrams** - Create vector graphics and diagrams directly in markdown
 
+### 🤝 Real-time Collaborative Editing
+
+* **Multi-user Editing** - Real-time collaborative editing with conflict resolution
+* **Live Presence** - See other users' cursors and selections in real-time
+* **Operational Transform** - Advanced conflict resolution using YJS (Yama.js) CRDTs
+* **WebSocket Communication** - Low-latency real-time synchronization via Socket.IO
+* **User Management** - Participant profiles with avatars and custom colors
+* **Session Sharing** - Easy document sharing with secure session links
+* **Auto-save & Sync** - Automatic saving and synchronization across all participants
+* **Configurable Settings** - Customizable collaboration preferences and conflict resolution strategies
+
 ### Theme Support
 
 * Light and dark modes with smooth transitions
@@ -368,8 +379,52 @@ api.fs.exists(path)
 
 For detailed plugin development documentation and examples, see the `/src/plugins/example-plugins.ts` file.
 
-## 🧠 Using the PKM Features
-```
+## 🤝 Collaborative Editing
+
+MarkItUp features real-time collaborative editing that allows multiple users to work on the same document simultaneously.
+
+### Key Features
+
+* **Real-time Synchronization** - Changes appear instantly across all connected users
+* **Conflict Resolution** - Advanced operational transform using YJS (Yama.js) CRDTs
+* **User Presence** - See other users' cursors, selections, and activity status
+* **WebSocket Communication** - Low-latency synchronization via Socket.IO
+* **Session Management** - Secure session sharing and participant management
+* **Auto-save** - Automatic saving and synchronization with configurable intervals
+
+### Getting Started with Collaboration
+
+1. **Enable Collaboration**
+   * Open collaboration settings
+   * Toggle "Enable Collaboration" to on
+   * Configure your user profile (name, avatar, color)
+
+2. **Share a Document**
+   * Open any document in collaborative mode
+   * Click the "Share" button to generate a collaboration link
+   * Send the link to other users
+
+3. **Join a Collaborative Session**
+   * Open a shared collaboration link
+   * Set up your user profile if not already configured
+   * Start editing together in real-time
+
+### Collaboration Settings
+
+* **Auto Save Interval** - How often to automatically save (5-300 seconds)
+* **Conflict Resolution** - Choose between operational transform, last-write-wins, or manual merge
+* **User Presence** - Show/hide other users' cursors and selections
+* **Session Limits** - Maximum participants and session timeout settings
+
+### Technical Details
+
+* Built on **YJS** for conflict-free replicated data types (CRDTs)
+* **Socket.IO** WebSocket connections for real-time communication
+* **Operational Transform** for intelligent conflict resolution
+* **Session persistence** with automatic cleanup
+* **Security features** including input validation and rate limiting
+
+For complete collaborative editing documentation, see `docs/COLLABORATIVE_EDITING.md`.
 
 ## 🐳 Deployment
 
@@ -396,7 +451,7 @@ docker run --name markitup -p 3000:3000 -v ./markdown:/app/markdown --restart un
 | **Graph View** | ✅ | ✅ | ❌ |
 | **Advanced Search** | ✅ | ✅ | Basic |
 | **Bidirectional Links** | ✅ | ✅ | ❌ |
-| **Real-time Collaboration** | 🔄 | ❌ (Desktop only) | Varies |
+| **Real-time Collaboration** | ✅ | ❌ (Desktop only) | Varies |
 | **Plugin System** | ✅ | ✅ | Varies |
 | **Privacy** | ✅ (Self-hosted) | ⚠️ (Desktop app) | Varies |
 | **Cross-platform** | ✅ (Web) | ✅ | Varies |

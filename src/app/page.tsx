@@ -15,7 +15,11 @@ import LaTeXRenderer from "@/components/LaTeXRenderer";
 import TikZRenderer from "@/components/TikZRenderer";
 import GraphView from "@/components/GraphView";
 import SearchBox from "@/components/SearchBox";
+import { CollaborativeEditor } from "@/components/CollaborativeEditor";
+import { CollaborationSettings } from "@/components/CollaborationSettings";
+import { UserProfile } from "@/components/UserProfile";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
+import { useCollaboration } from "@/contexts/CollaborationContext";
 
 // PKM imports
 import { getPKMSystem } from "@/lib/pkm";
@@ -34,6 +38,9 @@ import {
   X,
   Link as LinkIcon,
   Clock,
+  Users,
+  Settings,
+  User,
 } from "lucide-react";
 
 // Styles
@@ -44,6 +51,11 @@ import "./manual-theme.css";
 
 export default function Home() {
   const { theme } = useSimpleTheme();
+  const { settings, currentUser, updateSettings } = useCollaboration();
+
+  // Collaboration UI state
+  const [showCollabSettings, setShowCollabSettings] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -493,6 +505,39 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </button>
                 </div>
               )}
+
+              {/* Collaboration Controls */}
+              <div className="flex items-center space-x-2">
+                {/* Collaboration Status */}
+                <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${
+                  settings.enableCollaboration 
+                    ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                }`}>
+                  <Users className="w-4 h-4" />
+                  <span className="text-sm">
+                    {settings.enableCollaboration ? 'Collaborative' : 'Solo'}
+                  </span>
+                </div>
+
+                {/* User Profile Button */}
+                <button
+                  onClick={() => setShowUserProfile(true)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="User Profile"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+
+                {/* Collaboration Settings Button */}
+                <button
+                  onClick={() => setShowCollabSettings(true)}
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="Collaboration Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+              </div>
 
               <ThemeToggle />
             </div>
@@ -1045,6 +1090,34 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           </div>
         </div>
       </div>
+
+      {/* Collaboration Settings Modal */}
+      {showCollabSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Collaboration Settings
+              </h2>
+              <button
+                onClick={() => setShowCollabSettings(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <CollaborationSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showUserProfile && (
+        <UserProfile onClose={() => setShowUserProfile(false)} />
+      )}
     </div>
   );
 }

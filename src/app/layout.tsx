@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SimpleThemeProvider } from "@/contexts/SimpleThemeContext";
+import { CollaborationProvider } from "@/contexts/CollaborationContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SimpleThemeProvider>
-          {children}
+          <CollaborationProvider>
+            {children}
+          </CollaborationProvider>
         </SimpleThemeProvider>
       </body>
     </html>

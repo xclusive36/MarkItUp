@@ -251,3 +251,75 @@ export interface TagEvent {
 }
 
 export type SystemEvent = NoteEvent | LinkEvent | TagEvent;
+
+// Collaborative editing types
+export interface CollaborativeSession {
+  id: string;
+  noteId: string;
+  participants: Participant[];
+  createdAt: string;
+  lastActivity: string;
+}
+
+export interface Participant {
+  id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
+  color: string;
+  cursor?: CursorPosition;
+  selection?: SelectionRange;
+  lastSeen: string;
+  isActive: boolean;
+}
+
+export interface CursorPosition {
+  line: number;
+  column: number;
+  timestamp: number;
+}
+
+export interface SelectionRange {
+  start: CursorPosition;
+  end: CursorPosition;
+  timestamp: number;
+}
+
+export interface CollaborativeOperation {
+  id: string;
+  type: 'insert' | 'delete' | 'retain' | 'format';
+  position: number;
+  content?: string;
+  length?: number;
+  attributes?: Record<string, any>;
+  authorId: string;
+  timestamp: number;
+  vectorClock: Record<string, number>;
+}
+
+export interface ConflictResolution {
+  operationId: string;
+  strategy: 'last-write-wins' | 'operational-transform' | 'merge' | 'manual';
+  resolvedOperation: CollaborativeOperation;
+  conflictingOperations: CollaborativeOperation[];
+  resolvedBy: string;
+  resolvedAt: string;
+}
+
+export interface CollaborativeEvent {
+  type: 'user-joined' | 'user-left' | 'operation' | 'cursor-move' | 'selection-change' | 'save' | 'conflict';
+  sessionId: string;
+  userId: string;
+  data: any;
+  timestamp: number;
+}
+
+export interface CollaborativeSettings {
+  enableCollaboration: boolean;
+  autoSaveInterval: number; // milliseconds
+  conflictResolutionStrategy: 'last-write-wins' | 'operational-transform' | 'merge';
+  showOtherCursors: boolean;
+  showOtherSelections: boolean;
+  maxParticipants: number;
+  sessionTimeout: number; // milliseconds
+}
