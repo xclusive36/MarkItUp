@@ -172,7 +172,7 @@ export const SimpleCollaborativeEditor: React.FC<SimpleCollaborativeEditorProps>
   return (
     <div className="relative h-full">
       {/* Status bar */}
-      <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 border-b text-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 lg:p-3 bg-gray-100 dark:bg-gray-800 border-b text-xs sm:text-sm space-y-1 sm:space-y-0">
         <div className="flex items-center space-x-2">
           <div className={`w-2 h-2 rounded-full ${
             connectionStatus === 'connected' ? 'bg-green-500' : 
@@ -196,7 +196,7 @@ export const SimpleCollaborativeEditor: React.FC<SimpleCollaborativeEditorProps>
         ref={editorRef}
         value={content}
         onChange={handleTextChange}
-        className={`w-full h-full resize-none border-none outline-none bg-transparent p-4 font-mono ${className}`}
+        className={`w-full h-full resize-none border-none outline-none bg-transparent p-3 lg:p-4 font-mono text-sm lg:text-base ${className}`}
         placeholder="Start typing to test collaborative editing..."
         style={{ minHeight: 'calc(100% - 40px)' }}
       />

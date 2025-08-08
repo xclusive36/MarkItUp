@@ -408,77 +408,122 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   }
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900"
-      style={{ backgroundColor: theme === "dark" ? "#111827" : "#f9fafb" }}>
+    <>
+      <style jsx global>{`
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          overflow-x: hidden !important;
+        }
+        
+        * {
+          box-sizing: border-box !important;
+        }
+        
+        .main-container, .header-container {
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+        }
+        
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .main-container, .header-container {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 100% !important;
+          }
+        }
+      `}</style>
+      <div
+        className="min-h-screen bg-gray-50 dark:bg-gray-900"
+        style={{ 
+          backgroundColor: theme === "dark" ? "#111827" : "#f9fafb",
+          margin: 0,
+          padding: 0,
+          width: "100%"
+        }}>
       {/* Header */}
       <header
-        className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700"
+        className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 header-container"
         style={{
           backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
           borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
+          width: "100%",
+          margin: 0
         }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
+        <div 
+          className="header-container"
+          style={{ 
+            width: "100%",
+            margin: 0,
+            paddingLeft: "1rem",
+            paddingRight: "1rem"
+          }}
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 space-y-4 sm:space-y-0">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-3 lg:space-y-0 lg:space-x-4">
               <h1
-                className="text-2xl font-bold text-gray-900 dark:text-white"
+                className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"
                 style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}>
                 MarkItUp PKM
               </h1>
-              <div className="hidden md:flex text-sm text-gray-500 dark:text-gray-400 space-x-4">
+              <div className="flex flex-wrap text-xs sm:text-sm text-gray-500 dark:text-gray-400 space-x-3 sm:space-x-4">
                 <span className="flex items-center gap-1">
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                   {graphStats.totalNotes} notes
                 </span>
                 <span className="flex items-center gap-1">
-                  <LinkIcon className="w-4 h-4" />
+                  <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                   {graphStats.totalLinks} links
                 </span>
                 <span className="flex items-center gap-1">
-                  <Hash className="w-4 h-4" />
+                  <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
                   {tags.length} tags
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-1 w-full sm:w-auto">
               {/* View Switcher */}
-              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 w-full sm:w-auto">
                 <button
                   onClick={() => setCurrentView("editor")}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                     currentView === "editor"
                       ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                   }`}>
-                  <Edit3 className="w-4 h-4" />
+                  <Edit3 className="w-3 h-3" />
+                  <span className="hidden md:inline ml-1 text-xs">Edit</span>
                 </button>
                 <button
                   onClick={() => setCurrentView("graph")}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                     currentView === "graph"
                       ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                   }`}>
-                  <Network className="w-4 h-4" />
+                  <Network className="w-3 h-3" />
+                  <span className="hidden md:inline ml-1 text-xs">Graph</span>
                 </button>
                 <button
                   onClick={() => setCurrentView("search")}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                     currentView === "search"
                       ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                       : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
                   }`}>
-                  <Search className="w-4 h-4" />
+                  <Search className="w-3 h-3" />
+                  <span className="hidden md:inline ml-1 text-xs">Search</span>
                 </button>
               </div>
 
               {currentView === "editor" && (
-                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 w-full sm:w-auto">
                   <button
                     onClick={() => setViewMode("edit")}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                       viewMode === "edit"
                         ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                         : "text-gray-600 dark:text-gray-300"
@@ -487,7 +532,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </button>
                   <button
                     onClick={() => setViewMode("preview")}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                       viewMode === "preview"
                         ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                         : "text-gray-600 dark:text-gray-300"
@@ -496,67 +541,79 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </button>
                   <button
                     onClick={() => setViewMode("split")}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
                       viewMode === "split"
                         ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
                         : "text-gray-600 dark:text-gray-300"
                     }`}>
-                    Split
+                    <span className="hidden sm:inline">Split</span>
+                    <span className="sm:hidden">⧄</span>
                   </button>
                 </div>
               )}
 
               {/* Collaboration Controls */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 w-full sm:w-auto">
                 {/* Collaboration Status */}
-                <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${
+                <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none ${
                   settings.enableCollaboration 
                     ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                 }`}>
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm">
-                    {settings.enableCollaboration ? 'Collaborative' : 'Solo'}
+                  <Users className="w-3 h-3" />
+                  <span className="text-xs">
+                    {settings.enableCollaboration ? 'Collab' : 'Solo'}
                   </span>
                 </div>
 
                 {/* User Profile Button */}
                 <button
                   onClick={() => setShowUserProfile(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                   title="User Profile"
                 >
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 </button>
 
                 {/* Collaboration Settings Button */}
                 <button
                   onClick={() => setShowCollabSettings(true)}
-                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                   title="Collaboration Settings"
                 >
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-4 h-4" />
                 </button>
-              </div>
 
-              <ThemeToggle />
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex gap-6">
+      <div 
+        className="main-container"
+        style={{ 
+          width: "100%",
+          margin: 0,
+          paddingLeft: "1rem",
+          paddingRight: "1rem",
+          paddingTop: "1rem",
+          paddingBottom: "1.5rem"
+        }}
+        data-main-container
+      >
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           {/* Sidebar */}
-          <div className="w-80 flex-shrink-0">
+          <div className="w-full lg:w-80 lg:flex-shrink-0 order-2 lg:order-1">
             <div
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
               style={{
                 backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
-                borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
+                borderColor: theme === "dark" ? "#374151" : "#e5e7eb"
               }}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">
                   New Note
                 </h2>
                 <button
@@ -572,7 +629,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                   placeholder="Note title..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   style={{
                     backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
                     color: theme === "dark" ? "#f9fafb" : "#111827",
@@ -585,7 +642,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   value={folder}
                   onChange={(e) => setFolder(e.target.value)}
                   placeholder="Folder (optional)..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   style={{
                     backgroundColor: theme === "dark" ? "#374151" : "#ffffff",
                     color: theme === "dark" ? "#f9fafb" : "#111827",
@@ -595,14 +652,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 <button
                   onClick={() => saveNote()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                   <Save className="w-4 h-4" />
                   Save Note
                 </button>
 
                 {saveStatus && (
                   <p
-                    className={`text-sm text-center ${
+                    className={`text-xs text-center ${
                       saveStatus.includes("Error")
                         ? "text-red-600"
                         : "text-green-600"
@@ -613,8 +670,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               </div>
             </div>
 
-            {/* Global Search */}
-            <div className="mb-6">
+            {/* Global Search - Only show on larger screens or when in search view */}
+            <div className={`mb-4 lg:mb-6 ${currentView === 'search' ? 'block' : 'hidden lg:block'}`}>
               <SearchBox
                 onSearch={handleSearch}
                 onSelectNote={handleNoteSelect}
@@ -625,7 +682,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
             {/* Quick Stats */}
             <div
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6"
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
               style={{
                 backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
                 borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
@@ -633,9 +690,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 Knowledge Graph
               </h3>
-              <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="grid grid-cols-2 gap-2 lg:gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-lg lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {graphStats.totalNotes}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -643,7 +700,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-lg lg:text-2xl font-bold text-green-600 dark:text-green-400">
                     {graphStats.totalLinks}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -651,7 +708,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  <div className="text-lg lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {graphStats.avgConnections}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -659,7 +716,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  <div className="text-lg lg:text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {graphStats.orphanCount}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -669,7 +726,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               </div>
             </div>
 
-            {/* Notes List */}
+            {/* Notes List - Collapsible on mobile */}
             <div
               className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
               style={{
@@ -679,16 +736,16 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                 Recent Notes
               </h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
                 {notes.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                  <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                     No notes yet. Create your first note above!
                   </p>
                 ) : (
                   notes.slice(0, 20).map((note) => (
                     <div
                       key={note.id}
-                      className={`p-3 rounded-lg cursor-pointer transition-colors border ${
+                      className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border ${
                         activeNote?.id === note.id
                           ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
                           : "hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-100 dark:border-gray-700"
@@ -696,7 +753,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       onClick={() => handleNoteSelect(note.id)}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          <h4 className="text-xs lg:text-sm font-medium text-gray-900 dark:text-white truncate">
                             {note.name.replace(".md", "")}
                           </h4>
                           {note.folder && (
@@ -707,26 +764,26 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                           )}
                           {note.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {note.tags.slice(0, 3).map((tag) => (
+                              {note.tags.slice(0, 2).map((tag) => (
                                 <span
                                   key={tag}
                                   className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded">
                                   #{tag}
                                 </span>
                               ))}
-                              {note.tags.length > 3 && (
+                              {note.tags.length > 2 && (
                                 <span className="text-xs text-gray-400">
-                                  +{note.tags.length - 3}
+                                  +{note.tags.length - 2}
                                 </span>
                               )}
                             </div>
                           )}
-                          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-2 lg:gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {note.readingTime}m read
+                              {note.readingTime}m
                             </span>
-                            <span>{note.wordCount} words</span>
+                            <span className="hidden lg:inline">{note.wordCount} words</span>
                           </div>
                         </div>
                         <button
@@ -735,7 +792,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                             deleteNote(note.id);
                           }}
                           className="p-1 text-gray-400 hover:text-red-600 transition-colors">
-                          <X className="w-4 h-4" />
+                          <X className="w-3 lg:w-4 h-3 lg:h-4" />
                         </button>
                       </div>
                     </div>
@@ -746,10 +803,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 order-1 lg:order-2">
             {currentView === "editor" && (
               <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-200px)]"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]"
                 style={{
                   backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
                   borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
@@ -758,14 +815,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <textarea
                     value={markdown}
                     onChange={(e) => setMarkdown(e.target.value)}
-                    className="w-full h-full p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
+                    className="w-full h-full p-4 lg:p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Start writing your markdown here..."
                   />
                 )}
 
                 {viewMode === "preview" && (
-                  <div className="h-full p-6 overflow-y-auto">
-                    <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <div className="h-full p-4 lg:p-6 overflow-y-auto">
+                    <div className="prose prose-sm lg:prose prose-slate dark:prose-invert max-w-none">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm, remarkMath]}
                         rehypePlugins={[
@@ -891,17 +948,17 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 )}
 
                 {viewMode === "split" && (
-                  <div className="h-full flex">
-                    <div className="w-1/2 border-r border-gray-200 dark:border-gray-700">
+                  <div className="h-full flex flex-col lg:flex-row">
+                    <div className="w-full lg:w-1/2 h-1/2 lg:h-full border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
                       <textarea
                         value={markdown}
                         onChange={(e) => setMarkdown(e.target.value)}
-                        className="w-full h-full p-6 border-none resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full h-full p-3 lg:p-6 border-none resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Start writing..."
                       />
                     </div>
-                    <div className="w-1/2 p-6 overflow-y-auto">
-                      <div className="prose prose-slate dark:prose-invert max-w-none">
+                    <div className="w-full lg:w-1/2 h-1/2 lg:h-full p-3 lg:p-6 overflow-y-auto">
+                      <div className="prose prose-sm lg:prose prose-slate dark:prose-invert max-w-none">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm, remarkMath]}
                           rehypePlugins={[
@@ -1009,7 +1066,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
             {currentView === "graph" && (
               <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-200px)]"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]"
                 style={{
                   backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
                   borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
@@ -1025,13 +1082,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
             {currentView === "search" && (
               <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 lg:p-6"
                 style={{
                   backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
                   borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
                 }}>
                 <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">
                     Advanced Search
                   </h2>
                   <SearchBox
@@ -1042,10 +1099,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                      <Hash className="w-5 h-5" />
+                    <h3 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Hash className="w-4 lg:w-5 h-4 lg:h-5" />
                       Popular Tags
                     </h3>
                     <div className="space-y-2">
@@ -1065,8 +1122,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                      <Folder className="w-5 h-5" />
+                    <h3 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Folder className="w-4 lg:w-5 h-4 lg:h-5" />
                       Folders
                     </h3>
                     <div className="space-y-2">
@@ -1118,6 +1175,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       {showUserProfile && (
         <UserProfile onClose={() => setShowUserProfile(false)} />
       )}
-    </div>
+      </div>
+    </>
   );
 }
