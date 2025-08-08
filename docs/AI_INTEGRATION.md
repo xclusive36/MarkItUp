@@ -186,3 +186,46 @@ AI: "Considering your existing notes on environmental science, you might want to
 ---
 
 **Need more help?** Check out the main MarkItUp documentation or open an issue on GitHub.
+
+## 🚀 Phase 2: Advanced AI Features
+
+### Knowledge-Aware AI Features ✅ COMPLETED
+
+#### Advanced Content Analysis
+- **Content Analyzer** (`/src/lib/ai/analyzers.ts`)
+  - Comprehensive content analysis with readability scoring
+  - Knowledge gap identification and suggestions
+  - Content improvement recommendations
+  - Semantic analysis and categorization
+
+#### Writing Assistant
+- **Writing Assistant Component** (`/src/components/WritingAssistant.tsx`)
+  - Real-time content analysis and suggestions
+  - Writing style improvement recommendations
+  - Content expansion and restructuring suggestions
+  - Tone and clarity optimization
+  - **Access**: PenTool icon in header
+
+#### Knowledge Discovery
+- **Knowledge Discovery Component** (`/src/components/KnowledgeDiscovery.tsx`)
+  - Intelligent knowledge gap analysis
+  - Missing topic identification
+  - Orphaned note detection and connection suggestions
+  - Automated note creation with AI-generated content
+  - **Access**: Compass icon in header
+
+#### API Enhancements
+- **Analysis Endpoints**:
+  - `/api/ai/analyze` - General content analysis
+  - `/api/ai/analyze-knowledge` - Knowledge base analysis
+  - `/api/ai/suggest-note` - AI-powered note suggestions
+
+#### Features Implemented:
+✅ Advanced content analysis with multiple metrics
+✅ Writing improvement suggestions with real-time feedback
+✅ Knowledge gap identification and visualization
+✅ Intelligent note creation suggestions
+✅ Orphaned note detection and connection recommendations
+✅ Under-explored topic identification
+✅ Content clustering and organization suggestions
+✅ Tabbed interface for different analysis types

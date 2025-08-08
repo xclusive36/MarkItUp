@@ -20,6 +20,8 @@ import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import AIChat from "@/components/AIChat";
+import WritingAssistant from "@/components/WritingAssistant";
+import KnowledgeDiscovery from "@/components/KnowledgeDiscovery";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
 import { useCollaboration } from "@/contexts/CollaborationContext";
 
@@ -46,6 +48,8 @@ import {
   User,
   Activity,
   Brain,
+  Compass,
+  PenTool,
 } from "lucide-react";
 
 // Styles
@@ -64,6 +68,12 @@ export default function Home() {
 
   // AI Chat state
   const [showAIChat, setShowAIChat] = useState(false);
+
+  // Writing Assistant state
+  const [showWritingAssistant, setShowWritingAssistant] = useState(false);
+
+  // Knowledge Discovery state
+  const [showKnowledgeDiscovery, setShowKnowledgeDiscovery] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -853,6 +863,134 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <Brain className="w-4 h-4" />
                 </button>
 
+                {/* Writing Assistant Button */}
+                <button
+                  onClick={() => {
+                    setShowWritingAssistant(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_writing_assistant',
+                      noteContext: !!activeNote?.id
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showWritingAssistant 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showWritingAssistant) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showWritingAssistant) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Writing Assistant"
+                >
+                  <PenTool className="w-4 h-4" />
+                </button>
+
+                {/* Knowledge Discovery Button */}
+                <button
+                  onClick={() => {
+                    setShowKnowledgeDiscovery(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_knowledge_discovery',
+                      notesCount: notes.length
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showKnowledgeDiscovery 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showKnowledgeDiscovery) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showKnowledgeDiscovery) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Knowledge Discovery"
+                >
+                  <Compass className="w-4 h-4" />
+                </button>
+
+                {/* Writing Assistant Button */}
+                <button
+                  onClick={() => {
+                    setShowWritingAssistant(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_writing_assistant',
+                      noteContext: !!activeNote?.id
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showWritingAssistant 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showWritingAssistant) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showWritingAssistant) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Writing Assistant"
+                >
+                  <PenTool className="w-4 h-4" />
+                </button>
+
+                {/* Knowledge Discovery Button */}
+                <button
+                  onClick={() => {
+                    setShowKnowledgeDiscovery(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_knowledge_discovery',
+                      notesCount: notes.length
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showKnowledgeDiscovery 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showKnowledgeDiscovery) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showKnowledgeDiscovery) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Knowledge Discovery"
+                >
+                  <Compass className="w-4 h-4" />
+                </button>
+
                 <ThemeToggle />
               </div>
             </div>
@@ -1520,6 +1658,48 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         isOpen={showAIChat}
         onClose={() => setShowAIChat(false)}
         currentNoteId={activeNote?.id}
+      />
+
+      {/* Writing Assistant Panel */}
+      <WritingAssistant
+        isOpen={showWritingAssistant}
+        onClose={() => setShowWritingAssistant(false)}
+        content={activeNote?.content || markdown}
+        noteId={activeNote?.id}
+        onContentChange={(newContent: string) => {
+          if (activeNote) {
+            const updatedNote = { ...activeNote, content: newContent };
+            setActiveNote(updatedNote);
+            setMarkdown(newContent);
+            const updatedNotes = notes.map(n => 
+              n.id === activeNote.id ? updatedNote : n
+            );
+            setNotes(updatedNotes);
+          } else {
+            setMarkdown(newContent);
+          }
+        }}
+      />
+
+      {/* Knowledge Discovery Panel */}
+      <KnowledgeDiscovery
+        isOpen={showKnowledgeDiscovery}
+        onClose={() => setShowKnowledgeDiscovery(false)}
+        notes={notes}
+        tags={tags}
+        onCreateNote={async (title, content, suggestedTags) => {
+          const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          setFileName(newFileName);
+          setMarkdown(content);
+          // Create and save the note
+          const pkm = getPKMSystem();
+          await pkm.createNote(newFileName, content);
+          setShowKnowledgeDiscovery(false);
+        }}
+        onOpenNote={(noteId) => {
+          handleNoteSelect(noteId);
+          setShowKnowledgeDiscovery(false);
+        }}
       />
       </div>
     </>

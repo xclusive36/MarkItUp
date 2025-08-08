@@ -2193,5 +2193,243 @@
       "noteContext": false
     },
     "sessionId": "session_1754675483882_opxj09kqx"
+  },
+  {
+    "id": "event_1754676806827_rpyx5nopw",
+    "type": "session_ended",
+    "timestamp": "2025-08-08T18:13:26.827Z",
+    "data": {
+      "duration": 1322945
+    },
+    "sessionId": "session_1754675483882_opxj09kqx"
+  },
+  {
+    "id": "event_1754676810792_xxe5mngsz",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:13:30.792Z",
+    "data": {},
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676810944_1xic4s18n",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:13:30.944Z",
+    "data": {
+      "timestamp": "2025-08-08T18:13:30.944Z"
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676846070_s4mzq3d4m",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:14:06.070Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676846630_p1an5596j",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:14:06.630Z",
+    "data": {
+      "analysisType": "knowledge_discovery",
+      "notesAnalyzed": 6,
+      "tagsAnalyzed": 9
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676879248_j889fvpls",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:14:39.248Z",
+    "data": {
+      "action": "open_writing_assistant",
+      "noteContext": false
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676907466_k5gak1msa",
+    "type": "ai_chat",
+    "timestamp": "2025-08-08T18:15:07.466Z",
+    "data": {
+      "action": "open_chat",
+      "noteContext": false
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754676917031_tt8fcbppt",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:15:17.031Z",
+    "data": {
+      "action": "open_writing_assistant",
+      "noteContext": false
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754677022998_81bu76n2j",
+    "type": "ai_chat",
+    "timestamp": "2025-08-08T18:17:02.998Z",
+    "data": {
+      "action": "open_chat",
+      "noteContext": false
+    },
+    "sessionId": "session_1754676810792_oqizz3wf2"
+  },
+  {
+    "id": "event_1754677230168_vc6m9x9c4",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:20:30.168Z",
+    "data": {},
+    "sessionId": "session_1754677230168_gzacemrl4"
+  },
+  {
+    "id": "event_1754677235435_aw81t8q1x",
+    "type": "session_ended",
+    "timestamp": "2025-08-08T18:20:35.435Z",
+    "data": {
+      "duration": 5267
+    },
+    "sessionId": "session_1754677230168_gzacemrl4"
+  },
+  {
+    "id": "event_1754677236084_zub5q8egw",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:20:36.084Z",
+    "data": {},
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677236108_27tm0b1co",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:20:36.108Z",
+    "data": {
+      "timestamp": "2025-08-08T18:20:36.108Z"
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677243867_tatzwm0q2",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:20:43.867Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677246950_om8ex5kz8",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:20:46.950Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677264767_lvq2m8gla",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:21:04.767Z",
+    "data": {
+      "action": "open_writing_assistant",
+      "noteContext": false
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677299016_o5qz27yzt",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:21:39.016Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677511777_n5ivwi8kq",
+    "type": "session_ended",
+    "timestamp": "2025-08-08T18:25:11.777Z",
+    "data": {
+      "duration": 275693
+    },
+    "sessionId": "session_1754677236084_bxhtbsvim"
+  },
+  {
+    "id": "event_1754677515332_8sgruin7i",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:25:15.332Z",
+    "data": {},
+    "sessionId": "session_1754677515332_gdqn2ghy5"
+  },
+  {
+    "id": "event_1754677515463_52aif0s7r",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:25:15.463Z",
+    "data": {
+      "timestamp": "2025-08-08T18:25:15.463Z"
+    },
+    "sessionId": "session_1754677515332_gdqn2ghy5"
+  },
+  {
+    "id": "event_1754677518886_14eegb64r",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:25:18.886Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754677515332_gdqn2ghy5"
+  },
+  {
+    "id": "event_1754677771764_3jk6pdrrr",
+    "type": "session_ended",
+    "timestamp": "2025-08-08T18:29:31.764Z",
+    "data": {
+      "duration": 256432
+    },
+    "sessionId": "session_1754677515332_gdqn2ghy5"
+  },
+  {
+    "id": "event_1754677775191_fa9hn20pl",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:29:35.191Z",
+    "data": {},
+    "sessionId": "session_1754677775191_0rz0p7bi2"
+  },
+  {
+    "id": "event_1754677775326_vmx32w2ch",
+    "type": "session_started",
+    "timestamp": "2025-08-08T18:29:35.326Z",
+    "data": {
+      "timestamp": "2025-08-08T18:29:35.326Z"
+    },
+    "sessionId": "session_1754677775191_0rz0p7bi2"
+  },
+  {
+    "id": "event_1754677776920_h5c11z4oi",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:29:36.920Z",
+    "data": {
+      "action": "open_knowledge_discovery",
+      "notesCount": 6
+    },
+    "sessionId": "session_1754677775191_0rz0p7bi2"
+  },
+  {
+    "id": "event_1754677826269_lxacixuib",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-08T18:30:26.269Z",
+    "data": {
+      "action": "open_writing_assistant",
+      "noteContext": false
+    },
+    "sessionId": "session_1754677775191_0rz0p7bi2"
   }
 ]
