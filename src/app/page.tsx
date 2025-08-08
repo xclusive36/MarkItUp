@@ -22,6 +22,9 @@ import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import AIChat from "@/components/AIChat";
 import WritingAssistant from "@/components/WritingAssistant";
 import KnowledgeDiscovery from "@/components/KnowledgeDiscovery";
+import ResearchAssistant from "@/components/ResearchAssistant";
+import KnowledgeMap from "@/components/KnowledgeMap";
+import BatchAnalyzer from "@/components/BatchAnalyzer";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
 import { useCollaboration } from "@/contexts/CollaborationContext";
 
@@ -50,6 +53,9 @@ import {
   Brain,
   Compass,
   PenTool,
+  Map,
+  BookOpen,
+  BarChart3,
 } from "lucide-react";
 
 // Styles
@@ -74,6 +80,15 @@ export default function Home() {
 
   // Knowledge Discovery state
   const [showKnowledgeDiscovery, setShowKnowledgeDiscovery] = useState(false);
+
+  // Research Assistant state
+  const [showResearchAssistant, setShowResearchAssistant] = useState(false);
+
+  // Knowledge Map state
+  const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
+
+  // Batch Analyzer state
+  const [showBatchAnalyzer, setShowBatchAnalyzer] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -927,69 +942,103 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <Compass className="w-4 h-4" />
                 </button>
 
-                {/* Writing Assistant Button */}
+                {/* Research Assistant Button */}
                 <button
                   onClick={() => {
-                    setShowWritingAssistant(true);
+                    setShowResearchAssistant(true);
                     analytics.trackEvent('ai_analysis', {
-                      action: 'open_writing_assistant',
-                      noteContext: !!activeNote?.id
-                    });
-                  }}
-                  className="p-1 rounded-md transition-colors"
-                  style={{
-                    color: showWritingAssistant 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showWritingAssistant) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showWritingAssistant) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Writing Assistant"
-                >
-                  <PenTool className="w-4 h-4" />
-                </button>
-
-                {/* Knowledge Discovery Button */}
-                <button
-                  onClick={() => {
-                    setShowKnowledgeDiscovery(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_knowledge_discovery',
+                      action: 'open_research_assistant',
                       notesCount: notes.length
                     });
                   }}
                   className="p-1 rounded-md transition-colors"
                   style={{
-                    color: showKnowledgeDiscovery 
+                    color: showResearchAssistant 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
                   }}
                   onMouseEnter={(e) => {
-                    if (!showKnowledgeDiscovery) {
+                    if (!showResearchAssistant) {
                       e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
                       e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!showKnowledgeDiscovery) {
+                    if (!showResearchAssistant) {
                       e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
                   }}
-                  title="Knowledge Discovery"
+                  title="Research Assistant"
                 >
-                  <Compass className="w-4 h-4" />
+                  <BookOpen className="w-4 h-4" />
                 </button>
+
+                {/* Knowledge Map Button */}
+                <button
+                  onClick={() => {
+                    setShowKnowledgeMap(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_knowledge_map',
+                      notesCount: notes.length
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showKnowledgeMap 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showKnowledgeMap) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showKnowledgeMap) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Knowledge Map"
+                >
+                  <Map className="w-4 h-4" />
+                </button>
+
+                {/* Batch Analyzer Button */}
+                <button
+                  onClick={() => {
+                    setShowBatchAnalyzer(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_batch_analyzer',
+                      notesCount: notes.length
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showBatchAnalyzer 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showBatchAnalyzer) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showBatchAnalyzer) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="Batch Analyzer"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </button>
+
+                {/* Writing Assistant Button - duplicate removal needed */}
 
                 <ThemeToggle />
               </div>
@@ -1699,6 +1748,62 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         onOpenNote={(noteId) => {
           handleNoteSelect(noteId);
           setShowKnowledgeDiscovery(false);
+        }}
+      />
+
+      {/* Research Assistant Panel */}
+      <ResearchAssistant
+        isOpen={showResearchAssistant}
+        onClose={() => setShowResearchAssistant(false)}
+        notes={notes}
+        onCreateNote={async (title, content, suggestedTags) => {
+          const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          setFileName(newFileName);
+          setMarkdown(content);
+          // Create and save the note
+          const pkm = getPKMSystem();
+          await pkm.createNote(newFileName, content);
+          setShowResearchAssistant(false);
+        }}
+        onOpenNote={(noteId) => {
+          handleNoteSelect(noteId);
+          setShowResearchAssistant(false);
+        }}
+      />
+
+      {/* Knowledge Map */}
+      <KnowledgeMap
+        isOpen={showKnowledgeMap}
+        onClose={() => setShowKnowledgeMap(false)}
+        notes={notes}
+        onOpenNote={(noteId) => {
+          handleNoteSelect(noteId);
+          setShowKnowledgeMap(false);
+        }}
+        onCreateNote={async (title, content, suggestedTags) => {
+          const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          setFileName(newFileName);
+          setMarkdown(content);
+          // Create and save the note
+          const pkm = getPKMSystem();
+          await pkm.createNote(newFileName, content);
+          setShowKnowledgeMap(false);
+        }}
+      />
+
+      {/* Batch Analyzer */}
+      <BatchAnalyzer
+        isOpen={showBatchAnalyzer}
+        onClose={() => setShowBatchAnalyzer(false)}
+        notes={notes}
+        onOpenNote={(noteId) => {
+          handleNoteSelect(noteId);
+          setShowBatchAnalyzer(false);
+        }}
+        onBulkUpdate={async (updates) => {
+          // Handle bulk updates if needed
+          console.log('Bulk updates:', updates);
+          setShowBatchAnalyzer(false);
         }}
       />
       </div>

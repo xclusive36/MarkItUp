@@ -18,9 +18,13 @@
 ### 🤖 AI-Powered Intelligence
 
 * **Context-Aware AI Chat** - AI assistant that understands your knowledge graph and note connections
-* **Smart Writing Assistant** - Get help with writing, editing, and content improvement
-* **Intelligent Note Analysis** - Automatic tag suggestions, summaries, and content insights
+* **Smart Writing Assistant** - Advanced content analysis, writing suggestions, and improvement recommendations
+* **Intelligent Note Analysis** - Automatic tag suggestions, summaries, and content insights with gap detection
 * **Knowledge Discovery** - AI-powered suggestions for connecting ideas and finding related content
+* **Research Assistant** - Semantic search with query expansion, research insights, and intelligent note creation
+* **Knowledge Map Visualization** - Interactive graph showing relationships between notes, concepts, and topics
+* **Batch Analyzer** - Comprehensive analysis across your entire knowledge base with export capabilities
+* **Semantic Search Engine** - Advanced search with conceptual understanding and relevance scoring
 * **Multi-Provider Support** - OpenAI GPT models with plans for local AI integration
 * **Privacy-First Design** - Optional AI features with full control over data sharing
 
