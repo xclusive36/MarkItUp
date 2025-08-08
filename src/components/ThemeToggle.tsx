@@ -1,11 +1,17 @@
 'use client';
 
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
+import { analytics } from '@/lib/analytics';
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useSimpleTheme();
 
   const handleClick = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    analytics.trackEvent('theme_changed', {
+      fromTheme: theme,
+      toTheme: newTheme
+    });
     toggleTheme();
   };
 

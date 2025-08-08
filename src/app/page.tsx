@@ -18,12 +18,14 @@ import SearchBox from "@/components/SearchBox";
 import { CollaborativeEditor } from "@/components/CollaborativeEditor";
 import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
 import { useCollaboration } from "@/contexts/CollaborationContext";
 
 // PKM imports
 import { getPKMSystem } from "@/lib/pkm";
 import { Note, Graph, SearchResult } from "@/lib/types";
+import { analytics } from "@/lib/analytics";
 
 // Icon imports
 import {
@@ -41,6 +43,7 @@ import {
   Users,
   Settings,
   User,
+  Activity,
 } from "lucide-react";
 
 // Styles
@@ -98,10 +101,28 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
 *Start writing and building your second brain...*`);
 
+  // Track markdown editing with debounce
+  const [lastEditTrack, setLastEditTrack] = useState(0);
+  const handleMarkdownChange = (value: string) => {
+    setMarkdown(value);
+    
+    // Debounced analytics tracking for editing
+    const now = Date.now();
+    if (now - lastEditTrack > 5000) {
+      analytics.trackEvent('note_edited', {
+        wordCount: value.split(/\s+/).filter(word => word.length > 0).length,
+        characterCount: value.length,
+        hasWikilinks: value.includes('[['),
+        tagCount: (value.match(/#\w+/g) || []).length
+      });
+      setLastEditTrack(now);
+    }
+  };
+
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(
     "edit"
   );
-  const [currentView, setCurrentView] = useState<"editor" | "graph" | "search">(
+  const [currentView, setCurrentView] = useState<"editor" | "graph" | "search" | "analytics">(
     "editor"
   );
 
@@ -134,6 +155,11 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     const initializePKM = async () => {
       try {
         console.log("Initializing PKM system...");
+
+        // Track session start
+        analytics.trackEvent('session_started', {
+          timestamp: new Date().toISOString()
+        });
 
         // Load initial data directly
         await refreshData();
@@ -206,6 +232,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const handleSearch = useCallback(
     async (query: string, options?: SearchOptions): Promise<SearchResult[]> => {
       try {
+        // Track search event
+        analytics.trackEvent('search_performed', {
+          query: query.length > 50 ? query.substring(0, 50) + '...' : query,
+          queryLength: query.length,
+          hasOptions: !!options,
+          timestamp: new Date().toISOString()
+        });
+
         const params = new URLSearchParams({
           q: query,
           limit: options?.limit?.toString() || "20",
@@ -222,10 +256,20 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         const response = await fetch(`/api/search?${params}`);
         if (response.ok) {
           const data = await response.json();
+          
+          // Track search results
+          analytics.trackEvent('search_completed', {
+            resultsCount: data.results?.length || 0,
+            query: query.length > 50 ? query.substring(0, 50) + '...' : query
+          });
+          
           return data.results || [];
         }
       } catch (error) {
         console.error("Search error:", error);
+        analytics.trackEvent('search_error', {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
       }
       return [];
     },
@@ -237,6 +281,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     (noteId: string) => {
       const note = notes.find((n) => n.id === noteId);
       if (note) {
+        // Track note view
+        analytics.trackEvent('note_viewed', {
+          noteId: note.id,
+          noteName: note.name,
+          wordCount: note.wordCount,
+          hasLinks: note.content.includes('[['),
+          tagCount: note.tags.length
+        });
+
         setActiveNote(note);
         setMarkdown(note.content);
         setFileName(note.name.replace(".md", ""));
@@ -275,6 +328,22 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
       if (response.ok) {
         setSaveStatus("Note saved successfully! 🎉");
+
+        // Track note save
+        const wordCount = markdown.split(/\s+/).filter(word => word.length > 0).length;
+        const hasWikilinks = markdown.includes('[[');
+        const tagMatches = markdown.match(/#\w+/g) || [];
+        
+        analytics.trackEvent(activeNote ? 'note_updated' : 'note_created', {
+          noteId: activeNote?.id || 'new',
+          fileName: fileName,
+          wordCount: wordCount,
+          characterCount: markdown.length,
+          hasWikilinks: hasWikilinks,
+          tagCount: tagMatches.length,
+          folder: folder || null,
+          isOverwrite: forceOverwrite
+        });
 
         // Create or update note in PKM system
         if (activeNote) {
@@ -382,6 +451,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Create new note
   const createNewNote = () => {
+    analytics.trackEvent('note_created', {
+      action: 'new_note_button_clicked'
+    });
+    
     setActiveNote(null);
     setMarkdown("# New Note\n\nStart writing your thoughts here...");
     setFileName("");
@@ -391,6 +464,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Graph node click handler
   const handleGraphNodeClick = (nodeId: string) => {
+    analytics.trackEvent('link_clicked', {
+      linkType: 'graph_node',
+      targetNoteId: nodeId,
+      source: 'graph_view'
+    });
+    
     handleNoteSelect(nodeId);
     setCurrentView("editor");
   };
@@ -486,65 +565,101 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-1 w-full sm:w-auto">
               {/* View Switcher */}
-              <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 w-full sm:w-auto">
+              <div 
+                className="flex rounded-lg p-0.5 w-full sm:w-auto"
+                style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
                 <button
-                  onClick={() => setCurrentView("editor")}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                  onClick={() => {
+                    setCurrentView("editor");
+                    analytics.trackEvent('mode_switched', { view: 'editor' });
+                  }}
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                     currentView === "editor"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }`}>
                   <Edit3 className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Edit</span>
                 </button>
                 <button
-                  onClick={() => setCurrentView("graph")}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                  onClick={() => {
+                    setCurrentView("graph");
+                    analytics.trackEvent('mode_switched', { view: 'graph' });
+                    analytics.trackEvent('graph_viewed', {});
+                  }}
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                     currentView === "graph"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }`}>
                   <Network className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Graph</span>
                 </button>
                 <button
-                  onClick={() => setCurrentView("search")}
-                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                  onClick={() => {
+                    setCurrentView("search");
+                    analytics.trackEvent('mode_switched', { view: 'search' });
+                  }}
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                     currentView === "search"
-                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                   }`}>
                   <Search className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Search</span>
                 </button>
+                <button
+                  onClick={() => {
+                    setCurrentView("analytics");
+                    analytics.trackEvent('mode_switched', { view: 'analytics' });
+                  }}
+                  className={`flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
+                    currentView === "analytics"
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+                  }`}>
+                  <Activity className="w-3 h-3" />
+                  <span className="hidden md:inline ml-1 text-xs">Analytics</span>
+                </button>
               </div>
 
               {currentView === "editor" && (
-                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 w-full sm:w-auto">
+                <div 
+                  className="flex rounded-lg p-0.5 w-full sm:w-auto"
+                  style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
                   <button
-                    onClick={() => setViewMode("edit")}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                    onClick={() => {
+                      setViewMode("edit");
+                      analytics.trackEvent('mode_switched', { mode: 'edit' });
+                    }}
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                       viewMode === "edit"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-300"
+                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                     }`}>
                     Edit
                   </button>
                   <button
-                    onClick={() => setViewMode("preview")}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                    onClick={() => {
+                      setViewMode("preview");
+                      analytics.trackEvent('mode_switched', { mode: 'preview' });
+                    }}
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                       viewMode === "preview"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-300"
+                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                     }`}>
                     Preview
                   </button>
                   <button
-                    onClick={() => setViewMode("split")}
-                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors ${
+                    onClick={() => {
+                      setViewMode("split");
+                      analytics.trackEvent('mode_switched', { mode: 'split' });
+                    }}
+                    className={`flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm ${
                       viewMode === "split"
-                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-300"
+                        ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
+                        : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
                     }`}>
                     <span className="hidden sm:inline">Split</span>
                     <span className="sm:hidden">⧄</span>
@@ -555,11 +670,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               {/* Collaboration Controls */}
               <div className="flex items-center space-x-1 w-full sm:w-auto">
                 {/* Collaboration Status */}
-                <div className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none ${
-                  settings.enableCollaboration 
-                    ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                }`}>
+                <div 
+                  className={`flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none ${
+                    settings.enableCollaboration
+                      ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                  }`}>
                   <Users className="w-3 h-3" />
                   <span className="text-xs">
                     {settings.enableCollaboration ? 'Collab' : 'Solo'}
@@ -814,7 +930,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 {viewMode === "edit" && (
                   <textarea
                     value={markdown}
-                    onChange={(e) => setMarkdown(e.target.value)}
+                    onChange={(e) => handleMarkdownChange(e.target.value)}
                     className="w-full h-full p-4 lg:p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="Start writing your markdown here..."
                   />
@@ -952,7 +1068,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     <div className="w-full lg:w-1/2 h-1/2 lg:h-full border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
                       <textarea
                         value={markdown}
-                        onChange={(e) => setMarkdown(e.target.value)}
+                        onChange={(e) => handleMarkdownChange(e.target.value)}
                         className="w-full h-full p-3 lg:p-6 border-none resize-none focus:outline-none bg-transparent text-gray-900 dark:text-white font-mono text-sm placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Start writing..."
                       />
@@ -1143,6 +1259,22 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   </div>
                 </div>
               </div>
+            )}
+
+            {currentView === "analytics" && (
+              <AnalyticsDashboard
+                notes={notes}
+                links={graph.edges.map(edge => ({
+                  id: `${edge.source}-${edge.target}`,
+                  source: edge.source,
+                  target: edge.target,
+                  type: edge.type === 'link' ? 'wikilink' : edge.type as any,
+                  anchorText: undefined,
+                  blockId: undefined
+                }))}
+                tags={tags}
+                className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto"
+              />
             )}
           </div>
         </div>
