@@ -7,7 +7,7 @@ const { setupWSConnection } = require('y-websocket/bin/utils');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
-const port = process.env.PORT || 3002;
+const port = process.env.PORT || 3000;
 
 // When using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });

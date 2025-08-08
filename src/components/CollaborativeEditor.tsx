@@ -57,7 +57,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     // Create WebSocket provider for YJS sync - using correct port and path
     const wsUrl = process.env.NODE_ENV === 'production' 
       ? `wss://${window.location.host}/ws` 
-      : 'ws://localhost:3002/ws';
+      : 'ws://localhost:3000/ws';
     
     const provider = new WebsocketProvider(wsUrl, noteId, yjsDoc);
     providerRef.current = provider;
@@ -112,7 +112,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   }, [noteId, settings.enableCollaboration]);
 
   const initializeSocket = () => {
-    const socket = io('http://localhost:3002', {
+    const socket = io('http://localhost:3000', {
       transports: ['websocket'],
     });
 

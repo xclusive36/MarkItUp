@@ -35,7 +35,7 @@ export const SimpleCollaborativeEditor: React.FC<SimpleCollaborativeEditorProps>
     yjsDocRef.current = yjsDoc;
 
     // Create WebSocket provider for YJS sync
-    const wsUrl = 'ws://localhost:3002/ws';
+    const wsUrl = 'ws://localhost:3000/ws';
     const provider = new WebsocketProvider(wsUrl, noteId, yjsDoc);
     providerRef.current = provider;
 
@@ -98,7 +98,7 @@ export const SimpleCollaborativeEditor: React.FC<SimpleCollaborativeEditorProps>
     provider.on('sync', handleProviderSync);
 
     // Setup Socket.IO for participant tracking
-    const socket = io('http://localhost:3002', {
+    const socket = io('http://localhost:3000', {
       transports: ['websocket'],
     });
     socketRef.current = socket;
