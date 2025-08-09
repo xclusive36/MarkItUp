@@ -18,6 +18,7 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 ## ✨ Key Features
 
 ### 🧠 Personal Knowledge Management
+
 - **Wikilinks & Bidirectional Linking** - Connect notes with `[[Note Name]]` syntax
 - **Interactive Graph View** - Visualize your knowledge network
 - **Advanced Search** - Full-text search with operators (`tag:`, `folder:`, exact phrases)
@@ -25,6 +26,7 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Real-time Analytics** - Track your knowledge growth
 
 ### 🤖 AI-Powered Intelligence
+
 - **Context-Aware AI Chat** - AI assistant that understands your knowledge graph
 - **Writing Assistant** - Advanced content analysis and improvement suggestions
 - **Knowledge Discovery** - AI-powered gap analysis and content recommendations
@@ -32,18 +34,21 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Multi-Provider Support** - OpenAI integration with plans for local AI
 
 ### 🤝 Real-time Collaboration
+
 - **Multi-user Editing** - Real-time collaborative editing with conflict resolution
 - **Live Presence** - See other users' cursors and selections
 - **WebSocket Sync** - Low-latency synchronization via Socket.IO
 - **Session Sharing** - Easy document sharing with secure links
 
 ### 🔌 Extensible Plugin System
+
 - **Rich Plugin API** - Custom functionality, commands, and processors
 - **Settings Management** - Configurable plugin settings with persistence
 - **Content Processors** - Transform content during import/export
 - **Event System** - Plugin communication through events
 
 ### � Advanced Markdown Features
+
 - **Multi-mode Editor** - Edit, preview, or split-view modes
 - **LaTeX Math** - Inline `$math$` and block `$$math$$` equations
 - **TikZ Diagrams** - Create vector graphics directly in markdown
@@ -74,17 +79,35 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 **⚡ Modern Stack:** Built with Next.js 15 and TypeScript for speed and reliability
 
 **🆓 Truly Free:** Open-source with no licensing fees or feature restrictions
-
 **🚀 Extensible:** Modern plugin architecture for unlimited customization
 
 ## 🐳 Quick Deploy
 
 ### Docker Compose (Recommended)
+
+```bash
+version: "3.8"
+
+services:
+  markitup:
+    container_name: markitup
+    ports:
+      - 3000:3000
+    volumes:
+      - ./markdown:/app/markdown
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    image: ghcr.io/xclusive36/markitup:latest
+```
+
 ```bash
 docker compose up -d
 ```
 
 ### Docker CLI
+
 ```bash
 docker run --name markitup -p 3000:3000 \
   -v ./markdown:/app/markdown \
