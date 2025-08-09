@@ -1,229 +1,205 @@
 [
   {
-    "id": "event_1754681577240_l8h5cjcqz",
+    "id": "event_1754755648274_ioszu16ge",
     "type": "session_ended",
-    "timestamp": "2025-08-08T19:32:57.240Z",
+    "timestamp": "2025-08-09T16:07:28.274Z",
     "data": {
-      "duration": 3802049
+      "duration": 35849
     },
-    "sessionId": "session_1754677775191_0rz0p7bi2"
+    "sessionId": "session_1754755612425_c0oy8w58v"
   },
   {
-    "id": "event_1754681580492_v7ktrkfh2",
+    "id": "event_1754755648997_4tt2ecdfb",
     "type": "session_started",
-    "timestamp": "2025-08-08T19:33:00.492Z",
+    "timestamp": "2025-08-09T16:07:28.997Z",
     "data": {},
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754755648997_zryy5mh84"
   },
   {
-    "id": "event_1754681580647_utpcxtgc1",
+    "id": "event_1754755649021_9k7yokt27",
     "type": "session_started",
-    "timestamp": "2025-08-08T19:33:00.647Z",
+    "timestamp": "2025-08-09T16:07:29.021Z",
     "data": {
-      "timestamp": "2025-08-08T19:33:00.647Z"
+      "timestamp": "2025-08-09T16:07:29.021Z"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754755648997_zryy5mh84"
   },
   {
-    "id": "event_1754681591245_fvxddze6z",
-    "type": "theme_changed",
-    "timestamp": "2025-08-08T19:33:11.246Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681592579_ftllddj7z",
-    "type": "theme_changed",
-    "timestamp": "2025-08-08T19:33:12.579Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681606345_4f3az1dt7",
-    "type": "ai_chat",
-    "timestamp": "2025-08-08T19:33:26.345Z",
-    "data": {
-      "action": "open_chat",
-      "noteContext": false
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681634496_yst5sc7f1",
+    "id": "event_1754755651588_safblcvwa",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:33:54.497Z",
+    "timestamp": "2025-08-09T16:07:31.588Z",
     "data": {
-      "action": "open_writing_assistant",
-      "noteContext": false
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681649797_l29qomeig",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:09.797Z",
-    "data": {
-      "action": "open_knowledge_discovery",
+      "action": "open_plugin_dashboard",
       "notesCount": 6
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754755648997_zryy5mh84"
   },
   {
-    "id": "event_1754681656312_2i11os002",
+    "id": "event_1754755658205_8hm5gw3xa",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:16.312Z",
+    "timestamp": "2025-08-09T16:07:38.205Z",
     "data": {
-      "action": "open_research_assistant",
+      "action": "plugin_installed",
+      "pluginId": "knowledge-graph-analytics",
+      "pluginName": "Knowledge Graph Analytics"
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754755662987_gkrasrkqj",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-09T16:07:42.987Z",
+    "data": {
+      "action": "plugin_uninstalled",
+      "pluginId": "smart-link-detector"
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754755662994_5a7v4rdyj",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-09T16:07:42.994Z",
+    "data": {
+      "action": "plugin_uninstalled",
+      "pluginId": "smart-link-detector"
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754755664737_bulozan9x",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-09T16:07:44.737Z",
+    "data": {
+      "action": "plugin_uninstalled",
+      "pluginId": "ai-writing-assistant"
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754755664744_0iba9b5hk",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-09T16:07:44.744Z",
+    "data": {
+      "action": "plugin_uninstalled",
+      "pluginId": "ai-writing-assistant"
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754756051991_agweqypa6",
+    "type": "session_ended",
+    "timestamp": "2025-08-09T16:14:11.991Z",
+    "data": {
+      "duration": 402994
+    },
+    "sessionId": "session_1754755648997_zryy5mh84"
+  },
+  {
+    "id": "event_1754756053218_m83no4v7a",
+    "type": "session_started",
+    "timestamp": "2025-08-09T16:14:13.218Z",
+    "data": {},
+    "sessionId": "session_1754756053218_41j7vv1g8"
+  },
+  {
+    "id": "event_1754756053270_y3nwlkd8q",
+    "type": "session_started",
+    "timestamp": "2025-08-09T16:14:13.270Z",
+    "data": {
+      "timestamp": "2025-08-09T16:14:13.270Z"
+    },
+    "sessionId": "session_1754756053218_41j7vv1g8"
+  },
+  {
+    "id": "event_1754756054688_18iw5tbeu",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-09T16:14:14.688Z",
+    "data": {
+      "action": "open_plugin_dashboard",
       "notesCount": 6
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681668008_5kamwlb8x",
+    "id": "event_1754756059154_tdv5qu5u1",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:28.008Z",
+    "timestamp": "2025-08-09T16:14:19.154Z",
     "data": {
-      "action": "semantic_search",
-      "query": "cats",
-      "resultsCount": 0,
-      "searchDepth": "comprehensive",
-      "hasResults": false
+      "action": "plugin_uninstalled",
+      "pluginId": "knowledge-graph-analytics"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681668010_4q6irz904",
+    "id": "event_1754756059166_yv7h7kb5g",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:28.010Z",
+    "timestamp": "2025-08-09T16:14:19.166Z",
     "data": {
-      "action": "semantic_search",
-      "query": "cats",
-      "resultsCount": 0
+      "action": "plugin_uninstalled",
+      "pluginId": "knowledge-graph-analytics"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681670993_a22hwc5oi",
+    "id": "event_1754756063506_6rhq4yli5",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:30.993Z",
+    "timestamp": "2025-08-09T16:14:23.506Z",
     "data": {
-      "action": "semantic_search",
-      "query": "cats",
-      "resultsCount": 0
+      "action": "plugin_installed",
+      "pluginId": "smart-link-detector",
+      "pluginName": "Smart Link Detector"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681677602_ubdu8v9u7",
+    "id": "event_1754756065238_ysdyadrca",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:37.602Z",
+    "timestamp": "2025-08-09T16:14:25.238Z",
     "data": {
-      "action": "semantic_search",
-      "query": "tools",
-      "resultsCount": 0,
-      "searchDepth": "comprehensive",
-      "hasResults": false
+      "action": "plugin_installed",
+      "pluginId": "ai-writing-assistant",
+      "pluginName": "AI Writing Assistant"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681677604_jk04oliau",
+    "id": "event_1754756069054_4jfpa2rtu",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:37.604Z",
+    "timestamp": "2025-08-09T16:14:29.054Z",
     "data": {
-      "action": "semantic_search",
-      "query": "tools",
-      "resultsCount": 0
+      "action": "plugin_uninstalled",
+      "pluginId": "ai-writing-assistant"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681691246_t85g2ok6k",
+    "id": "event_1754756069066_js8p6bbsu",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:51.246Z",
+    "timestamp": "2025-08-09T16:14:29.066Z",
     "data": {
-      "action": "open_knowledge_map",
-      "notesCount": 6
+      "action": "plugin_uninstalled",
+      "pluginId": "ai-writing-assistant"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681691305_jqisy3qdd",
+    "id": "event_1754756079721_qjzp0gbl6",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:51.305Z",
+    "timestamp": "2025-08-09T16:14:39.721Z",
     "data": {
-      "action": "knowledge_map_generated",
-      "nodeCount": 28,
-      "edgeCount": 37
+      "action": "plugin_uninstalled",
+      "pluginId": "smart-link-detector"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   },
   {
-    "id": "event_1754681698396_5stcpq9li",
+    "id": "event_1754756079732_2luxmgrz1",
     "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:34:58.396Z",
+    "timestamp": "2025-08-09T16:14:39.732Z",
     "data": {
-      "action": "open_research_assistant",
-      "notesCount": 6
+      "action": "plugin_uninstalled",
+      "pluginId": "smart-link-detector"
     },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681883713_ynibdtj3y",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:38:03.713Z",
-    "data": {
-      "action": "open_batch_analyzer",
-      "notesCount": 6
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754681883775_pznqre8xc",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:38:03.775Z",
-    "data": {
-      "action": "batch_analysis_completed",
-      "notesAnalyzed": 6,
-      "totalWords": 668
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754682098951_x1054njou",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:41:38.951Z",
-    "data": {
-      "action": "batch_analysis_exported",
-      "notesCount": 6
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754682355564_3hmqp4iwb",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:45:55.564Z",
-    "data": {
-      "action": "open_batch_analyzer",
-      "notesCount": 6
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
-  },
-  {
-    "id": "event_1754682355633_zhz59k58q",
-    "type": "ai_analysis",
-    "timestamp": "2025-08-08T19:45:55.633Z",
-    "data": {
-      "action": "batch_analysis_completed",
-      "notesAnalyzed": 6,
-      "totalWords": 668
-    },
-    "sessionId": "session_1754681580492_5mvivbhi8"
+    "sessionId": "session_1754756053218_41j7vv1g8"
   }
 ]

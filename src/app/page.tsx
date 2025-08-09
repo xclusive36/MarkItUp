@@ -25,6 +25,7 @@ import KnowledgeDiscovery from "@/components/KnowledgeDiscovery";
 import ResearchAssistant from "@/components/ResearchAssistant";
 import KnowledgeMap from "@/components/KnowledgeMap";
 import BatchAnalyzer from "@/components/BatchAnalyzer";
+import AIPluginDashboard from "@/components/AIPluginDashboard";
 import { useSimpleTheme } from "@/contexts/SimpleThemeContext";
 import { useCollaboration } from "@/contexts/CollaborationContext";
 
@@ -56,6 +57,7 @@ import {
   Map,
   BookOpen,
   BarChart3,
+  Zap,
 } from "lucide-react";
 
 // Styles
@@ -87,10 +89,11 @@ export default function Home() {
   // Knowledge Map state
   const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
 
-  // Batch Analyzer state
+  // Batch Analyzer state  
   const [showBatchAnalyzer, setShowBatchAnalyzer] = useState(false);
 
-  // Core PKM state
+  // AI Plugin Dashboard state
+  const [showPluginDashboard, setShowPluginDashboard] = useState(false);  // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [markdown, setMarkdown] = useState(`# Welcome to MarkItUp PKM System 🚀
@@ -1038,6 +1041,38 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <BarChart3 className="w-4 h-4" />
                 </button>
 
+                {/* AI Plugin Dashboard Button */}
+                <button
+                  onClick={() => {
+                    setShowPluginDashboard(true);
+                    analytics.trackEvent('ai_analysis', {
+                      action: 'open_plugin_dashboard',
+                      notesCount: notes.length
+                    });
+                  }}
+                  className="p-1 rounded-md transition-colors"
+                  style={{
+                    color: showPluginDashboard 
+                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!showPluginDashboard) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!showPluginDashboard) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                  title="AI Plugin Ecosystem"
+                >
+                  <Zap className="w-4 h-4" />
+                </button>
+
                 {/* Writing Assistant Button - duplicate removal needed */}
 
                 <ThemeToggle />
@@ -1805,6 +1840,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           console.log('Bulk updates:', updates);
           setShowBatchAnalyzer(false);
         }}
+      />
+
+      {/* AI Plugin Dashboard */}
+      <AIPluginDashboard
+        notes={notes}
+        isOpen={showPluginDashboard}
+        onClose={() => setShowPluginDashboard(false)}
       />
       </div>
     </>
