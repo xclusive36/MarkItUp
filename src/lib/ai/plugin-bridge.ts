@@ -8,7 +8,7 @@ import { AVAILABLE_PLUGINS, PLUGIN_METADATA } from '../../plugins/plugin-registr
 export class PluginBridge {
   // Convert Phase 5 plugin to AI Plugin format
   static convertToAIPlugin(plugin: PluginManifest): AIPluginMetadata {
-    const metadata = PLUGIN_METADATA[plugin.id];
+    const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
     
     return {
       ...plugin,

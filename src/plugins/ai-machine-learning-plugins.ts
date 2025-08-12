@@ -33,14 +33,14 @@ export const aiWritingAssistantPlugin: PluginManifest = {
 
 export const mlClassifierPlugin: PluginManifest = {
   id: 'ml-classifier',
-  name: 'ML Classifier',
-  description: 'Machine learning content classification and categorization',
+  name: 'ML Content Classifier',
+  description: 'Machine learning-based content classification and tagging',
   version: '1.0.0',
   author: 'MarkItUp Team',
   main: 'ml-classifier.js',
   permissions: [
-    { type: 'file-system', description: 'Train and save ML models' },
-    { type: 'network', description: 'Access ML training services' }
+    { type: 'file-system', description: 'Access documents for classification' },
+    { type: 'network', description: 'Connect to ML services' }
   ],
   commands: [
     {

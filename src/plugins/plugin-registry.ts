@@ -1,3 +1,35 @@
+import { PluginManifest, PluginSetting } from '../lib/types';
+
+// Enhanced plugin manifest that supports AI integration
+export interface EnhancedPluginManifest extends PluginManifest {
+  // AI Integration capabilities (optional)
+  aiIntegration?: {
+    type: 'content-generation' | 'analysis' | 'enhancement' | 'automation';
+    description: string;
+    requiresApiKey?: boolean;
+    supportedProviders?: string[];
+    capabilities: string[];
+  };
+  
+  // Enhanced metadata
+  category: string;
+  tags: string[];
+  rating: number;
+  downloads: number;
+  pricing: 'free' | 'freemium' | 'paid';
+  featured: boolean;
+  
+  // Plugin capabilities matrix
+  capabilities: {
+    chat?: boolean;
+    generation?: boolean;
+    analysis?: boolean;
+    automation?: boolean;
+    visualization?: boolean;
+    realtime?: boolean;
+  };
+}
+
 // Import our new sample plugins (the main ones we created)
 import { enhancedWordCountPlugin } from './enhanced-word-count';
 import { dailyNotesPlugin as newDailyNotesPlugin } from './daily-notes';

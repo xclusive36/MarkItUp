@@ -278,7 +278,7 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {FEATURED_PLUGINS.slice(0, 4).map(plugin => {
-            const metadata = PLUGIN_METADATA[plugin.id];
+            const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
             const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
             
             return (
@@ -333,7 +333,7 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 ml-4">
                 {plugins.map(plugin => {
-                  const metadata = PLUGIN_METADATA[plugin.id];
+                  const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
                   const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
                   
                   return (
