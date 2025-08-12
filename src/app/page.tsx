@@ -178,35 +178,45 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     Array<{ name: string; count: number }>
   >([]);
 
+  // Client-side mounting state to prevent hydration issues
+  const [isMounted, setIsMounted] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
   // PKM system
   const [pkm] = useState(() => getPKMSystem());
 
   // Initialize PKM system on mount
   useEffect(() => {
+    // Set mounted state immediately to enable UI interactions
+    setIsMounted(true);
+    
     const initializePKM = async () => {
       try {
         console.log("Initializing PKM system...");
+        setIsInitializing(true);
 
         // Track session start
         analytics.trackEvent('session_started', {
           timestamp: new Date().toISOString()
         });
 
-        // Initialize AI service with PKM system
+        // Initialize AI service with PKM system (non-blocking)
         const { initializeAIService } = await import('@/lib/ai/ai-service');
         initializeAIService(pkm);
-
-        // Load initial data directly
-        await refreshData();
 
         console.log("PKM system initialization complete");
       } catch (error) {
         console.error("Error initializing PKM system:", error);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
-    initializePKM();
-  }, []); // Remove refreshData dependency to avoid circular reference
+    // Run initialization in next tick to allow UI to render first
+    setTimeout(() => {
+      initializePKM();
+    }, 0);
+  }, [pkm]);
 
   // Refresh all PKM data
   const refreshData = useCallback(async () => {
@@ -255,6 +265,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       console.error("Error refreshing data:", error);
     }
   }, []);
+
+  // Load initial data after component is mounted
+  useEffect(() => {
+    if (isMounted) {
+      refreshData();
+    }
+  }, [isMounted, refreshData]);
 
   // Handle search
   type SearchOptions = {
@@ -606,11 +623,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 className="flex rounded-lg p-0.5 w-full sm:w-auto"
                 style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
                 <button
+                  disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("editor");
                     analytics.trackEvent('mode_switched', { view: 'editor' });
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={currentView === "editor" ? {
                     backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                     color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -631,12 +649,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <span className="hidden md:inline ml-1 text-xs">Edit</span>
                 </button>
                 <button
+                  disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("graph");
                     analytics.trackEvent('mode_switched', { view: 'graph' });
                     analytics.trackEvent('graph_viewed', {});
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={currentView === "graph" ? {
                     backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                     color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -657,11 +676,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <span className="hidden md:inline ml-1 text-xs">Graph</span>
                 </button>
                 <button
+                  disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("search");
                     analytics.trackEvent('mode_switched', { view: 'search' });
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={currentView === "search" ? {
                     backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                     color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -682,11 +702,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <span className="hidden md:inline ml-1 text-xs">Search</span>
                 </button>
                 <button
+                  disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("analytics");
                     analytics.trackEvent('mode_switched', { view: 'analytics' });
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={currentView === "analytics" ? {
                     backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                     color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -707,11 +728,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   <span className="hidden md:inline ml-1 text-xs">Analytics</span>
                 </button>
                 <button
+                  disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("plugins");
                     analytics.trackEvent('mode_switched', { view: 'plugins' });
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   style={currentView === "plugins" ? {
                     backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                     color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -738,11 +760,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   className="flex rounded-lg p-0.5 w-full sm:w-auto"
                   style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
                   <button
+                    disabled={!isMounted}
                     onClick={() => {
                       setViewMode("edit");
                       analytics.trackEvent('mode_switched', { mode: 'edit' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "edit" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -762,11 +785,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     Edit
                   </button>
                   <button
+                    disabled={!isMounted}
                     onClick={() => {
                       setViewMode("preview");
                       analytics.trackEvent('mode_switched', { mode: 'preview' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "preview" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
@@ -786,11 +810,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     Preview
                   </button>
                   <button
+                    disabled={!isMounted}
                     onClick={() => {
                       setViewMode("split");
                       analytics.trackEvent('mode_switched', { mode: 'split' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "split" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
