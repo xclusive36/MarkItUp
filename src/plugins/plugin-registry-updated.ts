@@ -28,21 +28,6 @@ import { advancedMarkdownEditorPlugin, templateEnginePlugin, contentStructurePlu
 import { smartSearchPlugin, tagManagerPlugin, contentDiscoveryPlugin, savedSearchesPlugin, globalIndexPlugin } from './search-discovery-plugins';
 import { knowledgeGraphPlugin, learningPathPlugin, conceptMapPlugin, questionBankPlugin, knowledgeExtractionPlugin } from './knowledge-enhancement-plugins';
 
-// Import Phase 3 expansion plugins (Professional & Specialized)
-import { budgetTrackerPlugin, projectManagerPlugin, invoiceGeneratorPlugin as newInvoiceGeneratorPlugin, businessPlannerPlugin, meetingNotesPlugin as proMeetingNotesPlugin } from './business-finance-plugins';
-import { citationManagerPlugin as newCitationManagerPlugin, researchNotebookPlugin, literatureReviewPlugin as newLiteratureReviewPlugin, thesisWriterPlugin, dataAnalysisPlugin } from './research-academic-plugins';
-import { contentPublisherPlugin, mediaManagerPlugin, seoOptimizerPlugin as newSeoOptimizerPlugin, emailNewsletterPlugin, socialMediaPlugin } from './media-publishing-plugins';
-
-// Import Phase 4 expansion plugins (Advanced Features)
-import { encryptionPlugin, passwordManagerPlugin, privacyAuditPlugin, secureBackupPlugin, accessControlPlugin } from './security-privacy-plugins';
-import { performanceMonitorPlugin, cacheManagerPlugin, indexOptimizerPlugin, memoryOptimizerPlugin, loadBalancerPlugin } from './performance-optimization-plugins';
-import { behaviorAnalyticsPlugin, predictiveAnalyticsPlugin, sentimentAnalysisPlugin, trendAnalysisPlugin, intelligenceReportPlugin } from './advanced-analytics-plugins';
-
-// Import Phase 5 expansion plugins (Innovation & Future)
-import { aiWritingAssistantPlugin, mlClassifierPlugin, neuralSearchPlugin, autoSummarizerPlugin, chatbotIntegrationPlugin } from './ai-machine-learning-plugins';
-import { iotDeviceManagerPlugin, smartHomeIntegrationPlugin, apiIntegratorPlugin, cloudSyncPlugin, webhookManagerPlugin } from './iot-integration-plugins';
-import { quantumNotesPlugin, brainWaveInterfacePlugin, holographicDisplayPlugin, timeManipulatorPlugin, universalTranslatorPlugin } from './experimental-features-plugins';
-
 // Import a few key example plugins for demonstration
 import { 
   wordCountPlugin,
@@ -170,73 +155,7 @@ export const AVAILABLE_PLUGINS = [
   backupPlugin,
   citationsPlugin,
   kanbanPlugin,
-  spacedRepetitionPlugin,
-
-  // 💼 PHASE 3: PROFESSIONAL & SPECIALIZED PLUGINS
-  // Business & Finance (5 plugins)
-  budgetTrackerPlugin,
-  projectManagerPlugin,
-  newInvoiceGeneratorPlugin,
-  businessPlannerPlugin,
-  proMeetingNotesPlugin,
-  
-  // Research & Academic (5 plugins)
-  newCitationManagerPlugin,
-  researchNotebookPlugin,
-  newLiteratureReviewPlugin,
-  thesisWriterPlugin,
-  dataAnalysisPlugin,
-  
-  // Media & Publishing (5 plugins)
-  contentPublisherPlugin,
-  mediaManagerPlugin,
-  newSeoOptimizerPlugin,
-  emailNewsletterPlugin,
-  socialMediaPlugin,
-
-  // 🚀 PHASE 4: ADVANCED FEATURES PLUGINS
-  // Security & Privacy (5 plugins)
-  encryptionPlugin,
-  passwordManagerPlugin,
-  privacyAuditPlugin,
-  secureBackupPlugin,
-  accessControlPlugin,
-  
-  // Performance & Optimization (5 plugins)
-  performanceMonitorPlugin,
-  cacheManagerPlugin,
-  indexOptimizerPlugin,
-  memoryOptimizerPlugin,
-  loadBalancerPlugin,
-  
-  // Advanced Analytics (5 plugins)
-  behaviorAnalyticsPlugin,
-  predictiveAnalyticsPlugin,
-  sentimentAnalysisPlugin,
-  trendAnalysisPlugin,
-  intelligenceReportPlugin,
-
-  // 🔮 PHASE 5: INNOVATION & FUTURE PLUGINS
-  // AI & Machine Learning (5 plugins)
-  aiWritingAssistantPlugin,
-  mlClassifierPlugin,
-  neuralSearchPlugin,
-  autoSummarizerPlugin,
-  chatbotIntegrationPlugin,
-  
-  // IoT & Integration (5 plugins)
-  iotDeviceManagerPlugin,
-  smartHomeIntegrationPlugin,
-  apiIntegratorPlugin,
-  cloudSyncPlugin,
-  webhookManagerPlugin,
-  
-  // Experimental Features (5 plugins)
-  quantumNotesPlugin,
-  brainWaveInterfacePlugin,
-  holographicDisplayPlugin,
-  timeManipulatorPlugin,
-  universalTranslatorPlugin
+  spacedRepetitionPlugin
 ];
 
 // Plugin Categories - Organized by user type and functionality
@@ -257,22 +176,6 @@ export const PLUGIN_CATEGORIES = {
   '✨ Enhanced Content Creation': [advancedMarkdownEditorPlugin, templateEnginePlugin, contentStructurePlugin, multiFormatExportPlugin, contentStatisticsPlugin],
   '🔍 Search & Discovery': [smartSearchPlugin, tagManagerPlugin, contentDiscoveryPlugin, savedSearchesPlugin, globalIndexPlugin],
   '📚 Knowledge Enhancement': [knowledgeGraphPlugin, learningPathPlugin, conceptMapPlugin, questionBankPlugin, knowledgeExtractionPlugin],
-  
-  // Phase 3: Professional & Specialized Categories
-  '💼 Business & Finance Pro': [budgetTrackerPlugin, projectManagerPlugin, newInvoiceGeneratorPlugin, businessPlannerPlugin, proMeetingNotesPlugin],
-  '🎓 Research & Academic Pro': [newCitationManagerPlugin, researchNotebookPlugin, newLiteratureReviewPlugin, thesisWriterPlugin, dataAnalysisPlugin],
-  '📺 Media & Publishing': [contentPublisherPlugin, mediaManagerPlugin, newSeoOptimizerPlugin, emailNewsletterPlugin, socialMediaPlugin],
-  
-  // Phase 4: Advanced Features Categories
-  '🔒 Security & Privacy': [encryptionPlugin, passwordManagerPlugin, privacyAuditPlugin, secureBackupPlugin, accessControlPlugin],
-  '⚡ Performance & Optimization': [performanceMonitorPlugin, cacheManagerPlugin, indexOptimizerPlugin, memoryOptimizerPlugin, loadBalancerPlugin],
-  '📊 Advanced Analytics': [behaviorAnalyticsPlugin, predictiveAnalyticsPlugin, sentimentAnalysisPlugin, trendAnalysisPlugin, intelligenceReportPlugin],
-  
-  // Phase 5: Innovation & Future Categories
-  '🤖 AI & Machine Learning': [aiWritingAssistantPlugin, mlClassifierPlugin, neuralSearchPlugin, autoSummarizerPlugin, chatbotIntegrationPlugin],
-  '🌐 IoT & Integration': [iotDeviceManagerPlugin, smartHomeIntegrationPlugin, apiIntegratorPlugin, cloudSyncPlugin, webhookManagerPlugin],
-  '🔬 Experimental Features': [quantumNotesPlugin, brainWaveInterfacePlugin, holographicDisplayPlugin, timeManipulatorPlugin, universalTranslatorPlugin],
-  
   '📚 Examples': [wordCountPlugin, markdownExportPlugin, darkThemePlugin, aiWritingPlugin],
   '🔧 Utilities': [backupPlugin, citationsPlugin, kanbanPlugin, spacedRepetitionPlugin]
 };
@@ -325,17 +228,6 @@ export const FEATURED_PLUGINS = [
   commentSystemPlugin,
   knowledgeGraphPlugin,
   smartSearchPlugin,
-  
-  // Phase 3-5 New Highlights
-  projectManagerPlugin,           // Business management
-  newCitationManagerPlugin,       // Academic research
-  aiWritingAssistantPlugin,       // AI-powered writing
-  encryptionPlugin,              // Security & privacy
-  performanceMonitorPlugin,      // Performance optimization
-  behaviorAnalyticsPlugin,       // Advanced analytics
-  contentPublisherPlugin,        // Multi-platform publishing
-  iotDeviceManagerPlugin,        // IoT integration
-  quantumNotesPlugin,            // Experimental features
   
   // Useful utilities
   backupPlugin,
