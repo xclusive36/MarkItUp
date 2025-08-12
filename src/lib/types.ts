@@ -139,6 +139,67 @@ export interface PluginSetting {
   options?: Array<{ label: string; value: any }>;
 }
 
+export interface PluginHealth {
+  status: 'healthy' | 'warning' | 'error' | 'disabled';
+  lastError?: string;
+  errorCount: number;
+  responseTime: number;
+  memoryUsage: number;
+  lastExecuted?: string;
+  executionCount: number;
+}
+
+export interface PluginUpdateInfo {
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  changelogUrl?: string;
+  autoUpdate: boolean;
+  lastChecked: string;
+}
+
+export interface PluginMarketplace {
+  name: string;
+  url: string;
+  trusted: boolean;
+  categories: string[];
+  searchApi: string;
+}
+
+export interface PluginBackup {
+  plugins: PluginManifest[];
+  settings: Map<string, Record<string, any>>;
+  timestamp: string;
+  deviceId: string;
+  version: string;
+}
+
+export interface PluginTest {
+  pluginId: string;
+  testCases: TestCase[];
+  lastRun: string;
+  status: 'passed' | 'failed' | 'pending';
+  coverage?: number;
+}
+
+export interface TestCase {
+  id: string;
+  name: string;
+  description: string;
+  test: () => Promise<boolean>;
+  expected: any;
+  actual?: any;
+}
+
+export interface PermissionRequest {
+  pluginId: string;
+  permission: PluginPermission;
+  reason: string;
+  granted: boolean;
+  grantedAt?: string;
+  grantedBy?: string;
+}
+
 export interface PluginAPI {
   // Core system access
   notes: {

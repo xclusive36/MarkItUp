@@ -33,33 +33,47 @@ export default function AIPluginDashboard({
   
   // State
   const [activeView, setActiveView] = useState<'overview' | 'store' | 'manager'>('overview');
-  const [pluginManager] = useState(() => new AIPluginManager());
+  const [pluginManager, setPluginManager] = useState<AIPluginManager | null>(null);
   const [installedCount, setInstalledCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize plugin manager on client side only
+  useEffect(() => {
+    setMounted(true);
+    const manager = new AIPluginManager();
+    setPluginManager(manager);
+    
+    // Give the plugin manager a moment to load persisted state
+    setTimeout(() => {
+      if (isOpen) {
+        loadStats(manager);
+      }
+    }, 100);
+  }, []);
 
   // Load plugin stats
   useEffect(() => {
-    if (isOpen) {
-      loadStats();
+    if (isOpen && pluginManager) {
+      // Small delay to ensure plugin manager has initialized
+      setTimeout(() => loadStats(pluginManager), 50);
     }
-  }, [isOpen]);
-
-  // Refresh stats when switching back to overview
+  }, [isOpen, pluginManager]);  // Reload stats when view changes
   useEffect(() => {
-    if (activeView === 'overview') {
+    if (pluginManager) {
       loadStats();
     }
-  }, [activeView]);
+  }, [activeView, pluginManager]);
 
-  const loadStats = async () => {
-    setIsLoading(true);
+  const loadStats = async (manager?: AIPluginManager) => {
+    const activeManager = manager || pluginManager;
+    if (!activeManager) return;
+    
     try {
-      const installed = await pluginManager.getInstalledPlugins();
+      const installed = await activeManager.getInstalledPlugins();
       setInstalledCount(installed.length);
     } catch (error) {
       console.error('Failed to load plugin stats:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -88,6 +102,8 @@ export default function AIPluginDashboard({
   ];
 
   const handleQuickInstall = async (pluginId: string) => {
+    if (!pluginManager) return;
+    
     setIsLoading(true);
     try {
       await pluginManager.installPlugin(pluginId);
@@ -242,7 +258,7 @@ export default function AIPluginDashboard({
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {quickActions.map(action => {
-                    const isInstalled = pluginManager.isPluginInstalled(action.id);
+                    const isInstalled = pluginManager ? pluginManager.isPluginInstalled(action.id) : false;
                     
                     return (
                       <div
@@ -318,21 +334,25 @@ export default function AIPluginDashboard({
       )}
 
       {/* Plugin Store */}
-      <AIPluginStore
-        notes={notes}
-        isOpen={activeView === 'store'}
-        onClose={() => setActiveView('overview')}
-        pluginManager={pluginManager}
-        onPluginChange={handlePluginChange}
-      />
+      {pluginManager && (
+        <AIPluginStore
+          notes={notes}
+          isOpen={activeView === 'store'}
+          onClose={() => setActiveView('overview')}
+          pluginManager={pluginManager}
+          onPluginChange={handlePluginChange}
+        />
+      )}
 
       {/* Plugin Manager */}
-      <PluginManager
-        isOpen={activeView === 'manager'}
-        onClose={() => setActiveView('overview')}
-        pluginManager={pluginManager}
-        onPluginChange={handlePluginChange}
-      />
+      {pluginManager && (
+        <PluginManager
+          isOpen={activeView === 'manager'}
+          onClose={() => setActiveView('overview')}
+          pluginManager={pluginManager}
+          onPluginChange={handlePluginChange}
+        />
+      )}
     </>
   );
 }

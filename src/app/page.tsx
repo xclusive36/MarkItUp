@@ -19,6 +19,7 @@ import { CollaborativeEditor } from "@/components/CollaborativeEditor";
 import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import PluginManagerDashboard from "@/components/PluginManagerDashboard";
 import AIChat from "@/components/AIChat";
 import WritingAssistant from "@/components/WritingAssistant";
 import KnowledgeDiscovery from "@/components/KnowledgeDiscovery";
@@ -155,7 +156,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const [viewMode, setViewMode] = useState<"edit" | "preview" | "split">(
     "edit"
   );
-  const [currentView, setCurrentView] = useState<"editor" | "graph" | "search" | "analytics">(
+  const [currentView, setCurrentView] = useState<"editor" | "graph" | "search" | "analytics" | "plugins">(
     "editor"
   );
 
@@ -707,6 +708,31 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   }}>
                   <Activity className="w-3 h-3" />
                   <span className="hidden md:inline ml-1 text-xs">Analytics</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentView("plugins");
+                    analytics.trackEvent('mode_switched', { view: 'plugins' });
+                  }}
+                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm"
+                  style={currentView === "plugins" ? {
+                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
+                    color: theme === "dark" ? "#f3f4f6" : "#111827"
+                  } : {
+                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (currentView !== "plugins") {
+                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (currentView !== "plugins") {
+                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
+                    }
+                  }}>
+                  <Settings className="w-3 h-3" />
+                  <span className="hidden md:inline ml-1 text-xs">Plugins</span>
                 </button>
               </div>
 
@@ -1697,6 +1723,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 tags={tags}
                 className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto"
               />
+            )}
+
+            {currentView === "plugins" && (
+              <div className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto">
+                <PluginManagerDashboard />
+              </div>
             )}
           </div>
         </div>

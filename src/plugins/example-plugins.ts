@@ -3,10 +3,10 @@ import { PluginManifest, ContentProcessor, Command, PluginSetting } from '../lib
 // Example: Word Count Plugin
 export const wordCountPlugin: PluginManifest = {
   id: 'word-count-enhanced',
-  name: 'Enhanced Word Count',
+  name: 'Basic Word Count',
   version: '1.0.0',
-  description: 'Provides detailed word count statistics and reading time estimates',
-  author: 'MarkItUp Team',
+  description: 'Simple word count statistics and reading time estimates',
+  author: 'MarkItUp Community',
   main: 'word-count-plugin.js',
   
   settings: [

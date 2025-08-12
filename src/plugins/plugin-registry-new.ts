@@ -15,8 +15,6 @@ import { citationManagerPlugin, researchPaperPlugin, noteTakingSystemPlugin, pdf
 import { crmLitePlugin, invoiceGeneratorPlugin, expenseTrackerPlugin, contractTemplatesPlugin, businessPlanPlugin, timeTrackerPlugin } from './business-professional-plugins';
 import { storyPlannerPlugin, screenplayFormatPlugin, poetryToolsPlugin, contentCalendarPlugin } from './creative-content-plugins';
 import { fitnessTrackerPlugin, nutritionDiaryPlugin, sleepTrackerPlugin, mentalHealthJournalPlugin } from './health-wellness-plugins';
-import { budgetPlannerPlugin, investmentTrackerPlugin, debtPayoffPlannerPlugin } from './finance-investment-plugins';
-import { homeMaintenanceTrackerPlugin, recipeBookPlugin, giftPlannerPlugin } from './lifestyle-home-plugins';
 
 // Import a few key example plugins for demonstration
 import { 
@@ -79,17 +77,7 @@ export const AVAILABLE_PLUGINS = [
   sleepTrackerPlugin,
   mentalHealthJournalPlugin,
   
-  // � FINANCE & INVESTMENT PLUGINS
-  budgetPlannerPlugin,
-  investmentTrackerPlugin,
-  debtPayoffPlannerPlugin,
-  
-  // 🏠 LIFESTYLE & HOME PLUGINS
-  homeMaintenanceTrackerPlugin,
-  recipeBookPlugin,
-  giftPlannerPlugin,
-  
-  // �📚 EXAMPLE PLUGINS (Selected demos)
+  // 📚 EXAMPLE PLUGINS (Selected demos)
   wordCountPlugin,
   markdownExportPlugin,
   darkThemePlugin,
@@ -106,9 +94,7 @@ export const PLUGIN_CATEGORIES = {
   '💼 Business & Professional': [crmLitePlugin, invoiceGeneratorPlugin, expenseTrackerPlugin, contractTemplatesPlugin, businessPlanPlugin, timeTrackerPlugin],
   '🎨 Creative & Content': [storyPlannerPlugin, screenplayFormatPlugin, poetryToolsPlugin, contentCalendarPlugin],
   '🏃‍♂️ Health & Wellness': [fitnessTrackerPlugin, nutritionDiaryPlugin, sleepTrackerPlugin, mentalHealthJournalPlugin],
-  '� Finance & Investment': [budgetPlannerPlugin, investmentTrackerPlugin, debtPayoffPlannerPlugin],
-  '🏠 Lifestyle & Home': [homeMaintenanceTrackerPlugin, recipeBookPlugin, giftPlannerPlugin],
-  '�📚 Examples': [wordCountPlugin, markdownExportPlugin, darkThemePlugin, aiWritingPlugin]
+  '📚 Examples': [wordCountPlugin, markdownExportPlugin, darkThemePlugin, aiWritingPlugin]
 };
 
 // Featured Plugins - Highlight the most useful ones for different user types
@@ -146,14 +132,6 @@ export const FEATURED_PLUGINS = [
   // Popular for health & wellness
   fitnessTrackerPlugin,
   mentalHealthJournalPlugin,
-  
-  // Popular for finance & investment
-  budgetPlannerPlugin,
-  investmentTrackerPlugin,
-  
-  // Popular for lifestyle & home
-  homeMaintenanceTrackerPlugin,
-  recipeBookPlugin,
   
   // Popular utilities
   fileOrganizerPlugin,

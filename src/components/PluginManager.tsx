@@ -80,6 +80,7 @@ export default function PluginManager({
     setIsLoading(true);
     try {
       const installedPlugins = await pluginManager.getInstalledPlugins();
+      
       const pluginStatuses: PluginStatus[] = [];
 
       for (const plugin of installedPlugins) {

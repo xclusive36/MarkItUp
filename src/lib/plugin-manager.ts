@@ -9,6 +9,8 @@ export class PluginManager {
 
   constructor(pkmSystem: PKMSystem) {
     this.pkmSystem = pkmSystem;
+    this.loadPersistedSettings();
+    // Don't call loadPersistedPlugins in constructor - it will be called from plugin-init.ts
   }
 
   // Load a plugin from a manifest
@@ -80,6 +82,9 @@ export class PluginManager {
       this.plugins.set(manifest.id, loadedPlugin);
       loadedPlugin.isActive = true;
 
+      // Persist the loaded plugin list
+      this.persistLoadedPlugins();
+
       console.log(`Plugin ${manifest.id} loaded successfully`);
       return true;
     } catch (error) {
@@ -113,6 +118,9 @@ export class PluginManager {
       // Mark as inactive and remove
       plugin.isActive = false;
       this.plugins.delete(pluginId);
+
+      // Persist the updated plugin list
+      this.persistLoadedPlugins();
 
       console.log(`Plugin ${pluginId} unloaded successfully`);
       return true;
@@ -272,6 +280,131 @@ export class PluginManager {
     // In a real implementation, this would save to localStorage or a file
     if (typeof window !== 'undefined') {
       localStorage.setItem('markitup-plugin-settings', JSON.stringify(Array.from(this.pluginSettings.entries())));
+    }
+  }
+
+  private persistLoadedPlugins(): void {
+    // Persist the list of loaded plugin IDs
+    if (typeof window !== 'undefined') {
+      const loadedPluginIds = Array.from(this.plugins.keys());
+      localStorage.setItem('markitup-enabled-plugins', JSON.stringify(loadedPluginIds));
+      console.log('Persisted loaded plugins:', loadedPluginIds);
+    }
+  }
+
+  async loadPersistedPlugins(): Promise<void> {
+    // Load previously enabled plugins from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('markitup-enabled-plugins');
+      if (saved) {
+        try {
+          const pluginIds = JSON.parse(saved);
+          console.log('Found persisted plugins:', pluginIds);
+          
+          // Import the plugin registry to get plugin manifests
+          const { AVAILABLE_PLUGINS } = await import('../plugins/plugin-registry');
+          
+          // Load each persisted plugin without triggering persistence again
+          for (const pluginId of pluginIds) {
+            const plugin = AVAILABLE_PLUGINS.find(p => p.id === pluginId);
+            if (plugin && !this.plugins.has(pluginId)) {
+              console.log('Auto-loading persisted plugin:', pluginId);
+              await this.loadPluginWithoutPersisting(plugin);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load persisted plugins:', error);
+        }
+      } else {
+        console.log('No persisted plugins found');
+      }
+    }
+  }
+
+  // Debug method to clear persistence
+  clearPersistedPlugins(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('markitup-enabled-plugins');
+      console.log('Cleared persisted plugins from localStorage');
+    }
+  }
+
+  // Internal method to load a plugin without triggering persistence (used during restoration)
+  private async loadPluginWithoutPersisting(manifest: PluginManifest): Promise<boolean> {
+    try {
+      // Validate plugin
+      if (!this.validatePlugin(manifest)) {
+        throw new Error(`Invalid plugin manifest: ${manifest.id}`);
+      }
+
+      // Check if already loaded
+      if (this.plugins.has(manifest.id)) {
+        throw new Error(`Plugin ${manifest.id} is already loaded`);
+      }
+
+      // Check dependencies
+      if (manifest.dependencies) {
+        for (const depId of manifest.dependencies) {
+          if (!this.plugins.has(depId)) {
+            throw new Error(`Missing dependency: ${depId}`);
+          }
+        }
+      }
+
+      // Create plugin API
+      const api = this.createPluginAPI(manifest.id);
+
+      // Load plugin settings
+      const settings = this.getPluginSettings(manifest.id);
+
+      // Create loaded plugin instance
+      const loadedPlugin: LoadedPlugin = {
+        manifest,
+        api,
+        settings,
+        isActive: false,
+        commands: new Map(),
+        views: new Map(),
+        processors: new Map(),
+      };
+
+      // Execute onLoad if defined
+      if (manifest.onLoad) {
+        await manifest.onLoad();
+      }
+
+      // Register commands
+      if (manifest.commands) {
+        for (const command of manifest.commands) {
+          this.registerCommand(manifest.id, command);
+        }
+      }
+
+      // Register views
+      if (manifest.views) {
+        for (const view of manifest.views) {
+          this.registerView(manifest.id, view);
+        }
+      }
+
+      // Register processors
+      if (manifest.processors) {
+        for (const processor of manifest.processors) {
+          this.registerProcessor(manifest.id, processor);
+        }
+      }
+
+      // Store plugin
+      this.plugins.set(manifest.id, loadedPlugin);
+      loadedPlugin.isActive = true;
+
+      // NOTE: Don't persist here to avoid circular calls during restoration
+
+      console.log(`Plugin ${manifest.id} loaded successfully (from persistence)`);
+      return true;
+    } catch (error) {
+      console.error(`Failed to load plugin ${manifest.id}:`, error);
+      return false;
     }
   }
 

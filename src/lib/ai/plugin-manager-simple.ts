@@ -72,10 +72,19 @@ export class AIPluginManager {
   private pluginSettings: Map<string, Record<string, any>> = new Map();
   
   constructor() {
-    this.loadPersistedState();
+    // Only load persisted state on client side
+    if (typeof window !== 'undefined') {
+      this.loadPersistedState();
+    }
   }
 
   private loadPersistedState() {
+    // Additional safety check for SSR
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      console.log('Skipping plugin state loading during SSR');
+      return;
+    }
+    
     try {
       // Load installed plugins
       const installedData = localStorage.getItem('markitup-installed-plugins');
@@ -102,6 +111,12 @@ export class AIPluginManager {
   }
 
   private savePersistedState() {
+    // Only save state on client side
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      console.log('Skipping plugin state saving during SSR');
+      return;
+    }
+    
     try {
       const installedIds = Array.from(this.installedPlugins.keys());
       localStorage.setItem('markitup-installed-plugins', JSON.stringify(installedIds));
