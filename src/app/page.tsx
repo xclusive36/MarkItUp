@@ -20,6 +20,7 @@ import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import UnifiedPluginManager from "@/components/UnifiedPluginManager";
+import CommandPalette from "@/components/CommandPalette";
 import AIChat from "@/components/AIChat";
 import WritingAssistant from "@/components/WritingAssistant";
 import KnowledgeDiscovery from "@/components/KnowledgeDiscovery";
@@ -55,6 +56,7 @@ import {
   Compass,
   PenTool,
   Map,
+  Command,
   BookOpen,
   BarChart3,
 } from "lucide-react";
@@ -90,6 +92,9 @@ export default function Home() {
 
   // Batch Analyzer state  
   const [showBatchAnalyzer, setShowBatchAnalyzer] = useState(false);
+
+  // Command Palette state
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -183,7 +188,32 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const [isInitializing, setIsInitializing] = useState(true);
 
   // PKM system
-  const [pkm] = useState(() => getPKMSystem());
+  const [pkm] = useState(() => {
+    const pkmSystem = getPKMSystem();
+    
+    // Set up UI callbacks for plugin integration
+    pkmSystem.setUICallbacks({
+      setActiveNote: (note) => {
+        setActiveNote(note);
+        setMarkdown(note.content);
+        setFileName(note.name.replace('.md', ''));
+        setFolder(note.folder || '');
+      },
+      setMarkdown: setMarkdown,
+      setFileName: setFileName,
+      setFolder: setFolder,
+      refreshNotes: async () => {
+        // Refresh notes from API
+        const notesResponse = await fetch("/api/files");
+        if (notesResponse.ok) {
+          const notesData = await notesResponse.json();
+          setNotes(notesData);
+        }
+      }
+    });
+    
+    return pkmSystem;
+  });
 
   // Initialize PKM system on mount
   useEffect(() => {
@@ -199,6 +229,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         analytics.trackEvent('session_started', {
           timestamp: new Date().toISOString()
         });
+
+        // Initialize PKM system (this will load plugins)
+        await pkm.initialize();
 
         // Initialize AI service with PKM system (non-blocking)
         const { initializeAIService } = await import('@/lib/ai/ai-service');
@@ -272,6 +305,21 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       refreshData();
     }
   }, [isMounted, refreshData]);
+
+  // Command Palette keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Alt+P or Ctrl+K to open command palette
+      if ((e.altKey && e.key === 'p') || (e.ctrlKey && e.key === 'k')) {
+        e.preventDefault();
+        setShowCommandPalette(true);
+        analytics.trackEvent('mode_switched', { action: 'command_palette_opened' });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Handle search
   type SearchOptions = {
@@ -1091,7 +1139,97 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Writing Assistant Button - duplicate removal needed */}
 
-                <ThemeToggle />
+                {/* Command Palette Button */}
+                <button
+                  onClick={() => setShowCommandPalette(true)}
+                  className="p-2 rounded-md hover:bg-opacity-80 transition-colors"
+                  style={{
+                    backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
+                    color: theme === "dark" ? "#f9fafb" : "#111827"
+                  }}
+                    title="Command Palette (Alt+P)"
+                  >
+                    <Command className="w-4 h-4" />
+                  </button>
+                  
+                  {/* Debug: Show loaded plugins */}
+                  <button
+                    className="p-2 rounded-lg transition-colors"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                      color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+                    }}
+                    onClick={() => {
+                      try {
+                        console.log('=== PLUGIN DEBUG INFO ===');
+                        const pluginManager = pkm.getPluginManager();
+                        console.log('Plugin manager:', pluginManager);
+                        
+                        const plugins = pluginManager.getLoadedPlugins();
+                        console.log('Loaded plugins:', plugins);
+                        
+                        const commands = pluginManager.getAllCommands();
+                        console.log('All commands:', commands);
+                        
+                        let debugInfo = `=== PKM PLUGIN DEBUG ===\n`;
+                        debugInfo += `Initialization complete: ${!isInitializing}\n`;
+                        debugInfo += `Mounted: ${isMounted}\n`;
+                        debugInfo += `Loaded plugins: ${plugins.length}\n`;
+                        debugInfo += `Total commands: ${commands.length}\n\n`;
+                        
+                        if (plugins.length > 0) {
+                          debugInfo += `PLUGINS:\n${plugins.map(p => `- ${p.name} (${p.id})`).join('\n')}\n\n`;
+                        }
+                        
+                        if (commands.length > 0) {
+                          debugInfo += `COMMANDS:\n${commands.map(c => `- ${c.command.name} (${c.pluginId})`).join('\n')}`;
+                        } else {
+                          debugInfo += `No commands found!`;
+                        }
+                        
+                        alert(debugInfo);
+                      } catch (error: any) {
+                        console.error('Debug error:', error);
+                        alert(`Debug Error: ${error?.message || error}`);
+                      }
+                    }}
+                    title="Debug: Show loaded plugins"
+                  >
+                    🐛
+                  </button>
+                  
+                  {/* Debug: Reset plugins */}
+                  <button
+                    className="p-2 rounded-lg transition-colors"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                      color: theme === 'dark' ? '#9ca3af' : '#6b7280'
+                    }}
+                    onClick={async () => {
+                      try {
+                        console.log('=== RESETTING PLUGINS ===');
+                        
+                        // Clear persisted plugins
+                        localStorage.removeItem('markitup-enabled-plugins');
+                        localStorage.removeItem('markitup-plugin-settings');
+                        
+                        // Clear current plugins
+                        const pluginManager = pkm.getPluginManager();
+                        pluginManager.clearPersistedPlugins();
+                        
+                        // Force reload core plugins
+                        await pkm.initializePlugins();
+                        
+                        alert('Plugins reset! Core plugins should now be loaded. Check command palette and debug info.');
+                      } catch (error: any) {
+                        console.error('Reset error:', error);
+                        alert(`Reset Error: ${error?.message || error}`);
+                      }
+                    }}
+                    title="Reset plugins to core plugins"
+                  >
+                    🔄
+                  </button>                <ThemeToggle />
               </div>
             </div>
           </div>
@@ -1863,6 +2001,24 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           setShowBatchAnalyzer(false);
         }}
       />
+
+      {/* Command Palette */}
+      {isMounted && !isInitializing && (
+        <CommandPalette
+          isOpen={showCommandPalette}
+          onClose={() => setShowCommandPalette(false)}
+          onSelectNote={(noteId) => {
+            const note = notes.find(n => n.id === noteId);
+            if (note) {
+              setActiveNote(note);
+              setMarkdown(note.content);
+              setFileName(note.name);
+            }
+          }}
+          notes={notes}
+          pkm={pkm}
+        />
+      )}
 
       </div>
     </>

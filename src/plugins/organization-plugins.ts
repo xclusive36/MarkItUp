@@ -1,4 +1,4 @@
-import { PluginManifest } from '../lib/types';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Project Tracker Plugin - Track project progress and milestones
 export const projectTrackerPlugin: PluginManifest = {
@@ -259,7 +259,7 @@ export const blogTemplatePlugin: PluginManifest = {
       name: 'Generate Blog Template',
       description: 'Generate a blog post template',
       keybinding: 'Ctrl+Shift+B',
-      callback: async () => {
+      callback: async (api: PluginAPI) => {
         const templates = [
           'How-to Guide',
           'Listicle',
@@ -393,7 +393,19 @@ Your conclusion and call-to-action go here.
 `;
             }
             
-            console.log('Blog template:', template);
+            // Create a new note with the generated template
+            const fileName = `${title.toLowerCase().replace(/\s+/g, '-')}.md`;
+            try {
+              console.log('Creating blog template file:', fileName);
+              console.log('Template content:', template);
+              
+              await api.notes.create(fileName, template);
+              
+              api.ui.showNotification(`Blog template "${title}" created and loaded successfully!`, 'info');
+            } catch (error) {
+              console.error('Error creating blog template:', error);
+              api.ui.showNotification('Failed to create blog template. Please try again.', 'error');
+            }
           }
         }
       }

@@ -69,7 +69,7 @@ export interface Command {
   name: string;
   description: string;
   keybinding?: string;
-  callback: () => void | Promise<void>;
+  callback: (api?: PluginAPI) => void | Promise<void>;
   condition?: () => boolean;
 }
 

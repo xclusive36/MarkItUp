@@ -77,7 +77,7 @@ const PluginStore: React.FC<PluginStoreProps> = ({ pluginManager, onClose }) => 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-3/4 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl h-5/6 overflow-hidden">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -128,12 +128,19 @@ const PluginStore: React.FC<PluginStoreProps> = ({ pluginManager, onClose }) => 
                       </svg>
                       No plugins installed
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       Install plugins to extend MarkItUp's functionality
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">
+                      After installing, use <kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs">Ctrl/Cmd+K</kbd> to access plugin commands
                     </p>
                   </div>
                 ) : (
-                  loadedPlugins.map((plugin) => (
+                  loadedPlugins.map((plugin) => {
+                    // Get plugin commands from the plugin manager
+                    const pluginCommands = pluginManager.getAllCommands().filter(cmd => cmd.pluginId === plugin.id);
+                    
+                    return (
                     <div key={plugin.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -147,6 +154,35 @@ const PluginStore: React.FC<PluginStoreProps> = ({ pluginManager, onClose }) => 
                             <span>v{plugin.version}</span>
                             <span>by {plugin.author}</span>
                           </div>
+                          
+                          {/* Plugin Commands Info */}
+                          {pluginCommands.length > 0 && (
+                            <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-xs font-medium text-green-800 dark:text-green-200">
+                                  {pluginCommands.length} command{pluginCommands.length > 1 ? 's' : ''} available
+                                </span>
+                              </div>
+                              <div className="text-xs text-green-700 dark:text-green-300">
+                                {pluginCommands.map((cmd) => (
+                                  <div key={cmd.command.id} className="flex items-center justify-between">
+                                    <span>• {cmd.command.name}</span>
+                                    {cmd.command.keybinding && (
+                                      <kbd className="px-1 py-0.5 text-xs bg-green-200 dark:bg-green-800 rounded">
+                                        {cmd.command.keybinding}
+                                      </kbd>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-1 text-xs text-green-600 dark:text-green-400">
+                                Press <kbd className="px-1 py-0.5 bg-green-200 dark:bg-green-800 rounded">Ctrl/Cmd+K</kbd> to access these commands
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={() => handleUninstallPlugin(plugin.id)}
@@ -157,7 +193,8 @@ const PluginStore: React.FC<PluginStoreProps> = ({ pluginManager, onClose }) => 
                         </button>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             ) : (

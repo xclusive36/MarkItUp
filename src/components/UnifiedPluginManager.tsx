@@ -237,7 +237,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Package className="h-6 w-6" />
-              Unified Plugin Manager
+              Plugin Manager
             </h1>
             <p className="text-sm opacity-70 mt-1">
               Manage all {stats.totalPlugins} plugins from one unified interface
@@ -460,6 +460,45 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
           />
         )}
       </div>
+
+      {/* Command Palette Usage Info - Footer (only on overview tab) */}
+      {activeTab === 'overview' && (
+        <div className={`border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} p-4`}>
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <Key className={`h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-1`}>
+                💡 How to Use Plugin Commands
+              </h3>
+              <p className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                Access plugin commands through the Command Palette:
+              </p>
+              <div className="flex items-center space-x-2 text-xs">
+                <kbd className={`px-2 py-1 text-xs font-semibold rounded border ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 text-gray-200 border-gray-600' 
+                    : 'bg-gray-100 text-gray-900 border-gray-300'
+                }`}>
+                  Ctrl+K
+                </kbd>
+                <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>or</span>
+                <kbd className={`px-2 py-1 text-xs font-semibold rounded border ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 text-gray-200 border-gray-600' 
+                    : 'bg-gray-100 text-gray-900 border-gray-300'
+                }`}>
+                  Cmd+K
+                </kbd>
+                <span className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                  → Open Command Palette → Section #3: Plugin Commands
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -660,6 +699,53 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, showAdvanced =
             )}
           </div>
           <p className="text-sm opacity-70 line-clamp-2">{plugin.description}</p>
+          
+          {/* Show commands for loaded plugins */}
+          {isLoaded && manager && (
+            (() => {
+              const pluginCommands = manager.getAllCommands().filter((cmd: any) => cmd.pluginId === plugin.id);
+              return pluginCommands.length > 0 ? (
+                <div className={`mt-2 p-2 rounded-md ${
+                  theme === 'dark' 
+                    ? 'bg-green-900/20 border border-green-800/50' 
+                    : 'bg-green-50 border border-green-200'
+                }`}>
+                  <div className="flex items-center space-x-1 mb-1">
+                    <Zap className={`h-3 w-3 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
+                    <span className={`text-xs font-medium ${theme === 'dark' ? 'text-green-200' : 'text-green-800'}`}>
+                      {pluginCommands.length} command{pluginCommands.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className={`text-xs ${theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}>
+                    {pluginCommands.slice(0, 2).map((cmd: any) => (
+                      <div key={cmd.command.id} className="flex items-center justify-between">
+                        <span>• {cmd.command.name}</span>
+                        {cmd.command.keybinding && (
+                          <kbd className={`px-1 py-0.5 text-xs rounded ${
+                            theme === 'dark' 
+                              ? 'bg-green-800 text-green-200' 
+                              : 'bg-green-200 text-green-800'
+                          }`}>
+                            {cmd.command.keybinding}
+                          </kbd>
+                        )}
+                      </div>
+                    ))}
+                    {pluginCommands.length > 2 && (
+                      <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                        +{pluginCommands.length - 2} more commands
+                      </div>
+                    )}
+                  </div>
+                  <div className={`mt-1 text-xs ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                    Press <kbd className={`px-1 py-0.5 rounded ${
+                      theme === 'dark' ? 'bg-green-800 text-green-200' : 'bg-green-200 text-green-800'
+                    }`}>Ctrl/Cmd+K</kbd> to access
+                  </div>
+                </div>
+              ) : null;
+            })()
+          )}
         </div>
       </div>
       

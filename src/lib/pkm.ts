@@ -4,18 +4,29 @@ import { SearchEngine } from './search';
 import { GraphBuilder } from './graph';
 import { PluginManager } from './plugin-manager';
 
+interface UICallbacks {
+  setActiveNote: (note: Note) => void;
+  setMarkdown: (content: string) => void;
+  setFileName: (name: string) => void;
+  setFolder: (folder: string) => void;
+  refreshNotes: () => Promise<void>;
+}
+
 export class PKMSystem {
   private searchEngine: SearchEngine;
   private graphBuilder: GraphBuilder;
   private pluginManager: PluginManager;
   private notes: Map<string, Note> = new Map();
-  private eventListeners: Map<string, Array<(event: SystemEvent) => void>> = new Map();
   private commands: Map<string, Command> = new Map();
-  private viewState: ViewState = {
+  private eventListeners: Map<string, Array<(event: SystemEvent) => void>> = new Map();
+  private uiCallbacks?: UICallbacks;
+
+  viewState: ViewState = {
+    activeNoteId: undefined,
     selectedNotes: [],
     searchQuery: '',
     selectedTags: [],
-    viewMode: 'edit',
+    viewMode: 'split',
     sidebarWidth: 300,
     graphView: {
       zoom: 1,
@@ -26,8 +37,16 @@ export class PKMSystem {
   constructor() {
     this.searchEngine = new SearchEngine();
     this.graphBuilder = new GraphBuilder();
+    // Create plugin manager without callbacks initially
     this.pluginManager = new PluginManager(this);
     this.registerDefaultCommands();
+  }
+
+  // Set UI callbacks and recreate plugin manager with callbacks
+  setUICallbacks(callbacks: UICallbacks): void {
+    this.uiCallbacks = callbacks;
+    // Recreate plugin manager with UI callbacks
+    this.pluginManager = new PluginManager(this, callbacks);
   }
 
   // ===== NOTE MANAGEMENT =====
@@ -381,7 +400,64 @@ export class PKMSystem {
       this.graphBuilder.rebuildGraph(notes);
     }
 
+    // Initialize plugin system with some basic plugins
+    await this.initializePlugins();
+
     console.log('PKM System initialized with', this.notes.size, 'notes');
+  }
+
+  async initializePlugins(): Promise<void> {
+    try {
+      console.log('PKM: Starting plugin initialization...');
+      
+      // Load persisted plugins first
+      await this.pluginManager.loadPersistedPlugins();
+      
+      // If no plugins are loaded, load some basic ones
+      const loadedPlugins = this.pluginManager.getLoadedPlugins();
+      console.log('PKM: Found', loadedPlugins.length, 'persisted plugins:', loadedPlugins.map(p => p.name));
+      
+      // ALWAYS load core plugins regardless of persisted plugins
+      console.log('PKM: Loading core plugins...');
+      
+      // Import and load core plugins
+      const { enhancedWordCountPlugin } = await import('../plugins/enhanced-word-count');
+      const { dailyNotesPlugin } = await import('../plugins/daily-notes');
+      const { tableOfContentsPlugin } = await import('../plugins/table-of-contents');
+      
+      console.log('PKM: Imported core plugin manifests');
+      
+      // Load each core plugin if not already loaded
+      const corePlugins = [
+        { plugin: enhancedWordCountPlugin, name: 'Enhanced Word Count' },
+        { plugin: dailyNotesPlugin, name: 'Daily Notes' },
+        { plugin: tableOfContentsPlugin, name: 'Table of Contents' }
+      ];
+      
+      for (const { plugin, name } of corePlugins) {
+        const isAlreadyLoaded = this.pluginManager.getLoadedPlugins().some(p => p.id === plugin.id);
+        if (!isAlreadyLoaded) {
+          try {
+            console.log(`PKM: Loading ${name} plugin...`);
+            await this.pluginManager.loadPlugin(plugin);
+            console.log(`PKM: Loaded ${name} plugin successfully`);
+          } catch (error) {
+            console.warn(`Failed to load ${name} plugin:`, error);
+          }
+        } else {
+          console.log(`PKM: ${name} plugin already loaded`);
+        }
+      }
+      
+      const finalLoadedPlugins = this.pluginManager.getLoadedPlugins();
+      console.log(`Plugin system initialized with ${finalLoadedPlugins.length} plugins:`, finalLoadedPlugins.map(p => p.name));
+      
+      // Debug: Check commands
+      const allCommands = this.pluginManager.getAllCommands();
+      console.log(`PKM: Found ${allCommands.length} total commands from plugins:`, allCommands);
+    } catch (error) {
+      console.error('Error initializing plugins:', error);
+    }
   }
 
   async destroy(): Promise<void> {
