@@ -59,6 +59,9 @@ import {
   Command,
   BookOpen,
   BarChart3,
+  ChevronDown,
+  MoreHorizontal,
+  ArrowLeft,
 } from "lucide-react";
 
 // Styles
@@ -95,6 +98,11 @@ export default function Home() {
 
   // Command Palette state
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  // Dropdown menu states
+  const [showAIToolsDropdown, setShowAIToolsDropdown] = useState(false);
+  const [showCollabDropdown, setShowCollabDropdown] = useState(false);
+  const [showViewsDropdown, setShowViewsDropdown] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -383,10 +391,34 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setShowCommandPalette(true);
         analytics.trackEvent('mode_switched', { action: 'command_palette_opened' });
       }
+      
+      // Escape to close dropdowns
+      if (e.key === 'Escape') {
+        setShowAIToolsDropdown(false);
+        setShowCollabDropdown(false);
+        setShowViewsDropdown(false);
+      }
+    };
+
+    // Click outside to close dropdowns
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.closest('[data-dropdown="ai-tools"]') && 
+          !target.closest('[data-dropdown="collab"]') && 
+          !target.closest('[data-dropdown="views"]')) {
+        setShowAIToolsDropdown(false);
+        setShowCollabDropdown(false);
+        setShowViewsDropdown(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
   // Handle search
@@ -733,147 +765,32 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-1 w-full sm:w-auto">
-              {/* View Switcher */}
-              <div 
-                className="flex rounded-lg p-0.5 w-full sm:w-auto"
-                style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
+            <div className="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto">
+              {/* View Switcher - Enhanced Dropdown Approach */}
+              {/* Back to Editor Button - Only show when not in editor */}
+              {currentView !== "editor" && (
                 <button
                   disabled={!isMounted}
                   onClick={() => {
                     setCurrentView("editor");
                     analytics.trackEvent('mode_switched', { view: 'editor' });
                   }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={currentView === "editor" ? {
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
-                    color: theme === "dark" ? "#f3f4f6" : "#111827"
-                  } : {
-                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
+                  className="flex items-center justify-center px-3 py-1.5 text-sm rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  style={{
+                    backgroundColor: theme === "dark" ? "#2563eb" : "#3b82f6",
+                    color: "#ffffff"
                   }}
-                  onMouseEnter={(e) => {
-                    if (currentView !== "editor") {
-                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentView !== "editor") {
-                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                    }
-                  }}>
-                  <Edit3 className="w-3 h-3" />
-                  <span className="hidden md:inline ml-1 text-xs">Edit</span>
+                  title="Return to Editor"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back
                 </button>
-                <button
-                  disabled={!isMounted}
-                  onClick={() => {
-                    setCurrentView("graph");
-                    analytics.trackEvent('mode_switched', { view: 'graph' });
-                    analytics.trackEvent('graph_viewed', {});
-                  }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={currentView === "graph" ? {
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
-                    color: theme === "dark" ? "#f3f4f6" : "#111827"
-                  } : {
-                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentView !== "graph") {
-                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentView !== "graph") {
-                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                    }
-                  }}>
-                  <Network className="w-3 h-3" />
-                  <span className="hidden md:inline ml-1 text-xs">Graph</span>
-                </button>
-                <button
-                  disabled={!isMounted}
-                  onClick={() => {
-                    setCurrentView("search");
-                    analytics.trackEvent('mode_switched', { view: 'search' });
-                  }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={currentView === "search" ? {
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
-                    color: theme === "dark" ? "#f3f4f6" : "#111827"
-                  } : {
-                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentView !== "search") {
-                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentView !== "search") {
-                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                    }
-                  }}>
-                  <Search className="w-3 h-3" />
-                  <span className="hidden md:inline ml-1 text-xs">Search</span>
-                </button>
-                <button
-                  disabled={!isMounted}
-                  onClick={() => {
-                    setCurrentView("analytics");
-                    analytics.trackEvent('mode_switched', { view: 'analytics' });
-                  }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={currentView === "analytics" ? {
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
-                    color: theme === "dark" ? "#f3f4f6" : "#111827"
-                  } : {
-                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentView !== "analytics") {
-                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentView !== "analytics") {
-                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                    }
-                  }}>
-                  <Activity className="w-3 h-3" />
-                  <span className="hidden md:inline ml-1 text-xs">Analytics</span>
-                </button>
-                <button
-                  disabled={!isMounted}
-                  onClick={() => {
-                    setCurrentView("plugins");
-                    analytics.trackEvent('mode_switched', { view: 'plugins' });
-                  }}
-                  className="flex items-center justify-center flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={currentView === "plugins" ? {
-                    backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
-                    color: theme === "dark" ? "#f3f4f6" : "#111827"
-                  } : {
-                    color: theme === "dark" ? "#d1d5db" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (currentView !== "plugins") {
-                      e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (currentView !== "plugins") {
-                      e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                    }
-                  }}>
-                  <Settings className="w-3 h-3" />
-                  <span className="hidden md:inline ml-1 text-xs">Plugins</span>
-                </button>
-              </div>
+              )}
 
+              {/* Editor Mode Toggle - Simplified */}
               {currentView === "editor" && (
                 <div 
-                  className="flex rounded-lg p-0.5 w-full sm:w-auto"
+                  className="flex rounded-lg p-0.5"
                   style={{ backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6" }}>
                   <button
                     disabled={!isMounted}
@@ -881,23 +798,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("edit");
                       analytics.trackEvent('mode_switched', { mode: 'edit' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "edit" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
                     } : {
                       color: theme === "dark" ? "#d1d5db" : "#6b7280"
                     }}
-                    onMouseEnter={(e) => {
-                      if (viewMode !== "edit") {
-                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (viewMode !== "edit") {
-                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                      }
-                    }}>
+                  >
                     Edit
                   </button>
                   <button
@@ -906,23 +814,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("preview");
                       analytics.trackEvent('mode_switched', { mode: 'preview' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "preview" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
                     } : {
                       color: theme === "dark" ? "#d1d5db" : "#6b7280"
                     }}
-                    onMouseEnter={(e) => {
-                      if (viewMode !== "preview") {
-                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (viewMode !== "preview") {
-                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                      }
-                    }}>
+                  >
                     Preview
                   </button>
                   <button
@@ -931,281 +830,317 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                       setViewMode("split");
                       analytics.trackEvent('mode_switched', { mode: 'split' });
                     }}
-                    className="flex-1 sm:flex-none px-1.5 sm:px-2 py-0.5 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     style={viewMode === "split" ? {
                       backgroundColor: theme === "dark" ? "#4b5563" : "#ffffff",
                       color: theme === "dark" ? "#f3f4f6" : "#111827"
                     } : {
                       color: theme === "dark" ? "#d1d5db" : "#6b7280"
                     }}
-                    onMouseEnter={(e) => {
-                      if (viewMode !== "split") {
-                        e.currentTarget.style.color = theme === "dark" ? "#f3f4f6" : "#111827";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (viewMode !== "split") {
-                        e.currentTarget.style.color = theme === "dark" ? "#d1d5db" : "#6b7280";
-                      }
-                    }}>
-                    <span className="hidden sm:inline">Split</span>
-                    <span className="sm:hidden">⧄</span>
+                  >
+                    Split
                   </button>
                 </div>
               )}
 
-              {/* Collaboration Controls */}
-              <div className="flex items-center space-x-1 w-full sm:w-auto">
-                {/* Collaboration Status */}
-                <div 
-                  className="flex items-center space-x-1 px-1.5 sm:px-2 py-0.5 rounded-md flex-1 sm:flex-none"
+              {/* Views Dropdown - Compact Always */}
+              <div className="relative" data-dropdown="views">
+                <button
+                  onClick={() => {
+                    setShowViewsDropdown(!showViewsDropdown);
+                    setShowAIToolsDropdown(false);
+                    setShowCollabDropdown(false);
+                  }}
+                  className="flex items-center space-x-1 p-2 rounded-md transition-colors shadow-sm"
                   style={{
-                    backgroundColor: settings.enableCollaboration
-                      ? theme === "dark" ? "rgba(34, 197, 94, 0.2)" : "#dcfce7"
+                    backgroundColor: ['graph', 'search', 'analytics', 'plugins'].includes(currentView)
+                      ? theme === "dark" ? "#1e40af" : "#dbeafe"
                       : theme === "dark" ? "#374151" : "#f3f4f6",
-                    color: settings.enableCollaboration
-                      ? theme === "dark" ? "#86efac" : "#15803d"
-                      : theme === "dark" ? "#9ca3af" : "#6b7280"
-                  }}>
-                  <Users className="w-3 h-3" />
-                  <span className="text-xs">
-                    {settings.enableCollaboration ? 'Collab' : 'Solo'}
-                  </span>
+                    color: ['graph', 'search', 'analytics', 'plugins'].includes(currentView)
+                      ? theme === "dark" ? "#60a5fa" : "#1e40af"
+                      : theme === "dark" ? "#d1d5db" : "#6b7280"
+                  }}
+                  title={`Views & Tools${currentView !== 'editor' ? ` - Current: ${currentView.charAt(0).toUpperCase() + currentView.slice(1)}` : ''}`}
+                >
+                  {currentView === 'graph' && <Network className="w-4 h-4" />}
+                  {currentView === 'search' && <Search className="w-4 h-4" />}
+                  {currentView === 'analytics' && <Activity className="w-4 h-4" />}
+                  {currentView === 'plugins' && <Settings className="w-4 h-4" />}
+                  {currentView === 'editor' && <Network className="w-4 h-4" />}
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                
+                {showViewsDropdown && (
+                  <div
+                    className="absolute right-0 mt-2 w-48 rounded-md shadow-lg z-50"
+                    style={{
+                      backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+                      border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`
+                    }}
+                  >
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setCurrentView("graph");
+                          setShowViewsDropdown(false);
+                          analytics.trackEvent('mode_switched', { view: 'graph' });
+                          analytics.trackEvent('graph_viewed', {});
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                        style={{ 
+                          color: currentView === 'graph' 
+                            ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                            : (theme === "dark" ? "#f9fafb" : "#111827")
+                        }}
+                      >
+                        <Network className="w-4 h-4 mr-3" />
+                        Knowledge Graph
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setCurrentView("search");
+                          setShowViewsDropdown(false);
+                          analytics.trackEvent('mode_switched', { view: 'search' });
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                        style={{ 
+                          color: currentView === 'search' 
+                            ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                            : (theme === "dark" ? "#f9fafb" : "#111827")
+                        }}
+                      >
+                        <Search className="w-4 h-4 mr-3" />
+                        Global Search
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setCurrentView("analytics");
+                          setShowViewsDropdown(false);
+                          analytics.trackEvent('mode_switched', { view: 'analytics' });
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                        style={{ 
+                          color: currentView === 'analytics' 
+                            ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                            : (theme === "dark" ? "#f9fafb" : "#111827")
+                        }}
+                      >
+                        <Activity className="w-4 h-4 mr-3" />
+                        Analytics
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setCurrentView("plugins");
+                          setShowViewsDropdown(false);
+                          analytics.trackEvent('mode_switched', { view: 'plugins' });
+                        }}
+                        className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                        style={{ 
+                          color: currentView === 'plugins' 
+                            ? (theme === "dark" ? "#60a5fa" : "#2563eb")
+                            : (theme === "dark" ? "#f9fafb" : "#111827")
+                        }}
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Plugin Manager
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Top Menu - Cleaned Up with Dropdowns */}
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                
+                {/* AI Tools Dropdown - Compact Always */}
+                <div className="relative" data-dropdown="ai-tools">
+                  <button
+                    onClick={() => {
+                      setShowAIToolsDropdown(!showAIToolsDropdown);
+                      setShowCollabDropdown(false);
+                    }}
+                    className="flex items-center space-x-1 p-2 rounded-md transition-colors hover:bg-opacity-80"
+                    style={{
+                      backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
+                      color: theme === "dark" ? "#f9fafb" : "#111827"
+                    }}
+                    title="AI Tools"
+                  >
+                    <Brain className="w-4 h-4" />
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  
+                  {showAIToolsDropdown && (
+                    <div
+                      className="absolute right-0 mt-2 w-56 rounded-md shadow-lg z-50"
+                      style={{
+                        backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+                        border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`
+                      }}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            handleButtonClick('ai-chat');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <Brain className="w-4 h-4 mr-3" />
+                          AI Assistant
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('writing-assistant');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <PenTool className="w-4 h-4 mr-3" />
+                          Writing Assistant
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('knowledge-discovery');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <Compass className="w-4 h-4 mr-3" />
+                          Knowledge Discovery
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('research-assistant');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <BookOpen className="w-4 h-4 mr-3" />
+                          Research Assistant
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('knowledge-map');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <Map className="w-4 h-4 mr-3" />
+                          Knowledge Map
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('batch-analyzer');
+                            setShowAIToolsDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <BarChart3 className="w-4 h-4 mr-3" />
+                          Batch Analyzer
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* User Profile Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => setShowUserProfile(true)}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="User Profile"
-                >
-                  <User className="w-4 h-4" />
-                </button>
-
-                {/* Collaboration Settings Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => setShowCollabSettings(true)}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: theme === "dark" ? "#9ca3af" : "#6b7280"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Collaboration Settings"
-                >
-                  <Settings className="w-4 h-4" />
-                </button>
-
-                {/* AI Chat Button */}
-                <button
-                  onClick={() => handleButtonClick('ai-chat')}
-                  className="p-1 rounded-md transition-colors"
-                  style={{
-                    color: showAIChat 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  title="AI Assistant"
-                >
-                  <Brain className="w-4 h-4" />
-                </button>
-
-                {/* Writing Assistant Button */}
-                <button
-                  onClick={() => handleButtonClick('writing-assistant')}
-                  className="p-1 rounded-md transition-colors"
-                  style={{
-                    color: showWritingAssistant 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  title="Writing Assistant"
-                >
-                  <PenTool className="w-4 h-4" />
-                </button>
-
-                {/* Knowledge Discovery Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => {
-                    if (isMounted && !isInitializing) {
-                      setShowKnowledgeDiscovery(true);
-                      analytics.trackEvent('ai_analysis', {
-                        action: 'open_knowledge_discovery',
-                        notesCount: notes.length
-                      });
-                    }
-                  }}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: showKnowledgeDiscovery 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showKnowledgeDiscovery && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showKnowledgeDiscovery && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Knowledge Discovery"
-                >
-                  <Compass className="w-4 h-4" />
-                </button>
-
-                {/* Research Assistant Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => {
-                    if (isMounted && !isInitializing) {
-                      setShowResearchAssistant(true);
-                      analytics.trackEvent('ai_analysis', {
-                        action: 'open_research_assistant',
-                        notesCount: notes.length
-                      });
-                    }
-                  }}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: showResearchAssistant 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showResearchAssistant && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showResearchAssistant && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Research Assistant"
-                >
-                  <BookOpen className="w-4 h-4" />
-                </button>
-
-                {/* Knowledge Map Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => {
-                    if (isMounted && !isInitializing) {
-                      setShowKnowledgeMap(true);
-                      analytics.trackEvent('ai_analysis', {
-                        action: 'open_knowledge_map',
-                        notesCount: notes.length
-                      });
-                    }
-                  }}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: showKnowledgeMap 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showKnowledgeMap && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showKnowledgeMap && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Knowledge Map"
-                >
-                  <Map className="w-4 h-4" />
-                </button>
-
-                {/* Batch Analyzer Button */}
-                <button
-                  disabled={!isMounted || isInitializing}
-                  onClick={() => {
-                    if (isMounted && !isInitializing) {
-                      setShowBatchAnalyzer(true);
-                      analytics.trackEvent('ai_analysis', {
-                        action: 'open_batch_analyzer',
-                        notesCount: notes.length
-                      });
-                    }
-                  }}
-                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    color: showBatchAnalyzer 
-                      ? (theme === "dark" ? "#60a5fa" : "#2563eb")
-                      : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showBatchAnalyzer && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showBatchAnalyzer && isMounted && !isInitializing) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
-                  }}
-                  title="Batch Analyzer"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                </button>
-
-                {/* Writing Assistant Button - duplicate removal needed */}
-
-                {/* Command Palette Button */}
+                {/* Collaboration Dropdown - Compact Always */}
+                <div className="relative" data-dropdown="collab">
                   <button
+                    onClick={() => {
+                      setShowCollabDropdown(!showCollabDropdown);
+                      setShowAIToolsDropdown(false);
+                    }}
+                    className="flex items-center space-x-1 p-2 rounded-md transition-colors hover:bg-opacity-80"
+                    style={{
+                      backgroundColor: settings.enableCollaboration
+                        ? theme === "dark" ? "rgba(34, 197, 94, 0.2)" : "#dcfce7"
+                        : theme === "dark" ? "#374151" : "#f3f4f6",
+                      color: settings.enableCollaboration
+                        ? theme === "dark" ? "#86efac" : "#15803d"
+                        : theme === "dark" ? "#f9fafb" : "#111827"
+                    }}
+                    title={`Collaboration - ${settings.enableCollaboration ? 'Active' : 'Solo Mode'}`}
+                  >
+                    <Users className="w-4 h-4" />
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  
+                  {showCollabDropdown && (
+                    <div
+                      className="absolute right-0 mt-2 w-56 rounded-md shadow-lg z-50"
+                      style={{
+                        backgroundColor: theme === "dark" ? "#1f2937" : "#ffffff",
+                        border: `1px solid ${theme === "dark" ? "#374151" : "#e5e7eb"}`
+                      }}
+                    >
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            handleButtonClick('user-profile');
+                            setShowCollabDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <User className="w-4 h-4 mr-3" />
+                          User Profile
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            handleButtonClick('collab-settings');
+                            setShowCollabDropdown(false);
+                          }}
+                          className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500"
+                          style={{ color: theme === "dark" ? "#f9fafb" : "#111827" }}
+                        >
+                          <Settings className="w-4 h-4 mr-3" />
+                          Collaboration Settings
+                        </button>
+                        
+                        <div className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+                        
+                        <div className="px-4 py-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm" style={{ color: theme === "dark" ? "#9ca3af" : "#6b7280" }}>
+                              Status: {settings.enableCollaboration ? 'Collaborative' : 'Solo'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Command Palette Button - Keep as standalone */}
+                <button
                   onClick={() => handleButtonClick('command-palette')}
                   className="p-2 rounded-md hover:bg-opacity-80 transition-colors"
                   style={{
                     backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
                     color: theme === "dark" ? "#f9fafb" : "#111827"
                   }}
-                    title={`Command Palette (Alt+P) - Ready: ${isReady}`}
-                  >
-                    <Command className="w-4 h-4" />
-                  </button>
+                  title="Command Palette (Alt+P)"
+                >
+                  <Command className="w-4 h-4" />
+                </button>
 
+                {/* Theme Toggle - Keep as standalone */}
                 <ThemeToggle />
               </div>
             </div>
