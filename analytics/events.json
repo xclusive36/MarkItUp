@@ -483,5 +483,30 @@
       "timestamp": "2025-08-13T23:10:32.535Z"
     },
     "sessionId": "session_1755126632236_svq0migd5"
+  },
+  {
+    "id": "event_1755127396195_j485yh152",
+    "type": "session_ended",
+    "timestamp": "2025-08-13T23:23:16.195Z",
+    "data": {
+      "duration": 763959
+    },
+    "sessionId": "session_1755126632236_svq0migd5"
+  },
+  {
+    "id": "event_1755127400453_sv10rgx0p",
+    "type": "session_started",
+    "timestamp": "2025-08-13T23:23:20.453Z",
+    "data": {},
+    "sessionId": "session_1755127400453_5kunej30i"
+  },
+  {
+    "id": "event_1755127400700_4qtu3lwo4",
+    "type": "session_started",
+    "timestamp": "2025-08-13T23:23:20.700Z",
+    "data": {
+      "timestamp": "2025-08-13T23:23:20.700Z"
+    },
+    "sessionId": "session_1755127400453_5kunej30i"
   }
 ]

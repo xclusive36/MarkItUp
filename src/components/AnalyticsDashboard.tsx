@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   AnalyticsMetrics, 
   TimeSeriesData, 
-  HeatmapData, 
   InsightType,
   analytics,
   AnalyticsEvent
@@ -10,8 +9,8 @@ import {
 import { Note, Link, Tag } from '@/lib/types';
 import { 
   TrendingUp, TrendingDown, Activity, BookOpen, Link as LinkIcon, 
-  Search, Clock, Target, Zap, Users, Calendar, Award, Lightbulb,
-  BarChart3, PieChart as PieChartIcon, Map, Settings
+  Search, Clock, Target, Zap, Award, Lightbulb,
+  BarChart3
 } from 'lucide-react';
 
 interface AnalyticsDashboardProps {

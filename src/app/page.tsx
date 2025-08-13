@@ -15,7 +15,6 @@ import LaTeXRenderer from "@/components/LaTeXRenderer";
 import TikZRenderer from "@/components/TikZRenderer";
 import GraphView from "@/components/GraphView";
 import SearchBox from "@/components/SearchBox";
-import { CollaborativeEditor } from "@/components/CollaborativeEditor";
 import { CollaborationSettings } from "@/components/CollaborationSettings";
 import { UserProfile } from "@/components/UserProfile";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
@@ -43,7 +42,6 @@ import {
   Hash,
   Folder,
   Plus,
-  Edit3,
   Save,
   X,
   Link as LinkIcon,
@@ -60,7 +58,6 @@ import {
   BookOpen,
   BarChart3,
   ChevronDown,
-  MoreHorizontal,
   ArrowLeft,
 } from "lucide-react";
 
@@ -72,7 +69,7 @@ import "./manual-theme.css";
 
 export default function Home() {
   const { theme } = useSimpleTheme();
-  const { settings, currentUser, updateSettings } = useCollaboration();
+  const { settings, updateSettings } = useCollaboration();
 
   // Collaboration UI state
   const [showCollabSettings, setShowCollabSettings] = useState(false);
@@ -237,13 +234,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   // Client-side mounting state to prevent hydration issues
   const [isMounted, setIsMounted] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [initializationComplete, setInitializationComplete] = useState(false);
+  const [_initializationComplete, setInitializationComplete] = useState(false);
   
   // Use ref to prevent double initialization
   const hasInitialized = useRef(false);
-
-  // Combined ready state for buttons
-  const isReady = isMounted && !isInitializing && initializationComplete;
 
   // PKM system
   const [pkm] = useState(() => {
@@ -1756,7 +1750,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   id: `${edge.source}-${edge.target}`,
                   source: edge.source,
                   target: edge.target,
-                  type: edge.type === 'link' ? 'wikilink' : edge.type as any,
+                  type: edge.type === 'link' ? 'wikilink' : (edge.type === 'tag' ? 'tag' : 'backlink'),
                   anchorText: undefined,
                   blockId: undefined
                 }))}
@@ -1843,7 +1837,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         onClose={() => setShowKnowledgeDiscovery(false)}
         notes={notes}
         tags={tags}
-        onCreateNote={async (title, content, suggestedTags) => {
+        onCreateNote={async (title, content, _suggestedTags) => {
           const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
           setFileName(newFileName);
           setMarkdown(content);
@@ -1863,7 +1857,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         isOpen={showResearchAssistant}
         onClose={() => setShowResearchAssistant(false)}
         notes={notes}
-        onCreateNote={async (title, content, suggestedTags) => {
+        onCreateNote={async (title, content, _suggestedTags) => {
           const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
           setFileName(newFileName);
           setMarkdown(content);
@@ -1887,7 +1881,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           handleNoteSelect(noteId);
           setShowKnowledgeMap(false);
         }}
-        onCreateNote={async (title, content, suggestedTags) => {
+        onCreateNote={async (title, content, _suggestedTags) => {
           const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
           setFileName(newFileName);
           setMarkdown(content);

@@ -259,7 +259,8 @@ export const blogTemplatePlugin: PluginManifest = {
       name: 'Generate Blog Template',
       description: 'Generate a blog post template',
       keybinding: 'Ctrl+Shift+B',
-      callback: async (api: PluginAPI) => {
+      callback: async (api?: PluginAPI) => {
+        if (!api) return;
         const templates = [
           'How-to Guide',
           'Listicle',
