@@ -1,7 +1,7 @@
 "use client";
 
 // React and markdown imports
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -183,9 +183,59 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     Array<{ name: string; count: number }>
   >([]);
 
+  // Simplified button handler with event delegation
+  const handleButtonClick = useCallback((buttonType: string) => {
+    console.log(`🎯 ${buttonType} button clicked via handleButtonClick`);
+    
+    switch (buttonType) {
+      case 'command-palette':
+        setShowCommandPalette(true);
+        break;
+      case 'ai-chat':
+        setShowAIChat(true);
+        analytics.trackEvent('ai_chat', { action: 'open_chat', noteContext: !!activeNote?.id });
+        break;
+      case 'writing-assistant':
+        setShowWritingAssistant(true);
+        analytics.trackEvent('ai_analysis', { action: 'open_writing_assistant', noteContext: !!activeNote?.id });
+        break;
+      case 'knowledge-discovery':
+        setShowKnowledgeDiscovery(true);
+        analytics.trackEvent('ai_analysis', { action: 'open_knowledge_discovery', notesCount: notes.length });
+        break;
+      case 'research-assistant':
+        setShowResearchAssistant(true);
+        analytics.trackEvent('ai_analysis', { action: 'open_research_assistant', notesCount: notes.length });
+        break;
+      case 'knowledge-map':
+        setShowKnowledgeMap(true);
+        analytics.trackEvent('ai_analysis', { action: 'open_knowledge_map', notesCount: notes.length });
+        break;
+      case 'batch-analyzer':
+        setShowBatchAnalyzer(true);
+        analytics.trackEvent('ai_analysis', { action: 'open_batch_analyzer', notesCount: notes.length });
+        break;
+      case 'user-profile':
+        setShowUserProfile(true);
+        break;
+      case 'collab-settings':
+        setShowCollabSettings(true);
+        break;
+      default:
+        console.log(`❌ Unknown button type: ${buttonType}`);
+    }
+  }, [activeNote?.id, notes.length]);
+
   // Client-side mounting state to prevent hydration issues
   const [isMounted, setIsMounted] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [initializationComplete, setInitializationComplete] = useState(false);
+  
+  // Use ref to prevent double initialization
+  const hasInitialized = useRef(false);
+
+  // Combined ready state for buttons
+  const isReady = isMounted && !isInitializing && initializationComplete;
 
   // PKM system
   const [pkm] = useState(() => {
@@ -217,12 +267,21 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Initialize PKM system on mount
   useEffect(() => {
+    // Prevent double initialization
+    if (hasInitialized.current) {
+      console.log('🚫 Initialization already ran, skipping');
+      return;
+    }
+    
     // Set mounted state immediately to enable UI interactions
     setIsMounted(true);
+    console.log('🔧 Component mounted, isMounted set to true');
     
     const initializePKM = async () => {
       try {
-        console.log("Initializing PKM system...");
+        hasInitialized.current = true;
+        console.log("🚀 Initializing PKM system...");
+        console.log('🔧 Setting isInitializing to true');
         setIsInitializing(true);
 
         // Track session start
@@ -231,24 +290,33 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         });
 
         // Initialize PKM system (this will load plugins)
+        console.log('🔧 Calling pkm.initialize()...');
         await pkm.initialize();
+        console.log('✅ pkm.initialize() completed');
 
         // Initialize AI service with PKM system (non-blocking)
+        console.log('🔧 Initializing AI service...');
         const { initializeAIService } = await import('@/lib/ai/ai-service');
         initializeAIService(pkm);
+        console.log('✅ AI service initialized');
 
-        console.log("PKM system initialization complete");
+        console.log("✅ PKM system initialization complete");
       } catch (error) {
-        console.error("Error initializing PKM system:", error);
+        console.error("❌ Error initializing PKM system:", error);
       } finally {
+        console.log('🔧 Setting isInitializing to false');
         setIsInitializing(false);
+        console.log('🔧 Setting initializationComplete to true');
+        setInitializationComplete(true);
+        console.log('🎯 Button state should now be: enabled (isMounted=true, isInitializing=false, initializationComplete=true)');
       }
     };
 
     // Run initialization in next tick to allow UI to render first
     setTimeout(() => {
+      console.log('⏰ Starting PKM initialization after timeout');
       initializePKM();
-    }, 0);
+    }, 100); // Increased timeout slightly
   }, [pkm]);
 
   // Refresh all PKM data
@@ -907,18 +975,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* User Profile Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => setShowUserProfile(true)}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: theme === "dark" ? "#9ca3af" : "#6b7280"
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                    e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    if (isMounted && !isInitializing) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                    e.currentTarget.style.backgroundColor = "transparent";
+                    if (isMounted && !isInitializing) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
                   }}
                   title="User Profile"
                 >
@@ -927,18 +1000,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Collaboration Settings Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => setShowCollabSettings(true)}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: theme === "dark" ? "#9ca3af" : "#6b7280"
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                    e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    if (isMounted && !isInitializing) {
+                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
+                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                    e.currentTarget.style.backgroundColor = "transparent";
+                    if (isMounted && !isInitializing) {
+                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
                   }}
                   title="Collaboration Settings"
                 >
@@ -947,30 +1025,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* AI Chat Button */}
                 <button
-                  onClick={() => {
-                    setShowAIChat(true);
-                    analytics.trackEvent('ai_chat', {
-                      action: 'open_chat',
-                      noteContext: !!activeNote?.id
-                    });
-                  }}
+                  onClick={() => handleButtonClick('ai-chat')}
                   className="p-1 rounded-md transition-colors"
                   style={{
                     color: showAIChat 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showAIChat) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showAIChat) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
                   }}
                   title="AI Assistant"
                 >
@@ -979,30 +1039,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Writing Assistant Button */}
                 <button
-                  onClick={() => {
-                    setShowWritingAssistant(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_writing_assistant',
-                      noteContext: !!activeNote?.id
-                    });
-                  }}
+                  onClick={() => handleButtonClick('writing-assistant')}
                   className="p-1 rounded-md transition-colors"
                   style={{
                     color: showWritingAssistant 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!showWritingAssistant) {
-                      e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
-                      e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!showWritingAssistant) {
-                      e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }
                   }}
                   title="Writing Assistant"
                 >
@@ -1011,27 +1053,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Knowledge Discovery Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => {
-                    setShowKnowledgeDiscovery(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_knowledge_discovery',
-                      notesCount: notes.length
-                    });
+                    if (isMounted && !isInitializing) {
+                      setShowKnowledgeDiscovery(true);
+                      analytics.trackEvent('ai_analysis', {
+                        action: 'open_knowledge_discovery',
+                        notesCount: notes.length
+                      });
+                    }
                   }}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: showKnowledgeDiscovery 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
                   }}
                   onMouseEnter={(e) => {
-                    if (!showKnowledgeDiscovery) {
+                    if (!showKnowledgeDiscovery && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
                       e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!showKnowledgeDiscovery) {
+                    if (!showKnowledgeDiscovery && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
@@ -1043,27 +1088,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Research Assistant Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => {
-                    setShowResearchAssistant(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_research_assistant',
-                      notesCount: notes.length
-                    });
+                    if (isMounted && !isInitializing) {
+                      setShowResearchAssistant(true);
+                      analytics.trackEvent('ai_analysis', {
+                        action: 'open_research_assistant',
+                        notesCount: notes.length
+                      });
+                    }
                   }}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: showResearchAssistant 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
                   }}
                   onMouseEnter={(e) => {
-                    if (!showResearchAssistant) {
+                    if (!showResearchAssistant && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
                       e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!showResearchAssistant) {
+                    if (!showResearchAssistant && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
@@ -1075,27 +1123,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Knowledge Map Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => {
-                    setShowKnowledgeMap(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_knowledge_map',
-                      notesCount: notes.length
-                    });
+                    if (isMounted && !isInitializing) {
+                      setShowKnowledgeMap(true);
+                      analytics.trackEvent('ai_analysis', {
+                        action: 'open_knowledge_map',
+                        notesCount: notes.length
+                      });
+                    }
                   }}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: showKnowledgeMap 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
                   }}
                   onMouseEnter={(e) => {
-                    if (!showKnowledgeMap) {
+                    if (!showKnowledgeMap && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
                       e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!showKnowledgeMap) {
+                    if (!showKnowledgeMap && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
@@ -1107,27 +1158,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
                 {/* Batch Analyzer Button */}
                 <button
+                  disabled={!isMounted || isInitializing}
                   onClick={() => {
-                    setShowBatchAnalyzer(true);
-                    analytics.trackEvent('ai_analysis', {
-                      action: 'open_batch_analyzer',
-                      notesCount: notes.length
-                    });
+                    if (isMounted && !isInitializing) {
+                      setShowBatchAnalyzer(true);
+                      analytics.trackEvent('ai_analysis', {
+                        action: 'open_batch_analyzer',
+                        notesCount: notes.length
+                      });
+                    }
                   }}
-                  className="p-1 rounded-md transition-colors"
+                  className="p-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     color: showBatchAnalyzer 
                       ? (theme === "dark" ? "#60a5fa" : "#2563eb")
                       : (theme === "dark" ? "#9ca3af" : "#6b7280")
                   }}
                   onMouseEnter={(e) => {
-                    if (!showBatchAnalyzer) {
+                    if (!showBatchAnalyzer && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#ffffff" : "#111827";
                       e.currentTarget.style.backgroundColor = theme === "dark" ? "#374151" : "#f3f4f6";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!showBatchAnalyzer) {
+                    if (!showBatchAnalyzer && isMounted && !isInitializing) {
                       e.currentTarget.style.color = theme === "dark" ? "#9ca3af" : "#6b7280";
                       e.currentTarget.style.backgroundColor = "transparent";
                     }
@@ -1140,96 +1194,19 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 {/* Writing Assistant Button - duplicate removal needed */}
 
                 {/* Command Palette Button */}
-                <button
-                  onClick={() => setShowCommandPalette(true)}
+                  <button
+                  onClick={() => handleButtonClick('command-palette')}
                   className="p-2 rounded-md hover:bg-opacity-80 transition-colors"
                   style={{
                     backgroundColor: theme === "dark" ? "#374151" : "#f3f4f6",
                     color: theme === "dark" ? "#f9fafb" : "#111827"
                   }}
-                    title="Command Palette (Alt+P)"
+                    title={`Command Palette (Alt+P) - Ready: ${isReady}`}
                   >
                     <Command className="w-4 h-4" />
                   </button>
-                  
-                  {/* Debug: Show loaded plugins */}
-                  <button
-                    className="p-2 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                      color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-                    }}
-                    onClick={() => {
-                      try {
-                        console.log('=== PLUGIN DEBUG INFO ===');
-                        const pluginManager = pkm.getPluginManager();
-                        console.log('Plugin manager:', pluginManager);
-                        
-                        const plugins = pluginManager.getLoadedPlugins();
-                        console.log('Loaded plugins:', plugins);
-                        
-                        const commands = pluginManager.getAllCommands();
-                        console.log('All commands:', commands);
-                        
-                        let debugInfo = `=== PKM PLUGIN DEBUG ===\n`;
-                        debugInfo += `Initialization complete: ${!isInitializing}\n`;
-                        debugInfo += `Mounted: ${isMounted}\n`;
-                        debugInfo += `Loaded plugins: ${plugins.length}\n`;
-                        debugInfo += `Total commands: ${commands.length}\n\n`;
-                        
-                        if (plugins.length > 0) {
-                          debugInfo += `PLUGINS:\n${plugins.map(p => `- ${p.name} (${p.id})`).join('\n')}\n\n`;
-                        }
-                        
-                        if (commands.length > 0) {
-                          debugInfo += `COMMANDS:\n${commands.map(c => `- ${c.command.name} (${c.pluginId})`).join('\n')}`;
-                        } else {
-                          debugInfo += `No commands found!`;
-                        }
-                        
-                        alert(debugInfo);
-                      } catch (error: any) {
-                        console.error('Debug error:', error);
-                        alert(`Debug Error: ${error?.message || error}`);
-                      }
-                    }}
-                    title="Debug: Show loaded plugins"
-                  >
-                    🐛
-                  </button>
-                  
-                  {/* Debug: Reset plugins */}
-                  <button
-                    className="p-2 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                      color: theme === 'dark' ? '#9ca3af' : '#6b7280'
-                    }}
-                    onClick={async () => {
-                      try {
-                        console.log('=== RESETTING PLUGINS ===');
-                        
-                        // Clear persisted plugins
-                        localStorage.removeItem('markitup-enabled-plugins');
-                        localStorage.removeItem('markitup-plugin-settings');
-                        
-                        // Clear current plugins
-                        const pluginManager = pkm.getPluginManager();
-                        pluginManager.clearPersistedPlugins();
-                        
-                        // Force reload core plugins
-                        await pkm.initializePlugins();
-                        
-                        alert('Plugins reset! Core plugins should now be loaded. Check command palette and debug info.');
-                      } catch (error: any) {
-                        console.error('Reset error:', error);
-                        alert(`Reset Error: ${error?.message || error}`);
-                      }
-                    }}
-                    title="Reset plugins to core plugins"
-                  >
-                    🔄
-                  </button>                <ThemeToggle />
+
+                <ThemeToggle />
               </div>
             </div>
           </div>
