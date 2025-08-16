@@ -681,7 +681,28 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             }}
           >
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 space-y-4 sm:space-y-0">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-3 lg:space-y-0 lg:space-x-4">
+              <div className="flex flex-row items-center gap-3 lg:gap-4">
+                {/* Hamburger menu for mobile */}
+                <button
+                  className="lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onClick={() => setShowMobileSidebar(true)}
+                  aria-label="Open sidebar menu"
+                  type="button"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
                 <h1
                   className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0 whitespace-nowrap"
                   style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
@@ -725,25 +746,33 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Mobile Sidebar Drawer */}
             {showMobileSidebar && (
-              <div className="fixed inset-0 z-40 flex">
+              <div className="fixed inset-0 z-40 flex" onClick={() => setShowMobileSidebar(false)}>
                 <div
-                  className="fixed inset-0 bg-black bg-opacity-40"
-                  onClick={() => setShowMobileSidebar(false)}
-                />
-                <div className="relative w-72 max-w-full h-full bg-white dark:bg-gray-900 shadow-xl p-4 overflow-y-auto z-50 animate-slide-in-left">
+                  className="relative w-72 max-w-full h-full bg-white dark:bg-gray-900 shadow-xl p-4 overflow-y-auto z-50 animate-slide-in-left"
+                  onClick={e => e.stopPropagation()}
+                >
                   <Sidebar
                     fileName={fileName}
                     setFileName={setFileName}
                     folder={folder}
                     setFolder={setFolder}
-                    saveNote={saveNote}
+                    saveNote={() => {
+                      saveNote();
+                      setShowMobileSidebar(false);
+                    }}
                     saveStatus={saveStatus}
-                    createNewNote={createNewNote}
+                    createNewNote={() => {
+                      createNewNote();
+                      setShowMobileSidebar(false);
+                    }}
                     graphStats={graphStats}
                     tags={tags}
                     currentView={currentView}
                     handleSearch={handleSearch}
-                    handleNoteSelect={handleNoteSelect}
+                    handleNoteSelect={noteId => {
+                      handleNoteSelect(noteId);
+                      setShowMobileSidebar(false);
+                    }}
                     notes={notes}
                     activeNote={activeNote}
                     deleteNote={deleteNote}
