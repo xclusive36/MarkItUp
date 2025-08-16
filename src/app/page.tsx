@@ -2,23 +2,14 @@
 
 // React and markdown imports
 import { useState, useEffect, useCallback, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
+// ...existing code...
+// MainContent import
+import MainPanel from '@/components/MainPanel';
 
 // Component imports
-import ThemeToggle from '@/components/ThemeToggle';
-import LaTeXRenderer from '@/components/LaTeXRenderer';
-import TikZRenderer from '@/components/TikZRenderer';
-import GraphView from '@/components/GraphView';
-import SearchBox from '@/components/SearchBox';
+// ...existing code...
 import { CollaborationSettings } from '@/components/CollaborationSettings';
 import { UserProfile } from '@/components/UserProfile';
-import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
-import UnifiedPluginManager from '@/components/UnifiedPluginManager';
 import CommandPalette from '@/components/CommandPalette';
 import AIChat from '@/components/AIChat';
 import WritingAssistant from '@/components/WritingAssistant';
@@ -32,38 +23,13 @@ import { useCollaboration } from '@/contexts/CollaborationContext';
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
 import { Note, Graph, SearchResult } from '@/lib/types';
-import { analytics } from '@/lib/analytics';
+import { analytics, AnalyticsEventType } from '@/lib/analytics';
 
 // Component imports
-import { SimpleDropdown } from '@/components/SimpleDropdown';
+// ...existing code...
 import { AppHeader } from '@/components/AppHeader';
-
-// Icon imports
-import {
-  Search,
-  Network,
-  FileText,
-  Hash,
-  Folder,
-  Plus,
-  Save,
-  X,
-  Link as LinkIcon,
-  Clock,
-  Users,
-  Settings,
-  User,
-  Activity,
-  Brain,
-  Compass,
-  PenTool,
-  Map,
-  Command,
-  BookOpen,
-  BarChart3,
-  ChevronDown,
-  ArrowLeft,
-} from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import { X } from 'lucide-react';
 
 // Styles
 import 'highlight.js/styles/github.css';
@@ -139,7 +105,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
 ---
 
-*Start writing and building your second brain...*`);
+*Start writing and building your second brain...`);
 
   // Track markdown editing with debounce
   const [lastEditTrack, setLastEditTrack] = useState(0);
@@ -182,6 +148,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   // Search and organization
   const [tags, setTags] = useState<Array<{ name: string; count: number }>>([]);
   const [folders, setFolders] = useState<Array<{ name: string; count: number }>>([]);
+
+  // Mobile sidebar state
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   // Simplified button handler with event delegation
   const handleButtonClick = useCallback(
@@ -247,7 +216,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   // Client-side mounting state to prevent hydration issues
   const [isMounted, setIsMounted] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [_initializationComplete, setInitializationComplete] = useState(false);
+  // const [_initializationComplete, setInitializationComplete] = useState(false); // unused
 
   // Use ref to prevent double initialization
   const hasInitialized = useRef(false);
@@ -322,7 +291,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         console.log('🔧 Setting isInitializing to false');
         setIsInitializing(false);
         console.log('🔧 Setting initializationComplete to true');
-        setInitializationComplete(true);
+        // setInitializationComplete(true); // removed, variable is unused
         console.log(
           '🎯 Button state should now be: enabled (isMounted=true, isInitializing=false, initializationComplete=true)'
         );
@@ -714,7 +683,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 space-y-4 sm:space-y-0">
               <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-3 lg:space-y-0 lg:space-x-4">
                 <h1
-                  className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white"
+                  className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0 whitespace-nowrap"
                   style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
                 >
                   MarkItUp PKM
@@ -728,10 +697,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 viewMode={viewMode}
                 settings={settings}
                 isMounted={isMounted}
-                onViewChange={view => setCurrentView(view as any)}
-                onViewModeChange={mode => setViewMode(mode as any)}
+                onViewChange={view =>
+                  setCurrentView(view as 'editor' | 'graph' | 'search' | 'analytics' | 'plugins')
+                }
+                onViewModeChange={mode => setViewMode(mode as 'edit' | 'preview' | 'split')}
                 onButtonClick={handleButtonClick}
-                onAnalyticsTrack={(event, data) => analytics.trackEvent(event as any, data)}
+                onAnalyticsTrack={(event: string, data?: Record<string, unknown>) =>
+                  analytics.trackEvent(event as AnalyticsEventType, data)
+                }
               />
             </div>
           </div>
@@ -750,694 +723,91 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           data-main-container
         >
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
-            {/* Sidebar */}
-            <div className="w-full lg:w-80 lg:flex-shrink-0 order-2 lg:order-1">
-              <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">
-                    New Note
-                  </h2>
-                  <button
-                    onClick={createNewNote}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={fileName}
-                    onChange={e => setFileName(e.target.value)}
-                    placeholder="Note title..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                      color: theme === 'dark' ? '#f9fafb' : '#111827',
-                      borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                    }}
-                  />
-
-                  <input
-                    type="text"
-                    value={folder}
-                    onChange={e => setFolder(e.target.value)}
-                    placeholder="Folder (optional)..."
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                      color: theme === 'dark' ? '#f9fafb' : '#111827',
-                      borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                    }}
-                  />
-
-                  <button
-                    onClick={() => saveNote()}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Save className="w-4 h-4" />
-                    Save Note
-                  </button>
-
-                  {saveStatus && (
-                    <p
-                      className={`text-xs text-center ${
-                        saveStatus.includes('Error') ? 'text-red-600' : 'text-green-600'
-                      }`}
-                    >
-                      {saveStatus}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Stats - moved from header for better UX */}
-              <div
-                className="flex flex-wrap justify-center text-xs sm:text-sm space-x-3 sm:space-x-4 mb-4"
-                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-              >
-                <span className="flex items-center gap-1">
-                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {graphStats.totalNotes} notes
-                </span>
-                <span className="flex items-center gap-1">
-                  <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {graphStats.totalLinks} links
-                </span>
-                <span className="flex items-center gap-1">
-                  <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
-                  {tags.length} tags
-                </span>
-              </div>
-              <div
-                className={`mb-4 lg:mb-6 ${currentView === 'search' ? 'block' : 'hidden lg:block'}`}
-              >
-                <SearchBox
-                  onSearch={handleSearch}
-                  onSelectNote={handleNoteSelect}
-                  placeholder="Search all notes..."
-                  className="w-full"
+            {/* Mobile Sidebar Drawer */}
+            {showMobileSidebar && (
+              <div className="fixed inset-0 z-40 flex">
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-40"
+                  onClick={() => setShowMobileSidebar(false)}
                 />
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center mx-auto">
-                  Try: <span className="font-mono">tag:project</span>,{' '}
-                  <span className="font-mono">folder:notes</span>, or{' '}
-                  <span className="font-mono">"exact phrase"</span>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                }}
-              >
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Knowledge Graph
-                </h3>
-                <div className="grid grid-cols-2 gap-2 lg:gap-4 text-center">
-                  <div>
-                    <div className="text-lg lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
-                      {graphStats.totalNotes}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Notes</div>
-                  </div>
-                  <div>
-                    <div className="text-lg lg:text-2xl font-bold text-green-600 dark:text-green-400">
-                      {graphStats.totalLinks}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Links</div>
-                  </div>
-                  <div>
-                    <div className="text-lg lg:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                      {graphStats.avgConnections}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Avg Links</div>
-                  </div>
-                  <div>
-                    <div className="text-lg lg:text-2xl font-bold text-orange-600 dark:text-orange-400">
-                      {graphStats.orphanCount}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Orphans</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes List - Collapsible on mobile */}
-              <div
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                }}
-              >
-                <h3
-                  className="text-sm font-semibold mb-3"
-                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-                >
-                  Recent Notes
-                </h3>
-                <div className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
-                  {notes.length === 0 ? (
-                    <p
-                      className="text-xs lg:text-sm text-center py-4"
-                      style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                <div className="relative w-72 max-w-full h-full bg-white dark:bg-gray-900 shadow-xl p-4 overflow-y-auto z-50 animate-slide-in-left">
+                  <Sidebar
+                    fileName={fileName}
+                    setFileName={setFileName}
+                    folder={folder}
+                    setFolder={setFolder}
+                    saveNote={saveNote}
+                    saveStatus={saveStatus}
+                    createNewNote={createNewNote}
+                    graphStats={graphStats}
+                    tags={tags}
+                    currentView={currentView}
+                    handleSearch={handleSearch}
+                    handleNoteSelect={handleNoteSelect}
+                    notes={notes}
+                    activeNote={activeNote}
+                    deleteNote={deleteNote}
+                    theme={theme}
+                  />
+                  <button
+                    className="absolute top-2 right-2 text-gray-500 dark:text-gray-300 hover:text-red-500"
+                    onClick={() => setShowMobileSidebar(false)}
+                    aria-label="Close sidebar"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
                     >
-                      No notes yet. Create your first note above!
-                    </p>
-                  ) : (
-                    notes.slice(0, 20).map(note => (
-                      <div
-                        key={note.id}
-                        className="p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border"
-                        style={{
-                          backgroundColor:
-                            activeNote?.id === note.id
-                              ? theme === 'dark'
-                                ? 'rgba(59, 130, 246, 0.1)'
-                                : '#eff6ff'
-                              : 'transparent',
-                          borderColor:
-                            activeNote?.id === note.id
-                              ? theme === 'dark'
-                                ? '#1e40af'
-                                : '#bfdbfe'
-                              : theme === 'dark'
-                                ? '#374151'
-                                : '#f3f4f6',
-                        }}
-                        onMouseEnter={e => {
-                          if (activeNote?.id !== note.id) {
-                            e.currentTarget.style.backgroundColor =
-                              theme === 'dark' ? '#374151' : '#f9fafb';
-                          }
-                        }}
-                        onMouseLeave={e => {
-                          if (activeNote?.id !== note.id) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                        onClick={() => handleNoteSelect(note.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h4
-                              className="text-xs lg:text-sm font-medium truncate"
-                              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-                            >
-                              {note.name.replace('.md', '')}
-                            </h4>
-                            {note.folder && (
-                              <p
-                                className="text-xs flex items-center gap-1"
-                                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                              >
-                                <Folder className="w-3 h-3" />
-                                {note.folder}
-                              </p>
-                            )}
-                            {note.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {note.tags.slice(0, 2).map(tag => (
-                                  <span
-                                    key={tag}
-                                    className="text-xs px-1.5 py-0.5 rounded"
-                                    style={{
-                                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                                      color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                                    }}
-                                  >
-                                    #{tag}
-                                  </span>
-                                ))}
-                                {note.tags.length > 2 && (
-                                  <span
-                                    className="text-xs"
-                                    style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
-                                  >
-                                    +{note.tags.length - 2}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            <div
-                              className="flex items-center gap-2 lg:gap-3 mt-2 text-xs"
-                              style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                            >
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {note.readingTime}m
-                              </span>
-                              <span className="hidden lg:inline">{note.wordCount} words</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={e => {
-                              e.stopPropagation();
-                              deleteNote(note.id);
-                            }}
-                            className="p-1 transition-colors"
-                            style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.color = '#dc2626';
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.color =
-                                theme === 'dark' ? '#9ca3af' : '#9ca3af';
-                            }}
-                          >
-                            <X className="w-3 lg:w-4 h-3 lg:h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
+            )}
+            {/* Desktop Sidebar */}
+            <div className="hidden lg:block w-80 flex-shrink-0 order-2 lg:order-1">
+              <Sidebar
+                fileName={fileName}
+                setFileName={setFileName}
+                folder={folder}
+                setFolder={setFolder}
+                saveNote={saveNote}
+                saveStatus={saveStatus}
+                createNewNote={createNewNote}
+                graphStats={graphStats}
+                tags={tags}
+                currentView={currentView}
+                handleSearch={handleSearch}
+                handleNoteSelect={handleNoteSelect}
+                notes={notes}
+                activeNote={activeNote}
+                deleteNote={deleteNote}
+                theme={theme}
+              />
             </div>
-
             {/* Main Content Area */}
             <div className="flex-1 min-w-0 order-1 lg:order-2">
-              {currentView === 'editor' && (
-                <div
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] flex flex-col"
-                  style={{
-                    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                    borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                  }}
-                >
-                  {/* Editor Mode Toggle - Now just above the textarea */}
-                  <div className="flex justify-end w-full px-0 pt-4 mb-4 pr-4">
-                    <div
-                      className="inline-flex gap-2 p-1 rounded-lg shadow-sm"
-                      style={{
-                        background: 'transparent',
-                        boxShadow:
-                          theme === 'dark'
-                            ? '0 1px 4px rgba(0,0,0,0.25)'
-                            : '0 1px 4px rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      <button
-                        onClick={() => {
-                          setViewMode('edit');
-                          analytics.trackEvent('mode_switched', { mode: 'edit' });
-                        }}
-                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                          viewMode === 'edit'
-                            ? theme === 'dark'
-                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
-                              : 'bg-white text-gray-900 border border-blue-500'
-                            : theme === 'dark'
-                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
-                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                        style={{ minWidth: 70 }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          setViewMode('preview');
-                          analytics.trackEvent('mode_switched', { mode: 'preview' });
-                        }}
-                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                          viewMode === 'preview'
-                            ? theme === 'dark'
-                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
-                              : 'bg-white text-gray-900 border border-blue-500'
-                            : theme === 'dark'
-                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
-                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                        style={{ minWidth: 70 }}
-                      >
-                        Preview
-                      </button>
-                      <button
-                        onClick={() => {
-                          setViewMode('split');
-                          analytics.trackEvent('mode_switched', { mode: 'split' });
-                        }}
-                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                          viewMode === 'split'
-                            ? theme === 'dark'
-                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
-                              : 'bg-white text-gray-900 border border-blue-500'
-                            : theme === 'dark'
-                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
-                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                        style={{ minWidth: 70 }}
-                      >
-                        Split
-                      </button>
-                    </div>
-                  </div>
-                  {viewMode === 'edit' && (
-                    <textarea
-                      value={markdown}
-                      onChange={e => handleMarkdownChange(e.target.value)}
-                      className="w-full h-full p-4 lg:p-6 border-none resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg font-mono text-sm editor-textarea"
-                      style={{
-                        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                        color: theme === 'dark' ? '#f9fafb' : '#111827',
-                        borderColor: 'transparent',
-                      }}
-                      placeholder="Start writing your markdown here..."
-                    />
-                  )}
-
-                  {viewMode === 'preview' && (
-                    <div className="h-full p-4 lg:p-6 overflow-y-auto">
-                      <div className="prose prose-sm lg:prose prose-slate dark:prose-invert max-w-none">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                          components={{
-                            code(props) {
-                              const { className, children } = props;
-                              const match = /language-(\w+)/.exec(className || '');
-                              const content = String(children).replace(/\n$/, '');
-
-                              if (match) {
-                                const lang = match[1];
-                                switch (lang) {
-                                  case 'tikz':
-                                    return <TikZRenderer content={content} />;
-                                  case 'latex':
-                                    // For simple math expressions, render as KaTeX display math
-                                    const isSimpleMath =
-                                      !content.includes('\\') &&
-                                      !content.includes('\begin') &&
-                                      content.trim().length < 200;
-                                    if (isSimpleMath) {
-                                      return (
-                                        <div className="my-4 text-center">
-                                          <div className="katex-display">{`$$${content.trim()}$$`}</div>
-                                        </div>
-                                      );
-                                    }
-                                    return <LaTeXRenderer content={content} displayMode={true} />;
-                                  default:
-                                    return (
-                                      <div className="relative group">
-                                        <code className={className} {...props}>
-                                          {children}
-                                        </code>
-                                        <span className="absolute top-0 right-0 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-bl opacity-75">
-                                          {lang}
-                                        </span>
-                                      </div>
-                                    );
-                                }
-                              }
-                              return <code className={className}>{children}</code>;
-                            },
-                            a(props) {
-                              const { href, children } = props;
-                              // Handle wikilinks (internal links starting with #note/)
-                              if (href?.startsWith('#note/')) {
-                                const noteId = href.replace('#note/', '');
-                                return (
-                                  <button
-                                    onClick={e => {
-                                      e.preventDefault();
-                                      handleNoteSelect(noteId);
-                                    }}
-                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
-                                  >
-                                    {children}
-                                  </button>
-                                );
-                              }
-                              // Handle broken wikilinks (starting with #broken:)
-                              if (href?.startsWith('#broken:')) {
-                                const target = href.replace('#broken:', '').replace(/-/g, ' ');
-                                return (
-                                  <span
-                                    className="text-red-500 dark:text-red-400 cursor-help underline decoration-dotted"
-                                    title={`Note "${target}" doesn't exist. Click to create it.`}
-                                    onClick={() => {
-                                      if (window.confirm(`Create note "${target}"?`)) {
-                                        setFileName(target);
-                                        setMarkdown(`# ${target}\n\nStart writing...`);
-                                        setCurrentView('editor');
-                                        setViewMode('edit');
-                                      }
-                                    }}
-                                  >
-                                    {children}
-                                  </span>
-                                );
-                              }
-                              // Handle broken links (spans with broken-link class)
-                              if (props.className === 'broken-link') {
-                                return (
-                                  <span
-                                    className="text-red-500 dark:text-red-400 cursor-help"
-                                    title="This link doesn't point to an existing note"
-                                  >
-                                    {children}
-                                  </span>
-                                );
-                              }
-                              // Regular external links
-                              return (
-                                <a {...props} target="_blank" rel="noopener noreferrer">
-                                  {children}
-                                </a>
-                              );
-                            },
-                          }}
-                        >
-                          {processedMarkdown}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  )}
-
-                  {viewMode === 'split' && (
-                    <div className="h-full flex flex-col lg:flex-row">
-                      <div className="w-full lg:w-1/2 h-1/2 lg:h-full border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
-                        <textarea
-                          value={markdown}
-                          onChange={e => handleMarkdownChange(e.target.value)}
-                          className="w-full h-full p-3 lg:p-6 border-none resize-none focus:outline-none font-mono text-sm editor-textarea"
-                          style={{
-                            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                            color: theme === 'dark' ? '#f9fafb' : '#111827',
-                            borderColor: 'transparent',
-                          }}
-                          placeholder="Start writing..."
-                        />
-                      </div>
-                      <div className="w-full lg:w-1/2 h-1/2 lg:h-full p-3 lg:p-6 overflow-y-auto">
-                        <div className="prose prose-sm lg:prose prose-slate dark:prose-invert max-w-none">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath]}
-                            rehypePlugins={[rehypeRaw, rehypeHighlight, rehypeKatex]}
-                            components={{
-                              code(props) {
-                                const { className, children } = props;
-                                const match = /language-(\w+)/.exec(className || '');
-                                const content = String(children).replace(/\n$/, '');
-
-                                if (match) {
-                                  const lang = match[1];
-                                  switch (lang) {
-                                    case 'tikz':
-                                      return <TikZRenderer content={content} />;
-                                    case 'latex':
-                                      // For simple math expressions, render as KaTeX display math
-                                      const isSimpleMath =
-                                        !content.includes('\\') &&
-                                        !content.includes('\begin') &&
-                                        content.trim().length < 200;
-                                      if (isSimpleMath) {
-                                        return (
-                                          <div className="my-4 text-center">
-                                            <div className="katex-display">{`$$${content.trim()}$$`}</div>
-                                          </div>
-                                        );
-                                      }
-                                      return <LaTeXRenderer content={content} displayMode={true} />;
-                                    default:
-                                      return (
-                                        <div className="relative group">
-                                          <code className={className} {...props}>
-                                            {children}
-                                          </code>
-                                          <span className="absolute top-0 right-0 px-2 py-1 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-bl opacity-75">
-                                            {lang}
-                                          </span>
-                                        </div>
-                                      );
-                                  }
-                                }
-                                return <code className={className}>{children}</code>;
-                              },
-                              a(props) {
-                                const { href, children } = props;
-                                // Handle wikilinks (internal links starting with #note/)
-                                if (href?.startsWith('#note/')) {
-                                  const noteId = href.replace('#note/', '');
-                                  return (
-                                    <button
-                                      onClick={e => {
-                                        e.preventDefault();
-                                        handleNoteSelect(noteId);
-                                      }}
-                                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
-                                    >
-                                      {children}
-                                    </button>
-                                  );
-                                }
-                                // Handle broken links (spans with broken-link class)
-                                if (props.className === 'broken-link') {
-                                  return (
-                                    <span
-                                      className="text-red-500 dark:text-red-400 cursor-help"
-                                      title="This link doesn't point to an existing note"
-                                    >
-                                      {children}
-                                    </span>
-                                  );
-                                }
-                                // Regular external links
-                                return (
-                                  <a {...props} target="_blank" rel="noopener noreferrer">
-                                    {children}
-                                  </a>
-                                );
-                              },
-                            }}
-                          >
-                            {processedMarkdown}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {currentView === 'graph' && (
-                <div
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]"
-                  style={{
-                    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                    borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                  }}
-                >
-                  <GraphView
-                    graph={graph}
-                    centerNode={activeNote?.id}
-                    onNodeClick={handleGraphNodeClick}
-                    className="w-full h-full"
-                  />
-                </div>
-              )}
-
-              {currentView === 'search' && (
-                <div
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 lg:p-6"
-                  style={{
-                    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-                    borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                  }}
-                >
-                  <div className="mb-6">
-                    <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                      Advanced Search
-                    </h2>
-                    <SearchBox
-                      onSearch={handleSearch}
-                      onSelectNote={handleNoteSelect}
-                      placeholder="Search with advanced syntax..."
-                      className="w-full"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    <div>
-                      <h3 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                        <Hash className="w-4 lg:w-5 h-4 lg:h-5" />
-                        Popular Tags
-                      </h3>
-                      <div className="space-y-2">
-                        {tags.slice(0, 10).map(tag => (
-                          <div
-                            key={tag.name}
-                            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                          >
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              #{tag.name}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
-                              {tag.count}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                        <Folder className="w-4 lg:w-5 h-4 lg:h-5" />
-                        Folders
-                      </h3>
-                      <div className="space-y-2">
-                        {folders.slice(0, 10).map(folder => (
-                          <div
-                            key={folder.name}
-                            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                          >
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {folder.name}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
-                              {folder.count}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {currentView === 'analytics' && (
-                <AnalyticsDashboard
-                  notes={notes}
-                  links={graph.edges.map(edge => ({
-                    id: `${edge.source}-${edge.target}`,
-                    source: edge.source,
-                    target: edge.target,
-                    type:
-                      edge.type === 'link' ? 'wikilink' : edge.type === 'tag' ? 'tag' : 'backlink',
-                    anchorText: undefined,
-                    blockId: undefined,
-                  }))}
-                  tags={tags}
-                  className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto"
-                />
-              )}
-
-              {currentView === 'plugins' && (
-                <div className="h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] overflow-y-auto">
-                  <UnifiedPluginManager />
-                </div>
-              )}
+              <MainPanel
+                currentView={currentView}
+                markdown={markdown}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                handleMarkdownChange={handleMarkdownChange}
+                processedMarkdown={processedMarkdown}
+                theme={theme}
+                analytics={analytics}
+                graph={graph}
+                activeNote={activeNote}
+                handleGraphNodeClick={handleGraphNodeClick}
+                handleSearch={handleSearch}
+                handleNoteSelect={handleNoteSelect}
+                tags={tags}
+                folders={folders}
+                notes={notes}
+              />
             </div>
           </div>
         </div>
@@ -1507,7 +877,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           onClose={() => setShowKnowledgeDiscovery(false)}
           notes={notes}
           tags={tags}
-          onCreateNote={async (title, content, _suggestedTags) => {
+          onCreateNote={async (title, content) => {
             const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
             setFileName(newFileName);
             setMarkdown(content);
@@ -1527,7 +897,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           isOpen={showResearchAssistant}
           onClose={() => setShowResearchAssistant(false)}
           notes={notes}
-          onCreateNote={async (title, content, _suggestedTags) => {
+          onCreateNote={async (title, content) => {
             const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
             setFileName(newFileName);
             setMarkdown(content);
@@ -1551,7 +921,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             handleNoteSelect(noteId);
             setShowKnowledgeMap(false);
           }}
-          onCreateNote={async (title, content, _suggestedTags) => {
+          onCreateNote={async (title, content) => {
             const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
             setFileName(newFileName);
             setMarkdown(content);
