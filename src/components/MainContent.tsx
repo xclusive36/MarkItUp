@@ -27,7 +27,7 @@ const MainContent: React.FC<MainContentProps> = ({
   analytics,
 }) => (
   <div
-    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] flex flex-col"
+    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col"
     style={{
       backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
       borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
