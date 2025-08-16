@@ -719,23 +719,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 >
                   MarkItUp PKM
                 </h1>
-                <div
-                  className="flex flex-wrap text-xs sm:text-sm space-x-3 sm:space-x-4"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
-                  <span className="flex items-center gap-1">
-                    <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {graphStats.totalNotes} notes
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {graphStats.totalLinks} links
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
-                    {tags.length} tags
-                  </span>
-                </div>
+                {/* Quick Stats moved to sidebar below */}
               </div>
 
               <AppHeader
@@ -834,7 +818,24 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 </div>
               </div>
 
-              {/* Global Search - Only show on larger screens or when in search view */}
+              {/* Quick Stats - moved from header for better UX */}
+              <div
+                className="flex flex-wrap justify-center text-xs sm:text-sm space-x-3 sm:space-x-4 mb-4"
+                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+              >
+                <span className="flex items-center gap-1">
+                  <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                  {graphStats.totalNotes} notes
+                </span>
+                <span className="flex items-center gap-1">
+                  <LinkIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  {graphStats.totalLinks} links
+                </span>
+                <span className="flex items-center gap-1">
+                  <Hash className="w-3 h-3 sm:w-4 sm:h-4" />
+                  {tags.length} tags
+                </span>
+              </div>
               <div
                 className={`mb-4 lg:mb-6 ${currentView === 'search' ? 'block' : 'hidden lg:block'}`}
               >
@@ -844,6 +845,11 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   placeholder="Search all notes..."
                   className="w-full"
                 />
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center mx-auto">
+                  Try: <span className="font-mono">tag:project</span>,{' '}
+                  <span className="font-mono">folder:notes</span>, or{' '}
+                  <span className="font-mono">"exact phrase"</span>
+                </div>
               </div>
 
               {/* Quick Stats */}
@@ -1022,12 +1028,80 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             <div className="flex-1 min-w-0 order-1 lg:order-2">
               {currentView === 'editor' && (
                 <div
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)] flex flex-col"
                   style={{
                     backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
                     borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
                   }}
                 >
+                  {/* Editor Mode Toggle - Now just above the textarea */}
+                  <div className="flex justify-end w-full px-0 pt-4 mb-4 pr-4">
+                    <div
+                      className="inline-flex gap-2 p-1 rounded-lg shadow-sm"
+                      style={{
+                        background: 'transparent',
+                        boxShadow:
+                          theme === 'dark'
+                            ? '0 1px 4px rgba(0,0,0,0.25)'
+                            : '0 1px 4px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <button
+                        onClick={() => {
+                          setViewMode('edit');
+                          analytics.trackEvent('mode_switched', { mode: 'edit' });
+                        }}
+                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                          viewMode === 'edit'
+                            ? theme === 'dark'
+                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
+                              : 'bg-white text-gray-900 border border-blue-500'
+                            : theme === 'dark'
+                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
+                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        style={{ minWidth: 70 }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          setViewMode('preview');
+                          analytics.trackEvent('mode_switched', { mode: 'preview' });
+                        }}
+                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                          viewMode === 'preview'
+                            ? theme === 'dark'
+                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
+                              : 'bg-white text-gray-900 border border-blue-500'
+                            : theme === 'dark'
+                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
+                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        style={{ minWidth: 70 }}
+                      >
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => {
+                          setViewMode('split');
+                          analytics.trackEvent('mode_switched', { mode: 'split' });
+                        }}
+                        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                          viewMode === 'split'
+                            ? theme === 'dark'
+                              ? 'bg-gray-600 text-gray-100 border border-blue-500'
+                              : 'bg-white text-gray-900 border border-blue-500'
+                            : theme === 'dark'
+                              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
+                              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        style={{ minWidth: 70 }}
+                      >
+                        Split
+                      </button>
+                    </div>
+                  </div>
                   {viewMode === 'edit' && (
                     <textarea
                       value={markdown}

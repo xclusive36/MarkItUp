@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Network,
   Search,
@@ -9,8 +8,6 @@ import {
   Brain,
   Users,
   Command,
-  Edit3,
-  Eye,
   ArrowLeft,
   PenTool,
   Compass,
@@ -26,22 +23,22 @@ interface HeaderProps {
   theme: 'light' | 'dark';
   currentView: string;
   viewMode: string;
-  settings: any;
+  settings: {
+    enableCollaboration: boolean;
+  };
   isMounted: boolean;
   onViewChange: (view: string) => void;
   onViewModeChange: (mode: string) => void;
   onButtonClick: (buttonType: string) => void;
-  onAnalyticsTrack: (event: string, data?: any) => void;
+  onAnalyticsTrack: (event: string, data?: Record<string, unknown>) => void;
 }
 
 export function AppHeader({
   theme,
   currentView,
-  viewMode,
   settings,
   isMounted,
   onViewChange,
-  onViewModeChange,
   onButtonClick,
   onAnalyticsTrack,
 }: HeaderProps) {
@@ -179,75 +176,6 @@ export function AppHeader({
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back
         </button>
-      )}
-
-      {/* Editor Mode Toggle - Only show in editor view */}
-      {currentView === 'editor' && (
-        <div
-          className="flex rounded-lg p-0.5"
-          style={{ backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6' }}
-        >
-          <button
-            disabled={!isMounted}
-            onClick={() => {
-              onViewModeChange('edit');
-              onAnalyticsTrack('mode_switched', { mode: 'edit' });
-            }}
-            className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style={
-              viewMode === 'edit'
-                ? {
-                    backgroundColor: theme === 'dark' ? '#4b5563' : '#ffffff',
-                    color: theme === 'dark' ? '#f3f4f6' : '#111827',
-                  }
-                : {
-                    color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                  }
-            }
-          >
-            Edit
-          </button>
-          <button
-            disabled={!isMounted}
-            onClick={() => {
-              onViewModeChange('preview');
-              onAnalyticsTrack('mode_switched', { mode: 'preview' });
-            }}
-            className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style={
-              viewMode === 'preview'
-                ? {
-                    backgroundColor: theme === 'dark' ? '#4b5563' : '#ffffff',
-                    color: theme === 'dark' ? '#f3f4f6' : '#111827',
-                  }
-                : {
-                    color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                  }
-            }
-          >
-            Preview
-          </button>
-          <button
-            disabled={!isMounted}
-            onClick={() => {
-              onViewModeChange('split');
-              onAnalyticsTrack('mode_switched', { mode: 'split' });
-            }}
-            className="px-2 py-1 text-xs rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style={
-              viewMode === 'split'
-                ? {
-                    backgroundColor: theme === 'dark' ? '#4b5563' : '#ffffff',
-                    color: theme === 'dark' ? '#f3f4f6' : '#111827',
-                  }
-                : {
-                    color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                  }
-            }
-          >
-            Split
-          </button>
-        </div>
       )}
 
       {/* Right Side Controls */}
