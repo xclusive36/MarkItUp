@@ -27,10 +27,11 @@ const MainContent: React.FC<MainContentProps> = ({
   analytics,
 }) => (
   <div
-    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col"
+    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full min-h-screen"
     style={{
       backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
       borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+      minHeight: '100vh',
     }}
   >
     {/* Editor Mode Toggle */}
@@ -45,15 +46,17 @@ const MainContent: React.FC<MainContentProps> = ({
       />
     </div>
     {viewMode === 'edit' && (
-      <MarkdownEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+      <div className="flex-grow flex flex-col h-full">
+        <MarkdownEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+      </div>
     )}
     {viewMode === 'preview' && <MarkdownPreview markdown={processedMarkdown} theme={theme} />}
     {viewMode === 'split' && (
-      <div className="flex flex-col lg:flex-row h-full">
-        <div className="w-full lg:w-1/2 h-1/2 lg:h-full">
+      <div className="flex flex-col lg:flex-row h-full flex-grow min-h-0">
+        <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col min-h-0">
           <MarkdownEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
         </div>
-        <div className="h-1/2 lg:h-full w-full lg:w-1/2">
+        <div className="h-1/2 lg:h-full w-full lg:w-1/2 flex flex-col min-h-0">
           <MarkdownPreview markdown={processedMarkdown} theme={theme} />
         </div>
       </div>
