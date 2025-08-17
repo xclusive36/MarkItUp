@@ -16,11 +16,14 @@ export async function PUT(
     const fileExists = fs.existsSync(filePath);
     if (fileExists && !overwrite) {
       // Prompt user for overwrite confirmation
-      return NextResponse.json({
-        error: 'File already exists',
-        prompt: 'File exists. Are you sure you want to overwrite it?',
-        requiresOverwrite: true
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'File already exists',
+          prompt: 'File exists. Are you sure you want to overwrite it?',
+          requiresOverwrite: true,
+        },
+        { status: 409 }
+      );
     }
     // Ensure parent directory exists
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -35,9 +38,9 @@ export async function PUT(
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { MarkdownParser } from '@/lib/parser';
 
 const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
-
 
 function safeJoinMarkdownDir(filename: string): string | null {
   // Allow subfolders, but prevent traversal outside MARKDOWN_DIR
@@ -61,10 +64,18 @@ export async function GET(
     }
     const content = fs.readFileSync(filePath, 'utf-8');
     const stats = fs.statSync(filePath);
+    // Parse for tags, word count, reading time
+    const parsed = MarkdownParser.parseNote(content);
+    const wordCount = MarkdownParser.calculateWordCount(content);
+    const readingTime = MarkdownParser.calculateReadingTime(wordCount);
     return NextResponse.json({
       name: filename,
       content,
       createdAt: stats.ctime.toISOString(),
+      tags: parsed.tags || [],
+      wordCount,
+      readingTime,
+      updatedAt: stats.mtime.toISOString(),
     });
   } catch (error) {
     console.error('Error reading file:', error);

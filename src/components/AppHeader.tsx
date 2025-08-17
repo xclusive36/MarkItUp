@@ -8,7 +8,6 @@ import {
   Brain,
   Users,
   Command,
-  ArrowLeft,
   PenTool,
   Compass,
   BookOpen,
@@ -16,6 +15,7 @@ import {
   BarChart3,
   User,
 } from 'lucide-react';
+import Link from 'next/link';
 import { SimpleDropdown } from './SimpleDropdown';
 import ThemeToggle from './ThemeToggle';
 
@@ -158,25 +158,21 @@ export function AppHeader({
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full">
-      {/* Back to Editor Button - Only show when not in editor */}
-      {currentView !== 'editor' && (
-        <button
-          disabled={!isMounted}
-          onClick={() => {
-            onViewChange('editor');
-            onAnalyticsTrack('mode_switched', { view: 'editor' });
-          }}
-          className="flex items-center justify-center px-3 py-1.5 text-sm rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-          style={{
-            backgroundColor: theme === 'dark' ? '#2563eb' : '#3b82f6',
-            color: '#ffffff',
-          }}
-          title="Return to Editor"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back
-        </button>
-      )}
+      {/* App Title as Home Link */}
+      <Link
+        href="/"
+        className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 no-underline hover:no-underline"
+        style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+        onClick={e => {
+          e.preventDefault();
+          if (typeof window !== 'undefined') {
+            const event = new CustomEvent('setCurrentView', { detail: 'editor' });
+            window.dispatchEvent(event);
+          }
+        }}
+      >
+        MarkItUp PKM
+      </Link>
 
       {/* Right Side Controls */}
       <div className="flex items-center space-x-2 ml-auto">

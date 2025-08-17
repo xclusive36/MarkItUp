@@ -1,5 +1,6 @@
 import React from 'react';
 import MainContent from './MainContent';
+import NotesPanel from './NotesPanel';
 import GraphView from './GraphView';
 import SearchBox from './SearchBox';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
@@ -18,8 +19,10 @@ type SearchOptions = {
   folders?: string[];
 };
 
+type MainPanelView = 'editor' | 'graph' | 'search' | 'analytics' | 'plugins' | 'notes';
+
 interface MainPanelProps {
-  currentView: 'editor' | 'graph' | 'search' | 'analytics' | 'plugins';
+  currentView: MainPanelView;
   // MainContent props
   markdown: string;
   viewMode: 'edit' | 'preview' | 'split';
@@ -62,6 +65,9 @@ const MainPanel: React.FC<MainPanelProps> = ({
   folders,
   notes,
 }) => {
+  if (currentView === 'notes') {
+    return <NotesPanel />;
+  }
   if (currentView === 'editor') {
     return (
       <MainContent

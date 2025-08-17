@@ -127,8 +127,38 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
   const [currentView, setCurrentView] = useState<
-    'editor' | 'graph' | 'search' | 'analytics' | 'plugins'
+    'editor' | 'graph' | 'search' | 'analytics' | 'plugins' | 'notes'
   >('editor');
+
+  // Listen for sidebar "All Notes" click event
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (typeof e.detail === 'string') {
+        if (e.detail === 'notes') setCurrentView('notes');
+        if (e.detail === 'editor') setCurrentView('editor');
+      } else if (
+        e.detail &&
+        typeof e.detail === 'object' &&
+        e.detail.view === 'editor' &&
+        e.detail.notePath
+      ) {
+        // Find note by path (folder/name or just name)
+        const note = notes.find(n => {
+          const fullPath = n.folder ? `${n.folder}/${n.name}` : n.name;
+          return fullPath === e.detail.notePath;
+        });
+        if (note) {
+          setActiveNote(note);
+          setMarkdown(note.content);
+          setFileName(note.name.replace('.md', ''));
+          setFolder(note.folder || '');
+        }
+        setCurrentView('editor');
+      }
+    };
+    window.addEventListener('setCurrentView', handler);
+    return () => window.removeEventListener('setCurrentView', handler);
+  }, [notes]);
 
   // File management
   const [fileName, setFileName] = useState('');
@@ -487,7 +517,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         const tagMatches = markdown.match(/#\w+/g) || [];
 
         analytics.trackEvent(activeNote ? 'note_updated' : 'note_created', {
-          noteId: activeNote?.id || 'new',
+          noteId:
+            typeof activeNote === 'object' && activeNote && 'id' in activeNote
+              ? activeNote.id
+              : 'new',
           fileName: fileName,
           wordCount: wordCount,
           characterCount: markdown.length,
@@ -703,12 +736,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     />
                   </svg>
                 </button>
-                <h1
-                  className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0 whitespace-nowrap"
-                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-                >
-                  MarkItUp PKM
-                </h1>
+                {/* Title moved to AppHeader as a link */}
                 {/* Quick Stats moved to sidebar below */}
               </div>
 

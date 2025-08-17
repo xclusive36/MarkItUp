@@ -1,4 +1,5 @@
 import React from 'react';
+// import Link from 'next/link';
 import { FileText, Link as LinkIcon, Hash, Save, Plus, X, Folder, Clock } from 'lucide-react';
 import SearchBox from './SearchBox';
 import { Note, Tag, Graph } from '@/lib/types';
@@ -61,6 +62,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={createNewNote}
           className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+          disabled={currentView !== 'editor'}
+          style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -76,7 +79,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
             color: theme === 'dark' ? '#f9fafb' : '#111827',
             borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+            opacity: currentView !== 'editor' ? 0.5 : 1,
+            cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
           }}
+          disabled={currentView !== 'editor'}
         />
         <input
           type="text"
@@ -88,11 +94,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
             color: theme === 'dark' ? '#f9fafb' : '#111827',
             borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+            opacity: currentView !== 'editor' ? 0.5 : 1,
+            cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
           }}
+          disabled={currentView !== 'editor'}
         />
         <button
-          onClick={saveNote}
+          onClick={() => saveNote()}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={currentView !== 'editor'}
+          style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           <Save className="w-4 h-4" />
           Save Note
@@ -178,6 +189,21 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </div>
+    {/* All Notes Page Link */}
+    <div className="mb-4">
+      <span
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium cursor-pointer transition-colors"
+        onClick={() => {
+          if (typeof window !== 'undefined') {
+            const event = new CustomEvent('setCurrentView', { detail: 'notes' });
+            window.dispatchEvent(event);
+          }
+        }}
+      >
+        <Folder className="w-4 h-4" />
+        All Notes
+      </span>
+    </div>
     {/* Notes List - Collapsible on mobile */}
     <div
       className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
@@ -231,7 +257,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }
               }}
-              onClick={() => handleNoteSelect(note.id)}
+              onClick={() => {
+                handleNoteSelect(note.id);
+                if (typeof window !== 'undefined') {
+                  const event = new CustomEvent('setCurrentView', { detail: 'editor' });
+                  window.dispatchEvent(event);
+                }
+              }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
