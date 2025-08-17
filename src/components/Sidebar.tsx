@@ -191,18 +191,20 @@ const Sidebar: React.FC<SidebarProps> = ({
     </div>
     {/* All Notes Page Link */}
     <div className="mb-4">
-      <span
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium cursor-pointer transition-colors"
+      <button
         onClick={() => {
           if (typeof window !== 'undefined') {
             const event = new CustomEvent('setCurrentView', { detail: 'notes' });
             window.dispatchEvent(event);
           }
         }}
+        className="w-full flex items-center justify-center px-3 py-1.5 text-sm rounded-md transition-colors shadow-sm font-medium mb-2 bg-blue-600 text-white hover:bg-blue-700"
+        style={{ minHeight: '40px' }}
+        title="View All Notes"
       >
-        <Folder className="w-4 h-4" />
+        <Folder className="w-4 h-4 mr-1" />
         All Notes
-      </span>
+      </button>
     </div>
     {/* Notes List - Collapsible on mobile */}
     <div

@@ -2040,5 +2040,310 @@
       "timestamp": "2025-08-17T20:18:54.671Z"
     },
     "sessionId": "session_1755461934484_eekq3znrx"
+  },
+  {
+    "id": "event_1755462157203_mgmwi46ns",
+    "type": "session_ended",
+    "timestamp": "2025-08-17T20:22:37.203Z",
+    "data": {
+      "duration": 222719
+    },
+    "sessionId": "session_1755461934484_eekq3znrx"
+  },
+  {
+    "id": "event_1755462158914_wcenpcx78",
+    "type": "session_started",
+    "timestamp": "2025-08-17T20:22:38.914Z",
+    "data": {},
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462159108_5sgimh7jg",
+    "type": "session_started",
+    "timestamp": "2025-08-17T20:22:39.108Z",
+    "data": {
+      "timestamp": "2025-08-17T20:22:39.108Z"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462311833_yrf04tdpd",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:11.833Z",
+    "data": {
+      "mode": "preview"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462312699_7s6fxeedz",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:12.699Z",
+    "data": {
+      "mode": "split"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462313565_pii2owtr1",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:13.565Z",
+    "data": {
+      "mode": "edit"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462327682_qm67myc46",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:27.682Z",
+    "data": {
+      "view": "graph"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462327686_trf3amtvk",
+    "type": "graph_viewed",
+    "timestamp": "2025-08-17T20:25:27.686Z",
+    "data": {},
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462331100_zhycjb1oo",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:31.100Z",
+    "data": {
+      "view": "search"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462333898_vvghmrotk",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:33.898Z",
+    "data": {
+      "view": "analytics"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462335715_h2k4edenp",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:35.715Z",
+    "data": {
+      "view": "plugins"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462335778_rqkgicps4",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:35.778Z",
+    "data": {
+      "view": "plugin_refresh",
+      "total": 3,
+      "regular": 3,
+      "ai": 0
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462339915_tkcfo4jwr",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:39.915Z",
+    "data": {
+      "view": "search"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462344151_c6ofohx3z",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:44.151Z",
+    "data": {
+      "view": "plugins"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462344204_l4gt0do8y",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:25:44.204Z",
+    "data": {
+      "view": "plugin_refresh",
+      "total": 3,
+      "regular": 3,
+      "ai": 0
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462346216_1euzpb71g",
+    "type": "ai_chat",
+    "timestamp": "2025-08-17T20:25:46.216Z",
+    "data": {
+      "action": "open_chat",
+      "noteContext": false
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462387016_q514k8110",
+    "type": "mode_switched",
+    "timestamp": "2025-08-17T20:26:27.016Z",
+    "data": {
+      "view": "plugin_refresh",
+      "total": 3,
+      "regular": 3,
+      "ai": 0
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462389801_y72xk2a9g",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-17T20:26:29.801Z",
+    "data": {
+      "action": "open_batch_analyzer",
+      "notesCount": 3
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462389852_eymxd6qbj",
+    "type": "ai_analysis",
+    "timestamp": "2025-08-17T20:26:29.852Z",
+    "data": {
+      "action": "batch_analysis_completed",
+      "notesAnalyzed": 3,
+      "totalWords": 490
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462400634_1qwlo0zte",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:26:40.634Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462422167_j9jajpzll",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:27:02.167Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462423216_a8vhyd71i",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:27:03.216Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462695594_u9vvxo2up",
+    "type": "session_ended",
+    "timestamp": "2025-08-17T20:31:35.594Z",
+    "data": {
+      "duration": 536680
+    },
+    "sessionId": "session_1755462158914_jbpkc186z"
+  },
+  {
+    "id": "event_1755462698782_yoz3x1usa",
+    "type": "session_started",
+    "timestamp": "2025-08-17T20:31:38.782Z",
+    "data": {},
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462698971_54hudpktb",
+    "type": "session_started",
+    "timestamp": "2025-08-17T20:31:38.971Z",
+    "data": {
+      "timestamp": "2025-08-17T20:31:38.971Z"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462704673_jt4ae4ph3",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:44.673Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462706571_5d78bgtd3",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:46.571Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462710304_0dp0y7aze",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:50.304Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462714187_ld1ho45ir",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:54.187Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462715036_n8gdb2ere",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:55.036Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462715737_3buh7ndva",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:55.737Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
+  },
+  {
+    "id": "event_1755462718270_j5i6pqsv7",
+    "type": "theme_changed",
+    "timestamp": "2025-08-17T20:31:58.270Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1755462698782_oy42nsxjl"
   }
 ]
