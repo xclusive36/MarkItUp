@@ -106,6 +106,7 @@ services:
 docker compose up -d
 ```
 
+
 ### Docker CLI
 
 ```bash
@@ -114,6 +115,15 @@ docker run --name markitup -p 3000:3000 \
   --restart unless-stopped \
   ghcr.io/xclusive36/markitup:latest
 ```
+
+> **Important:** The `markdown` folder on your host must be writable by the container user (UID 65532, used by distroless images). If you get a permission error when creating notes, run:
+
+```sh
+sudo chown -R 65532:65532 ./markdown
+```
+
+This ensures the container can write notes to the `markdown` directory.
+Change the User and Group to your needs. 65532 is for user and group 'Nobody' for example
 
 ## 🤝 Contributing
 
