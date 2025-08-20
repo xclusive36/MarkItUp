@@ -78,19 +78,160 @@ interface FolderTreeProps {
   onDeleteNote: (path: string) => void;
 }
 
-function FolderTree({
-  nodes,
-  noteDetails,
-  openFolders,
-  onToggleFolder,
-  onNoteClick,
-  selectedNotes,
-  onToggleNoteSelect,
-  activeNotePath,
-  searchTerm,
-  tagFilter,
-  onDeleteNote,
-}: FolderTreeProps) {
+function FolderTree(
+  props: FolderTreeProps & {
+    parentNodes?: TreeNode[] | null;
+    setParentNodes?: ((n: TreeNode[]) => void) | null;
+    parentPath?: string;
+    moveNodeInTree?: ((fromPath: string, toFolderPath: string) => void) | null;
+  }
+) {
+  const {
+    nodes,
+    noteDetails,
+    openFolders,
+    onToggleFolder,
+    onNoteClick,
+    selectedNotes,
+    onToggleNoteSelect,
+    activeNotePath,
+    searchTerm,
+    tagFilter,
+    onDeleteNote,
+    parentNodes = null,
+    setParentNodes = null,
+    parentPath = '',
+    moveNodeInTree = null,
+  } = props;
+  // Use refs to track dragged node and its parent array for cross-folder drops
+  const [dragOverNodePath, setDragOverNodePath] = React.useState<string | null>(null);
+  const draggedNodePathRef = React.useRef<string | null>(null);
+  const draggedParentNodesRef = React.useRef<TreeNode[] | null>(null);
+
+  // Drag handlers
+  const handleDragStart = (e: React.DragEvent, nodePath: string, parentNodesArr: TreeNode[]) => {
+    draggedNodePathRef.current = nodePath;
+    draggedParentNodesRef.current = parentNodesArr;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  // (Unused: handleDragOver)
+  // Drop handler for dropping between nodes (above or below)
+  const handleDropBetween = (
+    e: React.DragEvent,
+    targetParentNodes: TreeNode[],
+    setTargetParentNodes: (n: TreeNode[]) => void,
+    targetIdx: number
+  ) => {
+    e.preventDefault();
+    const draggedNodePath = draggedNodePathRef.current;
+    const draggedParentNodes = draggedParentNodesRef.current;
+    if (draggedNodePath && draggedParentNodes) {
+      // Remove dragged node from its original parent
+      let draggedNode: TreeNode | null = null;
+      const removeNode = (nodes: TreeNode[]): TreeNode[] => {
+        return nodes.filter(n => {
+          if (n.path === draggedNodePath) {
+            draggedNode = n;
+            return false;
+          }
+          if (n.type === 'folder' && n.children) {
+            n.children = removeNode(n.children);
+          }
+          return true;
+        });
+      };
+      const updatedSource = removeNode([...draggedParentNodes]);
+      if (draggedParentNodes === targetParentNodes) {
+        // Same parent: just update in place
+        if (draggedNode) {
+          updatedSource.splice(targetIdx, 0, draggedNode);
+          setTargetParentNodes(updatedSource);
+        }
+      } else {
+        // Cross-parent: update both arrays
+        if (draggedNode) {
+          const arr = [...targetParentNodes];
+          arr.splice(targetIdx, 0, draggedNode!);
+          setTargetParentNodes(arr);
+          if (setParentNodes && parentNodes) {
+            setParentNodes(updatedSource);
+          }
+        }
+      }
+    }
+    draggedNodePathRef.current = null;
+    draggedParentNodesRef.current = null;
+    setDragOverNodePath(null);
+  };
+  // Drop handler for dropping onto a folder (cross-folder move)
+  const handleDropOnFolder = (e: React.DragEvent, folderPath: string) => {
+    e.preventDefault();
+    const draggedNodePath = draggedNodePathRef.current;
+    if (draggedNodePath && draggedNodePath !== folderPath) {
+      moveNodeInTreeHandler(draggedNodePath, folderPath);
+    }
+    draggedNodePathRef.current = null;
+    draggedParentNodesRef.current = null;
+    setDragOverNodePath(null);
+  };
+  const handleDragEnd = () => {
+    draggedNodePathRef.current = null;
+    draggedParentNodesRef.current = null;
+    setDragOverNodePath(null);
+  };
+
+  // (Unused: reorderNodes)
+
+  // Helper to move node to a different folder
+  const moveNode = (tree: TreeNode[], fromPath: string, toFolderPath: string): TreeNode[] => {
+    let nodeToMove: TreeNode | null = null;
+    // Remove node from its current location
+    const removeNode = (nodes: TreeNode[]): TreeNode[] => {
+      return nodes.filter(n => {
+        if (n.path === fromPath) {
+          nodeToMove = n;
+          return false;
+        }
+        if (n.type === 'folder' && n.children) {
+          n.children = removeNode(n.children);
+        }
+        return true;
+      });
+    };
+    const newTree = removeNode([...tree]);
+    if (!nodeToMove) return tree;
+    // Insert node into target folder
+    const insertNode = (nodes: TreeNode[]): boolean => {
+      for (const n of nodes) {
+        if (n.type === 'folder' && n.path === toFolderPath) {
+          n.children = n.children || [];
+          n.children.push(nodeToMove!);
+          return true;
+        }
+        if (n.type === 'folder' && n.children) {
+          if (insertNode(n.children)) return true;
+        }
+      }
+      return false;
+    };
+    if (toFolderPath === '') {
+      // Move to root
+      newTree.push(nodeToMove!);
+    } else {
+      insertNode(newTree);
+    }
+    return newTree;
+  };
+
+  // Handler to move node in the tree (passed down recursively)
+  const moveNodeInTreeHandler =
+    moveNodeInTree ||
+    ((fromPath: string, toFolderPath: string) => {
+      if (!setParentNodes || !parentNodes) return;
+      const updated = moveNode(parentNodes, fromPath, toFolderPath);
+      setParentNodes(updated);
+    });
+
   const filterNote = (node: FileNode) => {
     if (searchTerm) {
       const meta = noteDetails[node.path] || {};
@@ -118,155 +259,225 @@ function FolderTree({
   return (
     <ul className="pl-4">
       <AnimatePresence initial={false}>
-        {nodes.map((node: TreeNode) => {
-          if (node.type === 'folder') {
-            const hasVisibleChild = (children: TreeNode[]): boolean =>
-              children.some(child =>
-                child.type === 'folder'
-                  ? hasVisibleChild(child.children || [])
-                  : filterNote(child as FileNode)
-              );
-            if (!hasVisibleChild(node.children || [])) return null;
-            return (
-              <motion.li
-                key={node.path}
-                className="mb-2"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                layout
-              >
-                <button
-                  type="button"
-                  className="flex items-center gap-1 font-semibold focus:outline-none"
-                  onClick={() => onToggleFolder(node.path)}
-                  aria-expanded={!!openFolders[node.path]}
-                >
-                  {openFolders[node.path] ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                  <span>{node.name}</span>
-                </button>
-                {openFolders[node.path] && node.children && (
-                  <FolderTree
-                    nodes={node.children}
-                    noteDetails={noteDetails}
-                    openFolders={openFolders}
-                    onToggleFolder={onToggleFolder}
-                    onNoteClick={onNoteClick}
-                    selectedNotes={selectedNotes}
-                    onToggleNoteSelect={onToggleNoteSelect}
-                    activeNotePath={activeNotePath}
-                    searchTerm={searchTerm}
-                    tagFilter={tagFilter}
-                    onDeleteNote={onDeleteNote}
-                  />
-                )}
-              </motion.li>
-            );
-          } else if (node.type === 'file' && filterNote(node as FileNode)) {
-            const meta = noteDetails[node.path] || {};
-            return (
-              <motion.li
-                key={node.path}
-                className="mb-2 group"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                layout
-              >
-                <div
-                  className={`relative p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 flex items-start ${activeNotePath === node.path ? 'ring-2 ring-blue-400' : ''}`}
-                  onClick={() => onNoteClick(node.path)}
-                  tabIndex={0}
-                  aria-label={`Open note ${meta.name || node.name.replace('.md', '')}`}
-                >
-                  <button
-                    type="button"
-                    className="mr-2 mt-1"
-                    onClick={e => {
-                      e.stopPropagation();
-                      onToggleNoteSelect(node.path);
-                    }}
-                    aria-label={selectedNotes.has(node.path) ? 'Deselect note' : 'Select note'}
+        {nodes.map((node: TreeNode, idx: number) => {
+          // Drop zone above node
+          const parentNodesArr = parentNodes || nodes;
+          const setParentNodesFn = setParentNodes || (() => {});
+          const dropZoneAbove = (
+            <div
+              key={node.path + '-drop-above'}
+              style={{
+                height: 8,
+                margin: '2px 0',
+                background: dragOverNodePath === node.path + '-above' ? '#3b82f6' : 'transparent',
+                borderRadius: 4,
+              }}
+              onDragOver={e => {
+                e.preventDefault();
+                setDragOverNodePath(node.path + '-above');
+              }}
+              onDrop={e => handleDropBetween(e, parentNodesArr, setParentNodesFn, idx)}
+            />
+          );
+          // Drop zone below node (only after last node)
+          const dropZoneBelow = (
+            <div
+              key={node.path + '-drop-below'}
+              style={{
+                height: 8,
+                margin: '2px 0',
+                background: dragOverNodePath === node.path + '-below' ? '#3b82f6' : 'transparent',
+                borderRadius: 4,
+              }}
+              onDragOver={e => {
+                e.preventDefault();
+                setDragOverNodePath(node.path + '-below');
+              }}
+              onDrop={e => handleDropBetween(e, parentNodesArr, setParentNodesFn, idx + 1)}
+            />
+          );
+
+          // Render drop zone above
+          return [
+            dropZoneAbove,
+            (() => {
+              if (node.type === 'folder') {
+                const hasVisibleChild = (children: TreeNode[]): boolean =>
+                  children.some(child =>
+                    child.type === 'folder'
+                      ? hasVisibleChild(child.children || [])
+                      : filterNote(child as FileNode)
+                  );
+                if (!hasVisibleChild(node.children || [])) return null;
+                return (
+                  <motion.li
+                    key={node.path}
+                    className={`mb-2 ${draggedNodePathRef.current === node.path ? 'opacity-50' : ''} ${dragOverNodePath === node.path ? 'ring-2 ring-blue-400' : ''}`}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    layout
                   >
-                    {selectedNotes.has(node.path) ? (
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-gray-400" />
+                    <button
+                      type="button"
+                      className="flex items-center gap-1 font-semibold focus:outline-none"
+                      onClick={() => onToggleFolder(node.path)}
+                      aria-expanded={!!openFolders[node.path]}
+                      draggable
+                      onDragStart={(e: React.DragEvent) =>
+                        handleDragStart(e, node.path, parentNodesArr)
+                      }
+                      onDragEnd={handleDragEnd}
+                    >
+                      {openFolders[node.path] ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                      <span>{node.name}</span>
+                    </button>
+                    {/* Allow dropping onto folder to move node here */}
+                    <div
+                      onDragOver={e => {
+                        e.preventDefault();
+                        setDragOverNodePath(node.path);
+                      }}
+                      onDrop={e => handleDropOnFolder(e, node.path)}
+                      style={{ minHeight: 4 }}
+                    />
+                    {openFolders[node.path] && node.children && (
+                      <FolderTree
+                        nodes={node.children}
+                        noteDetails={noteDetails}
+                        openFolders={openFolders}
+                        onToggleFolder={onToggleFolder}
+                        onNoteClick={onNoteClick}
+                        selectedNotes={selectedNotes}
+                        onToggleNoteSelect={onToggleNoteSelect}
+                        activeNotePath={activeNotePath}
+                        searchTerm={searchTerm}
+                        tagFilter={tagFilter}
+                        onDeleteNote={onDeleteNote}
+                        parentNodes={node.children}
+                        setParentNodes={updated => {
+                          node.children.splice(0, node.children.length, ...updated);
+                        }}
+                        parentPath={node.path}
+                        moveNodeInTree={moveNodeInTreeHandler}
+                      />
                     )}
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs lg:text-sm font-medium truncate text-gray-900 dark:text-white">
-                      {highlight(meta.name || node.name.replace('.md', ''))}
-                    </h4>
-                    {meta.folder && (
-                      <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                        <FolderIcon className="w-3 h-3" />
-                        {meta.folder}
-                      </p>
-                    )}
-                    {meta.tags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {meta.tags.map((tag: string) => (
-                          <span
-                            key={tag}
-                            className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
-                          >
-                            #{tag}
+                  </motion.li>
+                );
+              } else if (node.type === 'file' && filterNote(node as FileNode)) {
+                const meta = noteDetails[node.path] || {};
+                return (
+                  <motion.li
+                    key={node.path}
+                    className={`mb-2 group ${draggedNodePathRef.current === node.path ? 'opacity-50' : ''} ${dragOverNodePath === node.path ? 'ring-2 ring-blue-400' : ''}`}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    layout
+                  >
+                    <div
+                      className={`relative p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 flex items-start ${activeNotePath === node.path ? 'ring-2 ring-blue-400' : ''}`}
+                      onClick={() => onNoteClick(node.path)}
+                      tabIndex={0}
+                      aria-label={`Open note ${meta.name || node.name.replace('.md', '')}`}
+                      draggable
+                      onDragStart={(e: React.DragEvent) =>
+                        handleDragStart(e, node.path, parentNodesArr)
+                      }
+                      onDragEnd={handleDragEnd}
+                    >
+                      <button
+                        type="button"
+                        className="mr-2 mt-1"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onToggleNoteSelect(node.path);
+                        }}
+                        aria-label={selectedNotes.has(node.path) ? 'Deselect note' : 'Select note'}
+                      >
+                        {selectedNotes.has(node.path) ? (
+                          <CheckSquare className="w-4 h-4 text-blue-600" />
+                        ) : (
+                          <Square className="w-4 h-4 text-gray-400" />
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs lg:text-sm font-medium truncate text-gray-900 dark:text-white">
+                          {highlight(meta.name || node.name.replace('.md', ''))}
+                        </h4>
+                        {meta.folder && (
+                          <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                            <FolderIcon className="w-3 h-3" />
+                            {meta.folder}
+                          </p>
+                        )}
+                        {meta.tags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {meta.tags.map((tag: string) => (
+                              <span
+                                key={tag}
+                                className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {/* Note preview/snippet */}
+                        {meta.preview && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                            {highlight(meta.preview)}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 lg:gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {meta.readingTime ? `${meta.readingTime}m` : '--'}
                           </span>
-                        ))}
+                          <span className="hidden lg:inline">
+                            {meta.wordCount ? `${meta.wordCount} words` : '-- words'}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                    {/* Note preview/snippet */}
-                    {meta.preview && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                        {highlight(meta.preview)}
+                      {/* Quick actions (edit, delete, favorite) */}
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                          className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900"
+                          title="Edit"
+                          tabIndex={-1}
+                          onClick={e => {
+                            e.stopPropagation();
+                            onNoteClick(node.path);
+                          }}
+                        >
+                          <Edit className="w-4 h-4 text-blue-500" />
+                        </button>
+                        <button
+                          className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
+                          title="Delete"
+                          tabIndex={-1}
+                          onClick={e => {
+                            e.stopPropagation();
+                            onDeleteNote(node.path);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 lg:gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {meta.readingTime ? `${meta.readingTime}m` : '--'}
-                      </span>
-                      <span className="hidden lg:inline">
-                        {meta.wordCount ? `${meta.wordCount} words` : '-- words'}
-                      </span>
                     </div>
-                  </div>
-                  {/* Quick actions (edit, delete, favorite) */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                      className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900"
-                      title="Edit"
-                      tabIndex={-1}
-                      onClick={e => {
-                        e.stopPropagation();
-                        onNoteClick(node.path);
-                      }}
-                    >
-                      <Edit className="w-4 h-4 text-blue-500" />
-                    </button>
-                    <button
-                      className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900"
-                      title="Delete"
-                      tabIndex={-1}
-                      onClick={e => {
-                        e.stopPropagation();
-                        onDeleteNote(node.path);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              </motion.li>
-            );
-          } else {
-            return null;
-          }
+                  </motion.li>
+                );
+              } else {
+                return null;
+              }
+            })(),
+            // Drop zone below node (only after last node)
+            idx === parentNodesArr.length - 1 ? dropZoneBelow : null,
+          ];
         })}
       </AnimatePresence>
     </ul>
@@ -584,6 +795,9 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
           searchTerm={searchTerm}
           tagFilter={tagFilter}
           onDeleteNote={handleDeleteNote}
+          parentNodes={tree}
+          setParentNodes={updated => setTree(updated)}
+          parentPath={''}
         />
       ) : (
         <div

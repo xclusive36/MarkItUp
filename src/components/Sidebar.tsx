@@ -1,6 +1,25 @@
-import React from 'react';
+import React, { useRef } from 'react';
 // import Link from 'next/link';
-import { FileText, Link as LinkIcon, Hash, Save, Plus, X, Folder, Clock } from 'lucide-react';
+import {
+  FileText,
+  Link as LinkIcon,
+  Hash,
+  Save,
+  Plus,
+  X,
+  Folder,
+  Clock,
+  File as FileIcon,
+  FileCode,
+} from 'lucide-react';
+// Helper to get icon by file type
+const getFileIcon = (name: string) => {
+  if (name.endsWith('.md'))
+    return <FileText className="w-4 h-4 mr-1 inline-block align-text-bottom" />;
+  if (name.endsWith('.js') || name.endsWith('.ts'))
+    return <FileCode className="w-4 h-4 mr-1 inline-block align-text-bottom" />;
+  return <FileIcon className="w-4 h-4 mr-1 inline-block align-text-bottom" />;
+};
 import SearchBox from './SearchBox';
 import { Note, Tag, Graph } from '@/lib/types';
 
@@ -27,6 +46,7 @@ interface SidebarProps {
   activeNote: Note | null;
   deleteNote: (id: string) => void;
   theme: string;
+  onReorderNotes?: (notes: Note[]) => void;
 }
 
 import { useEffect, useState } from 'react';
@@ -44,14 +64,149 @@ const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   handleSearch,
   handleNoteSelect,
-  notes,
+  notes: notesProp,
   activeNote,
   deleteNote,
   theme,
+  onReorderNotes,
 }) => {
   console.log('Sidebar initialGraphStats prop:', initialGraphStats);
   const [graphStats, setGraphStats] = useState(initialGraphStats);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    note: Note | null;
+  } | null>(null);
+  const notesListRef = useRef<HTMLDivElement>(null);
+  const [notes, setNotes] = useState<Note[]>(notesProp);
+  const [renamingNoteId, setRenamingNoteId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState<string>('');
+
+  // Keep local notes in sync with prop
+  React.useEffect(() => {
+    setNotes(notesProp);
+  }, [notesProp]);
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, noteId: string) => {
+    setDraggedNoteId(noteId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragOver = (e: React.DragEvent, _noteId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const handleDrop = (e: React.DragEvent, targetNoteId: string) => {
+    e.preventDefault();
+    if (draggedNoteId && draggedNoteId !== targetNoteId) {
+      const fromIdx = notes.findIndex(n => n.id === draggedNoteId);
+      const toIdx = notes.findIndex(n => n.id === targetNoteId);
+      if (fromIdx !== -1 && toIdx !== -1) {
+        const updated = [...notes];
+        const [moved] = updated.splice(fromIdx, 1);
+        updated.splice(toIdx, 0, moved);
+        setNotes(updated);
+        if (onReorderNotes) onReorderNotes(updated);
+      }
+    }
+    setDraggedNoteId(null);
+  };
+  const handleDragEnd = () => setDraggedNoteId(null);
+
+  // Context menu handlers
+  const handleContextMenu = (e: React.MouseEvent, note: Note) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, note });
+  };
+  const handleCloseContextMenu = () => setContextMenu(null);
+  // Inline rename logic
+  const handleRename = () => {
+    if (contextMenu?.note) {
+      setRenamingNoteId(contextMenu.note.id);
+      setRenameValue(contextMenu.note.name.replace('.md', ''));
+    }
+    setContextMenu(null);
+  };
+  const handleRenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRenameValue(e.target.value);
+  };
+  const handleRenameSubmit = async (note: Note) => {
+    const newName = renameValue.trim();
+    if (newName && newName !== note.name.replace('.md', '')) {
+      // Call backend API to rename file
+      const oldName = note.name;
+      const folder = note.folder || '';
+      const res = await fetch('/api/files/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldName, newName: newName + '.md', folder }),
+      });
+      if (res.ok) {
+        // Optionally show a toast here
+        // Refresh notes list (emit event or call prop)
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('refreshNotes'));
+        }
+      } else {
+        // Optionally show error toast
+      }
+    }
+    setRenamingNoteId(null);
+    setRenameValue('');
+  };
+  // Listen for refreshNotes event to reload notes from parent
+  useEffect(() => {
+    function handleRefreshNotes() {
+      if (typeof window !== 'undefined') {
+        window.location.reload(); // simplest way to ensure all components reload
+      }
+    }
+    window.addEventListener('refreshNotes', handleRefreshNotes);
+    return () => window.removeEventListener('refreshNotes', handleRefreshNotes);
+  }, []);
+  const handleRenameKeyDown = (e: React.KeyboardEvent, note: Note) => {
+    if (e.key === 'Enter') handleRenameSubmit(note);
+    if (e.key === 'Escape') {
+      setRenamingNoteId(null);
+      setRenameValue('');
+    }
+  };
+
+  // Duplicate logic
+  const handleDuplicate = async () => {
+    if (contextMenu?.note) {
+      const note = contextMenu.note;
+      const baseName = note.name.replace('.md', '');
+      let newName = baseName + ' (Copy)';
+      let i = 2;
+      while (notes.some(n => n.name === newName + '.md')) {
+        newName = baseName + ` (Copy ${i})`;
+        i++;
+      }
+      const folder = note.folder || '';
+      // Call backend API to duplicate file
+      const res = await fetch('/api/files/duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceName: note.name, targetName: newName + '.md', folder }),
+      });
+      if (res.ok) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('refreshNotes'));
+        }
+      } else {
+        // Optionally show error toast
+      }
+    }
+    setContextMenu(null);
+  };
+  const handleDelete = () => {
+    if (contextMenu?.note) {
+      deleteNote(contextMenu.note.id);
+    }
+    setContextMenu(null);
+  };
 
   useEffect(() => {
     setLoadingStats(true);
@@ -257,7 +412,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           Recent Notes
         </h3>
-        <div className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
+        <div ref={notesListRef} className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
           {notes.length === 0 ? (
             <p
               className="text-xs lg:text-sm text-center py-4"
@@ -269,7 +424,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             notes.slice(0, 20).map((note: Note) => (
               <div
                 key={note.id}
-                className="p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border"
+                className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border flex items-center ${draggedNoteId === note.id ? 'opacity-50' : ''}`}
                 style={{
                   backgroundColor:
                     activeNote?.id === note.id
@@ -286,6 +441,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                         ? '#374151'
                         : '#f3f4f6',
                 }}
+                draggable
+                onDragStart={e => handleDragStart(e, note.id)}
+                onDragOver={e => handleDragOver(e, note.id)}
+                onDrop={e => handleDrop(e, note.id)}
+                onDragEnd={handleDragEnd}
+                onContextMenu={e => handleContextMenu(e, note)}
                 onMouseEnter={e => {
                   if (activeNote?.id !== note.id) {
                     e.currentTarget.style.backgroundColor =
@@ -305,77 +466,119 @@ const Sidebar: React.FC<SidebarProps> = ({
                   }
                 }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
+                {getFileIcon(note.name)}
+                <div className="flex-1 min-w-0">
+                  {renamingNoteId === note.id ? (
+                    <input
+                      className="text-xs lg:text-sm font-medium truncate bg-transparent border-b border-blue-400 outline-none px-1 py-0.5"
+                      style={{
+                        color: theme === 'dark' ? '#f9fafb' : '#111827',
+                        minWidth: 0,
+                        width: '90%',
+                      }}
+                      value={renameValue}
+                      autoFocus
+                      onChange={handleRenameChange}
+                      onBlur={() => handleRenameSubmit(note)}
+                      onKeyDown={e => handleRenameKeyDown(e, note)}
+                    />
+                  ) : (
                     <h4
                       className="text-xs lg:text-sm font-medium truncate"
                       style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
                     >
                       {note.name.replace('.md', '')}
                     </h4>
-                    {note.folder && (
-                      <p
-                        className="text-xs flex items-center gap-1"
-                        style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                      >
-                        <Folder className="w-3 h-3" />
-                        {note.folder}
-                      </p>
-                    )}
-                    {note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {note.tags.slice(0, 2).map((tag: string) => (
-                          <span
-                            key={tag}
-                            className="text-xs px-1.5 py-0.5 rounded"
-                            style={{
-                              backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                              color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                            }}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                        {note.tags.length > 2 && (
-                          <span
-                            className="text-xs"
-                            style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
-                          >
-                            +{note.tags.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <div
-                      className="flex items-center gap-2 lg:gap-3 mt-2 text-xs"
+                  )}
+                  {note.folder && (
+                    <p
+                      className="text-xs flex items-center gap-1"
                       style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                     >
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {note.readingTime}m
-                      </span>
-                      <span className="hidden lg:inline">{note.wordCount} words</span>
+                      <Folder className="w-3 h-3" />
+                      {note.folder}
+                    </p>
+                  )}
+                  {note.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {note.tags.slice(0, 2).map((tag: string) => (
+                        <span
+                          key={tag}
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{
+                            backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                            color: theme === 'dark' ? '#d1d5db' : '#6b7280',
+                          }}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                      {note.tags.length > 2 && (
+                        <span
+                          className="text-xs"
+                          style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
+                        >
+                          +{note.tags.length - 2}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      deleteNote(note.id);
-                    }}
-                    className="p-1 transition-colors"
-                    style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.color = '#dc2626';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.color = theme === 'dark' ? '#9ca3af' : '#9ca3af';
-                    }}
+                  )}
+                  <div
+                    className="flex items-center gap-2 lg:gap-3 mt-2 text-xs"
+                    style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                   >
-                    <X className="w-3 lg:w-4 h-3 lg:h-4" />
-                  </button>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {note.readingTime}m
+                    </span>
+                    <span className="hidden lg:inline">{note.wordCount} words</span>
+                  </div>
                 </div>
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    deleteNote(note.id);
+                  }}
+                  className="p-1 transition-colors"
+                  style={{ color: theme === 'dark' ? '#9ca3af' : '#9ca3af' }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#dc2626';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = theme === 'dark' ? '#9ca3af' : '#9ca3af';
+                  }}
+                >
+                  <X className="w-3 lg:w-4 h-3 lg:h-4" />
+                </button>
               </div>
             ))
+          )}
+          {/* Context Menu */}
+          {contextMenu && contextMenu.note && (
+            <div
+              className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg py-1 text-sm"
+              style={{ top: contextMenu.y, left: contextMenu.x, minWidth: 120 }}
+              onMouseLeave={handleCloseContextMenu}
+            >
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={handleRename}
+              >
+                Rename
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={handleDuplicate}
+              >
+                Duplicate
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                onClick={handleDelete}
+              >
+                Delete
+              </button>
+            </div>
           )}
         </div>
       </div>
