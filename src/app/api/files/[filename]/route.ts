@@ -1,4 +1,4 @@
-export async function PUT(request: NextRequest, { params }: { params: { filename: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: any }) {
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
@@ -46,7 +46,7 @@ function safeJoinMarkdownDir(filename: string): string | null {
   return filePath;
 }
 
-export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
+export async function GET(request: NextRequest, { params }: { params: any }) {
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest, { params }: { params: { filename
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { filename: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: any }) {
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
