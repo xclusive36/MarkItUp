@@ -1,5 +1,7 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
 // React and markdown imports
 import { useState, useEffect, useCallback, useRef } from 'react';
 // ...existing code...
@@ -40,6 +42,17 @@ import './manual-theme.css';
 export default function Home() {
   const { theme } = useSimpleTheme();
   const { settings, updateSettings } = useCollaboration();
+
+  const NotesComponent = dynamic(() => import('@/components/NotesComponent'), { ssr: false });
+  // Notes refresh for NotesComponent
+  const handleNotesComponentRefresh = useCallback(async () => {
+    // This will reload the notes list and update sidebar, memory, etc.
+    const notesResponse = await fetch('/api/files');
+    if (notesResponse.ok) {
+      const notesData = await notesResponse.json();
+      setNotes(notesData);
+    }
+  }, []);
 
   // Collaboration UI state
   const [showCollabSettings, setShowCollabSettings] = useState(false);
@@ -136,22 +149,25 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       if (typeof e.detail === 'string') {
         if (e.detail === 'notes') setCurrentView('notes');
         if (e.detail === 'editor') setCurrentView('editor');
-      } else if (
-        e.detail &&
-        typeof e.detail === 'object' &&
-        e.detail.view === 'editor' &&
-        e.detail.notePath
-      ) {
-        // Find note by path (folder/name or just name)
-        const note = notes.find(n => {
-          const fullPath = n.folder ? `${n.folder}/${n.name}` : n.name;
-          return fullPath === e.detail.notePath;
-        });
-        if (note) {
-          setActiveNote(note);
-          setMarkdown(note.content);
-          setFileName(note.name.replace('.md', ''));
-          setFolder(note.folder || '');
+      } else if (e.detail && typeof e.detail === 'object' && e.detail.view === 'editor') {
+        if (!e.detail.notePath) {
+          // New note: clear editor state
+          setActiveNote(null);
+          setMarkdown('');
+          setFileName('');
+          setFolder('');
+        } else {
+          // Find note by path (folder/name or just name)
+          const note = notes.find(n => {
+            const fullPath = n.folder ? `${n.folder}/${n.name}` : n.name;
+            return fullPath === e.detail.notePath;
+          });
+          if (note) {
+            setActiveNote(note);
+            setMarkdown(note.content);
+            setFileName(note.name.replace('.md', ''));
+            setFolder(note.folder || '');
+          }
         }
         setCurrentView('editor');
       }
@@ -847,24 +863,28 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             </div>
             {/* Main Content Area */}
             <div className="flex-1 min-w-0 order-1 lg:order-2">
-              <MainPanel
-                currentView={currentView}
-                markdown={markdown}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                handleMarkdownChange={handleMarkdownChange}
-                processedMarkdown={processedMarkdown}
-                theme={theme}
-                analytics={analytics}
-                graph={graph}
-                activeNote={activeNote}
-                handleGraphNodeClick={handleGraphNodeClick}
-                handleSearch={handleSearch}
-                handleNoteSelect={handleNoteSelect}
-                tags={tags}
-                folders={folders}
-                notes={notes}
-              />
+              {currentView === 'notes' ? (
+                <NotesComponent refreshNotes={handleNotesComponentRefresh} />
+              ) : (
+                <MainPanel
+                  currentView={currentView}
+                  markdown={markdown}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  handleMarkdownChange={handleMarkdownChange}
+                  processedMarkdown={processedMarkdown}
+                  theme={theme}
+                  analytics={analytics}
+                  graph={graph}
+                  activeNote={activeNote}
+                  handleGraphNodeClick={handleGraphNodeClick}
+                  handleSearch={handleSearch}
+                  handleNoteSelect={handleNoteSelect}
+                  tags={tags}
+                  folders={folders}
+                  notes={notes}
+                />
+              )}
             </div>
           </div>
         </div>

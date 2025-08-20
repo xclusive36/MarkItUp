@@ -26,13 +26,10 @@ body {
 }
 
 /* Override manual-theme.css for editor textareas to match card backgrounds */
-
 .editor-textarea {
   background-color: #ffffff !important;
   color: #111827 !important;
   border-color: transparent !important;
-  resize: vertical !important;
-  min-height: 0 !important;
 }
 
 html.dark .editor-textarea {
