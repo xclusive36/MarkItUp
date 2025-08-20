@@ -1,9 +1,6 @@
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
-    const { filename } = await params;
+    const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
@@ -49,12 +46,9 @@ function safeJoinMarkdownDir(filename: string): string | null {
   return filePath;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
-    const { filename } = await params;
+    const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
@@ -83,12 +77,9 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ filename: string }> }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
-    const { filename } = await params;
+    const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
