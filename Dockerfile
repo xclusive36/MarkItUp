@@ -22,7 +22,10 @@ ENV HOSTNAME="0.0.0.0"
 COPY --from=builder --chown=nonroot:nonroot /app/.next/standalone ./
 COPY --from=builder --chown=nonroot:nonroot /app/.next/static ./.next/static
 COPY --from=builder --chown=nonroot:nonroot /app/public ./public
+
+# Ensure markdown directory always exists and is owned by nonroot
 COPY --from=builder --chown=nonroot:nonroot /app/markdown ./markdown
+RUN mkdir -p /app/markdown && chown nonroot:nonroot /app/markdown
 
 USER nonroot
 
