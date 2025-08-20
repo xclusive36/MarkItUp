@@ -2,11 +2,15 @@ FROM node:lts-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+
 FROM base AS builder
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 COPY . .
+
+# Ensure markdown directory always exists in build context
+RUN mkdir -p /app/markdown
 
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
@@ -25,7 +29,6 @@ COPY --from=builder --chown=nonroot:nonroot /app/public ./public
 
 # Ensure markdown directory always exists and is owned by nonroot
 COPY --from=builder --chown=nonroot:nonroot /app/markdown ./markdown
-RUN mkdir -p /app/markdown && chown nonroot:nonroot /app/markdown
 
 USER nonroot
 
