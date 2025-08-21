@@ -1621,5 +1621,160 @@
       "timestamp": "2025-08-21T21:02:02.218Z"
     },
     "sessionId": "session_1755810122027_hn4n0twvh"
+  },
+  {
+    "id": "event_1755819879713_jgugs8t2n",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:44:39.713Z",
+    "data": {
+      "duration": 50515
+    },
+    "sessionId": "session_1755819829198_w1ff2wtba"
+  },
+  {
+    "id": "event_1755819881127_8k8bcnqrq",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:44:41.127Z",
+    "data": {},
+    "sessionId": "session_1755819881127_ur7tcw4dw"
+  },
+  {
+    "id": "event_1755819883289_oqj5fb3aq",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:44:43.289Z",
+    "data": {
+      "duration": 2162
+    },
+    "sessionId": "session_1755819881127_ur7tcw4dw"
+  },
+  {
+    "id": "event_1755819884199_1cngo6djx",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:44:44.199Z",
+    "data": {},
+    "sessionId": "session_1755819884199_e2264xjrd"
+  },
+  {
+    "id": "event_1755819886124_cf1hvdk1w",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:44:46.124Z",
+    "data": {
+      "duration": 1925
+    },
+    "sessionId": "session_1755819884199_e2264xjrd"
+  },
+  {
+    "id": "event_1755819887029_ca0vo8x0x",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:44:47.029Z",
+    "data": {},
+    "sessionId": "session_1755819887029_d3n9q46pw"
+  },
+  {
+    "id": "event_1755819889440_z0tpwougr",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:44:49.440Z",
+    "data": {
+      "duration": 2411
+    },
+    "sessionId": "session_1755819887029_d3n9q46pw"
+  },
+  {
+    "id": "event_1755819890464_0h42duway",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:44:50.464Z",
+    "data": {},
+    "sessionId": "session_1755819890464_mz9tt5z1u"
+  },
+  {
+    "id": "event_1755819890677_3fp35tda9",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:44:50.677Z",
+    "data": {
+      "timestamp": "2025-08-21T23:44:50.677Z"
+    },
+    "sessionId": "session_1755819890464_mz9tt5z1u"
+  },
+  {
+    "id": "event_1755820349187_y8ad3vzte",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:52:29.187Z",
+    "data": {
+      "duration": 458723
+    },
+    "sessionId": "session_1755819890464_mz9tt5z1u"
+  },
+  {
+    "id": "event_1755820350910_5j9pgx8ib",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:52:30.910Z",
+    "data": {},
+    "sessionId": "session_1755820350910_84chmxlsg"
+  },
+  {
+    "id": "event_1755820352996_cd862ln3h",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:52:32.996Z",
+    "data": {
+      "duration": 2086
+    },
+    "sessionId": "session_1755820350910_84chmxlsg"
+  },
+  {
+    "id": "event_1755820353895_l6kiahgzf",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:52:33.895Z",
+    "data": {},
+    "sessionId": "session_1755820353895_yb7elxqlo"
+  },
+  {
+    "id": "event_1755820356630_wjwu6nm7k",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:52:36.630Z",
+    "data": {
+      "duration": 2735
+    },
+    "sessionId": "session_1755820353895_yb7elxqlo"
+  },
+  {
+    "id": "event_1755820357620_rspcbbwnd",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:52:37.620Z",
+    "data": {},
+    "sessionId": "session_1755820357620_ntxufc90f"
+  },
+  {
+    "id": "event_1755820357808_2b5jat85d",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:52:37.808Z",
+    "data": {
+      "timestamp": "2025-08-21T23:52:37.808Z"
+    },
+    "sessionId": "session_1755820357620_ntxufc90f"
+  },
+  {
+    "id": "event_1755820546466_pm2y66jnf",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T23:55:46.466Z",
+    "data": {
+      "duration": 188846
+    },
+    "sessionId": "session_1755820357620_ntxufc90f"
+  },
+  {
+    "id": "event_1755820548564_4z7nhm80j",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:55:48.564Z",
+    "data": {},
+    "sessionId": "session_1755820548564_pphx7e0d0"
+  },
+  {
+    "id": "event_1755820548760_zebmcom2q",
+    "type": "session_started",
+    "timestamp": "2025-08-21T23:55:48.760Z",
+    "data": {
+      "timestamp": "2025-08-21T23:55:48.760Z"
+    },
+    "sessionId": "session_1755820548564_pphx7e0d0"
   }
 ]

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Note } from '@/lib/types';
 // import { FolderDragItem, NoteDragItem } from './NotesDndTypes';
 import { Folder, Clock, X } from 'lucide-react';
@@ -17,6 +17,62 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [draggedNote, setDraggedNote] = useState<Note | null>(null);
+  const [draggedFromFolder, setDraggedFromFolder] = useState<string | null>(null);
+
+  // Allow drop
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  // Drop on a note (reorder or move between folders)
+  const handleNoteDrop = (targetFolder: string, targetIndex: number) => {
+    if (!draggedNote || !draggedFromFolder) return;
+    setOrderedNotes(prevNotes => {
+      // Remove from old folder
+      const filtered = prevNotes.filter(n => n.id !== draggedNote.id);
+      // Insert into new folder at targetIndex
+      let insertIdx = filtered.findIndex((n, i) => {
+        return (
+          (n.folder || 'Uncategorized') === targetFolder &&
+          filtered.slice(0, i).filter(x => (x.folder || 'Uncategorized') === targetFolder)
+            .length === targetIndex
+        );
+      });
+      if (insertIdx === -1) insertIdx = filtered.length;
+      const newNote = { ...draggedNote, folder: targetFolder };
+      return [...filtered.slice(0, insertIdx), newNote, ...filtered.slice(insertIdx)];
+    });
+    setDraggedNote(null);
+    setDraggedFromFolder(null);
+  };
+
+  // Drop on folder background (move to end of folder)
+  const handleFolderDrop = (targetFolder: string) => {
+    if (!draggedNote || !draggedFromFolder) return;
+    setOrderedNotes(prevNotes => {
+      // Remove from old folder
+      const filtered = prevNotes.filter(n => n.id !== draggedNote.id);
+      // Add to end of new folder
+      // Find last index of this folder
+      let lastIdx = -1;
+      for (let i = filtered.length - 1; i >= 0; i--) {
+        if ((filtered[i].folder || 'Uncategorized') === targetFolder) {
+          lastIdx = i;
+          break;
+        }
+      }
+      const newNote = { ...draggedNote, folder: targetFolder };
+      if (lastIdx === -1) {
+        return [...filtered, newNote];
+      } else {
+        return [...filtered.slice(0, lastIdx + 1), newNote, ...filtered.slice(lastIdx + 1)];
+      }
+    });
+    setDraggedNote(null);
+    setDraggedFromFolder(null);
+  };
 
   // Fetch notes logic
   const fetchNotes = useCallback(async () => {
@@ -62,8 +118,42 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
     {} as Record<string, Note[]>
   );
 
-  // For drag state
-  // Drag state not needed for Framer Motion Reorder
+  const folderOrder = Object.keys(notesByFolder);
+
+  // Drag and drop handler
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+
+    const sourceFolder = source.droppableId;
+    const destFolder = destination.droppableId;
+    const sourceIdx = source.index;
+    const destIdx = destination.index;
+
+    if (sourceFolder === destFolder && sourceIdx === destIdx) return;
+
+    setOrderedNotes(prevNotes => {
+      // Remove from source
+      const notesByFolderCopy: Record<string, Note[]> = {};
+      for (const key of folderOrder) {
+        notesByFolderCopy[key] = prevNotes.filter(n => (n.folder || 'Uncategorized') === key);
+      }
+      const moved = notesByFolderCopy[sourceFolder][sourceIdx];
+      notesByFolderCopy[sourceFolder].splice(sourceIdx, 1);
+      // Update folder if moved between folders
+      if (sourceFolder !== destFolder) {
+        moved.folder = destFolder === 'Uncategorized' ? '' : destFolder;
+      }
+      notesByFolderCopy[destFolder].splice(destIdx, 0, moved);
+      // Flatten back to array, preserving folder order
+      return folderOrder.flatMap(f => notesByFolderCopy[f]);
+    });
+  };
+
+  const handleDragStart = (note: Note, folderName: string) => {
+    setDraggedNote(note);
+    setDraggedFromFolder(folderName);
+  };
 
   return (
     <div className="w-full h-full bg-white dark:bg-gray-900 p-0 m-0">
@@ -75,107 +165,94 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
           <p className="text-base text-center py-8 text-gray-500">Loading notes...</p>
         ) : error ? (
           <p className="text-base text-center py-8 text-red-500">{error}</p>
-        ) : Object.keys(notesByFolder).length === 0 ? (
+        ) : folderOrder.length === 0 ? (
           <p className="text-base text-center py-8 text-gray-500">No notes found.</p>
         ) : (
-          <div className="space-y-8">
-            {Object.entries(notesByFolder).map(([folder, folderNotes]) => (
-              <div
-                key={folder}
-                className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 shadow-sm"
-              >
-                <div className="flex items-center mb-4">
-                  <Folder className="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400" />
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                    {folder}
-                  </h4>
-                  <span className="ml-2 text-xs text-gray-400">
-                    {folderNotes.length} note{folderNotes.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <Reorder.Group
-                  axis="y"
-                  values={folderNotes.map(n => n.id)}
-                  onReorder={newOrderIds => {
-                    setOrderedNotes(prevNotes => {
-                      // Reorder only notes in this folder, preserving order in other folders
-                      const reordered: Note[] = [];
-                      let folderIdx = 0;
-                      for (let i = 0; i < prevNotes.length; i++) {
-                        const note = prevNotes[i];
-                        if ((note.folder || 'Uncategorized') === folder) {
-                          // Place notes in the new order for this folder
-                          const newId = newOrderIds[folderIdx++];
-                          const newNote = prevNotes.find(n => n.id === newId);
-                          if (newNote) reordered.push(newNote);
-                        } else {
-                          reordered.push(note);
-                        }
-                      }
-                      return reordered;
-                    });
-                  }}
-                  className="flex flex-col gap-4"
-                  component={motion.div}
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="space-y-8">
+              {folderOrder.map(folder => (
+                <div
+                  key={folder}
+                  className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 shadow-sm"
                 >
-                  <AnimatePresence>
-                    {folderNotes.map(note => (
-                      <Reorder.Item
-                        key={note.id}
-                        value={note.id}
-                        component={motion.div}
-                        layout
-                        whileHover={{ scale: 1.01, boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
-                        whileTap={{ scale: 0.97 }}
-                        dragElastic={0.18}
-                        className="p-4 rounded-lg cursor-pointer transition-colors border flex items-center hover:bg-gray-100 dark:hover:bg-gray-700 bg-white dark:bg-gray-900"
+                  <div className="flex items-center mb-4">
+                    <Folder className="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400" />
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                      {folder}
+                    </h4>
+                    <span className="ml-2 text-xs text-gray-400">
+                      {notesByFolder[folder].length} note
+                      {notesByFolder[folder].length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <Droppable droppableId={folder}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className="flex flex-col gap-4 min-h-[40px]"
+                        style={{ background: snapshot.isDraggingOver ? '#e0e7ef' : undefined }}
                       >
-                        {getFileIcon(note.name)}
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">
-                            {note.name.replace('.md', '')}
-                          </h5>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {note.readingTime}m
-                            </span>
-                            <span>{note.wordCount} words</span>
-                          </div>
-                          {note.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {note.tags.slice(0, 3).map(tag => (
-                                <span
-                                  key={tag}
-                                  className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                        {notesByFolder[folder].map((note, idx) => (
+                          <Draggable key={note.id} draggableId={note.id} index={idx}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`p-4 rounded-lg cursor-pointer transition-colors border flex items-center hover:bg-gray-100 dark:hover:bg-gray-700 bg-white dark:bg-gray-900 ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                              >
+                                {getFileIcon(note.name)}
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">
+                                    {note.name.replace('.md', '')}
+                                  </h5>
+                                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {note.readingTime}m
+                                    </span>
+                                    <span>{note.wordCount} words</span>
+                                  </div>
+                                  {note.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      {note.tags.slice(0, 3).map(tag => (
+                                        <span
+                                          key={tag}
+                                          className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                        >
+                                          #{tag}
+                                        </span>
+                                      ))}
+                                      {note.tags.length > 3 && (
+                                        <span className="text-xs text-gray-400">
+                                          +{note.tags.length - 3}
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    // TODO: Implement delete logic
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-red-600"
                                 >
-                                  #{tag}
-                                </span>
-                              ))}
-                              {note.tags.length > 3 && (
-                                <span className="text-xs text-gray-400">
-                                  +{note.tags.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            // TODO: Implement delete logic
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </Reorder.Item>
-                    ))}
-                  </AnimatePresence>
-                </Reorder.Group>
-              </div>
-            ))}
-          </div>
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              ))}
+            </div>
+          </DragDropContext>
         )}
       </div>
     </div>
