@@ -18,62 +18,6 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [draggedNote, setDraggedNote] = useState<Note | null>(null);
-  const [draggedFromFolder, setDraggedFromFolder] = useState<string | null>(null);
-
-  // Allow drop
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  // Drop on a note (reorder or move between folders)
-  const handleNoteDrop = (targetFolder: string, targetIndex: number) => {
-    if (!draggedNote || !draggedFromFolder) return;
-    setOrderedNotes(prevNotes => {
-      // Remove from old folder
-      const filtered = prevNotes.filter(n => n.id !== draggedNote.id);
-      // Insert into new folder at targetIndex
-      let insertIdx = filtered.findIndex((n, i) => {
-        return (
-          (n.folder || 'Uncategorized') === targetFolder &&
-          filtered.slice(0, i).filter(x => (x.folder || 'Uncategorized') === targetFolder)
-            .length === targetIndex
-        );
-      });
-      if (insertIdx === -1) insertIdx = filtered.length;
-      const newNote = { ...draggedNote, folder: targetFolder };
-      return [...filtered.slice(0, insertIdx), newNote, ...filtered.slice(insertIdx)];
-    });
-    setDraggedNote(null);
-    setDraggedFromFolder(null);
-  };
-
-  // Drop on folder background (move to end of folder)
-  const handleFolderDrop = (targetFolder: string) => {
-    if (!draggedNote || !draggedFromFolder) return;
-    setOrderedNotes(prevNotes => {
-      // Remove from old folder
-      const filtered = prevNotes.filter(n => n.id !== draggedNote.id);
-      // Add to end of new folder
-      // Find last index of this folder
-      let lastIdx = -1;
-      for (let i = filtered.length - 1; i >= 0; i--) {
-        if ((filtered[i].folder || 'Uncategorized') === targetFolder) {
-          lastIdx = i;
-          break;
-        }
-      }
-      const newNote = { ...draggedNote, folder: targetFolder };
-      if (lastIdx === -1) {
-        return [...filtered, newNote];
-      } else {
-        return [...filtered.slice(0, lastIdx + 1), newNote, ...filtered.slice(lastIdx + 1)];
-      }
-    });
-    setDraggedNote(null);
-    setDraggedFromFolder(null);
-  };
-
   // Fetch notes logic
   const fetchNotes = useCallback(async () => {
     setLoading(true);
@@ -122,7 +66,7 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
   // Drag and drop handler
   const onDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination } = result;
     if (!destination) return;
 
     const sourceFolder = source.droppableId;
@@ -148,11 +92,6 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
       // Flatten back to array, preserving folder order
       return folderOrder.flatMap(f => notesByFolderCopy[f]);
     });
-  };
-
-  const handleDragStart = (note: Note, folderName: string) => {
-    setDraggedNote(note);
-    setDraggedFromFolder(folderName);
   };
 
   return (
