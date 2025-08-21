@@ -14,5 +14,1612 @@
       "isOverwrite": false
     },
     "sessionId": "session_1755701983488_7v4os60mg"
+  },
+  {
+    "id": "event_1755800826573_zwlinj4p6",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:27:06.573Z",
+    "data": {
+      "timestamp": "2025-08-21T18:27:06.573Z"
+    },
+    "sessionId": "session_1755800826441_c57l9h7l2"
+  },
+  {
+    "id": "event_1755802253701_trpzwbeuc",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:50:53.701Z",
+    "data": {
+      "duration": 1427260
+    },
+    "sessionId": "session_1755800826441_c57l9h7l2"
+  },
+  {
+    "id": "event_1755802255009_egdkmntqr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:50:55.009Z",
+    "data": {},
+    "sessionId": "session_1755802255009_2kyy502yw"
+  },
+  {
+    "id": "event_1755802255139_uvu9jnful",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:50:55.139Z",
+    "data": {
+      "timestamp": "2025-08-21T18:50:55.139Z"
+    },
+    "sessionId": "session_1755802255009_2kyy502yw"
+  },
+  {
+    "id": "event_1755802295118_h5ls4hazy",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:51:35.118Z",
+    "data": {
+      "duration": 40109
+    },
+    "sessionId": "session_1755802255009_2kyy502yw"
+  },
+  {
+    "id": "event_1755802295909_hh591v5tt",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:51:35.909Z",
+    "data": {},
+    "sessionId": "session_1755802295909_f6cx3d11q"
+  },
+  {
+    "id": "event_1755802298763_v0wdk8op6",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:51:38.763Z",
+    "data": {
+      "duration": 2854
+    },
+    "sessionId": "session_1755802295909_f6cx3d11q"
+  },
+  {
+    "id": "event_1755802299353_du1fa8ohd",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:51:39.353Z",
+    "data": {},
+    "sessionId": "session_1755802299353_nsq64rlur"
+  },
+  {
+    "id": "event_1755802299465_cdr3vuuwx",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:51:39.465Z",
+    "data": {
+      "timestamp": "2025-08-21T18:51:39.465Z"
+    },
+    "sessionId": "session_1755802299353_nsq64rlur"
+  },
+  {
+    "id": "event_1755802451885_y9atwplvr",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:11.885Z",
+    "data": {
+      "duration": 152532
+    },
+    "sessionId": "session_1755802299353_nsq64rlur"
+  },
+  {
+    "id": "event_1755802453229_vr1fsfp6a",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:13.229Z",
+    "data": {},
+    "sessionId": "session_1755802453229_qd9n0zzeq"
+  },
+  {
+    "id": "event_1755802459615_ta8hwxr7x",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:19.615Z",
+    "data": {
+      "duration": 6385
+    },
+    "sessionId": "session_1755802453229_qd9n0zzeq"
+  },
+  {
+    "id": "event_1755802460212_thspnvpvz",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:20.212Z",
+    "data": {},
+    "sessionId": "session_1755802460211_i93n7xsim"
+  },
+  {
+    "id": "event_1755802463398_zp1kpxxb6",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:23.398Z",
+    "data": {
+      "duration": 3187
+    },
+    "sessionId": "session_1755802460211_i93n7xsim"
+  },
+  {
+    "id": "event_1755802463970_iubxhrifk",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:23.970Z",
+    "data": {},
+    "sessionId": "session_1755802463970_1374xoesd"
+  },
+  {
+    "id": "event_1755802466381_551w0yq5t",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:26.381Z",
+    "data": {
+      "duration": 2411
+    },
+    "sessionId": "session_1755802463970_1374xoesd"
+  },
+  {
+    "id": "event_1755802466946_9ynrndhk5",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:26.946Z",
+    "data": {},
+    "sessionId": "session_1755802466946_akfa9qkli"
+  },
+  {
+    "id": "event_1755802469148_cfvvycl4t",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:29.148Z",
+    "data": {
+      "duration": 2202
+    },
+    "sessionId": "session_1755802466946_akfa9qkli"
+  },
+  {
+    "id": "event_1755802469684_o55p4m57i",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:29.684Z",
+    "data": {},
+    "sessionId": "session_1755802469684_tp29s5ahj"
+  },
+  {
+    "id": "event_1755802471414_z44lwuya3",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:54:31.414Z",
+    "data": {
+      "duration": 1730
+    },
+    "sessionId": "session_1755802469684_tp29s5ahj"
+  },
+  {
+    "id": "event_1755802471920_x7r1epmzf",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:31.920Z",
+    "data": {},
+    "sessionId": "session_1755802471920_38nh8g76i"
+  },
+  {
+    "id": "event_1755802472045_levo3efzr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:54:32.045Z",
+    "data": {
+      "timestamp": "2025-08-21T18:54:32.045Z"
+    },
+    "sessionId": "session_1755802471920_38nh8g76i"
+  },
+  {
+    "id": "event_1755802584869_mxa3axzwj",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T18:56:24.869Z",
+    "data": {
+      "duration": 112949
+    },
+    "sessionId": "session_1755802471920_38nh8g76i"
+  },
+  {
+    "id": "event_1755802586163_llokklqyu",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:56:26.163Z",
+    "data": {},
+    "sessionId": "session_1755802586163_rv2cmnl09"
+  },
+  {
+    "id": "event_1755802586292_ll9banlsr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T18:56:26.292Z",
+    "data": {
+      "timestamp": "2025-08-21T18:56:26.292Z"
+    },
+    "sessionId": "session_1755802586163_rv2cmnl09"
+  },
+  {
+    "id": "event_1755802895367_p864u6w6f",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:01:35.367Z",
+    "data": {
+      "duration": 309204
+    },
+    "sessionId": "session_1755802586163_rv2cmnl09"
+  },
+  {
+    "id": "event_1755802896740_8vyam6322",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:01:36.740Z",
+    "data": {},
+    "sessionId": "session_1755802896740_l7g6segck"
+  },
+  {
+    "id": "event_1755802899116_znl1in6ky",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:01:39.116Z",
+    "data": {
+      "duration": 2376
+    },
+    "sessionId": "session_1755802896740_l7g6segck"
+  },
+  {
+    "id": "event_1755802899670_1ai3d1ahr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:01:39.670Z",
+    "data": {},
+    "sessionId": "session_1755802899670_c40qczsmx"
+  },
+  {
+    "id": "event_1755802899794_e0tnrgns3",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:01:39.794Z",
+    "data": {
+      "timestamp": "2025-08-21T19:01:39.794Z"
+    },
+    "sessionId": "session_1755802899670_c40qczsmx"
+  },
+  {
+    "id": "event_1755803285195_hxez1fp4z",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:08:05.195Z",
+    "data": {
+      "duration": 385524
+    },
+    "sessionId": "session_1755802899670_c40qczsmx"
+  },
+  {
+    "id": "event_1755803286347_err11pwgy",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:08:06.347Z",
+    "data": {},
+    "sessionId": "session_1755803286347_3qobm0159"
+  },
+  {
+    "id": "event_1755803286475_5pf6caqp4",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:08:06.475Z",
+    "data": {
+      "timestamp": "2025-08-21T19:08:06.475Z"
+    },
+    "sessionId": "session_1755803286347_3qobm0159"
+  },
+  {
+    "id": "event_1755803295095_zyj9t2q12",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:08:15.095Z",
+    "data": {
+      "duration": 8748
+    },
+    "sessionId": "session_1755803286347_3qobm0159"
+  },
+  {
+    "id": "event_1755803295742_gvmbl6bqg",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:08:15.742Z",
+    "data": {},
+    "sessionId": "session_1755803295742_kro4dtzlj"
+  },
+  {
+    "id": "event_1755803297524_jqs5g8wj4",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:08:17.524Z",
+    "data": {
+      "duration": 1782
+    },
+    "sessionId": "session_1755803295742_kro4dtzlj"
+  },
+  {
+    "id": "event_1755803298005_cn14pn0ub",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:08:18.005Z",
+    "data": {},
+    "sessionId": "session_1755803298005_v7ui1utjx"
+  },
+  {
+    "id": "event_1755803298128_yhumxqxod",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:08:18.128Z",
+    "data": {
+      "timestamp": "2025-08-21T19:08:18.128Z"
+    },
+    "sessionId": "session_1755803298005_v7ui1utjx"
+  },
+  {
+    "id": "event_1755803537099_aj8ginvfg",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:12:17.099Z",
+    "data": {
+      "duration": 239094
+    },
+    "sessionId": "session_1755803298005_v7ui1utjx"
+  },
+  {
+    "id": "event_1755803538542_lk7ruo5qv",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:12:18.542Z",
+    "data": {},
+    "sessionId": "session_1755803538542_wfo42f04y"
+  },
+  {
+    "id": "event_1755803538671_pqlizp4mf",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:12:18.671Z",
+    "data": {
+      "timestamp": "2025-08-21T19:12:18.671Z"
+    },
+    "sessionId": "session_1755803538542_wfo42f04y"
+  },
+  {
+    "id": "event_1755803545516_wdne0peww",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:12:25.516Z",
+    "data": {
+      "duration": 6974
+    },
+    "sessionId": "session_1755803538542_wfo42f04y"
+  },
+  {
+    "id": "event_1755803546155_pm006y6mr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:12:26.155Z",
+    "data": {},
+    "sessionId": "session_1755803546155_mlco1g7jm"
+  },
+  {
+    "id": "event_1755803546283_zh6p2z4mv",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:12:26.283Z",
+    "data": {
+      "timestamp": "2025-08-21T19:12:26.283Z"
+    },
+    "sessionId": "session_1755803546155_mlco1g7jm"
+  },
+  {
+    "id": "event_1755803612100_cc6eagidb",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:13:32.100Z",
+    "data": {
+      "duration": 65945
+    },
+    "sessionId": "session_1755803546155_mlco1g7jm"
+  },
+  {
+    "id": "event_1755803612910_w29mwikhw",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:13:32.910Z",
+    "data": {},
+    "sessionId": "session_1755803612910_n3vf2dav8"
+  },
+  {
+    "id": "event_1755803613048_wn77r71hj",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:13:33.048Z",
+    "data": {
+      "timestamp": "2025-08-21T19:13:33.048Z"
+    },
+    "sessionId": "session_1755803612910_n3vf2dav8"
+  },
+  {
+    "id": "event_1755803675119_duhbqamu7",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:14:35.119Z",
+    "data": {
+      "duration": 62209
+    },
+    "sessionId": "session_1755803612910_n3vf2dav8"
+  },
+  {
+    "id": "event_1755803675796_5fq1iec6c",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:14:35.796Z",
+    "data": {},
+    "sessionId": "session_1755803675796_fjll5vwdv"
+  },
+  {
+    "id": "event_1755803675929_zp816te1n",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:14:35.929Z",
+    "data": {
+      "timestamp": "2025-08-21T19:14:35.929Z"
+    },
+    "sessionId": "session_1755803675796_fjll5vwdv"
+  },
+  {
+    "id": "event_1755803812987_knq76of78",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:16:52.987Z",
+    "data": {
+      "duration": 137191
+    },
+    "sessionId": "session_1755803675796_fjll5vwdv"
+  },
+  {
+    "id": "event_1755803814128_558aob95g",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:16:54.128Z",
+    "data": {},
+    "sessionId": "session_1755803814128_k8bmbkvr2"
+  },
+  {
+    "id": "event_1755803814264_lkcvnvn8t",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:16:54.264Z",
+    "data": {
+      "timestamp": "2025-08-21T19:16:54.264Z"
+    },
+    "sessionId": "session_1755803814128_k8bmbkvr2"
+  },
+  {
+    "id": "event_1755803985889_sn82nug2u",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:19:45.889Z",
+    "data": {
+      "duration": 171761
+    },
+    "sessionId": "session_1755803814128_k8bmbkvr2"
+  },
+  {
+    "id": "event_1755803987084_pitl3si7c",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:19:47.084Z",
+    "data": {},
+    "sessionId": "session_1755803987084_9b8g2zqht"
+  },
+  {
+    "id": "event_1755803987221_4zddk3ip3",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:19:47.221Z",
+    "data": {
+      "timestamp": "2025-08-21T19:19:47.221Z"
+    },
+    "sessionId": "session_1755803987084_9b8g2zqht"
+  },
+  {
+    "id": "event_1755804042766_bifixwwzz",
+    "type": "note_created",
+    "timestamp": "2025-08-21T19:20:42.766Z",
+    "data": {
+      "noteId": "new",
+      "fileName": "cat",
+      "wordCount": 193,
+      "characterCount": 1287,
+      "hasWikilinks": true,
+      "tagCount": 4,
+      "folder": "cat",
+      "isOverwrite": false
+    },
+    "sessionId": "session_1755803987084_9b8g2zqht"
+  },
+  {
+    "id": "event_1755804119124_x6rgcbrm9",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:21:59.124Z",
+    "data": {
+      "duration": 132040
+    },
+    "sessionId": "session_1755803987084_9b8g2zqht"
+  },
+  {
+    "id": "event_1755804120206_5c5h6m4hc",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:22:00.206Z",
+    "data": {},
+    "sessionId": "session_1755804120206_yxk8uubfm"
+  },
+  {
+    "id": "event_1755804120333_sscjh1b2k",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:22:00.333Z",
+    "data": {
+      "timestamp": "2025-08-21T19:22:00.333Z"
+    },
+    "sessionId": "session_1755804120206_yxk8uubfm"
+  },
+  {
+    "id": "event_1755804416112_ezujm4vc6",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:26:56.112Z",
+    "data": {
+      "duration": 295906
+    },
+    "sessionId": "session_1755804120206_yxk8uubfm"
+  },
+  {
+    "id": "event_1755804417726_pc8l9wxja",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:26:57.726Z",
+    "data": {},
+    "sessionId": "session_1755804417725_tej7dkduh"
+  },
+  {
+    "id": "event_1755804421643_wm8iptlqa",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:27:01.643Z",
+    "data": {
+      "duration": 3918
+    },
+    "sessionId": "session_1755804417725_tej7dkduh"
+  },
+  {
+    "id": "event_1755804422223_4099kzvtv",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:27:02.223Z",
+    "data": {},
+    "sessionId": "session_1755804422223_1k4ciizn9"
+  },
+  {
+    "id": "event_1755804422345_72awjtzfz",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:27:02.345Z",
+    "data": {
+      "timestamp": "2025-08-21T19:27:02.345Z"
+    },
+    "sessionId": "session_1755804422223_1k4ciizn9"
+  },
+  {
+    "id": "event_1755804902152_rlsoudwoj",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:35:02.152Z",
+    "data": {
+      "duration": 479929
+    },
+    "sessionId": "session_1755804422223_1k4ciizn9"
+  },
+  {
+    "id": "event_1755804903402_8lp8kbb3a",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:35:03.402Z",
+    "data": {},
+    "sessionId": "session_1755804903402_atcxzm4yt"
+  },
+  {
+    "id": "event_1755804905631_9biyot9ga",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:35:05.631Z",
+    "data": {
+      "duration": 2229
+    },
+    "sessionId": "session_1755804903402_atcxzm4yt"
+  },
+  {
+    "id": "event_1755804906130_3gbwzt6d8",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:35:06.130Z",
+    "data": {},
+    "sessionId": "session_1755804906130_dgbm4n663"
+  },
+  {
+    "id": "event_1755804906251_5lkqiwl5d",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:35:06.251Z",
+    "data": {
+      "timestamp": "2025-08-21T19:35:06.251Z"
+    },
+    "sessionId": "session_1755804906130_dgbm4n663"
+  },
+  {
+    "id": "event_1755805053303_8agigx37c",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:37:33.303Z",
+    "data": {
+      "duration": 147173
+    },
+    "sessionId": "session_1755804906130_dgbm4n663"
+  },
+  {
+    "id": "event_1755805054610_ty1ebdsv5",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:37:34.610Z",
+    "data": {},
+    "sessionId": "session_1755805054610_mgqchewla"
+  },
+  {
+    "id": "event_1755805056415_0ovj0uxlz",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:37:36.415Z",
+    "data": {
+      "duration": 1805
+    },
+    "sessionId": "session_1755805054610_mgqchewla"
+  },
+  {
+    "id": "event_1755805056969_akr6uqgbl",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:37:36.969Z",
+    "data": {},
+    "sessionId": "session_1755805056969_ijj4ul7ll"
+  },
+  {
+    "id": "event_1755805057095_mux563t3d",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:37:37.095Z",
+    "data": {
+      "timestamp": "2025-08-21T19:37:37.095Z"
+    },
+    "sessionId": "session_1755805056969_ijj4ul7ll"
+  },
+  {
+    "id": "event_1755805109237_pjtvevjpx",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:38:29.237Z",
+    "data": {
+      "duration": 52268
+    },
+    "sessionId": "session_1755805056969_ijj4ul7ll"
+  },
+  {
+    "id": "event_1755805110066_k7vr3gzy8",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:38:30.066Z",
+    "data": {},
+    "sessionId": "session_1755805110066_wzb38rgdj"
+  },
+  {
+    "id": "event_1755805110210_qjd3934o6",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:38:30.210Z",
+    "data": {
+      "timestamp": "2025-08-21T19:38:30.210Z"
+    },
+    "sessionId": "session_1755805110066_wzb38rgdj"
+  },
+  {
+    "id": "event_1755805145587_bi0nnqjkm",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:39:05.587Z",
+    "data": {
+      "duration": 35521
+    },
+    "sessionId": "session_1755805110066_wzb38rgdj"
+  },
+  {
+    "id": "event_1755805146260_cvcvx4c65",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:39:06.260Z",
+    "data": {},
+    "sessionId": "session_1755805146260_hq8b8sarf"
+  },
+  {
+    "id": "event_1755805148133_4rjtri8ks",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:39:08.133Z",
+    "data": {
+      "duration": 1872
+    },
+    "sessionId": "session_1755805146260_hq8b8sarf"
+  },
+  {
+    "id": "event_1755805148699_co6ufjtvh",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:39:08.699Z",
+    "data": {},
+    "sessionId": "session_1755805148699_vjmkv5s6t"
+  },
+  {
+    "id": "event_1755805148825_1dlqg3vpc",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:39:08.825Z",
+    "data": {
+      "timestamp": "2025-08-21T19:39:08.825Z"
+    },
+    "sessionId": "session_1755805148699_vjmkv5s6t"
+  },
+  {
+    "id": "event_1755805170870_wdo418o34",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:39:30.870Z",
+    "data": {
+      "duration": 22171
+    },
+    "sessionId": "session_1755805148699_vjmkv5s6t"
+  },
+  {
+    "id": "event_1755805171517_6lq1pk60l",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:39:31.517Z",
+    "data": {},
+    "sessionId": "session_1755805171517_sbomab1zs"
+  },
+  {
+    "id": "event_1755805171649_pt540kgz2",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:39:31.649Z",
+    "data": {
+      "timestamp": "2025-08-21T19:39:31.649Z"
+    },
+    "sessionId": "session_1755805171517_sbomab1zs"
+  },
+  {
+    "id": "event_1755805271271_yb6js7or8",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:41:11.271Z",
+    "data": {
+      "duration": 99754
+    },
+    "sessionId": "session_1755805171517_sbomab1zs"
+  },
+  {
+    "id": "event_1755805272618_fn1vytz8t",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:41:12.618Z",
+    "data": {},
+    "sessionId": "session_1755805272618_9sw8032xj"
+  },
+  {
+    "id": "event_1755805272746_vwwujyrz4",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:41:12.746Z",
+    "data": {
+      "timestamp": "2025-08-21T19:41:12.746Z"
+    },
+    "sessionId": "session_1755805272618_9sw8032xj"
+  },
+  {
+    "id": "event_1755805550256_rvzj0jq53",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:45:50.256Z",
+    "data": {
+      "duration": 277638
+    },
+    "sessionId": "session_1755805272618_9sw8032xj"
+  },
+  {
+    "id": "event_1755805551435_07j7ruln7",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:45:51.435Z",
+    "data": {},
+    "sessionId": "session_1755805551435_gw6oiv7t6"
+  },
+  {
+    "id": "event_1755805551572_3yi7l10vm",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:45:51.572Z",
+    "data": {
+      "timestamp": "2025-08-21T19:45:51.572Z"
+    },
+    "sessionId": "session_1755805551435_gw6oiv7t6"
+  },
+  {
+    "id": "event_1755806180975_d5g1hzfl9",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:56:20.975Z",
+    "data": {
+      "duration": 629539
+    },
+    "sessionId": "session_1755805551435_gw6oiv7t6"
+  },
+  {
+    "id": "event_1755806182226_v00a7rdu0",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:56:22.227Z",
+    "data": {},
+    "sessionId": "session_1755806182226_dsb8o03nl"
+  },
+  {
+    "id": "event_1755806182355_gkohxzd3s",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:56:22.355Z",
+    "data": {
+      "timestamp": "2025-08-21T19:56:22.355Z"
+    },
+    "sessionId": "session_1755806182226_dsb8o03nl"
+  },
+  {
+    "id": "event_1755806201226_a2o4wtjjh",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T19:56:41.226Z",
+    "data": {
+      "duration": 19000
+    },
+    "sessionId": "session_1755806182226_dsb8o03nl"
+  },
+  {
+    "id": "event_1755806201851_ghtksz0yy",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:56:41.851Z",
+    "data": {},
+    "sessionId": "session_1755806201851_rkyr69xv7"
+  },
+  {
+    "id": "event_1755806201982_ugnrav416",
+    "type": "session_started",
+    "timestamp": "2025-08-21T19:56:41.982Z",
+    "data": {
+      "timestamp": "2025-08-21T19:56:41.982Z"
+    },
+    "sessionId": "session_1755806201851_rkyr69xv7"
+  },
+  {
+    "id": "event_1755806537642_uus6csiu0",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:17.642Z",
+    "data": {
+      "duration": 335791
+    },
+    "sessionId": "session_1755806201851_rkyr69xv7"
+  },
+  {
+    "id": "event_1755806538851_kk4q1fxzl",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:18.851Z",
+    "data": {},
+    "sessionId": "session_1755806538851_c3nvvmm0n"
+  },
+  {
+    "id": "event_1755806538982_0ctl3i2k0",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:18.982Z",
+    "data": {
+      "timestamp": "2025-08-21T20:02:18.982Z"
+    },
+    "sessionId": "session_1755806538851_c3nvvmm0n"
+  },
+  {
+    "id": "event_1755806542526_gsefunfhl",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:22.526Z",
+    "data": {
+      "duration": 3675
+    },
+    "sessionId": "session_1755806538851_c3nvvmm0n"
+  },
+  {
+    "id": "event_1755806543170_8xp4duhn6",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:23.170Z",
+    "data": {},
+    "sessionId": "session_1755806543170_inqck9lgd"
+  },
+  {
+    "id": "event_1755806546138_r6gpy0p7r",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:26.138Z",
+    "data": {
+      "duration": 2968
+    },
+    "sessionId": "session_1755806543170_inqck9lgd"
+  },
+  {
+    "id": "event_1755806546651_2mlaitqor",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:26.651Z",
+    "data": {},
+    "sessionId": "session_1755806546651_xji2l0y1y"
+  },
+  {
+    "id": "event_1755806546772_marppic5m",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:26.772Z",
+    "data": {
+      "timestamp": "2025-08-21T20:02:26.772Z"
+    },
+    "sessionId": "session_1755806546651_xji2l0y1y"
+  },
+  {
+    "id": "event_1755806558557_4s92bklnx",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:38.557Z",
+    "data": {
+      "duration": 11906
+    },
+    "sessionId": "session_1755806546651_xji2l0y1y"
+  },
+  {
+    "id": "event_1755806563236_tleq3tcik",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:43.236Z",
+    "data": {},
+    "sessionId": "session_1755806563236_78ndginh8"
+  },
+  {
+    "id": "event_1755806568256_trp9z6bhc",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:48.256Z",
+    "data": {
+      "duration": 5020
+    },
+    "sessionId": "session_1755806563236_78ndginh8"
+  },
+  {
+    "id": "event_1755806569202_baf5b1g95",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:49.202Z",
+    "data": {},
+    "sessionId": "session_1755806569202_dcwbivryf"
+  },
+  {
+    "id": "event_1755806572390_abrw6jvzl",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:02:52.390Z",
+    "data": {
+      "duration": 3188
+    },
+    "sessionId": "session_1755806569202_dcwbivryf"
+  },
+  {
+    "id": "event_1755806573297_46brbsv9v",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:53.297Z",
+    "data": {},
+    "sessionId": "session_1755806573297_aoi3ae60x"
+  },
+  {
+    "id": "event_1755806573482_2k9slcacg",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:02:53.482Z",
+    "data": {
+      "timestamp": "2025-08-21T20:02:53.482Z"
+    },
+    "sessionId": "session_1755806573297_aoi3ae60x"
+  },
+  {
+    "id": "event_1755806728336_ntxl38ygv",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:05:28.336Z",
+    "data": {
+      "duration": 155039
+    },
+    "sessionId": "session_1755806573297_aoi3ae60x"
+  },
+  {
+    "id": "event_1755806730056_o0e8v5o28",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:05:30.056Z",
+    "data": {},
+    "sessionId": "session_1755806730056_t4ianp2ax"
+  },
+  {
+    "id": "event_1755806730242_xssj3j95q",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:05:30.242Z",
+    "data": {
+      "timestamp": "2025-08-21T20:05:30.242Z"
+    },
+    "sessionId": "session_1755806730056_t4ianp2ax"
+  },
+  {
+    "id": "event_1755806938274_93z3bflt5",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:08:58.274Z",
+    "data": {
+      "duration": 208218
+    },
+    "sessionId": "session_1755806730056_t4ianp2ax"
+  },
+  {
+    "id": "event_1755806939993_zki35749l",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:08:59.993Z",
+    "data": {},
+    "sessionId": "session_1755806939993_tc7tj0qag"
+  },
+  {
+    "id": "event_1755806940178_ikh3od2dr",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:09:00.178Z",
+    "data": {
+      "timestamp": "2025-08-21T20:09:00.178Z"
+    },
+    "sessionId": "session_1755806939993_tc7tj0qag"
+  },
+  {
+    "id": "event_1755806985303_sigh3zsrv",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:09:45.303Z",
+    "data": {
+      "duration": 45310
+    },
+    "sessionId": "session_1755806939993_tc7tj0qag"
+  },
+  {
+    "id": "event_1755806986566_5mzzkixci",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:09:46.566Z",
+    "data": {},
+    "sessionId": "session_1755806986566_e7fpzpt8r"
+  },
+  {
+    "id": "event_1755806986759_8hyg440sy",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:09:46.759Z",
+    "data": {
+      "timestamp": "2025-08-21T20:09:46.759Z"
+    },
+    "sessionId": "session_1755806986566_e7fpzpt8r"
+  },
+  {
+    "id": "event_1755807103287_3e576xyuc",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:11:43.287Z",
+    "data": {
+      "duration": 116721
+    },
+    "sessionId": "session_1755806986566_e7fpzpt8r"
+  },
+  {
+    "id": "event_1755807104823_cdgigvyfl",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:11:44.823Z",
+    "data": {},
+    "sessionId": "session_1755807104823_ua7nb5kxu"
+  },
+  {
+    "id": "event_1755807106877_zwk9tx6dl",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:11:46.877Z",
+    "data": {
+      "duration": 2054
+    },
+    "sessionId": "session_1755807104823_ua7nb5kxu"
+  },
+  {
+    "id": "event_1755807107792_t7f5t79eb",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:11:47.792Z",
+    "data": {},
+    "sessionId": "session_1755807107792_9w6fuzfun"
+  },
+  {
+    "id": "event_1755807109978_1n89tj6y0",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:11:49.978Z",
+    "data": {
+      "duration": 2186
+    },
+    "sessionId": "session_1755807107792_9w6fuzfun"
+  },
+  {
+    "id": "event_1755807110867_nhkhk84qb",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:11:50.867Z",
+    "data": {},
+    "sessionId": "session_1755807110867_6d5m8p1w3"
+  },
+  {
+    "id": "event_1755807111053_u7ycsz1o6",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:11:51.053Z",
+    "data": {
+      "timestamp": "2025-08-21T20:11:51.053Z"
+    },
+    "sessionId": "session_1755807110867_6d5m8p1w3"
+  },
+  {
+    "id": "event_1755807893317_cqb7g7mub",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:24:53.317Z",
+    "data": {},
+    "sessionId": "session_1755807893317_2y9y3pt83"
+  },
+  {
+    "id": "event_1755808067921_hsficabng",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:27:47.921Z",
+    "data": {
+      "duration": 174604
+    },
+    "sessionId": "session_1755807893317_2y9y3pt83"
+  },
+  {
+    "id": "event_1755808069449_fi2pnt680",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:27:49.449Z",
+    "data": {},
+    "sessionId": "session_1755808069449_ilsqzqjfu"
+  },
+  {
+    "id": "event_1755808071558_34yei9nx6",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:27:51.558Z",
+    "data": {
+      "duration": 2109
+    },
+    "sessionId": "session_1755808069449_ilsqzqjfu"
+  },
+  {
+    "id": "event_1755808072450_st09p57cx",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:27:52.450Z",
+    "data": {},
+    "sessionId": "session_1755808072450_wqp6knliu"
+  },
+  {
+    "id": "event_1755808072635_qf281smub",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:27:52.635Z",
+    "data": {
+      "timestamp": "2025-08-21T20:27:52.635Z"
+    },
+    "sessionId": "session_1755808072450_wqp6knliu"
+  },
+  {
+    "id": "event_1755808106429_ardz0fzyr",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:28:26.429Z",
+    "data": {
+      "duration": 33979
+    },
+    "sessionId": "session_1755808072450_wqp6knliu"
+  },
+  {
+    "id": "event_1755808107546_iim3cl0gt",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:28:27.546Z",
+    "data": {},
+    "sessionId": "session_1755808107546_4kl5v8vg3"
+  },
+  {
+    "id": "event_1755808107775_axfjtige2",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:28:27.775Z",
+    "data": {
+      "timestamp": "2025-08-21T20:28:27.775Z"
+    },
+    "sessionId": "session_1755808107546_4kl5v8vg3"
+  },
+  {
+    "id": "event_1755808275954_tjfi1da0l",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:31:15.954Z",
+    "data": {
+      "duration": 168407
+    },
+    "sessionId": "session_1755808107546_4kl5v8vg3"
+  },
+  {
+    "id": "event_1755808277466_9tozyspx4",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:31:17.466Z",
+    "data": {},
+    "sessionId": "session_1755808277466_4jg36q8fz"
+  },
+  {
+    "id": "event_1755808277654_0unq5tye0",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:31:17.654Z",
+    "data": {
+      "timestamp": "2025-08-21T20:31:17.654Z"
+    },
+    "sessionId": "session_1755808277466_4jg36q8fz"
+  },
+  {
+    "id": "event_1755808595208_qriau5s31",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:36:35.208Z",
+    "data": {
+      "duration": 317742
+    },
+    "sessionId": "session_1755808277466_4jg36q8fz"
+  },
+  {
+    "id": "event_1755808596683_eyvnznqzp",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:36:36.683Z",
+    "data": {},
+    "sessionId": "session_1755808596683_dj9qfmv95"
+  },
+  {
+    "id": "event_1755808599645_sbiuz9oda",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:36:39.645Z",
+    "data": {
+      "duration": 2962
+    },
+    "sessionId": "session_1755808596683_dj9qfmv95"
+  },
+  {
+    "id": "event_1755808600612_qnjrx64tf",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:36:40.612Z",
+    "data": {},
+    "sessionId": "session_1755808600611_saq2igz31"
+  },
+  {
+    "id": "event_1755808603279_rome2d4lq",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:36:43.279Z",
+    "data": {
+      "duration": 2668
+    },
+    "sessionId": "session_1755808600611_saq2igz31"
+  },
+  {
+    "id": "event_1755808604164_pt4ob0g77",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:36:44.164Z",
+    "data": {},
+    "sessionId": "session_1755808604164_9cx0lfzrq"
+  },
+  {
+    "id": "event_1755808604346_nkwaa32qa",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:36:44.346Z",
+    "data": {
+      "timestamp": "2025-08-21T20:36:44.346Z"
+    },
+    "sessionId": "session_1755808604164_9cx0lfzrq"
+  },
+  {
+    "id": "event_1755808753798_1qs4hy908",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:39:13.798Z",
+    "data": {
+      "duration": 149634
+    },
+    "sessionId": "session_1755808604164_9cx0lfzrq"
+  },
+  {
+    "id": "event_1755808755294_z7ag33kct",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:39:15.294Z",
+    "data": {},
+    "sessionId": "session_1755808755294_u79wfdyri"
+  },
+  {
+    "id": "event_1755808757131_tnul5o4mm",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:39:17.131Z",
+    "data": {
+      "duration": 1837
+    },
+    "sessionId": "session_1755808755294_u79wfdyri"
+  },
+  {
+    "id": "event_1755808758076_i8omx6tlx",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:39:18.076Z",
+    "data": {},
+    "sessionId": "session_1755808758076_s3non7law"
+  },
+  {
+    "id": "event_1755808758261_da9u2rmmj",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:39:18.261Z",
+    "data": {
+      "timestamp": "2025-08-21T20:39:18.261Z"
+    },
+    "sessionId": "session_1755808758076_s3non7law"
+  },
+  {
+    "id": "event_1755808887901_l5fact4x4",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:41:27.901Z",
+    "data": {
+      "duration": 129825
+    },
+    "sessionId": "session_1755808758076_s3non7law"
+  },
+  {
+    "id": "event_1755808889538_fq6khxn26",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:41:29.538Z",
+    "data": {},
+    "sessionId": "session_1755808889538_500rzfo85"
+  },
+  {
+    "id": "event_1755808889741_982eekt73",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:41:29.741Z",
+    "data": {
+      "timestamp": "2025-08-21T20:41:29.741Z"
+    },
+    "sessionId": "session_1755808889538_500rzfo85"
+  },
+  {
+    "id": "event_1755809019219_4ok69iof5",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:43:39.220Z",
+    "data": {
+      "duration": 129681
+    },
+    "sessionId": "session_1755808889538_500rzfo85"
+  },
+  {
+    "id": "event_1755809020859_rjh7s0xdk",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:43:40.859Z",
+    "data": {},
+    "sessionId": "session_1755809020859_lm6i4v4wo"
+  },
+  {
+    "id": "event_1755809021048_wdqm9gptm",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:43:41.048Z",
+    "data": {
+      "timestamp": "2025-08-21T20:43:41.048Z"
+    },
+    "sessionId": "session_1755809020859_lm6i4v4wo"
+  },
+  {
+    "id": "event_1755809065536_xbe4vp21f",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:44:25.536Z",
+    "data": {
+      "duration": 44677
+    },
+    "sessionId": "session_1755809020859_lm6i4v4wo"
+  },
+  {
+    "id": "event_1755809066614_srs94hauh",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:44:26.614Z",
+    "data": {},
+    "sessionId": "session_1755809066614_s90c18lst"
+  },
+  {
+    "id": "event_1755809066822_gkq01cc6n",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:44:26.822Z",
+    "data": {
+      "timestamp": "2025-08-21T20:44:26.822Z"
+    },
+    "sessionId": "session_1755809066614_s90c18lst"
+  },
+  {
+    "id": "event_1755809142540_1g2ydbznl",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:45:42.540Z",
+    "data": {
+      "duration": 75926
+    },
+    "sessionId": "session_1755809066614_s90c18lst"
+  },
+  {
+    "id": "event_1755809144146_f44tf1pbv",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:45:44.146Z",
+    "data": {},
+    "sessionId": "session_1755809144146_5s25ytkzv"
+  },
+  {
+    "id": "event_1755809144333_0grunrq9b",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:45:44.333Z",
+    "data": {
+      "timestamp": "2025-08-21T20:45:44.333Z"
+    },
+    "sessionId": "session_1755809144146_5s25ytkzv"
+  },
+  {
+    "id": "event_1755809214371_jv7y4g6ft",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:46:54.371Z",
+    "data": {
+      "duration": 70225
+    },
+    "sessionId": "session_1755809144146_5s25ytkzv"
+  },
+  {
+    "id": "event_1755809215524_kvhhohjmc",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:46:55.524Z",
+    "data": {},
+    "sessionId": "session_1755809215524_0fgzrdww1"
+  },
+  {
+    "id": "event_1755809215738_bsl2dnwki",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:46:55.738Z",
+    "data": {
+      "timestamp": "2025-08-21T20:46:55.738Z"
+    },
+    "sessionId": "session_1755809215524_0fgzrdww1"
+  },
+  {
+    "id": "event_1755809292004_8be3ikkew",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:48:12.004Z",
+    "data": {
+      "duration": 76479
+    },
+    "sessionId": "session_1755809215524_0fgzrdww1"
+  },
+  {
+    "id": "event_1755809293006_1uqi8w8bd",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:48:13.006Z",
+    "data": {},
+    "sessionId": "session_1755809293005_vk4o13gay"
+  },
+  {
+    "id": "event_1755809294966_m697qcp75",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:48:14.966Z",
+    "data": {
+      "duration": 1960
+    },
+    "sessionId": "session_1755809293005_vk4o13gay"
+  },
+  {
+    "id": "event_1755809295904_akmeswadx",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:48:15.904Z",
+    "data": {},
+    "sessionId": "session_1755809295904_94extg040"
+  },
+  {
+    "id": "event_1755809298216_yuynjwgrs",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:48:18.216Z",
+    "data": {
+      "duration": 2312
+    },
+    "sessionId": "session_1755809295904_94extg040"
+  },
+  {
+    "id": "event_1755809299070_vqosfy2tw",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:48:19.070Z",
+    "data": {},
+    "sessionId": "session_1755809299069_qegxzxtr5"
+  },
+  {
+    "id": "event_1755809301067_mt4aecs0m",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:48:21.067Z",
+    "data": {
+      "duration": 1998
+    },
+    "sessionId": "session_1755809299069_qegxzxtr5"
+  },
+  {
+    "id": "event_1755809301949_xuql63bpp",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:48:21.949Z",
+    "data": {},
+    "sessionId": "session_1755809301949_hyin5p7h5"
+  },
+  {
+    "id": "event_1755809302139_a7tkf61es",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:48:22.139Z",
+    "data": {
+      "timestamp": "2025-08-21T20:48:22.139Z"
+    },
+    "sessionId": "session_1755809301949_hyin5p7h5"
+  },
+  {
+    "id": "event_1755809351655_mvuljtc9f",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:49:11.655Z",
+    "data": {
+      "duration": 49706
+    },
+    "sessionId": "session_1755809301949_hyin5p7h5"
+  },
+  {
+    "id": "event_1755809352677_9fm90x9fm",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:49:12.677Z",
+    "data": {},
+    "sessionId": "session_1755809352677_7cu63nxfv"
+  },
+  {
+    "id": "event_1755809352936_w7gbzeus0",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:49:12.936Z",
+    "data": {
+      "timestamp": "2025-08-21T20:49:12.936Z"
+    },
+    "sessionId": "session_1755809352677_7cu63nxfv"
+  },
+  {
+    "id": "event_1755809404539_0ro9dov8s",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:50:04.539Z",
+    "data": {
+      "duration": 51862
+    },
+    "sessionId": "session_1755809352677_7cu63nxfv"
+  },
+  {
+    "id": "event_1755809405628_0jil9bjoa",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:50:05.628Z",
+    "data": {},
+    "sessionId": "session_1755809405628_ru4gdg3hz"
+  },
+  {
+    "id": "event_1755809405873_0y30lbu6n",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:50:05.873Z",
+    "data": {
+      "timestamp": "2025-08-21T20:50:05.873Z"
+    },
+    "sessionId": "session_1755809405628_ru4gdg3hz"
+  },
+  {
+    "id": "event_1755809816869_wm8buu3r6",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T20:56:56.869Z",
+    "data": {
+      "duration": 411241
+    },
+    "sessionId": "session_1755809405628_ru4gdg3hz"
+  },
+  {
+    "id": "event_1755809818978_xtmnl312q",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:56:58.978Z",
+    "data": {},
+    "sessionId": "session_1755809818978_qin3uvdc3"
+  },
+  {
+    "id": "event_1755809819168_oexfm3gh9",
+    "type": "session_started",
+    "timestamp": "2025-08-21T20:56:59.168Z",
+    "data": {
+      "timestamp": "2025-08-21T20:56:59.168Z"
+    },
+    "sessionId": "session_1755809818978_qin3uvdc3"
+  },
+  {
+    "id": "event_1755810074173_6vgxn5sae",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T21:01:14.173Z",
+    "data": {
+      "duration": 255195
+    },
+    "sessionId": "session_1755809818978_qin3uvdc3"
+  },
+  {
+    "id": "event_1755810075944_lhk6qkprw",
+    "type": "session_started",
+    "timestamp": "2025-08-21T21:01:15.944Z",
+    "data": {},
+    "sessionId": "session_1755810075944_v981a5tiz"
+  },
+  {
+    "id": "event_1755810076136_qgxvuo515",
+    "type": "session_started",
+    "timestamp": "2025-08-21T21:01:16.136Z",
+    "data": {
+      "timestamp": "2025-08-21T21:01:16.136Z"
+    },
+    "sessionId": "session_1755810075944_v981a5tiz"
+  },
+  {
+    "id": "event_1755810118340_blk2t7r0f",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T21:01:58.340Z",
+    "data": {
+      "duration": 42396
+    },
+    "sessionId": "session_1755810075944_v981a5tiz"
+  },
+  {
+    "id": "event_1755810119591_ue9jvzd4d",
+    "type": "session_started",
+    "timestamp": "2025-08-21T21:01:59.591Z",
+    "data": {},
+    "sessionId": "session_1755810119591_g4hq2562q"
+  },
+  {
+    "id": "event_1755810121085_vbfvggvkv",
+    "type": "session_ended",
+    "timestamp": "2025-08-21T21:02:01.085Z",
+    "data": {
+      "duration": 1494
+    },
+    "sessionId": "session_1755810119591_g4hq2562q"
+  },
+  {
+    "id": "event_1755810122027_922auuj9r",
+    "type": "session_started",
+    "timestamp": "2025-08-21T21:02:02.027Z",
+    "data": {},
+    "sessionId": "session_1755810122027_hn4n0twvh"
+  },
+  {
+    "id": "event_1755810122218_xg0sa0uxh",
+    "type": "session_started",
+    "timestamp": "2025-08-21T21:02:02.218Z",
+    "data": {
+      "timestamp": "2025-08-21T21:02:02.218Z"
+    },
+    "sessionId": "session_1755810122027_hn4n0twvh"
   }
 ]

@@ -45,14 +45,17 @@ export default function Home() {
 
   const NotesComponent = dynamic(() => import('@/components/NotesComponent'), { ssr: false });
   // Notes refresh for NotesComponent
-  const handleNotesComponentRefresh = useCallback(async () => {
-    // This will reload the notes list and update sidebar, memory, etc.
-    const notesResponse = await fetch('/api/files');
-    if (notesResponse.ok) {
-      const notesData = await notesResponse.json();
-      setNotes(notesData);
-    }
-  }, []);
+  // const handleNotesComponentRefresh = useCallback(async () => {
+  //   // This will reload the notes list and update sidebar, memory, etc.
+  //   const notesResponse = await fetch('/api/files');
+  //   if (notesResponse.ok) {
+  //     const notesData = await notesResponse.json();
+  //     setNotes(notesData);
+  //   }
+  // }, []);
+
+  // Ref for NotesComponent refresh
+  const notesComponentRefreshRef = useRef<(() => Promise<void>) | null>(null);
 
   // Collaboration UI state
   const [showCollabSettings, setShowCollabSettings] = useState(false);
@@ -864,7 +867,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             {/* Main Content Area */}
             <div className="flex-1 min-w-0 order-1 lg:order-2">
               {currentView === 'notes' ? (
-                <NotesComponent refreshNotes={handleNotesComponentRefresh} />
+                <NotesComponent refreshNotes={notesComponentRefreshRef} />
               ) : (
                 <MainPanel
                   currentView={currentView}
