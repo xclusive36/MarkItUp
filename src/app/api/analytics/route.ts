@@ -18,14 +18,14 @@ async function ensureAnalyticsDir() {
 export async function GET(request: NextRequest) {
   try {
     await ensureAnalyticsDir();
-    
+
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit');
     const type = searchParams.get('type');
     const days = searchParams.get('days');
-    
+
     let events = [];
-    
+
     try {
       const data = await fs.readFile(EVENTS_FILE, 'utf-8');
       events = JSON.parse(data);
@@ -33,32 +33,29 @@ export async function GET(request: NextRequest) {
       // File doesn't exist yet, return empty array
       events = [];
     }
-    
+
     // Filter by type if specified
     if (type) {
       events = events.filter((event: any) => event.type === type);
     }
-    
+
     // Filter by days if specified
     if (days) {
       const daysNum = parseInt(days);
       const cutoff = new Date(Date.now() - daysNum * 24 * 60 * 60 * 1000);
       events = events.filter((event: any) => new Date(event.timestamp) >= cutoff);
     }
-    
+
     // Limit results if specified
     if (limit) {
       const limitNum = parseInt(limit);
       events = events.slice(-limitNum); // Get most recent events
     }
-    
+
     return NextResponse.json({ events, count: events.length });
   } catch (error) {
     console.error('Error retrieving analytics events:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve analytics events' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve analytics events' }, { status: 500 });
   }
 }
 
@@ -66,22 +63,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureAnalyticsDir();
-    
-    const eventData = await request.json();
-    
-    // Validate required fields
-    if (!eventData.type || !eventData.timestamp) {
+
+    let eventData;
+    try {
+      eventData = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse analytics POST body:', parseError);
       return NextResponse.json(
-        { error: 'Missing required fields: type, timestamp' },
+        { error: 'Invalid JSON in request body', details: String(parseError) },
         { status: 400 }
       );
     }
-    
+
+    console.log('Analytics POST eventData:', eventData);
+
+    // Validate required fields
+    if (!eventData.type || !eventData.timestamp) {
+      console.error('Analytics event missing required fields:', eventData);
+      return NextResponse.json(
+        { error: 'Missing required fields: type, timestamp', received: eventData },
+        { status: 400 }
+      );
+    }
+
     // Generate ID if not provided
     if (!eventData.id) {
       eventData.id = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
-    
+
     // Load existing events
     let events = [];
     try {
@@ -91,23 +100,23 @@ export async function POST(request: NextRequest) {
       // File doesn't exist yet, start with empty array
       events = [];
     }
-    
+
     // Add new event
     events.push(eventData);
-    
+
     // Keep only last 10000 events to prevent file from growing too large
     if (events.length > 10000) {
       events = events.slice(-10000);
     }
-    
+
     // Save events back to file
     await fs.writeFile(EVENTS_FILE, JSON.stringify(events, null, 2));
-    
+
     return NextResponse.json({ success: true, id: eventData.id });
   } catch (error) {
     console.error('Error storing analytics event:', error);
     return NextResponse.json(
-      { error: 'Failed to store analytics event' },
+      { error: 'Failed to store analytics event', details: String(error) },
       { status: 500 }
     );
   }
@@ -117,16 +126,13 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     await ensureAnalyticsDir();
-    
+
     // Clear events file
     await fs.writeFile(EVENTS_FILE, JSON.stringify([], null, 2));
-    
+
     return NextResponse.json({ success: true, message: 'Analytics data cleared' });
   } catch (error) {
     console.error('Error clearing analytics data:', error);
-    return NextResponse.json(
-      { error: 'Failed to clear analytics data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to clear analytics data' }, { status: 500 });
   }
 }
