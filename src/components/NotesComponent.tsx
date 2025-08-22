@@ -248,9 +248,9 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   };
 
   return (
-    <div className="w-full h-full bg-white dark:bg-gray-900 p-0 m-0">
-      <div className="py-6 px-8 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">All Notes</h3>
+    <div className="w-full h-full theme-bg-primary p-0 m-0">
+      <div className="py-6 px-8 theme-border-primary border-b">
+        <h3 className="text-lg font-semibold theme-text-primary">All Notes</h3>
       </div>
       <div className="py-8 px-8">
         {loading ? (
@@ -265,14 +265,12 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
               {folderOrder.map(folder => (
                 <div
                   key={folder}
-                  className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-6 shadow-sm"
+                  className="rounded-xl theme-border-primary border theme-bg-secondary p-6 shadow-sm"
                 >
                   <div className="flex items-center mb-4">
-                    <Folder className="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400" />
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                      {folder}
-                    </h4>
-                    <span className="ml-2 text-xs text-gray-400">
+                    <Folder className="w-5 h-5 mr-2 theme-text-secondary" />
+                    <h4 className="text-lg font-semibold theme-text-primary">{folder}</h4>
+                    <span className="ml-2 text-xs theme-text-secondary">
                       {notesByFolder[folder].length} note
                       {notesByFolder[folder].length !== 1 ? 's' : ''}
                     </span>
@@ -283,7 +281,9 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         className="flex flex-col gap-4 min-h-[40px]"
-                        style={{ background: snapshot.isDraggingOver ? '#e0e7ef' : undefined }}
+                        style={{
+                          background: snapshot.isDraggingOver ? 'var(--bg-tertiary)' : undefined,
+                        }}
                       >
                         {notesByFolder[folder].map((note, idx) => (
                           <Draggable key={note.id} draggableId={note.id} index={idx}>
@@ -292,14 +292,14 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`p-4 rounded-lg cursor-pointer transition-colors border flex items-center hover:bg-gray-100 dark:hover:bg-gray-700 bg-white dark:bg-gray-900 ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                                className={`p-4 rounded-lg cursor-pointer transition-colors border flex items-center theme-bg-secondary theme-border-secondary hover:theme-bg-tertiary ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
                               >
                                 {getFileIcon(note.name)}
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-base font-medium truncate text-gray-900 dark:text-gray-100">
+                                  <h5 className="text-base font-medium truncate theme-text-primary">
                                     {note.name.replace('.md', '')}
                                   </h5>
-                                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-400">
+                                  <div className="flex items-center gap-4 mt-2 text-xs theme-text-secondary">
                                     <span className="flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
                                       {note.readingTime}m
@@ -311,13 +311,13 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                                       {note.tags.slice(0, 3).map(tag => (
                                         <span
                                           key={tag}
-                                          className="text-xs px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                          className="text-xs px-1.5 py-0.5 rounded theme-bg-tertiary theme-text-secondary"
                                         >
                                           #{tag}
                                         </span>
                                       ))}
                                       {note.tags.length > 3 && (
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs theme-text-secondary">
                                           +{note.tags.length - 3}
                                         </span>
                                       )}
@@ -329,7 +329,7 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                                     e.stopPropagation();
                                     // TODO: Implement delete logic
                                   }}
-                                  className="p-1 text-gray-400 hover:text-red-600"
+                                  className="p-1 theme-text-secondary hover:text-red-600"
                                 >
                                   <X className="w-4 h-4" />
                                 </button>
