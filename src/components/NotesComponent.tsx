@@ -92,6 +92,16 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const folderOrder = Object.keys(notesByFolder);
 
   // Drag and drop handler (persist order)
+  // Store last move for undo
+  const [lastMove, setLastMove] = useState<{
+    noteId: string;
+    fromFolder: string;
+    toFolder: string;
+    fromIdx: number;
+    toIdx: number;
+    noteName: string;
+  } | null>(null);
+
   const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -103,10 +113,15 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
     if (sourceFolder === destFolder && sourceIdx === destIdx) return;
 
-    let movedNoteName = '';
-    let movedToFolder = '';
-    let movedBetweenFolders = false;
-
+    // Clean up: remove unused variables, fix type for movedForUndo
+    type MovedForUndo = {
+      moved: Note;
+      sourceFolder: string;
+      destFolder: string;
+      sourceIdx: number;
+      destIdx: number;
+    };
+    let movedForUndo: MovedForUndo | null = null;
     setOrderedNotes(prevNotes => {
       // Recompute folder grouping and order from prevNotes
       const notesByFolderCopy: Record<string, Note[]> = {};
@@ -122,22 +137,35 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
         notesByFolderCopy[key] = notesByFolderCopy[key].slice();
       }
 
-      const moved = notesByFolderCopy[sourceFolder]?.[sourceIdx];
+      const moved = notesByFolderCopy[sourceFolder]?.[sourceIdx] as Note | undefined;
       if (!moved) return prevNotes; // Guard: nothing to move
 
       // If moving between folders, move the file on the server first
       if (sourceFolder !== destFolder) {
         const oldPath = moved.folder ? `${moved.folder}/${moved.name}` : moved.name;
         const newPath = destFolder === 'Uncategorized' ? moved.name : `${destFolder}/${moved.name}`;
-        console.log('Moving note:', { from: oldPath, to: newPath }); // Debug log
         fetch('/api/move', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ from: oldPath, to: newPath }),
         });
-        movedNoteName = moved.name.replace('.md', '');
-        movedToFolder = destFolder;
-        movedBetweenFolders = true;
+        movedForUndo = {
+          moved,
+          sourceFolder,
+          destFolder,
+          sourceIdx,
+          destIdx,
+        };
+        setLastMove({
+          noteId: moved.id,
+          fromFolder: sourceFolder,
+          toFolder: destFolder,
+          fromIdx: sourceIdx,
+          toIdx: destIdx,
+          noteName: moved.name,
+        });
+      } else {
+        setLastMove(null);
       }
 
       notesByFolderCopy[sourceFolder].splice(sourceIdx, 1);
@@ -160,9 +188,62 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
       return newOrder;
     });
 
-    // Only show toast after the state update and only for folder moves
-    if (sourceFolder !== destFolder) {
-      showToast(`Moved "${movedNoteName}" to "${movedToFolder}"`, 'success');
+    // After state update, show toast if moved between folders
+    if (movedForUndo) {
+      const { moved, sourceFolder, destFolder, sourceIdx } = movedForUndo as {
+        moved: Note;
+        sourceFolder: string;
+        destFolder: string;
+        sourceIdx: number;
+        destIdx: number;
+      };
+      showToast(
+        `Moved "${moved.name.replace('.md', '')}" to "${destFolder}"`,
+        'success',
+        'Undo',
+        async () => {
+          const fromPath =
+            destFolder === 'Uncategorized' ? moved.name : `${destFolder}/${moved.name}`;
+          const toPath =
+            sourceFolder === 'Uncategorized' ? moved.name : `${sourceFolder}/${moved.name}`;
+          await fetch('/api/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: fromPath, to: toPath }),
+          });
+          setOrderedNotes(prevNotes => {
+            // Remove from destFolder
+            const notesByFolderCopy: Record<string, Note[]> = {};
+            for (const n of prevNotes) {
+              const folder = n.folder || 'Uncategorized';
+              if (!notesByFolderCopy[folder]) notesByFolderCopy[folder] = [];
+              notesByFolderCopy[folder].push(n);
+            }
+            // Find the note in destFolder
+            const idx = notesByFolderCopy[destFolder]?.findIndex(n => n.id === moved.id);
+            if (idx === undefined || idx < 0) return prevNotes;
+            const [note] = notesByFolderCopy[destFolder].splice(idx, 1);
+            // Insert back into sourceFolder at sourceIdx
+            notesByFolderCopy[sourceFolder] = notesByFolderCopy[sourceFolder] || [];
+            notesByFolderCopy[sourceFolder].splice(sourceIdx, 0, {
+              ...note,
+              folder: sourceFolder === 'Uncategorized' ? '' : sourceFolder,
+            });
+            // Flatten
+            const folderOrderLocal = Object.keys(notesByFolderCopy);
+            const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f]);
+            // Persist order
+            fetch('/api/files/order', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newOrder.map(n => ({ id: n.id, folder: n.folder }))),
+            });
+            return newOrder;
+          });
+          setLastMove(null);
+          showToast(`Restored "${moved.name.replace('.md', '')}" to "${sourceFolder}"`, 'info');
+        }
+      );
     }
   };
 
