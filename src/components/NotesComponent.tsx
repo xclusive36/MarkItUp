@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Note } from '@/lib/types';
 // import { FolderDragItem, NoteDragItem } from './NotesDndTypes';
 import { Folder, Clock, X } from 'lucide-react';
+import { useToast } from './ToastProvider';
 
 const getFileIcon = (name: string) => {
   if (name.endsWith('.md')) return <span className="inline-block mr-2">📄</span>;
@@ -17,6 +18,7 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   // Fetch notes logic (with order persistence)
   const fetchNotes = useCallback(async () => {
@@ -101,6 +103,10 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
     if (sourceFolder === destFolder && sourceIdx === destIdx) return;
 
+    let movedNoteName = '';
+    let movedToFolder = '';
+    let movedBetweenFolders = false;
+
     setOrderedNotes(prevNotes => {
       // Recompute folder grouping and order from prevNotes
       const notesByFolderCopy: Record<string, Note[]> = {};
@@ -118,6 +124,22 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
       const moved = notesByFolderCopy[sourceFolder]?.[sourceIdx];
       if (!moved) return prevNotes; // Guard: nothing to move
+
+      // If moving between folders, move the file on the server first
+      if (sourceFolder !== destFolder) {
+        const oldPath = moved.folder ? `${moved.folder}/${moved.name}` : moved.name;
+        const newPath = destFolder === 'Uncategorized' ? moved.name : `${destFolder}/${moved.name}`;
+        console.log('Moving note:', { from: oldPath, to: newPath }); // Debug log
+        fetch('/api/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: oldPath, to: newPath }),
+        });
+        movedNoteName = moved.name.replace('.md', '');
+        movedToFolder = destFolder;
+        movedBetweenFolders = true;
+      }
+
       notesByFolderCopy[sourceFolder].splice(sourceIdx, 1);
       // Always create a new object for the moved note
       const movedNote =
@@ -137,6 +159,11 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
       return newOrder;
     });
+
+    // Only show toast after the state update and only for folder moves
+    if (sourceFolder !== destFolder) {
+      showToast(`Moved "${movedNoteName}" to "${movedToFolder}"`, 'success');
+    }
   };
 
   return (

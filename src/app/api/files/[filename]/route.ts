@@ -1,4 +1,15 @@
+// Prevent dynamic route from catching static routes like /move, /order, etc.
+const RESERVED = ['move', 'order', 'rename', 'duplicate'];
+
+function isReserved(filename: string) {
+  // Handles both string and array (if catch-all is ever used)
+  if (Array.isArray(filename)) filename = filename[0];
+  return RESERVED.includes(filename);
+}
 export async function PUT(request: NextRequest, { params }: { params: any }) {
+  if (isReserved(params.filename)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
@@ -47,6 +58,9 @@ function safeJoinMarkdownDir(filename: string): string | null {
 }
 
 export async function GET(request: NextRequest, { params }: { params: any }) {
+  if (isReserved(params.filename)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
@@ -78,6 +92,9 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: any }) {
+  if (isReserved(params.filename)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
   try {
     const { filename } = params;
     const filePath = safeJoinMarkdownDir(filename);
