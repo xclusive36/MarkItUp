@@ -18,15 +18,40 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch notes logic
+  // Fetch notes logic (with order persistence)
   const fetchNotes = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/files');
-      if (!res.ok) throw new Error('Failed to fetch notes');
-      const notesArr: Note[] = await res.json();
-      setNotes(notesArr);
+      const [notesRes, orderRes] = await Promise.all([
+        fetch('/api/files'),
+        fetch('/api/files/order'),
+      ]);
+      if (!notesRes.ok) throw new Error('Failed to fetch notes');
+      const notesArr: Note[] = await notesRes.json();
+      let ordered: Note[] = notesArr;
+      if (orderRes.ok) {
+        const orderArr: { id: string; folder?: string }[] = await orderRes.json();
+        if (Array.isArray(orderArr) && orderArr.length > 0) {
+          // Map by id for fast lookup
+          const notesMap = Object.fromEntries(notesArr.map(n => [n.id, n]));
+          ordered = orderArr
+            .map(o => {
+              const n = notesMap[o.id];
+              if (n) {
+                // If folder changed, update it
+                if (o.folder !== undefined) n.folder = o.folder;
+                return n;
+              }
+              return null;
+            })
+            .filter(Boolean) as Note[];
+          // Add any notes not in orderArr at the end
+          const orderedIds = new Set(orderArr.map(o => o.id));
+          ordered = [...ordered, ...notesArr.filter(n => !orderedIds.has(n.id))];
+        }
+      }
+      setNotes(ordered);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
@@ -64,8 +89,8 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
 
   const folderOrder = Object.keys(notesByFolder);
 
-  // Drag and drop handler
-  const onDragEnd = (result: DropResult) => {
+  // Drag and drop handler (persist order)
+  const onDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
     if (!destination) return;
 
@@ -77,20 +102,40 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
     if (sourceFolder === destFolder && sourceIdx === destIdx) return;
 
     setOrderedNotes(prevNotes => {
-      // Remove from source
+      // Recompute folder grouping and order from prevNotes
       const notesByFolderCopy: Record<string, Note[]> = {};
-      for (const key of folderOrder) {
-        notesByFolderCopy[key] = prevNotes.filter(n => (n.folder || 'Uncategorized') === key);
+      for (const n of prevNotes) {
+        const folder = n.folder || 'Uncategorized';
+        if (!notesByFolderCopy[folder]) notesByFolderCopy[folder] = [];
+        notesByFolderCopy[folder].push(n);
       }
-      const moved = notesByFolderCopy[sourceFolder][sourceIdx];
+      const folderOrderLocal = Object.keys(notesByFolderCopy);
+
+      // Make shallow copies to avoid mutating state
+      for (const key in notesByFolderCopy) {
+        notesByFolderCopy[key] = notesByFolderCopy[key].slice();
+      }
+
+      const moved = notesByFolderCopy[sourceFolder]?.[sourceIdx];
+      if (!moved) return prevNotes; // Guard: nothing to move
       notesByFolderCopy[sourceFolder].splice(sourceIdx, 1);
-      // Update folder if moved between folders
-      if (sourceFolder !== destFolder) {
-        moved.folder = destFolder === 'Uncategorized' ? '' : destFolder;
-      }
-      notesByFolderCopy[destFolder].splice(destIdx, 0, moved);
+      // Always create a new object for the moved note
+      const movedNote =
+        sourceFolder !== destFolder
+          ? { ...moved, folder: destFolder === 'Uncategorized' ? '' : destFolder }
+          : { ...moved };
+      notesByFolderCopy[destFolder].splice(destIdx, 0, movedNote);
       // Flatten back to array, preserving folder order
-      return folderOrder.flatMap(f => notesByFolderCopy[f]);
+      const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f]);
+
+      // Persist order to backend
+      fetch('/api/files/order', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOrder.map(n => ({ id: n.id, folder: n.folder }))),
+      });
+
+      return newOrder;
     });
   };
 
