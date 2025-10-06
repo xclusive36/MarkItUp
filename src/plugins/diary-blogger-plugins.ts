@@ -1,19 +1,25 @@
-import { PluginManifest } from '../lib/types';
+import { PluginManifest, PluginAPI } from '../lib/types';
+
+// Global plugin instances - will be set in onLoad
+let moodTrackerInstance: MoodTrackerPlugin | null = null;
+let habitTrackerInstance: HabitTrackerPlugin | null = null;
+let seoOptimizerInstance: SEOOptimizerPlugin | null = null;
 
 // Mood Tracker Plugin - Track daily moods and emotions
 export const moodTrackerPlugin: PluginManifest = {
   id: 'mood-tracker',
   name: 'Mood Tracker',
   version: '1.0.0',
-  description: 'Track daily moods, emotions, and mental health patterns with beautiful visualizations',
+  description:
+    'Track daily moods, emotions, and mental health patterns with beautiful visualizations',
   author: 'MarkItUp Team',
   main: 'mood-tracker.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Save mood data'
-    }
+      description: 'Save mood data',
+    },
   ],
 
   settings: [
@@ -22,15 +28,15 @@ export const moodTrackerPlugin: PluginManifest = {
       name: 'Daily Reminder Time',
       type: 'string',
       default: '21:00',
-      description: 'Time to remind you to log your mood (HH:MM format)'
+      description: 'Time to remind you to log your mood (HH:MM format)',
     },
     {
       id: 'includeNotes',
       name: 'Include Notes with Mood',
       type: 'boolean',
       default: true,
-      description: 'Allow adding notes with mood entries'
-    }
+      description: 'Allow adding notes with mood entries',
+    },
   ],
 
   commands: [
@@ -39,34 +45,28 @@ export const moodTrackerPlugin: PluginManifest = {
       name: 'Log Mood',
       description: 'Log your current mood',
       keybinding: 'Ctrl+Shift+M',
-      callback: async () => {
-        const moods = ['😡 Angry', '😰 Anxious', '😢 Sad', '😐 Neutral', '😊 Happy', '😍 Excited', '😌 Peaceful'];
-        const mood = prompt(`Select mood:\n${moods.map((m, i) => `${i + 1}. ${m}`).join('\n')}\nEnter number (1-7):`);
-        
-        if (mood && parseInt(mood) >= 1 && parseInt(mood) <= 7) {
-          const selectedMood = moods[parseInt(mood) - 1];
-          const note = prompt('Add a note (optional):') || '';
-          
-          const moodEntry = `
-## Mood Entry - ${new Date().toLocaleDateString()}
-**Mood:** ${selectedMood}  
-**Time:** ${new Date().toLocaleTimeString()}  
-**Note:** ${note}
-
----
-`;
-          console.log('Mood entry:', moodEntry);
+      callback: async (api?: PluginAPI) => {
+        if (!moodTrackerInstance) {
+          console.error('Mood Tracker plugin instance not initialized');
+          api?.ui.showNotification('Mood Tracker plugin not ready', 'error');
+          return;
         }
-      }
+        await moodTrackerInstance.logMood();
+      },
     },
     {
       id: 'mood-analytics',
       name: 'Mood Analytics',
       description: 'View mood patterns and analytics',
-      callback: async () => {
-        console.log('Show mood analytics');
-      }
-    }
+      callback: async (api?: PluginAPI) => {
+        if (!moodTrackerInstance) {
+          console.error('Mood Tracker plugin instance not initialized');
+          api?.ui.showNotification('Mood Tracker plugin not ready', 'error');
+          return;
+        }
+        await moodTrackerInstance.showAnalytics();
+      },
+    },
   ],
 
   views: [
@@ -81,8 +81,8 @@ export const moodTrackerPlugin: PluginManifest = {
             <button onclick="alert('Log mood')" class="mood-btn">😊 Log Mood</button>
           </div>
         `;
-      }
-    }
+      },
+    },
   ],
 
   processors: [
@@ -95,11 +95,16 @@ export const moodTrackerPlugin: PluginManifest = {
           /\*\*Mood:\*\* (😡 Angry|😰 Anxious|😢 Sad|😐 Neutral|😊 Happy|😍 Excited|😌 Peaceful)/g,
           '<div class="mood-entry"><strong>Mood:</strong> <span class="mood-indicator">$1</span></div>'
         );
-      }
-    }
+      },
+    },
   ],
 
-  onLoad: async () => {
+  onLoad: async (api?: PluginAPI) => {
+    if (!api) {
+      console.error('Mood Tracker: PluginAPI not provided to onLoad');
+      return;
+    }
+
     const style = document.createElement('style');
     style.textContent = `
       .mood-widget { padding: 0.25rem; }
@@ -108,8 +113,15 @@ export const moodTrackerPlugin: PluginManifest = {
       .mood-indicator { font-size: 1.2em; }
     `;
     document.head.appendChild(style);
+
     console.log('Mood Tracker plugin loaded');
-  }
+    moodTrackerInstance = new MoodTrackerPlugin(api);
+  },
+
+  onUnload: async () => {
+    moodTrackerInstance = null;
+    console.log('Mood Tracker plugin unloaded');
+  },
 };
 
 // Habit Tracker Plugin - Track daily habits and build streaks
@@ -120,15 +132,15 @@ export const habitTrackerPlugin: PluginManifest = {
   description: 'Track daily habits, build streaks, and monitor progress with visual charts',
   author: 'MarkItUp Team',
   main: 'habit-tracker.js',
-  
+
   settings: [
     {
       id: 'streakGoal',
       name: 'Default Streak Goal',
       type: 'number',
       default: 21,
-      description: 'Default number of days for habit streak goals'
-    }
+      description: 'Default number of days for habit streak goals',
+    },
   ],
 
   commands: [
@@ -137,41 +149,28 @@ export const habitTrackerPlugin: PluginManifest = {
       name: 'Mark Habit Complete',
       description: 'Mark a habit as completed for today',
       keybinding: 'Ctrl+Shift+H',
-      callback: async () => {
-        const habit = prompt('Habit name:');
-        if (habit) {
-          const entry = `- [x] ${habit} - ${new Date().toLocaleDateString()} ✅\n`;
-          console.log('Habit completed:', entry);
+      callback: async (api?: PluginAPI) => {
+        if (!habitTrackerInstance) {
+          console.error('Habit Tracker plugin instance not initialized');
+          api?.ui.showNotification('Habit Tracker plugin not ready', 'error');
+          return;
         }
-      }
+        await habitTrackerInstance.markHabitComplete();
+      },
     },
     {
       id: 'create-habit-template',
       name: 'Create Habit Template',
       description: 'Create a habit tracking template',
-      callback: async () => {
-        const template = `# Habit Tracker - ${new Date().getFullYear()}
-
-## Daily Habits
-- [ ] Exercise (30 min)
-- [ ] Read (20 min)
-- [ ] Meditate (10 min)
-- [ ] Drink 8 glasses of water
-- [ ] No social media before noon
-
-## Weekly Habits
-- [ ] Meal prep
-- [ ] Clean house
-- [ ] Review goals
-
-## Monthly Reviews
-- Review habit completion rates
-- Adjust habits as needed
-- Set new challenges
-`;
-        console.log('Habit template:', template);
-      }
-    }
+      callback: async (api?: PluginAPI) => {
+        if (!habitTrackerInstance) {
+          console.error('Habit Tracker plugin instance not initialized');
+          api?.ui.showNotification('Habit Tracker plugin not ready', 'error');
+          return;
+        }
+        await habitTrackerInstance.createTemplate();
+      },
+    },
   ],
 
   views: [
@@ -192,8 +191,8 @@ export const habitTrackerPlugin: PluginManifest = {
             <button onclick="alert('Add new habit')" class="add-habit-btn">+ Add Habit</button>
           </div>
         `;
-      }
-    }
+      },
+    },
   ],
 
   processors: [
@@ -206,11 +205,16 @@ export const habitTrackerPlugin: PluginManifest = {
           /- \[x\] (.+?) - \d{1,2}\/\d{1,2}\/\d{4} ✅/g,
           '- [x] <span class="habit-completed">$1</span> - <span class="completion-date">$&</span>'
         );
-      }
-    }
+      },
+    },
   ],
 
-  onLoad: async () => {
+  onLoad: async (api?: PluginAPI) => {
+    if (!api) {
+      console.error('Habit Tracker: PluginAPI not provided to onLoad');
+      return;
+    }
+
     const style = document.createElement('style');
     style.textContent = `
       .habit-tracker { padding: 1rem; }
@@ -221,8 +225,15 @@ export const habitTrackerPlugin: PluginManifest = {
       .completion-date { color: #6b7280; font-size: 0.9em; }
     `;
     document.head.appendChild(style);
+
     console.log('Habit Tracker plugin loaded');
-  }
+    habitTrackerInstance = new HabitTrackerPlugin(api);
+  },
+
+  onUnload: async () => {
+    habitTrackerInstance = null;
+    console.log('Habit Tracker plugin unloaded');
+  },
 };
 
 // Blog SEO Optimizer Plugin - Optimize content for search engines
@@ -233,22 +244,22 @@ export const seoOptimizerPlugin: PluginManifest = {
   description: 'Analyze and optimize blog posts for SEO with keyword analysis and suggestions',
   author: 'MarkItUp Team',
   main: 'seo-optimizer.js',
-  
+
   settings: [
     {
       id: 'targetKeywordDensity',
       name: 'Target Keyword Density (%)',
       type: 'number',
       default: 2,
-      description: 'Target keyword density percentage'
+      description: 'Target keyword density percentage',
     },
     {
       id: 'minWordCount',
       name: 'Minimum Word Count',
       type: 'number',
       default: 300,
-      description: 'Minimum word count for SEO'
-    }
+      description: 'Minimum word count for SEO',
+    },
   ],
 
   commands: [
@@ -257,37 +268,28 @@ export const seoOptimizerPlugin: PluginManifest = {
       name: 'Analyze SEO',
       description: 'Analyze current note for SEO optimization',
       keybinding: 'Ctrl+Shift+S',
-      callback: async () => {
-        const keyword = prompt('Primary keyword to analyze:');
-        if (keyword) {
-          console.log(`Analyzing SEO for keyword: ${keyword}`);
-          alert(`SEO Analysis:\n- Keyword density: 1.5%\n- Word count: 450\n- Readability: Good\n- Meta description: Missing`);
+      callback: async (api?: PluginAPI) => {
+        if (!seoOptimizerInstance) {
+          console.error('SEO Optimizer plugin instance not initialized');
+          api?.ui.showNotification('SEO Optimizer plugin not ready', 'error');
+          return;
         }
-      }
+        await seoOptimizerInstance.analyzeSEO();
+      },
     },
     {
       id: 'generate-meta-tags',
       name: 'Generate Meta Tags',
       description: 'Generate SEO meta tags',
-      callback: async () => {
-        const title = prompt('Page title:');
-        const description = prompt('Meta description:');
-        const keywords = prompt('Keywords (comma-separated):');
-        
-        if (title && description) {
-          const metaTags = `
----
-title: "${title}"
-description: "${description}"
-keywords: "${keywords}"
-author: "Your Name"
-date: "${new Date().toISOString().split('T')[0]}"
----
-`;
-          console.log('Meta tags:', metaTags);
+      callback: async (api?: PluginAPI) => {
+        if (!seoOptimizerInstance) {
+          console.error('SEO Optimizer plugin instance not initialized');
+          api?.ui.showNotification('SEO Optimizer plugin not ready', 'error');
+          return;
         }
-      }
-    }
+        await seoOptimizerInstance.generateMetaTags();
+      },
+    },
   ],
 
   views: [
@@ -317,11 +319,16 @@ date: "${new Date().toISOString().split('T')[0]}"
             <button onclick="alert('Run SEO analysis')" class="analyze-btn">Analyze</button>
           </div>
         `;
-      }
-    }
+      },
+    },
   ],
 
-  onLoad: async () => {
+  onLoad: async (api?: PluginAPI) => {
+    if (!api) {
+      console.error('SEO Optimizer: PluginAPI not provided to onLoad');
+      return;
+    }
+
     const style = document.createElement('style');
     style.textContent = `
       .seo-optimizer { padding: 1rem; }
@@ -331,6 +338,175 @@ date: "${new Date().toISOString().split('T')[0]}"
       .analyze-btn { width: 100%; padding: 0.5rem; background: #3b82f6; color: white; border: none; border-radius: 4px; }
     `;
     document.head.appendChild(style);
+
     console.log('SEO Optimizer plugin loaded');
-  }
+    seoOptimizerInstance = new SEOOptimizerPlugin(api);
+  },
+
+  onUnload: async () => {
+    seoOptimizerInstance = null;
+    console.log('SEO Optimizer plugin unloaded');
+  },
 };
+
+// ============================================
+// PLUGIN IMPLEMENTATION CLASSES
+// ============================================
+
+// Mood Tracker Plugin Implementation
+export class MoodTrackerPlugin {
+  private moods = [
+    '😡 Angry',
+    '😰 Anxious',
+    '😢 Sad',
+    '😐 Neutral',
+    '😊 Happy',
+    '😍 Excited',
+    '😌 Peaceful',
+  ];
+
+  constructor(private api: PluginAPI) {}
+
+  async logMood() {
+    // Simple implementation: add mood entry at end of document
+    const moodEntry = `
+## Mood Entry - ${new Date().toLocaleDateString()}
+**Mood:** 😊 Happy  
+**Time:** ${new Date().toLocaleTimeString()}  
+**Note:** [Add your note here]
+
+---
+`;
+
+    const currentContent = this.api.ui.getEditorContent();
+    const updatedContent = currentContent + '\n' + moodEntry;
+    this.api.ui.setEditorContent(updatedContent);
+
+    this.api.ui.showNotification('Mood entry added! Edit the mood and note.', 'info');
+  }
+
+  async showAnalytics() {
+    const content = this.api.ui.getEditorContent();
+
+    // Count mood entries
+    const totalEntries = (content.match(/## Mood Entry/g) || []).length;
+
+    // Count each mood type
+    const moodCounts: Record<string, number> = {};
+    this.moods.forEach(mood => {
+      const count = (content.match(new RegExp(`\\*\\*Mood:\\*\\* ${mood}`, 'g')) || []).length;
+      if (count > 0) {
+        moodCounts[mood] = count;
+      }
+    });
+
+    const analytics = `
+📊 Mood Analytics
+═══════════════════
+Total Entries: ${totalEntries}
+
+Mood Distribution:
+${
+  Object.entries(moodCounts)
+    .map(([mood, count]) => `  ${mood}: ${count} (${Math.round((count / totalEntries) * 100)}%)`)
+    .join('\n') || '  No mood data yet'
+}
+`;
+
+    console.log(analytics);
+    this.api.ui.showNotification(`Total mood entries: ${totalEntries}`, 'info');
+  }
+}
+
+// Habit Tracker Plugin Implementation
+export class HabitTrackerPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async markHabitComplete() {
+    const entry = `- [x] Daily habit - ${new Date().toLocaleDateString()} ✅\n`;
+
+    const currentContent = this.api.ui.getEditorContent();
+    const updatedContent = currentContent + entry;
+    this.api.ui.setEditorContent(updatedContent);
+
+    this.api.ui.showNotification('Habit marked complete! Edit the habit name.', 'info');
+  }
+
+  async createTemplate() {
+    const template = `# Habit Tracker - ${new Date().getFullYear()}
+
+## Daily Habits
+- [ ] Exercise (30 min)
+- [ ] Read (20 min)
+- [ ] Meditate (10 min)
+- [ ] Drink 8 glasses of water
+- [ ] No social media before noon
+
+## Weekly Habits
+- [ ] Meal prep
+- [ ] Clean house
+- [ ] Review goals
+
+## Monthly Reviews
+- Review habit completion rates
+- Adjust habits as needed
+- Set new challenges
+`;
+
+    const currentContent = this.api.ui.getEditorContent();
+    const updatedContent = currentContent + '\n\n' + template;
+    this.api.ui.setEditorContent(updatedContent);
+
+    this.api.ui.showNotification('Habit tracker template inserted!', 'info');
+  }
+}
+
+// SEO Optimizer Plugin Implementation
+export class SEOOptimizerPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async analyzeSEO() {
+    const content = this.api.ui.getEditorContent();
+
+    // Basic SEO analysis
+    const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+    const headings = (content.match(/^#{1,6}\s/gm) || []).length;
+    const links = (content.match(/\[.*?\]\(.*?\)/g) || []).length;
+    const images = (content.match(/!\[.*?\]\(.*?\)/g) || []).length;
+
+    const analysis = `
+🔍 SEO Analysis
+═══════════════════
+Word Count: ${wordCount} ${wordCount < 300 ? '⚠️ (minimum 300 recommended)' : '✅'}
+Headings: ${headings} ${headings === 0 ? '⚠️ (add headings)' : '✅'}
+Links: ${links}
+Images: ${images}
+Readability: ${wordCount > 0 ? 'Calculating...' : 'No content'}
+`;
+
+    console.log(analysis);
+    this.api.ui.showNotification(
+      `SEO Score: ${wordCount >= 300 && headings > 0 ? 'Good' : 'Needs improvement'} - ${wordCount} words, ${headings} headings`,
+      'info'
+    );
+  }
+
+  async generateMetaTags() {
+    const metaTags = `
+---
+title: "Your Page Title Here"
+description: "Your meta description here (150-160 characters)"
+keywords: "keyword1, keyword2, keyword3"
+author: "Your Name"
+date: "${new Date().toISOString().split('T')[0]}"
+---
+
+`;
+
+    const currentContent = this.api.ui.getEditorContent();
+    const updatedContent = metaTags + currentContent;
+    this.api.ui.setEditorContent(updatedContent);
+
+    this.api.ui.showNotification('Meta tags template inserted at top! Edit the values.', 'info');
+  }
+}
