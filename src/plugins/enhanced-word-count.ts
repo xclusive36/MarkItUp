@@ -222,23 +222,38 @@ export class EnhancedWordCountPlugin {
 
     const stats = calculateWordStats(content);
 
-    // Format detailed statistics message
-    const statsMessage = `
-📊 Writing Statistics:
+    // Format detailed statistics as a markdown comment block
+    const statsBlock = `
+<!--
+📊 WRITING STATISTICS
+Generated: ${new Date().toLocaleString()}
 
-Words: ${stats.words}
-Characters: ${stats.characters} (${stats.charactersNoSpaces} without spaces)
-Paragraphs: ${stats.paragraphs}
-Sentences: ${stats.sentences}
+📝 Content Metrics:
+• Words: ${stats.words}
+• Characters: ${stats.characters} (${stats.charactersNoSpaces} without spaces)
+• Paragraphs: ${stats.paragraphs}
+• Sentences: ${stats.sentences}
 
-Reading Time: ${stats.readingTime} minute${stats.readingTime !== 1 ? 's' : ''}
-Average Words per Sentence: ${stats.averageWordsPerSentence}
-Average Words per Paragraph: ${stats.averageWordsPerParagraph}
-    `.trim();
+⏱️ Reading & Structure:
+• Reading Time: ${stats.readingTime} minute${stats.readingTime !== 1 ? 's' : ''} (at 200 WPM)
+• Average Words per Sentence: ${stats.averageWordsPerSentence}
+• Average Words per Paragraph: ${stats.averageWordsPerParagraph}
+-->
 
-    // Show in notification (in a real implementation, this would be a modal)
-    this.api.ui.showNotification(statsMessage, 'info');
+`.trim();
+
+    // Insert stats at the top of the document
+    const updatedContent = statsBlock + '\n\n' + content;
+    this.api.ui.setEditorContent(updatedContent);
+
+    // Also log to console
     console.log('Detailed Writing Statistics:', stats);
+
+    // Show success notification
+    this.api.ui.showNotification(
+      `Statistics inserted! ${stats.words} words, ${stats.readingTime} min read`,
+      'info'
+    );
   }
 
   updateSettings(newSettings: any) {
