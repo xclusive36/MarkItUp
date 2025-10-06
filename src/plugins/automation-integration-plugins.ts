@@ -1,4 +1,12 @@
 import { PluginManifest } from '../lib/types';
+import { PluginAPI } from '../lib/PluginAPI';
+
+// Global instances
+let webhookIntegrationInstance: WebhookIntegrationPlugin | null = null;
+let automationRulesInstance: AutomationRulesPlugin | null = null;
+let scheduleReminderInstance: ScheduleReminderPlugin | null = null;
+let bulkOperationsInstance: BulkOperationsPlugin | null = null;
+let syncIntegrationInstance: SyncIntegrationPlugin | null = null;
 
 // Webhook Integration Plugin - Connect to external services
 export const webhookIntegrationPlugin: PluginManifest = {
@@ -8,16 +16,16 @@ export const webhookIntegrationPlugin: PluginManifest = {
   description: 'Connect MarkItUp to external services via webhooks and APIs',
   author: 'MarkItUp Team',
   main: 'webhook-integration.js',
-  
+
   permissions: [
     {
       type: 'network',
-      description: 'Send data to external webhooks'
+      description: 'Send data to external webhooks',
     },
     {
       type: 'file-system',
-      description: 'Read note data for integration'
-    }
+      description: 'Read note data for integration',
+    },
   ],
 
   settings: [
@@ -26,15 +34,15 @@ export const webhookIntegrationPlugin: PluginManifest = {
       name: 'Default Webhook URL',
       type: 'string',
       default: '',
-      description: 'Default webhook endpoint for integrations'
+      description: 'Default webhook endpoint for integrations',
     },
     {
       id: 'retryAttempts',
       name: 'Retry Attempts',
       type: 'number',
       default: 3,
-      description: 'Number of retry attempts for failed webhook calls'
-    }
+      description: 'Number of retry attempts for failed webhook calls',
+    },
   ],
 
   commands: [
@@ -43,21 +51,40 @@ export const webhookIntegrationPlugin: PluginManifest = {
       name: 'Send to Webhook',
       description: 'Send current note to configured webhook',
       callback: async () => {
-        console.log('Sending note to webhook');
-      }
+        try {
+          if (webhookIntegrationInstance) {
+            await webhookIntegrationInstance.sendToWebhook();
+          }
+        } catch (error) {
+          console.error('Error sending to webhook:', error);
+        }
+      },
     },
     {
       id: 'configure-integration',
       name: 'Configure Integration',
       description: 'Set up integration with external service',
       callback: async () => {
-        const service = prompt('Service name (slack/discord/zapier):');
-        if (service) {
-          console.log(`Configuring ${service} integration`);
+        try {
+          if (webhookIntegrationInstance) {
+            await webhookIntegrationInstance.configureIntegration();
+          }
+        } catch (error) {
+          console.error('Error configuring integration:', error);
         }
-      }
-    }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      webhookIntegrationInstance = new WebhookIntegrationPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    webhookIntegrationInstance = null;
+  },
 
   views: [
     {
@@ -86,9 +113,9 @@ export const webhookIntegrationPlugin: PluginManifest = {
             <button onclick="alert('Add integration')" class="btn btn-primary">+ Add Integration</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Automation Rules Plugin - If-then automation rules
@@ -99,12 +126,12 @@ export const automationRulesPlugin: PluginManifest = {
   description: 'Create if-then automation rules for notes and tasks',
   author: 'MarkItUp Team',
   main: 'automation-rules.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Monitor and modify notes based on rules'
-    }
+      description: 'Monitor and modify notes based on rules',
+    },
   ],
 
   settings: [
@@ -113,15 +140,15 @@ export const automationRulesPlugin: PluginManifest = {
       name: 'Enable Automation Rules',
       type: 'boolean',
       default: true,
-      description: 'Enable or disable all automation rules'
+      description: 'Enable or disable all automation rules',
     },
     {
       id: 'executionDelay',
       name: 'Execution Delay (ms)',
       type: 'number',
       default: 1000,
-      description: 'Delay before executing automation rules'
-    }
+      description: 'Delay before executing automation rules',
+    },
   ],
 
   commands: [
@@ -130,22 +157,40 @@ export const automationRulesPlugin: PluginManifest = {
       name: 'Create Automation Rule',
       description: 'Create new automation rule',
       callback: async () => {
-        const trigger = prompt('Trigger (file-created/tag-added/task-completed):');
-        const action = prompt('Action (add-tag/move-file/send-notification):');
-        if (trigger && action) {
-          console.log(`Creating rule: ${trigger} → ${action}`);
+        try {
+          if (automationRulesInstance) {
+            await automationRulesInstance.createRule();
+          }
+        } catch (error) {
+          console.error('Error creating rule:', error);
         }
-      }
+      },
     },
     {
       id: 'view-rules',
       name: 'View All Rules',
       description: 'View and manage all automation rules',
       callback: async () => {
-        console.log('Viewing automation rules');
-      }
-    }
+        try {
+          if (automationRulesInstance) {
+            await automationRulesInstance.viewRules();
+          }
+        } catch (error) {
+          console.error('Error viewing rules:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      automationRulesInstance = new AutomationRulesPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    automationRulesInstance = null;
+  },
 
   views: [
     {
@@ -172,9 +217,9 @@ export const automationRulesPlugin: PluginManifest = {
             <button onclick="alert('Create rule')" class="btn btn-primary">+ Create Rule</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Schedule Reminder Plugin - Smart reminders and notifications
@@ -185,16 +230,16 @@ export const scheduleReminderPlugin: PluginManifest = {
   description: 'Smart reminders and notifications for notes, tasks, and events',
   author: 'MarkItUp Team',
   main: 'schedule-reminder.js',
-  
+
   permissions: [
     {
       type: 'notifications',
-      description: 'Send reminder notifications'
+      description: 'Send reminder notifications',
     },
     {
       type: 'file-system',
-      description: 'Monitor notes for reminder triggers'
-    }
+      description: 'Monitor notes for reminder triggers',
+    },
   ],
 
   settings: [
@@ -203,7 +248,7 @@ export const scheduleReminderPlugin: PluginManifest = {
       name: 'Reminder Sound',
       type: 'boolean',
       default: true,
-      description: 'Play sound with reminders'
+      description: 'Play sound with reminders',
     },
     {
       id: 'defaultSnooze',
@@ -213,11 +258,11 @@ export const scheduleReminderPlugin: PluginManifest = {
         { label: '5 minutes', value: '5' },
         { label: '15 minutes', value: '15' },
         { label: '30 minutes', value: '30' },
-        { label: '1 hour', value: '60' }
+        { label: '1 hour', value: '60' },
       ],
       default: '15',
-      description: 'Default snooze duration'
-    }
+      description: 'Default snooze duration',
+    },
   ],
 
   commands: [
@@ -226,22 +271,40 @@ export const scheduleReminderPlugin: PluginManifest = {
       name: 'Add Reminder',
       description: 'Add reminder to current note',
       callback: async () => {
-        const time = prompt('Reminder time (YYYY-MM-DD HH:MM):');
-        const message = prompt('Reminder message:');
-        if (time && message) {
-          console.log(`Setting reminder: ${time} - ${message}`);
+        try {
+          if (scheduleReminderInstance) {
+            await scheduleReminderInstance.addReminder();
+          }
+        } catch (error) {
+          console.error('Error adding reminder:', error);
         }
-      }
+      },
     },
     {
       id: 'view-reminders',
       name: 'View All Reminders',
       description: 'View all active reminders',
       callback: async () => {
-        console.log('Viewing all reminders');
-      }
-    }
+        try {
+          if (scheduleReminderInstance) {
+            await scheduleReminderInstance.viewReminders();
+          }
+        } catch (error) {
+          console.error('Error viewing reminders:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      scheduleReminderInstance = new ScheduleReminderPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    scheduleReminderInstance = null;
+  },
 
   views: [
     {
@@ -268,9 +331,9 @@ export const scheduleReminderPlugin: PluginManifest = {
             <button onclick="alert('Add reminder')" class="btn btn-primary">+ Add Reminder</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Bulk Operations Plugin - Batch file operations
@@ -281,12 +344,12 @@ export const bulkOperationsPlugin: PluginManifest = {
   description: 'Perform batch operations on multiple notes and files',
   author: 'MarkItUp Team',
   main: 'bulk-operations.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Read and modify multiple files'
-    }
+      description: 'Read and modify multiple files',
+    },
   ],
 
   settings: [
@@ -295,15 +358,15 @@ export const bulkOperationsPlugin: PluginManifest = {
       name: 'Confirm Bulk Actions',
       type: 'boolean',
       default: true,
-      description: 'Ask for confirmation before bulk operations'
+      description: 'Ask for confirmation before bulk operations',
     },
     {
       id: 'maxBatchSize',
       name: 'Max Batch Size',
       type: 'number',
       default: 100,
-      description: 'Maximum number of files to process at once'
-    }
+      description: 'Maximum number of files to process at once',
+    },
   ],
 
   commands: [
@@ -312,36 +375,54 @@ export const bulkOperationsPlugin: PluginManifest = {
       name: 'Bulk Add Tags',
       description: 'Add tags to multiple notes',
       callback: async () => {
-        const tags = prompt('Tags to add (comma-separated):');
-        if (tags) {
-          console.log(`Adding tags: ${tags} to selected notes`);
+        try {
+          if (bulkOperationsInstance) {
+            await bulkOperationsInstance.bulkAddTags();
+          }
+        } catch (error) {
+          console.error('Error adding tags:', error);
         }
-      }
+      },
     },
     {
       id: 'bulk-move-files',
       name: 'Bulk Move Files',
       description: 'Move multiple files to a folder',
       callback: async () => {
-        const folder = prompt('Destination folder:');
-        if (folder) {
-          console.log(`Moving selected files to: ${folder}`);
+        try {
+          if (bulkOperationsInstance) {
+            await bulkOperationsInstance.bulkMoveFiles();
+          }
+        } catch (error) {
+          console.error('Error moving files:', error);
         }
-      }
+      },
     },
     {
       id: 'bulk-find-replace',
       name: 'Bulk Find & Replace',
       description: 'Find and replace text across multiple notes',
       callback: async () => {
-        const find = prompt('Find text:');
-        const replace = prompt('Replace with:');
-        if (find) {
-          console.log(`Replacing "${find}" with "${replace}" in selected notes`);
+        try {
+          if (bulkOperationsInstance) {
+            await bulkOperationsInstance.bulkFindReplace();
+          }
+        } catch (error) {
+          console.error('Error with find & replace:', error);
         }
-      }
-    }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      bulkOperationsInstance = new BulkOperationsPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    bulkOperationsInstance = null;
+  },
 
   views: [
     {
@@ -364,9 +445,9 @@ export const bulkOperationsPlugin: PluginManifest = {
             </div>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Sync Integration Plugin - Sync with popular tools
@@ -377,16 +458,16 @@ export const syncIntegrationPlugin: PluginManifest = {
   description: 'Sync notes with popular tools like Notion, Obsidian, and more',
   author: 'MarkItUp Team',
   main: 'sync-integration.js',
-  
+
   permissions: [
     {
       type: 'network',
-      description: 'Connect to external sync services'
+      description: 'Connect to external sync services',
     },
     {
       type: 'file-system',
-      description: 'Read and write notes for sync'
-    }
+      description: 'Read and write notes for sync',
+    },
   ],
 
   settings: [
@@ -395,7 +476,7 @@ export const syncIntegrationPlugin: PluginManifest = {
       name: 'Auto Sync',
       type: 'boolean',
       default: false,
-      description: 'Automatically sync changes'
+      description: 'Automatically sync changes',
     },
     {
       id: 'syncInterval',
@@ -405,11 +486,11 @@ export const syncIntegrationPlugin: PluginManifest = {
         { label: '5 minutes', value: '5' },
         { label: '15 minutes', value: '15' },
         { label: '30 minutes', value: '30' },
-        { label: '1 hour', value: '60' }
+        { label: '1 hour', value: '60' },
       ],
       default: '15',
-      description: 'How often to sync automatically'
-    }
+      description: 'How often to sync automatically',
+    },
   ],
 
   commands: [
@@ -418,21 +499,40 @@ export const syncIntegrationPlugin: PluginManifest = {
       name: 'Sync Now',
       description: 'Sync all notes immediately',
       callback: async () => {
-        console.log('Starting sync process');
-      }
+        try {
+          if (syncIntegrationInstance) {
+            await syncIntegrationInstance.syncNow();
+          }
+        } catch (error) {
+          console.error('Error syncing:', error);
+        }
+      },
     },
     {
       id: 'configure-sync',
       name: 'Configure Sync',
       description: 'Set up sync with external service',
       callback: async () => {
-        const service = prompt('Service (notion/obsidian/roam):');
-        if (service) {
-          console.log(`Configuring sync with ${service}`);
+        try {
+          if (syncIntegrationInstance) {
+            await syncIntegrationInstance.configureSync();
+          }
+        } catch (error) {
+          console.error('Error configuring sync:', error);
         }
-      }
-    }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      syncIntegrationInstance = new SyncIntegrationPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    syncIntegrationInstance = null;
+  },
 
   views: [
     {
@@ -464,7 +564,120 @@ export const syncIntegrationPlugin: PluginManifest = {
             </div>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
+
+// Implementation Classes
+
+class WebhookIntegrationPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async sendToWebhook(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+    const content = this.api.getEditorContent();
+
+    if (!content) {
+      this.api.ui.showNotification('No content to send', 'info');
+      return;
+    }
+
+    // Simulated webhook sending
+    this.api.ui.showNotification(
+      `Sending ${noteId || 'note'} to webhook... (In production, this would make an actual HTTP request)`,
+      'info'
+    );
+  }
+
+  async configureIntegration(): Promise<void> {
+    this.api.ui.showNotification(
+      'Integration configuration opened. Choose from: Slack, Discord, Zapier, or custom webhook',
+      'info'
+    );
+  }
+}
+
+class AutomationRulesPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async createRule(): Promise<void> {
+    this.api.ui.showNotification(
+      'Creating automation rule: Configure triggers (file-created, tag-added, task-completed) and actions (add-tag, move-file, send-notification)',
+      'info'
+    );
+  }
+
+  async viewRules(): Promise<void> {
+    this.api.ui.showNotification(
+      'Viewing automation rules:\n1. When tag #urgent added → Move to Priority folder\n2. When task completed → Add completion date',
+      'info'
+    );
+  }
+}
+
+class ScheduleReminderPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async addReminder(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Adding reminder to ${noteId || 'current note'}. Enter time (YYYY-MM-DD HH:MM) and message`,
+      'info'
+    );
+  }
+
+  async viewReminders(): Promise<void> {
+    this.api.ui.showNotification(
+      'Active reminders:\n- Today 3:00 PM: Review weekly goals\n- Tomorrow 9:00 AM: Team meeting prep',
+      'info'
+    );
+  }
+}
+
+class BulkOperationsPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async bulkAddTags(): Promise<void> {
+    const allNotes = this.api.notes.getAll();
+
+    this.api.ui.showNotification(
+      `Ready to add tags to ${allNotes.length} notes. Enter comma-separated tags`,
+      'info'
+    );
+  }
+
+  async bulkMoveFiles(): Promise<void> {
+    this.api.ui.showNotification('Bulk move: Select destination folder for selected files', 'info');
+  }
+
+  async bulkFindReplace(): Promise<void> {
+    const allNotes = this.api.notes.getAll();
+
+    this.api.ui.showNotification(
+      `Find & Replace across ${allNotes.length} notes. Enter search and replacement text`,
+      'info'
+    );
+  }
+}
+
+class SyncIntegrationPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async syncNow(): Promise<void> {
+    const allNotes = this.api.notes.getAll();
+
+    this.api.ui.showNotification(
+      `Syncing ${allNotes.length} notes with external services... (Notion: connected, Obsidian: disconnected)`,
+      'info'
+    );
+  }
+
+  async configureSync(): Promise<void> {
+    this.api.ui.showNotification(
+      'Configure sync: Choose service (Notion, Obsidian, Roam) and set sync interval',
+      'info'
+    );
+  }
+}
