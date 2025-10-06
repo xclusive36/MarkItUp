@@ -15,8 +15,8 @@ export interface Note {
 
 export interface Link {
   id: string;
-  source: string;  // Note ID
-  target: string;  // Note ID
+  source: string; // Note ID
+  target: string; // Note ID
   type: 'wikilink' | 'backlink' | 'tag' | 'block';
   anchorText?: string;
   blockId?: string;
@@ -101,8 +101,8 @@ export interface Plugin {
 }
 
 export interface PluginManifest extends Plugin {
-  onLoad?: () => void | Promise<void>;
-  onUnload?: () => void | Promise<void>;
+  onLoad?: (api?: PluginAPI) => void | Promise<void>;
+  onUnload?: (api?: PluginAPI) => void | Promise<void>;
   commands?: Command[];
   views?: PluginView[];
   processors?: ContentProcessor[];
@@ -209,8 +209,9 @@ export interface PluginAPI {
     get: (id: string) => Note | null;
     getAll: () => Note[];
     search: (query: string) => SearchResult[];
+    getActiveNoteId: () => string | undefined;
   };
-  
+
   // UI interactions
   ui: {
     showNotification: (message: string, type?: 'info' | 'warning' | 'error') => void;
@@ -219,20 +220,20 @@ export interface PluginAPI {
     addView: (view: PluginView) => void;
     setStatusBarText: (text: string) => void;
   };
-  
+
   // Event system
   events: {
     on: (event: string, callback: (data: any) => void) => void;
     off: (event: string, callback: (data: any) => void) => void;
     emit: (event: string, data: any) => void;
   };
-  
+
   // Settings
   settings: {
     get: (key: string) => any;
     set: (key: string, value: any) => void;
   };
-  
+
   // File system (if permitted)
   fs?: {
     readFile: (path: string) => Promise<string>;
@@ -368,7 +369,14 @@ export interface ConflictResolution {
 }
 
 export interface CollaborativeEvent {
-  type: 'user-joined' | 'user-left' | 'operation' | 'cursor-move' | 'selection-change' | 'save' | 'conflict';
+  type:
+    | 'user-joined'
+    | 'user-left'
+    | 'operation'
+    | 'cursor-move'
+    | 'selection-change'
+    | 'save'
+    | 'conflict';
   sessionId: string;
   userId: string;
   data: any;

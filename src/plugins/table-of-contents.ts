@@ -1,5 +1,8 @@
 import { PluginManifest, PluginAPI, Note } from '../lib/types';
 
+// Global plugin instance - will be set in onLoad
+let pluginInstance: TableOfContentsPlugin | null = null;
+
 // Table of Contents Plugin - Generate and manage table of contents for notes
 export const tableOfContentsPlugin: PluginManifest = {
   id: 'table-of-contents',
@@ -8,12 +11,12 @@ export const tableOfContentsPlugin: PluginManifest = {
   description: 'Automatically generate and insert table of contents for your markdown notes',
   author: 'MarkItUp Team',
   main: 'table-of-contents.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Read and modify note content to insert TOC'
-    }
+      description: 'Read and modify note content to insert TOC',
+    },
   ],
 
   settings: [
@@ -22,43 +25,43 @@ export const tableOfContentsPlugin: PluginManifest = {
       name: 'Auto-generate TOC',
       type: 'boolean',
       default: false,
-      description: 'Automatically generate TOC when note is saved'
+      description: 'Automatically generate TOC when note is saved',
     },
     {
       id: 'minHeadings',
       name: 'Minimum Headings',
       type: 'number',
       default: 3,
-      description: 'Minimum number of headings required to generate TOC'
+      description: 'Minimum number of headings required to generate TOC',
     },
     {
       id: 'maxDepth',
       name: 'Maximum Heading Depth',
       type: 'number',
       default: 6,
-      description: 'Maximum heading level to include (1-6)'
+      description: 'Maximum heading level to include (1-6)',
     },
     {
       id: 'tocMarker',
       name: 'TOC Marker',
       type: 'string',
       default: '<!-- TOC -->',
-      description: 'Marker where TOC should be inserted'
+      description: 'Marker where TOC should be inserted',
     },
     {
       id: 'includeNumbers',
       name: 'Include Numbers',
       type: 'boolean',
       default: true,
-      description: 'Include numbering in TOC entries'
+      description: 'Include numbering in TOC entries',
     },
     {
       id: 'linkToHeadings',
       name: 'Link to Headings',
       type: 'boolean',
       default: true,
-      description: 'Create clickable links to headings'
-    }
+      description: 'Create clickable links to headings',
+    },
   ],
 
   processors: [
@@ -66,7 +69,7 @@ export const tableOfContentsPlugin: PluginManifest = {
       id: 'toc-processor',
       name: 'TOC Content Processor',
       type: 'markdown',
-      process: async function(content: string, context?: unknown) {
+      process: async function (content: string, context?: unknown) {
         // Auto-generate TOC if enabled
         const contextObj = context as { settings?: Partial<TOCSettings> } | undefined;
         const settings = contextObj?.settings || {};
@@ -74,8 +77,8 @@ export const tableOfContentsPlugin: PluginManifest = {
           return generateTableOfContents(content, settings);
         }
         return content;
-      }
-    }
+      },
+    },
   ],
 
   commands: [
@@ -84,28 +87,40 @@ export const tableOfContentsPlugin: PluginManifest = {
       name: 'Insert Table of Contents',
       description: 'Generate and insert TOC at cursor position',
       keybinding: 'Ctrl+Shift+O',
-      callback: async function() {
-        console.log('Inserting table of contents...');
-      }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.insertTOC();
+        } else {
+          console.error('TOC Plugin instance not initialized');
+        }
+      },
     },
     {
       id: 'update-toc',
       name: 'Update Table of Contents',
       description: 'Update existing TOC in the current note',
       keybinding: 'Ctrl+Shift+U',
-      callback: async function() {
-        console.log('Updating table of contents...');
-      }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.updateTOC();
+        } else {
+          console.error('TOC Plugin instance not initialized');
+        }
+      },
     },
     {
       id: 'remove-toc',
       name: 'Remove Table of Contents',
       description: 'Remove TOC from the current note',
       keybinding: 'Ctrl+Shift+R',
-      callback: async function() {
-        console.log('Removing table of contents...');
-      }
-    }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.removeTOC();
+        } else {
+          console.error('TOC Plugin instance not initialized');
+        }
+      },
+    },
   ],
 
   views: [
@@ -114,17 +129,25 @@ export const tableOfContentsPlugin: PluginManifest = {
       name: 'Document Outline',
       type: 'sidebar',
       component: null as unknown as React.ComponentType, // Would be React component
-      icon: '📋'
-    }
+      icon: '📋',
+    },
   ],
 
-  onLoad: async function() {
+  onLoad: async function (api?: PluginAPI) {
     console.log('Table of Contents plugin loaded');
+    if (api) {
+      pluginInstance = new TableOfContentsPlugin(api);
+      await pluginInstance.initialize();
+    }
   },
 
-  onUnload: async function() {
+  onUnload: async function () {
     console.log('Table of Contents plugin unloaded');
-  }
+    if (pluginInstance) {
+      pluginInstance.dispose();
+      pluginInstance = null;
+    }
+  },
 };
 
 // TOC generation functions
@@ -147,23 +170,23 @@ interface TOCSettings {
 function extractHeadings(content: string): HeadingInfo[] {
   const lines = content.split('\n');
   const headings: HeadingInfo[] = [];
-  
+
   lines.forEach((line, index) => {
     const match = line.match(/^(#{1,6})\s+(.+)$/);
     if (match) {
       const level = match[1].length;
       const text = match[2].trim();
       const id = generateHeadingId(text);
-      
+
       headings.push({
         level,
         text,
         id,
-        line: index + 1
+        line: index + 1,
       });
     }
   });
-  
+
   return headings;
 }
 
@@ -182,11 +205,10 @@ function generateTableOfContents(content: string, settings: Partial<TOCSettings>
     maxDepth = 6,
     tocMarker = '<!-- TOC -->',
     includeNumbers = true,
-    linkToHeadings = true
+    linkToHeadings = true,
   } = settings;
 
-  const headings = extractHeadings(content)
-    .filter(h => h.level <= maxDepth);
+  const headings = extractHeadings(content).filter(h => h.level <= maxDepth);
 
   // Check if we have enough headings
   if (headings.length < minHeadings) {
@@ -214,16 +236,12 @@ function generateTableOfContents(content: string, settings: Partial<TOCSettings>
 
     // Generate indent
     const indent = '  '.repeat(heading.level - 1);
-    
+
     // Generate number prefix
-    const numberPrefix = includeNumbers 
-      ? numbering.slice(0, heading.level).join('.') + '. '
-      : '';
+    const numberPrefix = includeNumbers ? numbering.slice(0, heading.level).join('.') + '. ' : '';
 
     // Generate link
-    const link = linkToHeadings 
-      ? `[${heading.text}](#${heading.id})`
-      : heading.text;
+    const link = linkToHeadings ? `[${heading.text}](#${heading.id})` : heading.text;
 
     tocContent += `${indent}- ${numberPrefix}${link}\n`;
   });
@@ -242,7 +260,7 @@ function generateTableOfContents(content: string, settings: Partial<TOCSettings>
     // Insert at the beginning (after title if present)
     const lines = content.split('\n');
     let insertIndex = 0;
-    
+
     // Skip front matter
     if (lines[0] === '---') {
       for (let i = 1; i < lines.length; i++) {
@@ -252,17 +270,17 @@ function generateTableOfContents(content: string, settings: Partial<TOCSettings>
         }
       }
     }
-    
+
     // Skip title (first H1)
     if (insertIndex < lines.length && lines[insertIndex].match(/^#\s+/)) {
       insertIndex++;
     }
-    
+
     // Skip empty lines after title
     while (insertIndex < lines.length && lines[insertIndex].trim() === '') {
       insertIndex++;
     }
-    
+
     lines.splice(insertIndex, 0, `${tocMarker}`, ...tocContent.split('\n'), `${tocMarker}`);
     return lines.join('\n');
   }
@@ -286,61 +304,59 @@ export class TableOfContentsPlugin {
       maxDepth: 6,
       tocMarker: '<!-- TOC -->',
       includeNumbers: true,
-      linkToHeadings: true
+      linkToHeadings: true,
     };
   }
 
   async initialize() {
     this.isActive = true;
-    
+
     // Listen for note updates
     this.api.events.on('note-updated', this.handleNoteUpdate.bind(this));
-    
+
     this.api.ui.showNotification('Table of Contents plugin activated', 'info');
   }
 
   private handleNoteUpdate(note: Note) {
     if (!this.isActive || !this.settings.autoGenerate) return;
-    
+
     // Auto-generate TOC if enabled
     const updatedContent = generateTableOfContents(note.content, this.settings);
     if (updatedContent !== note.content) {
       // Update note with new TOC
       this.api.notes.update(note.id, { content: updatedContent });
-      
+
       // Emit analytics event
       this.api.events.emit('toc-auto-generated', {
         noteId: note.id,
-        headingCount: extractHeadings(note.content).length
+        headingCount: extractHeadings(note.content).length,
       });
     }
   }
 
   async insertTOC(noteId?: string): Promise<void> {
-    const note = noteId 
-      ? this.api.notes.get(noteId)
-      : this.getCurrentNote(); // Would get current active note
-    
+    const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote(); // Would get current active note
+
     if (!note) {
       this.api.ui.showNotification('No note selected', 'warning');
       return;
     }
-    
+
     const updatedContent = generateTableOfContents(note.content, this.settings);
-    
+
     if (updatedContent === note.content) {
       this.api.ui.showNotification('No headings found or TOC already exists', 'info');
       return;
     }
-    
+
     try {
       await this.api.notes.update(note.id, { content: updatedContent });
       this.api.ui.showNotification('Table of contents inserted', 'info');
-      
+
       // Emit analytics event
       this.api.events.emit('toc-inserted', {
         noteId: note.id,
-        headingCount: extractHeadings(note.content).length
+        headingCount: extractHeadings(note.content).length,
       });
     } catch (error) {
       this.api.ui.showNotification('Failed to insert TOC', 'error');
@@ -349,22 +365,20 @@ export class TableOfContentsPlugin {
   }
 
   async updateTOC(noteId?: string): Promise<void> {
-    const note = noteId 
-      ? this.api.notes.get(noteId)
-      : this.getCurrentNote();
-    
+    const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote();
+
     if (!note) {
       this.api.ui.showNotification('No note selected', 'warning');
       return;
     }
-    
+
     if (!note.content.includes(this.settings.tocMarker)) {
       this.api.ui.showNotification('No TOC marker found', 'warning');
       return;
     }
-    
+
     const updatedContent = generateTableOfContents(note.content, this.settings);
-    
+
     try {
       await this.api.notes.update(note.id, { content: updatedContent });
       this.api.ui.showNotification('Table of contents updated', 'info');
@@ -375,27 +389,25 @@ export class TableOfContentsPlugin {
   }
 
   async removeTOC(noteId?: string): Promise<void> {
-    const note = noteId 
-      ? this.api.notes.get(noteId)
-      : this.getCurrentNote();
-    
+    const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote();
+
     if (!note) {
       this.api.ui.showNotification('No note selected', 'warning');
       return;
     }
-    
+
     const tocRegex = new RegExp(
       `${escapeRegex(this.settings.tocMarker)}[\\s\\S]*?${escapeRegex(this.settings.tocMarker)}`,
       'g'
     );
-    
+
     const updatedContent = note.content.replace(tocRegex, '').trim();
-    
+
     if (updatedContent === note.content) {
       this.api.ui.showNotification('No TOC found to remove', 'info');
       return;
     }
-    
+
     try {
       await this.api.notes.update(note.id, { content: updatedContent });
       this.api.ui.showNotification('Table of contents removed', 'info');
@@ -410,9 +422,12 @@ export class TableOfContentsPlugin {
   }
 
   private getCurrentNote(): Note | null {
-    // This would get the currently active/selected note
-    // Implementation depends on the app's state management
-    return null;
+    // Get the currently active/selected note from the PKM system
+    const activeNoteId = this.api.notes.getActiveNoteId();
+    if (!activeNoteId) {
+      return null;
+    }
+    return this.api.notes.get(activeNoteId);
   }
 
   updateSettings(newSettings: Partial<TOCSettings>): void {

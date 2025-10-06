@@ -1,4 +1,12 @@
-import { Plugin, PluginManifest, PluginAPI, Command, PluginView, ContentProcessor, Note } from './types';
+import {
+  Plugin,
+  PluginManifest,
+  PluginAPI,
+  Command,
+  PluginView,
+  ContentProcessor,
+  Note,
+} from './types';
 import { PKMSystem } from './pkm';
 
 interface UICallbacks {
@@ -65,16 +73,20 @@ export class PluginManager {
       // Store plugin BEFORE registering commands so registerCommand can find it
       this.plugins.set(manifest.id, loadedPlugin);
 
-      // Execute onLoad if defined
+      // Execute onLoad if defined, passing the plugin API
       if (manifest.onLoad) {
-        await manifest.onLoad();
+        await manifest.onLoad(loadedPlugin.api);
       }
 
       // Register commands
       if (manifest.commands) {
-        console.log(`PluginManager.loadPlugin: Plugin ${manifest.id} has ${manifest.commands.length} commands in manifest`);
+        console.log(
+          `PluginManager.loadPlugin: Plugin ${manifest.id} has ${manifest.commands.length} commands in manifest`
+        );
         for (const command of manifest.commands) {
-          console.log(`PluginManager.loadPlugin: Registering command ${command.id} from plugin ${manifest.id}`);
+          console.log(
+            `PluginManager.loadPlugin: Registering command ${command.id} from plugin ${manifest.id}`
+          );
           this.registerCommand(manifest.id, command);
         }
       } else {
@@ -159,21 +171,27 @@ export class PluginManager {
   // Get all commands from loaded plugins
   getAllCommands(): Array<{ command: Command; pluginId: string; pluginName: string }> {
     const allCommands: Array<{ command: Command; pluginId: string; pluginName: string }> = [];
-    
+
     console.log('PluginManager.getAllCommands: Checking', this.plugins.size, 'loaded plugins');
-    console.log('PluginManager.getAllCommands: PKM system has', this.pkmSystem.getAllCommands().length, 'commands registered');
-    
+    console.log(
+      'PluginManager.getAllCommands: PKM system has',
+      this.pkmSystem.getAllCommands().length,
+      'commands registered'
+    );
+
     for (const plugin of this.plugins.values()) {
-      console.log(`PluginManager: Plugin ${plugin.manifest.id} has ${plugin.commands.size} commands`);
+      console.log(
+        `PluginManager: Plugin ${plugin.manifest.id} has ${plugin.commands.size} commands`
+      );
       for (const command of plugin.commands.values()) {
         allCommands.push({
           command,
           pluginId: plugin.manifest.id,
-          pluginName: plugin.manifest.name
+          pluginName: plugin.manifest.name,
         });
       }
     }
-    
+
     console.log('PluginManager.getAllCommands: Returning', allCommands.length, 'total commands');
     return allCommands;
   }
@@ -206,7 +224,7 @@ export class PluginManager {
     const settings = this.getPluginSettings(pluginId);
     settings[key] = value;
     this.pluginSettings.set(pluginId, settings);
-    
+
     // Persist settings (in a real implementation, this would save to disk/localStorage)
     this.persistPluginSettings();
   }
@@ -225,13 +243,7 @@ export class PluginManager {
 
   // Private methods
   private validatePlugin(manifest: PluginManifest): boolean {
-    return !!(
-      manifest.id &&
-      manifest.name &&
-      manifest.version &&
-      manifest.author &&
-      manifest.main
-    );
+    return !!(manifest.id && manifest.name && manifest.version && manifest.author && manifest.main);
   }
 
   private createPluginAPI(pluginId: string): PluginAPI {
@@ -246,19 +258,19 @@ export class PluginManager {
             },
             body: JSON.stringify({ name, content, folder }),
           });
-          
+
           if (!response.ok) {
             throw new Error(`Failed to create note: ${response.statusText}`);
           }
-          
+
           // Create in PKM system for immediate availability
           const note = await this.pkmSystem.createNote(name, content, folder);
-          
+
           // Refresh the notes list in the UI
           if (this.uiCallbacks?.refreshNotes) {
             await this.uiCallbacks.refreshNotes();
           }
-          
+
           // Set the newly created note as active
           if (this.uiCallbacks?.setActiveNote) {
             this.uiCallbacks.setActiveNote(note);
@@ -266,14 +278,15 @@ export class PluginManager {
             this.uiCallbacks.setFileName(note.name.replace('.md', ''));
             this.uiCallbacks.setFolder(note.folder || '');
           }
-          
+
           return note;
         },
         update: (id, updates) => this.pkmSystem.updateNote(id, updates),
-        delete: (id) => this.pkmSystem.deleteNote(id),
-        get: (id) => this.pkmSystem.getNote(id),
+        delete: id => this.pkmSystem.deleteNote(id),
+        get: id => this.pkmSystem.getNote(id),
         getAll: () => this.pkmSystem.getAllNotes(),
-        search: (query) => this.pkmSystem.search(query),
+        search: query => this.pkmSystem.search(query),
+        getActiveNoteId: () => this.pkmSystem.viewState.activeNoteId,
       },
       ui: {
         showNotification: (message, type = 'info') => {
@@ -284,13 +297,13 @@ export class PluginManager {
           // Implementation for modal display
           return Promise.resolve();
         },
-        addCommand: (command) => {
+        addCommand: command => {
           this.registerCommand(pluginId, command);
         },
-        addView: (view) => {
+        addView: view => {
           this.registerView(pluginId, view);
         },
-        setStatusBarText: (text) => {
+        setStatusBarText: text => {
           // Implementation for status bar
           console.log(`Status: ${text}`);
         },
@@ -316,7 +329,7 @@ export class PluginManager {
         },
       },
       settings: {
-        get: (key) => this.getPluginSettings(pluginId)[key],
+        get: key => this.getPluginSettings(pluginId)[key],
         set: (key, value) => this.setPluginSetting(pluginId, key, value),
       },
     };
@@ -325,22 +338,28 @@ export class PluginManager {
   private registerCommand(pluginId: string, command: Command): void {
     const plugin = this.plugins.get(pluginId);
     if (plugin) {
-      console.log(`PluginManager.registerCommand: Registering command ${command.id} for plugin ${pluginId}`);
-      
+      console.log(
+        `PluginManager.registerCommand: Registering command ${command.id} for plugin ${pluginId}`
+      );
+
       // Create a new command with the plugin API bound to the callback
       const commandWithAPI: Command = {
         ...command,
         callback: () => {
           // Call the original callback with the plugin API
           return command.callback(plugin.api);
-        }
+        },
       };
-      
+
       plugin.commands.set(command.id, commandWithAPI);
       this.pkmSystem.registerCommand(commandWithAPI);
-      console.log(`PluginManager.registerCommand: Plugin ${pluginId} now has ${plugin.commands.size} commands`);
+      console.log(
+        `PluginManager.registerCommand: Plugin ${pluginId} now has ${plugin.commands.size} commands`
+      );
     } else {
-      console.warn(`PluginManager.registerCommand: Plugin ${pluginId} not found when trying to register command ${command.id}`);
+      console.warn(
+        `PluginManager.registerCommand: Plugin ${pluginId} not found when trying to register command ${command.id}`
+      );
     }
   }
 
@@ -362,7 +381,10 @@ export class PluginManager {
   private persistPluginSettings(): void {
     // In a real implementation, this would save to localStorage or a file
     if (typeof window !== 'undefined') {
-      localStorage.setItem('markitup-plugin-settings', JSON.stringify(Array.from(this.pluginSettings.entries())));
+      localStorage.setItem(
+        'markitup-plugin-settings',
+        JSON.stringify(Array.from(this.pluginSettings.entries()))
+      );
     }
   }
 
@@ -383,10 +405,10 @@ export class PluginManager {
         try {
           const pluginIds = JSON.parse(saved);
           console.log('Found persisted plugins:', pluginIds);
-          
+
           // Import the plugin registry to get plugin manifests
           const { AVAILABLE_PLUGINS } = await import('../plugins/plugin-registry');
-          
+
           // Load each persisted plugin without triggering persistence again
           for (const pluginId of pluginIds) {
             const plugin = AVAILABLE_PLUGINS.find(p => p.id === pluginId);
@@ -454,20 +476,26 @@ export class PluginManager {
       // Store plugin BEFORE registering commands so registerCommand can find it
       this.plugins.set(manifest.id, loadedPlugin);
 
-      // Execute onLoad if defined
+      // Execute onLoad if defined, passing the plugin API
       if (manifest.onLoad) {
-        await manifest.onLoad();
+        await manifest.onLoad(loadedPlugin.api);
       }
 
       // Register commands
       if (manifest.commands) {
-        console.log(`PluginManager.loadPluginWithoutPersisting: Plugin ${manifest.id} has ${manifest.commands.length} commands in manifest`);
+        console.log(
+          `PluginManager.loadPluginWithoutPersisting: Plugin ${manifest.id} has ${manifest.commands.length} commands in manifest`
+        );
         for (const command of manifest.commands) {
-          console.log(`PluginManager.loadPluginWithoutPersisting: Registering command ${command.id} from plugin ${manifest.id}`);
+          console.log(
+            `PluginManager.loadPluginWithoutPersisting: Registering command ${command.id} from plugin ${manifest.id}`
+          );
           this.registerCommand(manifest.id, command);
         }
       } else {
-        console.log(`PluginManager.loadPluginWithoutPersisting: Plugin ${manifest.id} has no commands in manifest`);
+        console.log(
+          `PluginManager.loadPluginWithoutPersisting: Plugin ${manifest.id} has no commands in manifest`
+        );
       }
 
       // Register views

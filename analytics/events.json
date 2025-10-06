@@ -664,5 +664,36 @@
       "toTheme": "dark"
     },
     "sessionId": "session_1755894115841_mlfxzmbxi"
+  },
+  {
+    "id": "event_1759781428627_y6vyvkjuu",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:10:28.627Z",
+    "data": {
+      "timestamp": "2025-10-06T20:10:28.627Z"
+    },
+    "sessionId": "session_1759781428495_tisr7m0xz"
+  },
+  {
+    "id": "event_1759781433944_4vzy77rak",
+    "type": "note_viewed",
+    "timestamp": "2025-10-06T20:10:33.944Z",
+    "data": {
+      "noteId": "test-hash-links",
+      "noteName": "test-hash-links.md",
+      "wordCount": 32,
+      "hasLinks": false,
+      "tagCount": 3
+    },
+    "sessionId": "session_1759781428495_tisr7m0xz"
+  },
+  {
+    "id": "event_1759781438061_zcmtofb8g",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:10:38.061Z",
+    "data": {
+      "mode": "preview"
+    },
+    "sessionId": "session_1759781428495_tisr7m0xz"
   }
 ]
