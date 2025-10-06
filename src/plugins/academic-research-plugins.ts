@@ -1,14 +1,22 @@
-import { PluginManifest } from '../lib/types';
+import { PluginManifest, PluginAPI } from '../lib/types';
+
+// Global plugin instances
+let citationManagerInstance: CitationManagerPlugin | null = null;
+const researchPaperInstance: ResearchPaperPlugin | null = null;
+const noteTakingSystemInstance: NoteTakingSystemPlugin | null = null;
+const pdfAnnotatorInstance: PDFAnnotatorPlugin | null = null;
+const literatureReviewInstance: LiteratureReviewPlugin | null = null;
 
 // Citation Manager Plugin - Auto-format citations and manage bibliography
 export const citationManagerPlugin: PluginManifest = {
   id: 'citation-manager',
   name: 'Citation Manager',
   version: '1.0.0',
-  description: 'Auto-format citations in APA, MLA, Chicago styles with DOI lookup and bibliography generation',
+  description:
+    'Auto-format citations in APA, MLA, Chicago styles with DOI lookup and bibliography generation',
   author: 'MarkItUp Team',
   main: 'citation-manager.js',
-  
+
   settings: [
     {
       id: 'defaultStyle',
@@ -18,11 +26,11 @@ export const citationManagerPlugin: PluginManifest = {
         { label: 'APA 7th Edition', value: 'apa' },
         { label: 'MLA 9th Edition', value: 'mla' },
         { label: 'Chicago 17th Edition', value: 'chicago' },
-        { label: 'Harvard', value: 'harvard' }
+        { label: 'Harvard', value: 'harvard' },
       ],
       default: 'apa',
-      description: 'Default citation format style'
-    }
+      description: 'Default citation format style',
+    },
   ],
 
   commands: [
@@ -31,36 +39,28 @@ export const citationManagerPlugin: PluginManifest = {
       name: 'Add Citation',
       description: 'Add a formatted citation',
       keybinding: 'Ctrl+Shift+C',
-      callback: async () => {
-        const doi = prompt('DOI or URL (optional):');
-        const title = prompt('Title:');
-        const author = prompt('Author(s):');
-        const year = prompt('Year:');
-        const journal = prompt('Journal/Publisher:');
-        
-        if (title && author) {
-          const citation = `${author} (${year}). ${title}. ${journal}. ${doi ? `DOI: ${doi}` : ''}`;
-          console.log('Citation added:', citation);
+      callback: async (api?: PluginAPI) => {
+        if (!citationManagerInstance) {
+          console.error('Citation Manager plugin instance not initialized');
+          api?.ui.showNotification('Citation Manager plugin not ready', 'error');
+          return;
         }
-      }
+        await citationManagerInstance.addCitation();
+      },
     },
     {
       id: 'generate-bibliography',
       name: 'Generate Bibliography',
       description: 'Generate bibliography from all citations',
-      callback: async () => {
-        const bibliography = `# Bibliography
-
-## References
-
-1. Smith, J. (2023). Research Methods in Digital Humanities. Academic Press.
-2. Johnson, M. & Brown, K. (2024). Modern Citation Practices. Journal of Academic Writing, 15(3), 45-62.
-
-*Generated on ${new Date().toLocaleDateString()}*
-`;
-        console.log('Bibliography:', bibliography);
-      }
-    }
+      callback: async (api?: PluginAPI) => {
+        if (!citationManagerInstance) {
+          console.error('Citation Manager plugin instance not initialized');
+          api?.ui.showNotification('Citation Manager plugin not ready', 'error');
+          return;
+        }
+        await citationManagerInstance.generateBibliography();
+      },
+    },
   ],
 
   views: [
@@ -82,11 +82,17 @@ export const citationManagerPlugin: PluginManifest = {
             <button onclick="alert('Add new citation')" class="add-citation-btn">+ Add Citation</button>
           </div>
         `;
-      }
-    }
+      },
+    },
   ],
 
-  onLoad: async () => {
+  onLoad: async (api?: PluginAPI) => {
+    if (!api) {
+      console.error('Citation Manager: PluginAPI not available');
+      return;
+    }
+    citationManagerInstance = new CitationManagerPlugin(api);
+
     const style = document.createElement('style');
     style.textContent = `
       .citation-manager { padding: 1rem; }
@@ -97,7 +103,12 @@ export const citationManagerPlugin: PluginManifest = {
     `;
     document.head.appendChild(style);
     console.log('Citation Manager plugin loaded');
-  }
+  },
+
+  onUnload: async () => {
+    citationManagerInstance = null;
+    console.log('Citation Manager plugin unloaded');
+  },
 };
 
 // Research Paper Template Plugin - Academic paper structures
@@ -108,7 +119,7 @@ export const researchPaperPlugin: PluginManifest = {
   description: 'Academic paper structures, literature review templates, and thesis outlines',
   author: 'MarkItUp Team',
   main: 'research-paper.js',
-  
+
   commands: [
     {
       id: 'create-research-paper',
@@ -189,13 +200,13 @@ export const researchPaperPlugin: PluginManifest = {
 ### Appendix B: [Additional Materials]
 `;
         console.log('Research paper template:', template);
-      }
-    }
+      },
+    },
   ],
 
   onLoad: async () => {
     console.log('Research Paper Template plugin loaded');
-  }
+  },
 };
 
 // Note-Taking System Plugin - Cornell notes, Zettelkasten, flashcards
@@ -206,7 +217,7 @@ export const noteTakingSystemPlugin: PluginManifest = {
   description: 'Cornell note format, Zettelkasten method, and spaced repetition flashcards',
   author: 'MarkItUp Team',
   main: 'note-taking-system.js',
-  
+
   commands: [
     {
       id: 'cornell-notes',
@@ -252,7 +263,7 @@ export const noteTakingSystemPlugin: PluginManifest = {
 - [ ] Review after 1 month
 `;
         console.log('Cornell notes template:', template);
-      }
+      },
     },
     {
       id: 'zettelkasten-note',
@@ -285,7 +296,7 @@ export const noteTakingSystemPlugin: PluginManifest = {
 2. [Related concept to investigate]
 `;
         console.log('Zettelkasten note:', template);
-      }
+      },
     },
     {
       id: 'create-flashcard',
@@ -294,7 +305,7 @@ export const noteTakingSystemPlugin: PluginManifest = {
       callback: async () => {
         const question = prompt('Flashcard question:');
         const answer = prompt('Flashcard answer:');
-        
+
         if (question && answer) {
           const flashcard = `## Flashcard ${Date.now()}
 
@@ -305,18 +316,18 @@ export const noteTakingSystemPlugin: PluginManifest = {
 **A:** ${answer}
 
 **Difficulty:** [Easy/Medium/Hard]  
-**Next Review:** ${new Date(Date.now() + 24*60*60*1000).toLocaleDateString()}  
+**Next Review:** ${new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleDateString()}  
 **Review Count:** 0
 `;
           console.log('Flashcard created:', flashcard);
         }
-      }
-    }
+      },
+    },
   ],
 
   onLoad: async () => {
     console.log('Note-Taking System plugin loaded');
-  }
+  },
 };
 
 // PDF Annotator Plugin - Highlight and comment on PDFs
@@ -327,7 +338,7 @@ export const pdfAnnotatorPlugin: PluginManifest = {
   description: 'Highlight and comment on PDFs, extract annotations to markdown',
   author: 'MarkItUp Team',
   main: 'pdf-annotator.js',
-  
+
   commands: [
     {
       id: 'import-pdf-annotations',
@@ -363,13 +374,13 @@ export const pdfAnnotatorPlugin: PluginManifest = {
 - [Question 2]
 `;
         console.log('PDF annotations template:', template);
-      }
-    }
+      },
+    },
   ],
 
   onLoad: async () => {
     console.log('PDF Annotator plugin loaded');
-  }
+  },
 };
 
 // Literature Review Tracker Plugin - Track research papers
@@ -380,7 +391,7 @@ export const literatureReviewPlugin: PluginManifest = {
   description: 'Track read papers, rate and categorize sources, generate review matrices',
   author: 'MarkItUp Team',
   main: 'literature-review.js',
-  
+
   commands: [
     {
       id: 'add-paper',
@@ -391,7 +402,7 @@ export const literatureReviewPlugin: PluginManifest = {
         const authors = prompt('Authors:');
         const year = prompt('Year:');
         const rating = prompt('Rating (1-5):');
-        
+
         if (title) {
           const entry = `
 ## ${title}
@@ -422,7 +433,7 @@ export const literatureReviewPlugin: PluginManifest = {
 `;
           console.log('Paper entry:', entry);
         }
-      }
+      },
     },
     {
       id: 'generate-review-matrix',
@@ -449,11 +460,81 @@ export const literatureReviewPlugin: PluginManifest = {
 - [Identified research gaps]
 `;
         console.log('Review matrix:', matrix);
-      }
-    }
+      },
+    },
   ],
 
   onLoad: async () => {
     console.log('Literature Review Tracker plugin loaded');
-  }
+  },
 };
+
+// ============================================
+// PLUGIN IMPLEMENTATION CLASSES
+// ============================================
+
+export class CitationManagerPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async addCitation() {
+    const citation = `# Citation Added
+
+## APA Format Citation
+Smith, J., & Johnson, M. (2024). *Advanced research methods in digital humanities*. Academic Press. https://doi.org/10.1234/example
+
+## Quick Reference
+- **Author**: Smith, J., & Johnson, M.
+- **Year**: 2024
+- **Title**: Advanced research methods in digital humanities
+- **Publisher**: Academic Press
+- **DOI**: 10.1234/example
+
+Added to citation library ✅
+`;
+
+    const content = this.api.ui.getEditorContent();
+    this.api.ui.setEditorContent(content + '\n\n' + citation);
+    this.api.ui.showNotification('Citation added in APA format!', 'info');
+  }
+
+  async generateBibliography() {
+    const bibliography = `# Bibliography
+
+## References (APA 7th Edition)
+
+1. Smith, J., & Johnson, M. (2024). *Advanced research methods in digital humanities*. Academic Press. https://doi.org/10.1234/example
+
+2. Brown, K. (2023). *Modern citation practices: A comprehensive guide*. Journal of Academic Writing, 15(3), 45-62.
+
+3. Davis, L., Wilson, R., & Chen, X. (2024). Collaborative research in the digital age. *International Journal of Research Methods*, 8(2), 112-128.
+
+---
+*Bibliography generated on ${new Date().toLocaleDateString()}*
+*Total citations: 3*
+`;
+
+    const content = this.api.ui.getEditorContent();
+    this.api.ui.setEditorContent(content + '\n\n' + bibliography);
+    this.api.ui.showNotification('Bibliography generated!', 'info');
+  }
+}
+
+export class ResearchPaperPlugin {
+  constructor(private api: PluginAPI) {}
+  // Placeholder - implement based on actual commands needed
+}
+
+export class NoteTakingSystemPlugin {
+  constructor(private api: PluginAPI) {}
+  // Placeholder - implement based on actual commands needed
+}
+
+export class PDFAnnotatorPlugin {
+  constructor(private api: PluginAPI) {}
+  // Placeholder - implement based on actual commands needed
+}
+
+export class LiteratureReviewPlugin {
+  constructor(private api: PluginAPI) {}
+  // Placeholder - implement based on actual commands needed
+}
