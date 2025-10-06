@@ -14,17 +14,14 @@ export class MarkdownParser {
     const blocks = this.parseBlocks(contentWithoutFrontmatter);
 
     // Merge frontmatter tags with inline tags
-    const allTags = [...new Set([
-      ...(frontmatter.tags || []),
-      ...tags
-    ])];
+    const allTags = [...new Set([...(frontmatter.tags || []), ...tags])];
 
     return {
       frontmatter,
       content: contentWithoutFrontmatter,
       links,
       tags: allTags,
-      blocks
+      blocks,
     };
   }
 
@@ -35,7 +32,7 @@ export class MarkdownParser {
     try {
       const yamlContent = match[1];
       const frontmatter: FrontMatter = {};
-      
+
       // Simple YAML parser for common frontmatter fields
       const lines = yamlContent.split('\n');
       for (const line of lines) {
@@ -91,7 +88,7 @@ export class MarkdownParser {
         target: match[1].trim(),
         displayText: match[2] || match[1].trim(),
         start: match.index,
-        end: match.index + match[0].length
+        end: match.index + match[0].length,
       });
     }
 
@@ -105,7 +102,7 @@ export class MarkdownParser {
           target: match[2],
           displayText: match[1],
           start: match.index,
-          end: match.index + match[0].length
+          end: match.index + match[0].length,
         });
       }
     }
@@ -117,8 +114,12 @@ export class MarkdownParser {
     const tags: string[] = [];
     let match;
 
+    // First, remove all markdown links to avoid matching hash anchors
+    // This regex matches markdown links like [text](url) or [text](#anchor)
+    const contentWithoutLinks = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '');
+
     const tagRegex = new RegExp(this.TAG_REGEX);
-    while ((match = tagRegex.exec(content)) !== null) {
+    while ((match = tagRegex.exec(contentWithoutLinks)) !== null) {
       tags.push(match[1]);
     }
 
@@ -137,7 +138,7 @@ export class MarkdownParser {
 
       // Check for block ID at end of line
       const blockIdMatch = line.match(/\^([a-zA-Z0-9_-]+)$/);
-      
+
       // Determine block type
       let blockType: Block['type'] = 'paragraph';
       let level: number | undefined;
@@ -167,7 +168,7 @@ export class MarkdownParser {
           start: lineStart,
           end: lineEnd,
           type: blockType,
-          level
+          level,
         };
       } else if (currentBlock) {
         // Continue current block
@@ -181,7 +182,7 @@ export class MarkdownParser {
           start: lineStart,
           end: lineEnd,
           type: blockType,
-          level
+          level,
         };
       }
 
@@ -242,8 +243,14 @@ export class MarkdownParser {
     return Math.ceil(wordCount / 225);
   }
 
-  static replaceWikilinks(content: string, linkResolver: (target: string) => string | null): string {
-    console.log('replaceWikilinks called with content containing wikilinks:', content.includes('[['));
+  static replaceWikilinks(
+    content: string,
+    linkResolver: (target: string) => string | null
+  ): string {
+    console.log(
+      'replaceWikilinks called with content containing wikilinks:',
+      content.includes('[[')
+    );
     const result = content.replace(this.WIKILINK_REGEX, (match, target, displayText) => {
       console.log('Wikilink match found:', { match, target, displayText });
       const resolvedPath = linkResolver(target.trim());
@@ -255,7 +262,10 @@ export class MarkdownParser {
       }
       // If link can't be resolved, create a special broken link markdown
       const text = displayText || target.trim();
-      const brokenLink = `[${text}](#broken:${target.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')})`;
+      const brokenLink = `[${text}](#broken:${target
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')})`;
       console.log('Broken wikilink:', brokenLink);
       return brokenLink;
     });
