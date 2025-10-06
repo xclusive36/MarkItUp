@@ -1436,5 +1436,21 @@
       "timestamp": "2025-10-06T22:55:44.194Z"
     },
     "sessionId": "session_1759791343752_ttdsal06i"
+  },
+  {
+    "id": "event_1759791365255_mhe5j174k",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T22:56:05.255Z",
+    "data": {
+      "duration": 21503
+    },
+    "sessionId": "session_1759791343752_ttdsal06i"
+  },
+  {
+    "id": "event_1759791367467_unserybor",
+    "type": "session_started",
+    "timestamp": "2025-10-06T22:56:07.467Z",
+    "data": {},
+    "sessionId": "session_1759791367466_bru9qfr4q"
   }
 ]
