@@ -221,6 +221,7 @@ export interface PluginAPI {
     setStatusBarText: (text: string) => void;
     getEditorContent: () => string;
     setEditorContent: (content: string) => void;
+    openNote: (noteId: string) => void;
   };
 
   // Event system

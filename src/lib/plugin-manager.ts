@@ -403,6 +403,17 @@ export class PluginManager {
             this.uiCallbacks.setMarkdown(content);
           }
         },
+        openNote: (noteId: string) => {
+          const note = this.pkmSystem.getNote(noteId);
+          if (note && this.uiCallbacks) {
+            this.uiCallbacks.setActiveNote(note);
+            this.uiCallbacks.setMarkdown(note.content);
+            this.uiCallbacks.setFileName(note.name.replace('.md', ''));
+            this.uiCallbacks.setFolder(note.folder || '');
+            // Also set active note in PKM system
+            this.pkmSystem.setActiveNote(noteId);
+          }
+        },
       },
       events: {
         on: (event, callback) => {

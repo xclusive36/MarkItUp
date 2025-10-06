@@ -1,5 +1,8 @@
 import { PluginManifest, PluginAPI, Note } from '../lib/types';
 
+// Global plugin instance - will be set in onLoad
+let pluginInstance: DailyNotesPlugin | null = null;
+
 // Daily Notes Plugin - Automatic daily note creation and management
 export const dailyNotesPlugin: PluginManifest = {
   id: 'daily-notes',
@@ -8,16 +11,16 @@ export const dailyNotesPlugin: PluginManifest = {
   description: 'Automatically create and manage daily notes with templates and calendar navigation',
   author: 'MarkItUp Team',
   main: 'daily-notes.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Create and manage daily note files'
+      description: 'Create and manage daily note files',
     },
     {
       type: 'notifications',
-      description: 'Show daily note reminders'
-    }
+      description: 'Show daily note reminders',
+    },
   ],
 
   settings: [
@@ -45,36 +48,37 @@ export const dailyNotesPlugin: PluginManifest = {
 
 ---
 Created: {{time}}`,
-      description: 'Template for new daily notes (supports {{date}}, {{time}}, {{day}}, {{month}}, {{year}} variables)'
+      description:
+        'Template for new daily notes (supports {{date}}, {{time}}, {{day}}, {{month}}, {{year}} variables)',
     },
     {
       id: 'dailyNoteFolder',
       name: 'Daily Notes Folder',
       type: 'string',
       default: 'Daily Notes',
-      description: 'Folder where daily notes are stored'
+      description: 'Folder where daily notes are stored',
     },
     {
       id: 'autoCreateDaily',
       name: 'Auto-create Daily Note',
       type: 'boolean',
       default: true,
-      description: 'Automatically create daily note on app startup'
+      description: 'Automatically create daily note on app startup',
     },
     {
       id: 'dailyReminder',
       name: 'Daily Reminder Time',
       type: 'string',
       default: '09:00',
-      description: 'Time to show daily note reminder (HH:MM format)'
+      description: 'Time to show daily note reminder (HH:MM format)',
     },
     {
       id: 'weekendNotes',
       name: 'Create Weekend Notes',
       type: 'boolean',
       default: false,
-      description: 'Create daily notes on weekends'
-    }
+      description: 'Create daily notes on weekends',
+    },
   ],
 
   views: [
@@ -83,52 +87,75 @@ Created: {{time}}`,
       name: 'Daily Notes Calendar',
       type: 'sidebar',
       component: null as any, // Would be React component
-      icon: '📅'
-    }
+      icon: '📅',
+    },
   ],
 
   commands: [
     {
       id: 'open-today',
-      name: 'Open Today\'s Note',
-      description: 'Open or create today\'s daily note',
+      name: "Open Today's Note",
+      description: "Open or create today's daily note",
       keybinding: 'Ctrl+Shift+T',
-      callback: async function() {
-        console.log('Opening today\'s note...');
-      }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.openToday();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
     },
     {
       id: 'open-yesterday',
-      name: 'Open Yesterday\'s Note',
-      description: 'Open yesterday\'s daily note',
+      name: "Open Yesterday's Note",
+      description: "Open yesterday's daily note",
       keybinding: 'Ctrl+Shift+Y',
-      callback: async function() {
-        console.log('Opening yesterday\'s note...');
-      }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.openYesterday();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
     },
     {
       id: 'show-daily-calendar',
       name: 'Show Daily Notes Calendar',
       description: 'Display calendar view of daily notes',
       keybinding: 'Ctrl+Shift+C',
-      callback: async function() {
-        console.log('Showing daily notes calendar...');
-      }
-    }
+      callback: async function () {
+        if (pluginInstance) {
+          const dailyNotes = pluginInstance.getAllDailyNotes();
+          console.log('Daily notes:', dailyNotes);
+          // TODO: Show calendar UI with daily notes
+          pluginInstance.api.ui.showNotification(`Found ${dailyNotes.length} daily notes`, 'info');
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
   ],
 
-  onLoad: async function() {
+  onLoad: async function (api?: PluginAPI) {
     console.log('Daily Notes plugin loaded');
+    if (api) {
+      pluginInstance = new DailyNotesPlugin(api);
+      await pluginInstance.initialize();
+    }
   },
 
-  onUnload: async function() {
+  onUnload: async function () {
     console.log('Daily Notes plugin unloaded');
-  }
+    if (pluginInstance) {
+      pluginInstance.dispose();
+      pluginInstance = null;
+    }
+  },
 };
 
 // Plugin implementation class
 export class DailyNotesPlugin {
-  private api: PluginAPI;
+  public api: PluginAPI;
   private settings: any;
   private isActive: boolean = false;
   private reminderInterval: NodeJS.Timeout | null = null;
@@ -140,24 +167,24 @@ export class DailyNotesPlugin {
       dailyNoteFolder: 'Daily Notes',
       autoCreateDaily: true,
       dailyReminder: '09:00',
-      weekendNotes: false
+      weekendNotes: false,
     };
   }
 
   async initialize() {
     this.isActive = true;
-    
+
     // Auto-create today's note if enabled
     if (this.settings.autoCreateDaily) {
       await this.createTodaysNote();
     }
-    
+
     // Set up daily reminder
     this.setupDailyReminder();
-    
+
     // Listen for date changes (midnight)
     this.setupMidnightChecker();
-    
+
     this.api.ui.showNotification('Daily Notes plugin activated', 'info');
   }
 
@@ -165,41 +192,37 @@ export class DailyNotesPlugin {
     const today = new Date();
     const dateString = this.formatDate(today);
     const fileName = `${dateString}.md`;
-    
+
     // Check if today's note already exists
     const existingNotes = this.api.notes.getAll();
-    const todaysNote = existingNotes.find(note => 
-      note.name === fileName || note.name === dateString
+    const todaysNote = existingNotes.find(
+      note => note.name === fileName || note.name === dateString
     );
-    
+
     if (todaysNote) {
       return todaysNote;
     }
-    
+
     // Check if weekends are disabled
     const isWeekend = today.getDay() === 0 || today.getDay() === 6;
     if (isWeekend && !this.settings.weekendNotes) {
       return null;
     }
-    
+
     // Create new daily note
     const content = this.processTemplate(this.settings.dailyNoteTemplate, today);
-    
+
     try {
-      const note = await this.api.notes.create(
-        dateString,
-        content,
-        this.settings.dailyNoteFolder
-      );
-      
+      const note = await this.api.notes.create(dateString, content, this.settings.dailyNoteFolder);
+
       this.api.ui.showNotification(`Created daily note for ${dateString}`, 'info');
-      
+
       // Emit analytics event
       this.api.events.emit('daily-note-created', {
         date: dateString,
-        noteId: note.id
+        noteId: note.id,
       });
-      
+
       return note;
     } catch (error) {
       this.api.ui.showNotification('Failed to create daily note', 'error');
@@ -211,23 +234,20 @@ export class DailyNotesPlugin {
   private async openDateNote(date: Date): Promise<void> {
     const dateString = this.formatDate(date);
     const existingNotes = this.api.notes.getAll();
-    
-    let note = existingNotes.find(n => 
-      n.name === `${dateString}.md` || n.name === dateString
-    );
-    
+
+    let note = existingNotes.find(n => n.name === `${dateString}.md` || n.name === dateString);
+
     if (!note) {
       // Create the note if it doesn't exist
       const content = this.processTemplate(this.settings.dailyNoteTemplate, date);
-      note = await this.api.notes.create(
-        dateString,
-        content,
-        this.settings.dailyNoteFolder
-      );
+      note = await this.api.notes.create(dateString, content, this.settings.dailyNoteFolder);
+
+      this.api.ui.showNotification(`Created daily note for ${dateString}`, 'info');
+    } else {
+      // Open existing note
+      this.api.ui.openNote(note.id);
+      this.api.ui.showNotification(`Opened daily note for ${dateString}`, 'info');
     }
-    
-    // Emit event to open the note
-    this.api.events.emit('note-open-requested', { noteId: note.id });
   }
 
   private processTemplate(template: string, date: Date): string {
@@ -239,14 +259,14 @@ export class DailyNotesPlugin {
       '{{year}}': date.getFullYear().toString(),
       '{{dayNumber}}': date.getDate().toString(),
       '{{monthNumber}}': (date.getMonth() + 1).toString().padStart(2, '0'),
-      '{{iso}}': date.toISOString().split('T')[0]
+      '{{iso}}': date.toISOString().split('T')[0],
     };
-    
+
     let processed = template;
     for (const [placeholder, value] of Object.entries(replacements)) {
       processed = processed.replace(new RegExp(placeholder, 'g'), value);
     }
-    
+
     return processed;
   }
 
@@ -258,15 +278,15 @@ export class DailyNotesPlugin {
     const checkReminder = () => {
       const now = new Date();
       const timeString = now.toTimeString().slice(0, 5); // HH:MM format
-      
+
       if (timeString === this.settings.dailyReminder) {
         this.api.ui.showNotification(
-          'Daily Note Reminder: Don\'t forget to update your daily note!',
+          "Daily Note Reminder: Don't forget to update your daily note!",
           'info'
         );
       }
     };
-    
+
     // Check every minute
     this.reminderInterval = setInterval(checkReminder, 60000);
   }
@@ -280,7 +300,7 @@ export class DailyNotesPlugin {
         }
       }
     };
-    
+
     // Check every minute
     setInterval(checkMidnight, 60000);
   }
@@ -306,16 +326,15 @@ export class DailyNotesPlugin {
   getAllDailyNotes(): Note[] {
     const allNotes = this.api.notes.getAll();
     const datePattern = /^\d{4}-\d{2}-\d{2}(\.md)?$/;
-    
-    return allNotes.filter(note => 
-      datePattern.test(note.name) || 
-      (note.folder === this.settings.dailyNoteFolder)
-    ).sort((a, b) => a.name.localeCompare(b.name));
+
+    return allNotes
+      .filter(note => datePattern.test(note.name) || note.folder === this.settings.dailyNoteFolder)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   updateSettings(newSettings: any): void {
     this.settings = { ...this.settings, ...newSettings };
-    
+
     // Restart reminder with new time
     if (this.reminderInterval) {
       clearInterval(this.reminderInterval);
@@ -325,7 +344,7 @@ export class DailyNotesPlugin {
 
   dispose(): void {
     this.isActive = false;
-    
+
     if (this.reminderInterval) {
       clearInterval(this.reminderInterval);
       this.reminderInterval = null;
