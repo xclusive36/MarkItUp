@@ -134,6 +134,19 @@ Created: {{time}}`,
         }
       },
     },
+    {
+      id: 'open-tomorrow',
+      name: "Open Tomorrow's Note",
+      description: "Open or create tomorrow's daily note for planning ahead",
+      keybinding: 'Ctrl+Shift+N',
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.openTomorrow();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
   ],
 
   onLoad: async function (api?: PluginAPI) {
@@ -314,6 +327,12 @@ export class DailyNotesPlugin {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     await this.openDateNote(yesterday);
+  }
+
+  async openTomorrow(): Promise<void> {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    await this.openDateNote(tomorrow);
   }
 
   async openSpecificDate(dateString: string): Promise<void> {
