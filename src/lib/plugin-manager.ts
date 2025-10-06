@@ -282,15 +282,20 @@ export class PluginManager {
           return note;
         },
         update: async (id, updates) => {
+          console.log('[PLUGIN-MANAGER] update called:', id, updates);
           // Get the current note
           const note = this.pkmSystem.getNote(id);
+          console.log('[PLUGIN-MANAGER] found note:', note?.id, note?.name);
           if (!note) {
+            console.log('[PLUGIN-MANAGER] Note not found!');
             return null;
           }
 
           // Update in PKM system first
           const updatedNote = await this.pkmSystem.updateNote(id, updates);
+          console.log('[PLUGIN-MANAGER] PKM update result:', updatedNote?.id);
           if (!updatedNote) {
+            console.log('[PLUGIN-MANAGER] PKM update returned null');
             return null;
           }
 
@@ -301,6 +306,7 @@ export class PluginManager {
               : updatedNote.name;
 
             try {
+              console.log('[PLUGIN-MANAGER] Making API call to:', fullPath);
               const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
                 method: 'PUT',
                 headers: {
@@ -312,13 +318,26 @@ export class PluginManager {
                 }),
               });
 
+              console.log('[PLUGIN-MANAGER] API response status:', response.status, response.ok);
               if (!response.ok) {
                 throw new Error(`Failed to update note: ${response.statusText}`);
               }
 
               // Update UI if this is the active note
               const activeNoteId = this.pkmSystem.viewState.activeNoteId;
+              console.log('[PLUGIN-MANAGER] activeNoteId:', activeNoteId, 'updating note:', id);
+              console.log('[PLUGIN-MANAGER] Match:', activeNoteId === id);
+              console.log('[PLUGIN-MANAGER] has uiCallbacks:', !!this.uiCallbacks);
+
               if (activeNoteId === id && this.uiCallbacks) {
+                console.log(
+                  '[PLUGIN-MANAGER] CALLING setMarkdown with content length:',
+                  updatedNote.content.length
+                );
+                console.log(
+                  '[PLUGIN-MANAGER] Content preview:',
+                  updatedNote.content.substring(0, 200)
+                );
                 this.uiCallbacks.setMarkdown(updatedNote.content);
                 if (updates.name && this.uiCallbacks.setFileName) {
                   this.uiCallbacks.setFileName(updatedNote.name.replace('.md', ''));
@@ -326,18 +345,26 @@ export class PluginManager {
                 if (updates.folder !== undefined && this.uiCallbacks.setFolder) {
                   this.uiCallbacks.setFolder(updatedNote.folder || '');
                 }
+              } else {
+                console.log(
+                  '[PLUGIN-MANAGER] NOT updating UI - either not active note or no callbacks'
+                );
               }
 
               // Refresh notes list in UI
+              console.log('[PLUGIN-MANAGER] Refreshing notes list');
               if (this.uiCallbacks?.refreshNotes) {
                 await this.uiCallbacks.refreshNotes();
               }
             } catch (error) {
-              console.error('Error updating note file:', error);
+              console.error('[PLUGIN-MANAGER] Error updating note file:', error);
               throw error;
             }
+          } else {
+            console.log('[PLUGIN-MANAGER] No content update, skipping file save');
           }
 
+          console.log('[PLUGIN-MANAGER] Returning updated note:', updatedNote.id);
           return updatedNote;
         },
         delete: id => this.pkmSystem.deleteNote(id),

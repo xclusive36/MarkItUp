@@ -487,6 +487,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     (noteId: string) => {
       const note = notes.find(n => n.id === noteId);
       if (note) {
+        console.log('[PAGE] handleNoteSelect - note:', note.id, note.name);
+
         // Track note view
         analytics.trackEvent('note_viewed', {
           noteId: note.id,
@@ -502,7 +504,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setFolder(note.folder || '');
 
         // Update PKM system's active note
+        console.log('[PAGE] Setting active note in PKM:', note.id);
         pkm.setActiveNote(note.id);
+        console.log('[PAGE] PKM activeNoteId is now:', pkm.viewState.activeNoteId);
       }
     },
     [notes, pkm]

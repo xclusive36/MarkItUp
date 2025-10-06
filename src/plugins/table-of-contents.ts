@@ -335,22 +335,29 @@ export class TableOfContentsPlugin {
   }
 
   async insertTOC(noteId?: string): Promise<void> {
+    console.log('[TOC DEBUG] insertTOC called with noteId:', noteId);
     const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote(); // Would get current active note
+    console.log('[TOC DEBUG] Current note:', note?.id, note?.name);
 
     if (!note) {
+      console.log('[TOC DEBUG] No note found!');
       this.api.ui.showNotification('No note selected', 'warning');
       return;
     }
 
     const updatedContent = generateTableOfContents(note.content, this.settings);
+    console.log('[TOC DEBUG] Generated TOC, content changed:', updatedContent !== note.content);
 
     if (updatedContent === note.content) {
+      console.log('[TOC DEBUG] No headings found or TOC already exists');
       this.api.ui.showNotification('No headings found or TOC already exists', 'info');
       return;
     }
 
     try {
+      console.log('[TOC DEBUG] Calling api.notes.update for note:', note.id);
       await this.api.notes.update(note.id, { content: updatedContent });
+      console.log('[TOC DEBUG] Update complete');
       this.api.ui.showNotification('Table of contents inserted', 'info');
 
       // Emit analytics event
@@ -424,10 +431,14 @@ export class TableOfContentsPlugin {
   private getCurrentNote(): Note | null {
     // Get the currently active/selected note from the PKM system
     const activeNoteId = this.api.notes.getActiveNoteId();
+    console.log('[TOC DEBUG] getCurrentNote - activeNoteId:', activeNoteId);
     if (!activeNoteId) {
+      console.log('[TOC DEBUG] No active note ID');
       return null;
     }
-    return this.api.notes.get(activeNoteId);
+    const note = this.api.notes.get(activeNoteId);
+    console.log('[TOC DEBUG] Retrieved note:', note?.id, note?.name);
+    return note;
   }
 
   updateSettings(newSettings: Partial<TOCSettings>): void {

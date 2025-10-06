@@ -78,5 +78,244 @@
       "commandName": "Insert Table of Contents"
     },
     "sessionId": "session_1759782189254_zix5q7qo7"
+  },
+  {
+    "id": "event_1759782408417_teaye6rxc",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:26:48.417Z",
+    "data": {
+      "duration": 219163
+    },
+    "sessionId": "session_1759782189254_zix5q7qo7"
+  },
+  {
+    "id": "event_1759782413175_q244t6cdm",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:26:53.175Z",
+    "data": {},
+    "sessionId": "session_1759782413175_852q3dtdw"
+  },
+  {
+    "id": "event_1759782419280_utobbd109",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:26:59.280Z",
+    "data": {
+      "duration": 6105
+    },
+    "sessionId": "session_1759782413175_852q3dtdw"
+  },
+  {
+    "id": "event_1759782419876_ieayu7kqv",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:26:59.876Z",
+    "data": {},
+    "sessionId": "session_1759782419876_kudyv0tfh"
+  },
+  {
+    "id": "event_1759782420001_jscq6rmzu",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:27:00.001Z",
+    "data": {
+      "timestamp": "2025-10-06T20:27:00.001Z"
+    },
+    "sessionId": "session_1759782419876_kudyv0tfh"
+  },
+  {
+    "id": "event_1759782421714_m82be0x9d",
+    "type": "note_created",
+    "timestamp": "2025-10-06T20:27:01.714Z",
+    "data": {
+      "action": "new_note_button_clicked"
+    },
+    "sessionId": "session_1759782419876_kudyv0tfh"
+  },
+  {
+    "id": "event_1759782427748_deny6pkdy",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:27:07.748Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
+    },
+    "sessionId": "session_1759782419876_kudyv0tfh"
+  },
+  {
+    "id": "event_1759782463430_0ntps449t",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:27:43.430Z",
+    "data": {
+      "duration": 43554
+    },
+    "sessionId": "session_1759782419876_kudyv0tfh"
+  },
+  {
+    "id": "event_1759782464333_cfth6kbhk",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:27:44.333Z",
+    "data": {},
+    "sessionId": "session_1759782464333_jp53lsn4e"
+  },
+  {
+    "id": "event_1759782470183_fx3yuzesc",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:27:50.183Z",
+    "data": {
+      "duration": 5850
+    },
+    "sessionId": "session_1759782464333_jp53lsn4e"
+  },
+  {
+    "id": "event_1759782470664_7uxvgtm3v",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:27:50.664Z",
+    "data": {},
+    "sessionId": "session_1759782470664_eooi3xkn7"
+  },
+  {
+    "id": "event_1759782486714_kay6m1cri",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:28:06.714Z",
+    "data": {
+      "duration": 16050
+    },
+    "sessionId": "session_1759782470664_eooi3xkn7"
+  },
+  {
+    "id": "event_1759782487280_9wdgqg1ze",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:28:07.280Z",
+    "data": {},
+    "sessionId": "session_1759782487280_b8afoo0r5"
+  },
+  {
+    "id": "event_1759782487412_xkql87z96",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:28:07.412Z",
+    "data": {
+      "timestamp": "2025-10-06T20:28:07.412Z"
+    },
+    "sessionId": "session_1759782487280_b8afoo0r5"
+  },
+  {
+    "id": "event_1759782489215_1iwxzxc0o",
+    "type": "note_created",
+    "timestamp": "2025-10-06T20:28:09.215Z",
+    "data": {
+      "action": "new_note_button_clicked"
+    },
+    "sessionId": "session_1759782487280_b8afoo0r5"
+  },
+  {
+    "id": "event_1759782711083_gk58pt4lj",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:31:51.083Z",
+    "data": {
+      "duration": 223803
+    },
+    "sessionId": "session_1759782487280_b8afoo0r5"
+  },
+  {
+    "id": "event_1759782715671_50bamrjml",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:31:55.671Z",
+    "data": {},
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782715801_a6oexcumr",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:31:55.801Z",
+    "data": {
+      "timestamp": "2025-10-06T20:31:55.801Z"
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782718498_3w41w70yc",
+    "type": "note_created",
+    "timestamp": "2025-10-06T20:31:58.498Z",
+    "data": {
+      "action": "new_note_button_clicked"
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782732915_bagtqx0nh",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:32:12.915Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782755282_uxnc5wera",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:32:35.282Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782808498_ansfjonif",
+    "type": "note_viewed",
+    "timestamp": "2025-10-06T20:33:28.498Z",
+    "data": {
+      "noteId": "test-toc",
+      "noteName": "test-toc.md",
+      "wordCount": 91,
+      "hasLinks": false,
+      "tagCount": 0
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782811066_fs2gjbfjq",
+    "type": "note_edited",
+    "timestamp": "2025-10-06T20:33:31.066Z",
+    "data": {
+      "wordCount": 0,
+      "characterCount": 0,
+      "hasWikilinks": false,
+      "tagCount": 0
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782816948_ommnq739n",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:33:36.948Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759782902850_df70st4qn",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T20:35:02.850Z",
+    "data": {
+      "duration": 187179
+    },
+    "sessionId": "session_1759782715671_v4z8v31pk"
+  },
+  {
+    "id": "event_1759787859444_rqgi48mhx",
+    "type": "session_started",
+    "timestamp": "2025-10-06T21:57:39.444Z",
+    "data": {},
+    "sessionId": "session_1759787859444_zuzu5jjdy"
   }
 ]
