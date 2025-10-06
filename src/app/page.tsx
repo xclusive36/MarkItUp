@@ -500,9 +500,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setMarkdown(note.content);
         setFileName(note.name.replace('.md', ''));
         setFolder(note.folder || '');
+
+        // Update PKM system's active note
+        pkm.setActiveNote(note.id);
       }
     },
-    [notes]
+    [notes, pkm]
   );
 
   // Save note
@@ -615,6 +618,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         // Clear active note if it was deleted
         if (activeNote?.id === noteId) {
           setActiveNote(null);
+          pkm.setActiveNote(undefined); // Clear active note in PKM
           setMarkdown('');
           setFileName('');
           setFolder('');
@@ -646,6 +650,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     });
 
     setActiveNote(null);
+    pkm.setActiveNote(undefined); // Clear active note in PKM
     setMarkdown('# New Note\n\nStart writing your thoughts here...');
     setFileName('');
     setFolder('');
