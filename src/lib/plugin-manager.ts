@@ -281,7 +281,65 @@ export class PluginManager {
 
           return note;
         },
-        update: (id, updates) => this.pkmSystem.updateNote(id, updates),
+        update: async (id, updates) => {
+          // Get the current note
+          const note = this.pkmSystem.getNote(id);
+          if (!note) {
+            return null;
+          }
+
+          // Update in PKM system first
+          const updatedNote = await this.pkmSystem.updateNote(id, updates);
+          if (!updatedNote) {
+            return null;
+          }
+
+          // If content was updated, persist to filesystem
+          if (updates.content !== undefined) {
+            const fullPath = updatedNote.folder
+              ? `${updatedNote.folder}/${updatedNote.name}`
+              : updatedNote.name;
+
+            try {
+              const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  content: updatedNote.content,
+                  overwrite: true,
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`Failed to update note: ${response.statusText}`);
+              }
+
+              // Update UI if this is the active note
+              const activeNoteId = this.pkmSystem.viewState.activeNoteId;
+              if (activeNoteId === id && this.uiCallbacks) {
+                this.uiCallbacks.setMarkdown(updatedNote.content);
+                if (updates.name && this.uiCallbacks.setFileName) {
+                  this.uiCallbacks.setFileName(updatedNote.name.replace('.md', ''));
+                }
+                if (updates.folder !== undefined && this.uiCallbacks.setFolder) {
+                  this.uiCallbacks.setFolder(updatedNote.folder || '');
+                }
+              }
+
+              // Refresh notes list in UI
+              if (this.uiCallbacks?.refreshNotes) {
+                await this.uiCallbacks.refreshNotes();
+              }
+            } catch (error) {
+              console.error('Error updating note file:', error);
+              throw error;
+            }
+          }
+
+          return updatedNote;
+        },
         delete: id => this.pkmSystem.deleteNote(id),
         get: id => this.pkmSystem.getNote(id),
         getAll: () => this.pkmSystem.getAllNotes(),

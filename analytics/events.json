@@ -1,699 +1,82 @@
 [
   {
-    "id": "event_1755892445352_vbzra2b3y",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:54:05.352Z",
-    "data": {
-      "duration": 161554
-    },
-    "sessionId": "session_1755892283797_n8ox6z6uw"
-  },
-  {
-    "id": "event_1755892450484_pqqlf5lee",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:54:10.484Z",
-    "data": {},
-    "sessionId": "session_1755892450484_9gztjrefk"
-  },
-  {
-    "id": "event_1755892459276_yeyu8vmld",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:54:19.276Z",
-    "data": {
-      "duration": 8792
-    },
-    "sessionId": "session_1755892450484_9gztjrefk"
-  },
-  {
-    "id": "event_1755892460288_bbqktv2n7",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:54:20.288Z",
-    "data": {},
-    "sessionId": "session_1755892460288_vedhod5mt"
-  },
-  {
-    "id": "event_1755892462143_m7m5n3hiv",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:54:22.143Z",
-    "data": {
-      "duration": 1854
-    },
-    "sessionId": "session_1755892460288_vedhod5mt"
-  },
-  {
-    "id": "event_1755892463137_k1ssd5o6z",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:54:23.137Z",
-    "data": {},
-    "sessionId": "session_1755892463137_giqoz97b7"
-  },
-  {
-    "id": "event_1755892463324_t2hd0uuvh",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:54:23.324Z",
-    "data": {
-      "timestamp": "2025-08-22T19:54:23.324Z"
-    },
-    "sessionId": "session_1755892463137_giqoz97b7"
-  },
-  {
-    "id": "event_1755892775627_k1i7t7xlr",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:35.627Z",
-    "data": {
-      "duration": 312490
-    },
-    "sessionId": "session_1755892463137_giqoz97b7"
-  },
-  {
-    "id": "event_1755892777547_78py8lde3",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:37.547Z",
-    "data": {},
-    "sessionId": "session_1755892777547_dx8lbvm6e"
-  },
-  {
-    "id": "event_1755892780973_ye53yv9op",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:40.973Z",
-    "data": {
-      "duration": 3426
-    },
-    "sessionId": "session_1755892777547_dx8lbvm6e"
-  },
-  {
-    "id": "event_1755892781960_gsypy2cak",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:41.960Z",
-    "data": {},
-    "sessionId": "session_1755892781960_dc6ls1p4e"
-  },
-  {
-    "id": "event_1755892784023_6f1a0o3xa",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:44.023Z",
-    "data": {
-      "duration": 2063
-    },
-    "sessionId": "session_1755892781960_dc6ls1p4e"
-  },
-  {
-    "id": "event_1755892784939_a2jgupr0w",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:44.939Z",
-    "data": {},
-    "sessionId": "session_1755892784939_0l1croe3e"
-  },
-  {
-    "id": "event_1755892788456_b15bxym48",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:48.456Z",
-    "data": {
-      "duration": 3517
-    },
-    "sessionId": "session_1755892784939_0l1croe3e"
-  },
-  {
-    "id": "event_1755892789423_3d0x4u2pe",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:49.423Z",
-    "data": {},
-    "sessionId": "session_1755892789423_3f875pfpg"
-  },
-  {
-    "id": "event_1755892793140_v8vrrlnfm",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:53.140Z",
-    "data": {
-      "duration": 3717
-    },
-    "sessionId": "session_1755892789423_3f875pfpg"
-  },
-  {
-    "id": "event_1755892794045_bhex22myo",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:54.045Z",
-    "data": {},
-    "sessionId": "session_1755892794045_kegld1zc5"
-  },
-  {
-    "id": "event_1755892797106_12jqr1lr3",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T19:59:57.106Z",
-    "data": {
-      "duration": 3061
-    },
-    "sessionId": "session_1755892794045_kegld1zc5"
-  },
-  {
-    "id": "event_1755892798015_vumurlku3",
-    "type": "session_started",
-    "timestamp": "2025-08-22T19:59:58.015Z",
-    "data": {},
-    "sessionId": "session_1755892798015_4bbr92jxa"
-  },
-  {
-    "id": "event_1755892800006_j7pime1ol",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:00:00.006Z",
-    "data": {
-      "duration": 1991
-    },
-    "sessionId": "session_1755892798015_4bbr92jxa"
-  },
-  {
-    "id": "event_1755892801008_1rs52aq5g",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:00:01.008Z",
-    "data": {},
-    "sessionId": "session_1755892801008_uv9hqvevz"
-  },
-  {
-    "id": "event_1755892801201_nh6ql3dxh",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:00:01.201Z",
-    "data": {
-      "timestamp": "2025-08-22T20:00:01.201Z"
-    },
-    "sessionId": "session_1755892801008_uv9hqvevz"
-  },
-  {
-    "id": "event_1755892878261_snuzr8v40",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:01:18.261Z",
-    "data": {
-      "duration": 77253
-    },
-    "sessionId": "session_1755892801008_uv9hqvevz"
-  },
-  {
-    "id": "event_1755892880265_yov4ggdyf",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:01:20.265Z",
-    "data": {},
-    "sessionId": "session_1755892880265_kt2rs4cxt"
-  },
-  {
-    "id": "event_1755892900856_49i6a0zzp",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:01:40.856Z",
-    "data": {
-      "duration": 20591
-    },
-    "sessionId": "session_1755892880265_kt2rs4cxt"
-  },
-  {
-    "id": "event_1755892901888_ewhox7z12",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:01:41.888Z",
-    "data": {},
-    "sessionId": "session_1755892901888_zumabmkim"
-  },
-  {
-    "id": "event_1755892903707_gh41il53y",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:01:43.707Z",
-    "data": {
-      "duration": 1819
-    },
-    "sessionId": "session_1755892901888_zumabmkim"
-  },
-  {
-    "id": "event_1755892904664_b81914z5x",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:01:44.664Z",
-    "data": {},
-    "sessionId": "session_1755892904664_qmr3kq3uq"
-  },
-  {
-    "id": "event_1755892904858_0v3v9af23",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:01:44.858Z",
-    "data": {
-      "timestamp": "2025-08-22T20:01:44.858Z"
-    },
-    "sessionId": "session_1755892904664_qmr3kq3uq"
-  },
-  {
-    "id": "event_1755892920044_o8pap9u72",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:02:00.044Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755892904664_qmr3kq3uq"
-  },
-  {
-    "id": "event_1755892934609_8qf2gr546",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:02:14.609Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755892904664_qmr3kq3uq"
-  },
-  {
-    "id": "event_1755892973404_a2q8v9ttq",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:02:53.404Z",
-    "data": {
-      "duration": 68740
-    },
-    "sessionId": "session_1755892904664_qmr3kq3uq"
-  },
-  {
-    "id": "event_1755892975469_ndj5x8qpq",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:02:55.469Z",
-    "data": {},
-    "sessionId": "session_1755892975469_yh8dc1m8c"
-  },
-  {
-    "id": "event_1755892995440_6j17gbcw1",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:03:15.440Z",
-    "data": {
-      "duration": 19971
-    },
-    "sessionId": "session_1755892975469_yh8dc1m8c"
-  },
-  {
-    "id": "event_1755892996474_mllq1yfky",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:03:16.474Z",
-    "data": {},
-    "sessionId": "session_1755892996474_yh3nj724n"
-  },
-  {
-    "id": "event_1755892996665_yuv021gwk",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:03:16.665Z",
-    "data": {
-      "timestamp": "2025-08-22T20:03:16.665Z"
-    },
-    "sessionId": "session_1755892996474_yh3nj724n"
-  },
-  {
-    "id": "event_1755893025144_0hfbxn3l2",
+    "id": "event_1759782163231_ibcs3bvxh",
     "type": "note_viewed",
-    "timestamp": "2025-08-22T20:03:45.144Z",
+    "timestamp": "2025-10-06T20:22:43.231Z",
     "data": {
-      "noteId": "cat/cat",
-      "noteName": "cat.md",
-      "wordCount": 172,
-      "hasLinks": true,
-      "tagCount": 4
+      "noteId": "test-toc",
+      "noteName": "test-toc.md",
+      "wordCount": 91,
+      "hasLinks": false,
+      "tagCount": 0
     },
-    "sessionId": "session_1755892996474_yh3nj724n"
+    "sessionId": "session_1759782159232_q55z9cpt3"
   },
   {
-    "id": "event_1755893028511_3ynji3u6n",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:03:48.511Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755892996474_yh3nj724n"
-  },
-  {
-    "id": "event_1755893040544_ubls6qkg0",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:04:00.544Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755892996474_yh3nj724n"
-  },
-  {
-    "id": "event_1755893041927_g1iwqa5vc",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:04:01.927Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755892996474_yh3nj724n"
-  },
-  {
-    "id": "event_1755893433241_r1czkg9hi",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:10:33.241Z",
-    "data": {},
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755893433426_g2o25a6ky",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:10:33.426Z",
-    "data": {
-      "timestamp": "2025-08-22T20:10:33.426Z"
-    },
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755893441096_jef6ckylt",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:10:41.096Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755893455862_j8zcn3g3r",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:10:55.862Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755893503080_nwis6imt9",
+    "id": "event_1759782168880_qvvaknqdv",
     "type": "mode_switched",
-    "timestamp": "2025-08-22T20:11:43.080Z",
+    "timestamp": "2025-10-06T20:22:48.880Z",
     "data": {
       "mode": "preview"
     },
-    "sessionId": "session_1755893433241_rvtef8xo6"
+    "sessionId": "session_1759782159232_q55z9cpt3"
   },
   {
-    "id": "event_1755893503695_k3b20krep",
+    "id": "event_1759782175563_y07l81w41",
     "type": "mode_switched",
-    "timestamp": "2025-08-22T20:11:43.695Z",
-    "data": {
-      "mode": "split"
-    },
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755894107575_90xw0z8pg",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:21:47.575Z",
-    "data": {
-      "duration": 674334
-    },
-    "sessionId": "session_1755893433241_rvtef8xo6"
-  },
-  {
-    "id": "event_1755894112175_5x3jgl2zx",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:21:52.175Z",
-    "data": {},
-    "sessionId": "session_1755894112175_x3dohc2f4"
-  },
-  {
-    "id": "event_1755894114780_ugudrmcrj",
-    "type": "session_ended",
-    "timestamp": "2025-08-22T20:21:54.780Z",
-    "data": {
-      "duration": 2605
-    },
-    "sessionId": "session_1755894112175_x3dohc2f4"
-  },
-  {
-    "id": "event_1755894115841_5uxc0qoxl",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:21:55.841Z",
-    "data": {},
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894116028_doo6kfeh7",
-    "type": "session_started",
-    "timestamp": "2025-08-22T20:21:56.028Z",
-    "data": {
-      "timestamp": "2025-08-22T20:21:56.028Z"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894120532_ch7aotans",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:00.532Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894122116_1z3zdyz2x",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:02.116Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894123399_84rctlxfv",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:03.399Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894124273_5gv36a6ml",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:04.273Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894128848_xj0xxl65o",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:08.848Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894130232_3h3t8emb9",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:10.232Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894134966_e25brmi2b",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:14.966Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894136249_207g1divo",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:16.249Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894137266_djdc0i7o8",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:17.266Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894138166_f2hul2xl9",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:18.166Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894141699_2b5jki9bu",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:21.699Z",
-    "data": {
-      "mode": "preview"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894142565_1k3dojl27",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:22.565Z",
-    "data": {
-      "mode": "split"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894143030_2t0pvc2ir",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:23.030Z",
+    "timestamp": "2025-10-06T20:22:55.563Z",
     "data": {
       "mode": "edit"
     },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
+    "sessionId": "session_1759782159232_q55z9cpt3"
   },
   {
-    "id": "event_1755894143782_4h6z0z1ib",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:23.782Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894145632_grirvpdl0",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:25.633Z",
-    "data": {
-      "view": "graph"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894145636_qew0b1eq5",
-    "type": "graph_viewed",
-    "timestamp": "2025-08-22T20:22:25.636Z",
-    "data": {},
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894147930_6fygmuaaw",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:27.930Z",
-    "data": {
-      "view": "search"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894154750_34bb2medk",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:34.750Z",
-    "data": {
-      "view": "analytics"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894157582_8z6vf52s7",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:37.582Z",
-    "data": {
-      "view": "plugins"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894157673_e0g9tvm9w",
-    "type": "mode_switched",
-    "timestamp": "2025-08-22T20:22:37.673Z",
-    "data": {
-      "view": "plugin_refresh",
-      "total": 3,
-      "regular": 3,
-      "ai": 0
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894166449_rwwx8e675",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:46.449Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894169816_nuijbpw9k",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:49.816Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894170799_68ora9iln",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:22:50.799Z",
-    "data": {
-      "fromTheme": "dark",
-      "toTheme": "light"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1755894230881_6mks9oby0",
-    "type": "theme_changed",
-    "timestamp": "2025-08-22T20:23:50.881Z",
-    "data": {
-      "fromTheme": "light",
-      "toTheme": "dark"
-    },
-    "sessionId": "session_1755894115841_mlfxzmbxi"
-  },
-  {
-    "id": "event_1759781428627_y6vyvkjuu",
+    "id": "event_1759782189254_lg9u6t8wd",
     "type": "session_started",
-    "timestamp": "2025-10-06T20:10:28.627Z",
-    "data": {
-      "timestamp": "2025-10-06T20:10:28.627Z"
-    },
-    "sessionId": "session_1759781428495_tisr7m0xz"
+    "timestamp": "2025-10-06T20:23:09.254Z",
+    "data": {},
+    "sessionId": "session_1759782189254_zix5q7qo7"
   },
   {
-    "id": "event_1759781433944_4vzy77rak",
-    "type": "note_viewed",
-    "timestamp": "2025-10-06T20:10:33.944Z",
+    "id": "event_1759782189386_u993qcbam",
+    "type": "session_started",
+    "timestamp": "2025-10-06T20:23:09.386Z",
     "data": {
-      "noteId": "test-hash-links",
-      "noteName": "test-hash-links.md",
-      "wordCount": 32,
-      "hasLinks": false,
-      "tagCount": 3
+      "timestamp": "2025-10-06T20:23:09.386Z"
     },
-    "sessionId": "session_1759781428495_tisr7m0xz"
+    "sessionId": "session_1759782189254_zix5q7qo7"
   },
   {
-    "id": "event_1759781438061_zcmtofb8g",
+    "id": "event_1759782196147_cq421x7la",
+    "type": "note_created",
+    "timestamp": "2025-10-06T20:23:16.147Z",
+    "data": {
+      "action": "new_note_button_clicked"
+    },
+    "sessionId": "session_1759782189254_zix5q7qo7"
+  },
+  {
+    "id": "event_1759782203830_2ac7ha95e",
     "type": "mode_switched",
-    "timestamp": "2025-10-06T20:10:38.061Z",
+    "timestamp": "2025-10-06T20:23:23.830Z",
     "data": {
-      "mode": "preview"
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
     },
-    "sessionId": "session_1759781428495_tisr7m0xz"
+    "sessionId": "session_1759782189254_zix5q7qo7"
+  },
+  {
+    "id": "event_1759782219580_yhr1nhveo",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T20:23:39.580Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "table-of-contents",
+      "commandId": "insert-toc",
+      "commandName": "Insert Table of Contents"
+    },
+    "sessionId": "session_1759782189254_zix5q7qo7"
   }
 ]
