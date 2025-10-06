@@ -293,6 +293,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           setNotes(notesData);
         }
       },
+      getMarkdown: () => markdown,
+      getFileName: () => fileName,
+      getFolder: () => folder,
     });
 
     return pkmSystem;

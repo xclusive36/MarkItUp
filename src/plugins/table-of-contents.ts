@@ -336,12 +336,38 @@ export class TableOfContentsPlugin {
 
   async insertTOC(noteId?: string): Promise<void> {
     console.log('[TOC DEBUG] insertTOC called with noteId:', noteId);
-    const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote(); // Would get current active note
+    const note = noteId ? this.api.notes.get(noteId) : this.getCurrentNote();
     console.log('[TOC DEBUG] Current note:', note?.id, note?.name);
 
+    // If no note found, try to use current editor content
     if (!note) {
-      console.log('[TOC DEBUG] No note found!');
-      this.api.ui.showNotification('No note selected', 'warning');
+      console.log('[TOC DEBUG] No note found, checking editor content');
+      const editorContent = this.api.ui.getEditorContent();
+      console.log('[TOC DEBUG] Editor content length:', editorContent.length);
+
+      if (!editorContent || editorContent.trim().length === 0) {
+        console.log('[TOC DEBUG] Editor is empty');
+        this.api.ui.showNotification('No note selected or editor is empty', 'warning');
+        return;
+      }
+
+      // Generate TOC for unsaved content
+      const updatedContent = generateTableOfContents(editorContent, this.settings);
+      console.log(
+        '[TOC DEBUG] Generated TOC for unsaved content, changed:',
+        updatedContent !== editorContent
+      );
+
+      if (updatedContent === editorContent) {
+        console.log('[TOC DEBUG] No headings found or TOC already exists');
+        this.api.ui.showNotification('No headings found or TOC already exists', 'info');
+        return;
+      }
+
+      // Update editor directly
+      console.log('[TOC DEBUG] Updating editor content directly');
+      this.api.ui.setEditorContent(updatedContent);
+      this.api.ui.showNotification('Table of contents inserted (save note to persist)', 'info');
       return;
     }
 

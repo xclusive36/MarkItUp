@@ -219,6 +219,8 @@ export interface PluginAPI {
     addCommand: (command: Command) => void;
     addView: (view: PluginView) => void;
     setStatusBarText: (text: string) => void;
+    getEditorContent: () => string;
+    setEditorContent: (content: string) => void;
   };
 
   // Event system

@@ -15,6 +15,9 @@ interface UICallbacks {
   setFileName: (name: string) => void;
   setFolder: (folder: string) => void;
   refreshNotes: () => Promise<void>;
+  getMarkdown?: () => string;
+  getFileName?: () => string;
+  getFolder?: () => string;
 }
 
 export class PluginManager {
@@ -391,6 +394,14 @@ export class PluginManager {
         setStatusBarText: text => {
           // Implementation for status bar
           console.log(`Status: ${text}`);
+        },
+        getEditorContent: () => {
+          return this.uiCallbacks?.getMarkdown?.() || '';
+        },
+        setEditorContent: (content: string) => {
+          if (this.uiCallbacks?.setMarkdown) {
+            this.uiCallbacks.setMarkdown(content);
+          }
         },
       },
       events: {
