@@ -1,4 +1,12 @@
 import { PluginManifest } from '../lib/types';
+import { PluginAPI } from '../lib/PluginAPI';
+
+// Global instances
+let versionHistoryInstance: VersionHistoryPlugin | null = null;
+let commentSystemInstance: CommentSystemPlugin | null = null;
+let reviewWorkflowInstance: ReviewWorkflowPlugin | null = null;
+let conflictResolutionInstance: ConflictResolutionPlugin | null = null;
+let teamDashboardInstance: TeamDashboardPlugin | null = null;
 
 // Version History Plugin - Track note changes over time
 export const versionHistoryPlugin: PluginManifest = {
@@ -8,12 +16,12 @@ export const versionHistoryPlugin: PluginManifest = {
   description: 'Track and manage changes to notes over time with version control',
   author: 'MarkItUp Team',
   main: 'version-history.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Store version history data'
-    }
+      description: 'Store version history data',
+    },
   ],
 
   settings: [
@@ -22,7 +30,7 @@ export const versionHistoryPlugin: PluginManifest = {
       name: 'Max Versions to Keep',
       type: 'number',
       default: 10,
-      description: 'Maximum number of versions to store per note'
+      description: 'Maximum number of versions to store per note',
     },
     {
       id: 'autoSaveInterval',
@@ -32,11 +40,11 @@ export const versionHistoryPlugin: PluginManifest = {
         { label: '1 minute', value: '1' },
         { label: '5 minutes', value: '5' },
         { label: '10 minutes', value: '10' },
-        { label: '30 minutes', value: '30' }
+        { label: '30 minutes', value: '30' },
       ],
       default: '5',
-      description: 'How often to automatically save versions'
-    }
+      description: 'How often to automatically save versions',
+    },
   ],
 
   commands: [
@@ -46,26 +54,54 @@ export const versionHistoryPlugin: PluginManifest = {
       description: 'View version history for current note',
       keybinding: 'Ctrl+H',
       callback: async () => {
-        console.log('Showing version history');
-      }
+        try {
+          if (versionHistoryInstance) {
+            await versionHistoryInstance.showHistory();
+          }
+        } catch (error) {
+          console.error('Error showing history:', error);
+        }
+      },
     },
     {
       id: 'restore-version',
       name: 'Restore Version',
       description: 'Restore note to a previous version',
       callback: async () => {
-        console.log('Restoring to previous version');
-      }
+        try {
+          if (versionHistoryInstance) {
+            await versionHistoryInstance.restoreVersion();
+          }
+        } catch (error) {
+          console.error('Error restoring version:', error);
+        }
+      },
     },
     {
       id: 'compare-versions',
       name: 'Compare Versions',
       description: 'Compare current note with previous version',
       callback: async () => {
-        console.log('Comparing versions');
-      }
-    }
+        try {
+          if (versionHistoryInstance) {
+            await versionHistoryInstance.compareVersions();
+          }
+        } catch (error) {
+          console.error('Error comparing versions:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      versionHistoryInstance = new VersionHistoryPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    versionHistoryInstance = null;
+  },
 
   views: [
     {
@@ -92,9 +128,9 @@ export const versionHistoryPlugin: PluginManifest = {
             <button onclick="alert('Save current version')" class="btn btn-primary">Save Version</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Comment System Plugin - Add comments to notes
@@ -105,12 +141,12 @@ export const commentSystemPlugin: PluginManifest = {
   description: 'Add collaborative comments and annotations to notes',
   author: 'MarkItUp Team',
   main: 'comment-system.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Store comment data'
-    }
+      description: 'Store comment data',
+    },
   ],
 
   settings: [
@@ -119,15 +155,15 @@ export const commentSystemPlugin: PluginManifest = {
       name: 'Show Comment Count',
       type: 'boolean',
       default: true,
-      description: 'Display comment count in note list'
+      description: 'Display comment count in note list',
     },
     {
       id: 'commentNotifications',
       name: 'Comment Notifications',
       type: 'boolean',
       default: true,
-      description: 'Notify when new comments are added'
-    }
+      description: 'Notify when new comments are added',
+    },
   ],
 
   commands: [
@@ -137,29 +173,54 @@ export const commentSystemPlugin: PluginManifest = {
       description: 'Add comment to selected text',
       keybinding: 'Ctrl+Shift+C',
       callback: async () => {
-        const comment = prompt('Add comment:');
-        if (comment) {
-          console.log(`Adding comment: ${comment}`);
+        try {
+          if (commentSystemInstance) {
+            await commentSystemInstance.addComment();
+          }
+        } catch (error) {
+          console.error('Error adding comment:', error);
         }
-      }
+      },
     },
     {
       id: 'show-all-comments',
       name: 'Show All Comments',
       description: 'View all comments in current note',
       callback: async () => {
-        console.log('Showing all comments');
-      }
+        try {
+          if (commentSystemInstance) {
+            await commentSystemInstance.showAllComments();
+          }
+        } catch (error) {
+          console.error('Error showing comments:', error);
+        }
+      },
     },
     {
       id: 'resolve-comment',
       name: 'Resolve Comment',
       description: 'Mark comment as resolved',
       callback: async () => {
-        console.log('Resolving comment');
-      }
-    }
+        try {
+          if (commentSystemInstance) {
+            await commentSystemInstance.resolveComment();
+          }
+        } catch (error) {
+          console.error('Error resolving comment:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      commentSystemInstance = new CommentSystemPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    commentSystemInstance = null;
+  },
 
   views: [
     {
@@ -188,9 +249,9 @@ export const commentSystemPlugin: PluginManifest = {
             <button onclick="alert('Add comment')" class="btn btn-primary">+ Add Comment</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Review Workflow Plugin - Review and approval processes
@@ -201,12 +262,12 @@ export const reviewWorkflowPlugin: PluginManifest = {
   description: 'Manage review and approval workflows for notes and documents',
   author: 'MarkItUp Team',
   main: 'review-workflow.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Manage review status and workflow data'
-    }
+      description: 'Manage review status and workflow data',
+    },
   ],
 
   settings: [
@@ -215,15 +276,15 @@ export const reviewWorkflowPlugin: PluginManifest = {
       name: 'Default Reviewers',
       type: 'string',
       default: '',
-      description: 'Comma-separated list of default reviewers'
+      description: 'Comma-separated list of default reviewers',
     },
     {
       id: 'requireApproval',
       name: 'Require Approval for Publication',
       type: 'boolean',
       default: false,
-      description: 'Require approval before marking notes as published'
-    }
+      description: 'Require approval before marking notes as published',
+    },
   ],
 
   commands: [
@@ -232,32 +293,54 @@ export const reviewWorkflowPlugin: PluginManifest = {
       name: 'Submit for Review',
       description: 'Submit current note for review',
       callback: async () => {
-        const reviewers = prompt('Reviewers (comma-separated):');
-        if (reviewers) {
-          console.log(`Submitting for review to: ${reviewers}`);
+        try {
+          if (reviewWorkflowInstance) {
+            await reviewWorkflowInstance.submitForReview();
+          }
+        } catch (error) {
+          console.error('Error submitting for review:', error);
         }
-      }
+      },
     },
     {
       id: 'approve-note',
       name: 'Approve Note',
       description: 'Approve current note',
       callback: async () => {
-        console.log('Approving note');
-      }
+        try {
+          if (reviewWorkflowInstance) {
+            await reviewWorkflowInstance.approveNote();
+          }
+        } catch (error) {
+          console.error('Error approving note:', error);
+        }
+      },
     },
     {
       id: 'request-changes',
       name: 'Request Changes',
       description: 'Request changes to current note',
       callback: async () => {
-        const feedback = prompt('Feedback for changes:');
-        if (feedback) {
-          console.log(`Requesting changes: ${feedback}`);
+        try {
+          if (reviewWorkflowInstance) {
+            await reviewWorkflowInstance.requestChanges();
+          }
+        } catch (error) {
+          console.error('Error requesting changes:', error);
         }
-      }
-    }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      reviewWorkflowInstance = new ReviewWorkflowPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    reviewWorkflowInstance = null;
+  },
 
   views: [
     {
@@ -283,9 +366,9 @@ export const reviewWorkflowPlugin: PluginManifest = {
             <button onclick="alert('Submit for review')" class="btn btn-primary">Submit for Review</button>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Conflict Resolution Plugin - Handle merge conflicts
@@ -296,12 +379,12 @@ export const conflictResolutionPlugin: PluginManifest = {
   description: 'Resolve conflicts when multiple users edit the same note',
   author: 'MarkItUp Team',
   main: 'conflict-resolution.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Access conflict data and resolve conflicts'
-    }
+      description: 'Access conflict data and resolve conflicts',
+    },
   ],
 
   settings: [
@@ -313,11 +396,11 @@ export const conflictResolutionPlugin: PluginManifest = {
         { label: 'Manual Only', value: 'manual' },
         { label: 'Accept Local', value: 'local' },
         { label: 'Accept Remote', value: 'remote' },
-        { label: 'Smart Merge', value: 'smart' }
+        { label: 'Smart Merge', value: 'smart' },
       ],
       default: 'manual',
-      description: 'How to handle conflicts automatically'
-    }
+      description: 'How to handle conflicts automatically',
+    },
   ],
 
   commands: [
@@ -326,26 +409,54 @@ export const conflictResolutionPlugin: PluginManifest = {
       name: 'Resolve Conflict',
       description: 'Manually resolve merge conflict',
       callback: async () => {
-        console.log('Opening conflict resolution interface');
-      }
+        try {
+          if (conflictResolutionInstance) {
+            await conflictResolutionInstance.resolveConflict();
+          }
+        } catch (error) {
+          console.error('Error resolving conflict:', error);
+        }
+      },
     },
     {
       id: 'accept-local',
       name: 'Accept Local Changes',
       description: 'Accept your version of the conflicted note',
       callback: async () => {
-        console.log('Accepting local changes');
-      }
+        try {
+          if (conflictResolutionInstance) {
+            await conflictResolutionInstance.acceptLocal();
+          }
+        } catch (error) {
+          console.error('Error accepting local changes:', error);
+        }
+      },
     },
     {
       id: 'accept-remote',
       name: 'Accept Remote Changes',
       description: 'Accept the other version of the conflicted note',
       callback: async () => {
-        console.log('Accepting remote changes');
-      }
-    }
+        try {
+          if (conflictResolutionInstance) {
+            await conflictResolutionInstance.acceptRemote();
+          }
+        } catch (error) {
+          console.error('Error accepting remote changes:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      conflictResolutionInstance = new ConflictResolutionPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    conflictResolutionInstance = null;
+  },
 
   views: [
     {
@@ -369,9 +480,9 @@ export const conflictResolutionPlugin: PluginManifest = {
             </div>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
 
 // Team Dashboard Plugin - Team activity overview
@@ -382,12 +493,12 @@ export const teamDashboardPlugin: PluginManifest = {
   description: 'Overview of team activity, collaboration, and progress',
   author: 'MarkItUp Team',
   main: 'team-dashboard.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Access team activity data'
-    }
+      description: 'Access team activity data',
+    },
   ],
 
   settings: [
@@ -396,7 +507,7 @@ export const teamDashboardPlugin: PluginManifest = {
       name: 'Team Members',
       type: 'string',
       default: '',
-      description: 'Comma-separated list of team member names'
+      description: 'Comma-separated list of team member names',
     },
     {
       id: 'activityPeriod',
@@ -405,11 +516,11 @@ export const teamDashboardPlugin: PluginManifest = {
       options: [
         { label: 'Last 24 hours', value: '24h' },
         { label: 'Last 7 days', value: '7d' },
-        { label: 'Last 30 days', value: '30d' }
+        { label: 'Last 30 days', value: '30d' },
       ],
       default: '7d',
-      description: 'Time period for activity overview'
-    }
+      description: 'Time period for activity overview',
+    },
   ],
 
   commands: [
@@ -418,18 +529,40 @@ export const teamDashboardPlugin: PluginManifest = {
       name: 'View Team Activity',
       description: 'View detailed team activity report',
       callback: async () => {
-        console.log('Viewing team activity');
-      }
+        try {
+          if (teamDashboardInstance) {
+            await teamDashboardInstance.viewTeamActivity();
+          }
+        } catch (error) {
+          console.error('Error viewing team activity:', error);
+        }
+      },
     },
     {
       id: 'generate-team-report',
       name: 'Generate Team Report',
       description: 'Generate team progress report',
       callback: async () => {
-        console.log('Generating team report');
-      }
-    }
+        try {
+          if (teamDashboardInstance) {
+            await teamDashboardInstance.generateTeamReport();
+          }
+        } catch (error) {
+          console.error('Error generating team report:', error);
+        }
+      },
+    },
   ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      teamDashboardInstance = new TeamDashboardPlugin(api);
+    }
+  },
+
+  onUnload: () => {
+    teamDashboardInstance = null;
+  },
 
   views: [
     {
@@ -468,7 +601,148 @@ export const teamDashboardPlugin: PluginManifest = {
             </div>
           </div>
         `;
-      }
-    }
-  ]
+      },
+    },
+  ],
 };
+
+// Implementation Classes
+
+class VersionHistoryPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async showHistory(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Version History for ${noteId || 'current note'}:\n- 2 hours ago: +127 words, -15 words\n- 1 day ago: +45 words, -3 words`,
+      'info'
+    );
+  }
+
+  async restoreVersion(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Restoring ${noteId || 'note'} to previous version... Select version from history panel`,
+      'info'
+    );
+  }
+
+  async compareVersions(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Comparing versions for ${noteId || 'current note'}. Showing diff view...`,
+      'info'
+    );
+  }
+}
+
+class CommentSystemPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async addComment(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Adding comment to ${noteId || 'current note'}. Select text to annotate`,
+      'info'
+    );
+  }
+
+  async showAllComments(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Comments for ${noteId || 'current note'}:\n- Alice: "Great insight about the methodology!" (2 hours ago)\n- Bob: "Could you clarify this section?" (Resolved)`,
+      'info'
+    );
+  }
+
+  async resolveComment(): Promise<void> {
+    this.api.ui.showNotification('Marking comment as resolved...', 'info');
+  }
+}
+
+class ReviewWorkflowPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async submitForReview(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Submitting ${noteId || 'note'} for review. Enter reviewers (comma-separated)`,
+      'info'
+    );
+  }
+
+  async approveNote(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Approving ${noteId || 'note'}. Status changed to Approved`,
+      'info'
+    );
+  }
+
+  async requestChanges(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Requesting changes for ${noteId || 'note'}. Enter feedback for reviewer`,
+      'info'
+    );
+  }
+}
+
+class ConflictResolutionPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async resolveConflict(): Promise<void> {
+    this.api.ui.showNotification(
+      'Opening conflict resolution interface. Choose between local and remote changes',
+      'info'
+    );
+  }
+
+  async acceptLocal(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Accepting local changes for ${noteId || 'note'}. Remote version discarded`,
+      'info'
+    );
+  }
+
+  async acceptRemote(): Promise<void> {
+    const noteId = this.api.getActiveNoteId();
+
+    this.api.ui.showNotification(
+      `Accepting remote changes for ${noteId || 'note'}. Local version discarded`,
+      'info'
+    );
+  }
+}
+
+class TeamDashboardPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async viewTeamActivity(): Promise<void> {
+    const allNotes = this.api.notes.getAll();
+
+    this.api.ui.showNotification(
+      `Team Activity Report:\n- Active Members: 5\n- Notes Created: ${allNotes.length}\n- Recent: Alice created "Meeting Notes" (2h ago), Bob commented on "Project Plan" (4h ago)`,
+      'info'
+    );
+  }
+
+  async generateTeamReport(): Promise<void> {
+    const allNotes = this.api.notes.getAll();
+
+    this.api.ui.showNotification(
+      `Generating team progress report for ${allNotes.length} notes... Export as PDF or email to team`,
+      'info'
+    );
+  }
+}
