@@ -1057,5 +1057,67 @@
       "timestamp": "2025-10-06T22:39:46.194Z"
     },
     "sessionId": "session_1759790384677_0ini0qja4"
+  },
+  {
+    "id": "event_1759790412408_gj50t4a4w",
+    "type": "session_started",
+    "timestamp": "2025-10-06T22:40:12.408Z",
+    "data": {},
+    "sessionId": "session_1759790412407_snxj3vjh3"
+  },
+  {
+    "id": "event_1759790413195_vheceakub",
+    "type": "session_started",
+    "timestamp": "2025-10-06T22:40:13.195Z",
+    "data": {
+      "timestamp": "2025-10-06T22:40:13.195Z"
+    },
+    "sessionId": "session_1759790412407_snxj3vjh3"
+  },
+  {
+    "id": "event_1759790432158_bqyudu6ks",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T22:40:32.158Z",
+    "data": {
+      "duration": 47543
+    },
+    "sessionId": "session_1759790384615_b32vi6cfq"
+  },
+  {
+    "id": "event_1759790433269_lci8a0ewc",
+    "type": "session_started",
+    "timestamp": "2025-10-06T22:40:33.269Z",
+    "data": {},
+    "sessionId": "session_1759790433269_t6f07d82r"
+  },
+  {
+    "id": "event_1759790433462_p5imr94av",
+    "type": "session_started",
+    "timestamp": "2025-10-06T22:40:33.462Z",
+    "data": {
+      "timestamp": "2025-10-06T22:40:33.462Z"
+    },
+    "sessionId": "session_1759790433269_t6f07d82r"
+  },
+  {
+    "id": "event_1759790439858_7aozlfu24",
+    "type": "mode_switched",
+    "timestamp": "2025-10-06T22:40:39.858Z",
+    "data": {
+      "action": "plugin_command_executed",
+      "pluginId": "daily-notes",
+      "commandId": "show-daily-calendar",
+      "commandName": "Show Daily Notes Calendar"
+    },
+    "sessionId": "session_1759790433269_t6f07d82r"
+  },
+  {
+    "id": "event_1759790527318_jtierqrkm",
+    "type": "session_ended",
+    "timestamp": "2025-10-06T22:42:07.318Z",
+    "data": {
+      "duration": 94049
+    },
+    "sessionId": "session_1759790433269_t6f07d82r"
   }
 ]

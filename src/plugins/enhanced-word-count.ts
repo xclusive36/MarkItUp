@@ -1,5 +1,8 @@
 import { PluginManifest, PluginAPI, Note } from '../lib/types';
 
+// Global plugin instance - will be set in onLoad
+let pluginInstance: EnhancedWordCountPlugin | null = null;
+
 // Enhanced Word Count Plugin - Provides detailed writing statistics
 export const enhancedWordCountPlugin: PluginManifest = {
   id: 'enhanced-word-count',
@@ -8,12 +11,12 @@ export const enhancedWordCountPlugin: PluginManifest = {
   description: 'Advanced word counting with reading time, character count, and writing analytics',
   author: 'MarkItUp Team',
   main: 'enhanced-word-count.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Read note content to calculate statistics'
-    }
+      description: 'Read note content to calculate statistics',
+    },
   ],
 
   settings: [
@@ -22,22 +25,22 @@ export const enhancedWordCountPlugin: PluginManifest = {
       name: 'Reading Speed (WPM)',
       type: 'number',
       default: 200,
-      description: 'Words per minute for reading time calculation'
+      description: 'Words per minute for reading time calculation',
     },
     {
       id: 'showCharacterCount',
       name: 'Show Character Count',
       type: 'boolean',
       default: true,
-      description: 'Display character count in statistics'
+      description: 'Display character count in statistics',
     },
     {
       id: 'showReadingTime',
       name: 'Show Reading Time',
       type: 'boolean',
       default: true,
-      description: 'Display estimated reading time'
-    }
+      description: 'Display estimated reading time',
+    },
   ],
 
   views: [
@@ -46,8 +49,8 @@ export const enhancedWordCountPlugin: PluginManifest = {
       name: 'Writing Statistics',
       type: 'sidebar',
       component: null as any, // Would be React component in real implementation
-      icon: '📊'
-    }
+      icon: '📊',
+    },
   ],
 
   processors: [
@@ -55,7 +58,7 @@ export const enhancedWordCountPlugin: PluginManifest = {
       id: 'word-count-processor',
       name: 'Word Count Processor',
       type: 'markdown',
-      process: async function(content: string, context?: any) {
+      process: async function (content: string, context?: any) {
         // This processor adds word count metadata to notes
         const stats = calculateWordStats(content);
         if (context?.note) {
@@ -65,12 +68,12 @@ export const enhancedWordCountPlugin: PluginManifest = {
             characterCount: stats.characters,
             readingTime: stats.readingTime,
             paragraphs: stats.paragraphs,
-            sentences: stats.sentences
+            sentences: stats.sentences,
           };
         }
         return content;
-      }
-    }
+      },
+    },
   ],
 
   commands: [
@@ -79,30 +82,42 @@ export const enhancedWordCountPlugin: PluginManifest = {
       name: 'Show Detailed Writing Statistics',
       description: 'Display comprehensive writing statistics for the current note',
       keybinding: 'Ctrl+Shift+W',
-      callback: async function() {
-        // Would show detailed stats modal
-        console.log('Showing detailed writing statistics...');
-      }
-    }
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.showDetailedStats();
+        } else {
+          console.error('Enhanced Word Count plugin instance not initialized');
+        }
+      },
+    },
   ],
 
-  onLoad: async function() {
+  onLoad: async function (api?: PluginAPI) {
     console.log('Enhanced Word Count plugin loaded');
+    if (api) {
+      pluginInstance = new EnhancedWordCountPlugin(api);
+      await pluginInstance.initialize();
+    }
   },
 
-  onUnload: async function() {
+  onUnload: async function () {
     console.log('Enhanced Word Count plugin unloaded');
-  }
+    if (pluginInstance) {
+      pluginInstance.dispose();
+      pluginInstance = null;
+    }
+  },
 };
 
 // Statistics calculation functions
 function calculateWordStats(content: string) {
-  const text = content.replace(/```[\s\S]*?```/g, '') // Remove code blocks
-                     .replace(/`[^`]*`/g, '') // Remove inline code
-                     .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
-                     .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
-                     .replace(/#+ /g, '') // Remove headers
-                     .trim();
+  const text = content
+    .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+    .replace(/`[^`]*`/g, '') // Remove inline code
+    .replace(/!\[.*?\]\(.*?\)/g, '') // Remove images
+    .replace(/\[.*?\]\(.*?\)/g, '') // Remove links
+    .replace(/#+ /g, '') // Remove headers
+    .trim();
 
   const words = text.split(/\s+/).filter(word => word.length > 0).length;
   const characters = text.length;
@@ -120,7 +135,7 @@ function calculateWordStats(content: string) {
     sentences,
     readingTime,
     averageWordsPerSentence: sentences > 0 ? Math.round(words / sentences) : 0,
-    averageWordsPerParagraph: paragraphs > 0 ? Math.round(words / paragraphs) : 0
+    averageWordsPerParagraph: paragraphs > 0 ? Math.round(words / paragraphs) : 0,
   };
 }
 
@@ -135,26 +150,26 @@ export class EnhancedWordCountPlugin {
     this.settings = {
       readingSpeed: 200,
       showCharacterCount: true,
-      showReadingTime: true
+      showReadingTime: true,
     };
   }
 
   async initialize() {
     this.isActive = true;
-    
+
     // Listen for note changes to update stats
     this.api.events.on('note-updated', this.handleNoteUpdate.bind(this));
     this.api.events.on('note-created', this.handleNoteUpdate.bind(this));
-    
+
     // Add status bar item
     this.updateStatusBar();
   }
 
   private handleNoteUpdate(note: Note) {
     if (!this.isActive) return;
-    
+
     const stats = calculateWordStats(note.content);
-    
+
     // Update note metadata
     note.metadata = {
       ...note.metadata,
@@ -163,16 +178,16 @@ export class EnhancedWordCountPlugin {
       readingTime: stats.readingTime,
       paragraphs: stats.paragraphs,
       sentences: stats.sentences,
-      lastStatsUpdate: new Date().toISOString()
+      lastStatsUpdate: new Date().toISOString(),
     };
 
     // Update status bar
     this.updateStatusBar(stats);
-    
+
     // Emit analytics event
     this.api.events.emit('word-count-updated', {
       noteId: note.id,
-      stats
+      stats,
     });
   }
 
@@ -183,16 +198,47 @@ export class EnhancedWordCountPlugin {
     }
 
     let statusText = `📊 ${stats.words} words`;
-    
+
     if (this.settings.showCharacterCount) {
       statusText += ` • ${stats.characters} chars`;
     }
-    
+
     if (this.settings.showReadingTime) {
       statusText += ` • ${stats.readingTime} min read`;
     }
-    
+
     this.api.ui.setStatusBarText(statusText);
+  }
+
+  // Public method for command
+  async showDetailedStats(): Promise<void> {
+    // Get current editor content
+    const content = this.api.ui.getEditorContent();
+
+    if (!content || content.trim().length === 0) {
+      this.api.ui.showNotification('No content to analyze', 'warning');
+      return;
+    }
+
+    const stats = calculateWordStats(content);
+
+    // Format detailed statistics message
+    const statsMessage = `
+📊 Writing Statistics:
+
+Words: ${stats.words}
+Characters: ${stats.characters} (${stats.charactersNoSpaces} without spaces)
+Paragraphs: ${stats.paragraphs}
+Sentences: ${stats.sentences}
+
+Reading Time: ${stats.readingTime} minute${stats.readingTime !== 1 ? 's' : ''}
+Average Words per Sentence: ${stats.averageWordsPerSentence}
+Average Words per Paragraph: ${stats.averageWordsPerParagraph}
+    `.trim();
+
+    // Show in notification (in a real implementation, this would be a modal)
+    this.api.ui.showNotification(statsMessage, 'info');
+    console.log('Detailed Writing Statistics:', stats);
   }
 
   updateSettings(newSettings: any) {
