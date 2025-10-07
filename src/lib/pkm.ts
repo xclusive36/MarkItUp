@@ -10,6 +10,9 @@ interface UICallbacks {
   setFileName: (name: string) => void;
   setFolder: (folder: string) => void;
   refreshNotes: () => Promise<void>;
+  getMarkdown?: () => string;
+  getFileName?: () => string;
+  getFolder?: () => string;
 }
 
 export class PKMSystem {
@@ -30,8 +33,8 @@ export class PKMSystem {
     sidebarWidth: 300,
     graphView: {
       zoom: 1,
-      position: { x: 0, y: 0 }
-    }
+      position: { x: 0, y: 0 },
+    },
   };
 
   constructor() {
@@ -67,7 +70,7 @@ export class PKMSystem {
       tags: parsed.tags,
       metadata: parsed.frontmatter,
       wordCount,
-      readingTime
+      readingTime,
     };
 
     this.notes.set(id, note);
@@ -77,7 +80,7 @@ export class PKMSystem {
     this.emitEvent({
       type: 'note-created',
       noteId: id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return note;
@@ -90,7 +93,7 @@ export class PKMSystem {
     const updatedNote: Note = {
       ...existingNote,
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // Reparse content if it changed
@@ -110,7 +113,7 @@ export class PKMSystem {
       type: 'note-updated',
       noteId: id,
       data: updates,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return updatedNote;
@@ -127,7 +130,7 @@ export class PKMSystem {
     this.emitEvent({
       type: 'note-deleted',
       noteId: id,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     return true;
@@ -138,18 +141,19 @@ export class PKMSystem {
   }
 
   getAllNotes(): Note[] {
-    return Array.from(this.notes.values())
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return Array.from(this.notes.values()).sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
   }
 
   getNotesByTag(tag: string): Note[] {
-    return Array.from(this.notes.values())
-      .filter(note => note.tags.some(t => t.toLowerCase() === tag.toLowerCase()));
+    return Array.from(this.notes.values()).filter(note =>
+      note.tags.some(t => t.toLowerCase() === tag.toLowerCase())
+    );
   }
 
   getNotesByFolder(folder: string): Note[] {
-    return Array.from(this.notes.values())
-      .filter(note => note.folder === folder);
+    return Array.from(this.notes.values()).filter(note => note.folder === folder);
   }
 
   // ===== SEARCH =====
@@ -200,7 +204,7 @@ export class PKMSystem {
       callback: () => {
         // This would trigger search UI
         console.log('Global search triggered');
-      }
+      },
     });
 
     // Quick switcher
@@ -211,7 +215,7 @@ export class PKMSystem {
       keybinding: 'Cmd+P',
       callback: () => {
         console.log('Quick switcher triggered');
-      }
+      },
     });
 
     // New note
@@ -222,7 +226,7 @@ export class PKMSystem {
       keybinding: 'Cmd+N',
       callback: () => {
         console.log('New note triggered');
-      }
+      },
     });
 
     // Toggle graph view
@@ -233,7 +237,7 @@ export class PKMSystem {
       keybinding: 'Cmd+G',
       callback: () => {
         console.log('Toggle graph triggered');
-      }
+      },
     });
 
     // View mode commands
@@ -244,7 +248,7 @@ export class PKMSystem {
       keybinding: 'Cmd+Shift+V',
       callback: () => {
         this.toggleViewMode();
-      }
+      },
     });
   }
 
@@ -326,7 +330,9 @@ export class PKMSystem {
 
   // ===== IMPORT/EXPORT =====
 
-  async importNotes(notes: Array<{ name: string; content: string; folder?: string }>): Promise<void> {
+  async importNotes(
+    notes: Array<{ name: string; content: string; folder?: string }>
+  ): Promise<void> {
     for (const noteData of notes) {
       await this.createNote(noteData.name, noteData.content, noteData.folder);
     }
@@ -336,7 +342,7 @@ export class PKMSystem {
     return Array.from(this.notes.values()).map(note => ({
       name: note.name,
       content: note.content,
-      folder: note.folder
+      folder: note.folder,
     }));
   }
 
@@ -345,32 +351,33 @@ export class PKMSystem {
   resolveWikilink(linkText: string): Note | null {
     // Try exact match first
     const exactMatch = Array.from(this.notes.values()).find(
-      note => note.name.toLowerCase() === linkText.toLowerCase() ||
-               note.name.toLowerCase().replace(/\.md$/, '') === linkText.toLowerCase()
+      note =>
+        note.name.toLowerCase() === linkText.toLowerCase() ||
+        note.name.toLowerCase().replace(/\.md$/, '') === linkText.toLowerCase()
     );
     if (exactMatch) return exactMatch;
 
     // Try alias match
     for (const note of this.notes.values()) {
       const parsed = MarkdownParser.parseNote(note.content);
-      if (parsed.frontmatter.aliases?.some(alias => 
-        alias.toLowerCase() === linkText.toLowerCase()
-      )) {
+      if (
+        parsed.frontmatter.aliases?.some(alias => alias.toLowerCase() === linkText.toLowerCase())
+      ) {
         return note;
       }
     }
 
     // Try partial match
-    const partialMatch = Array.from(this.notes.values()).find(
-      note => note.name.toLowerCase().includes(linkText.toLowerCase())
+    const partialMatch = Array.from(this.notes.values()).find(note =>
+      note.name.toLowerCase().includes(linkText.toLowerCase())
     );
-    
+
     return partialMatch || null;
   }
 
   renderContent(content: string): string {
     // Replace wikilinks with proper links
-    return MarkdownParser.replaceWikilinks(content, (target) => {
+    return MarkdownParser.replaceWikilinks(content, target => {
       const note = this.resolveWikilink(target);
       return note ? `#note/${note.id}` : null;
     });
@@ -394,7 +401,7 @@ export class PKMSystem {
       notes.forEach(note => {
         this.notes.set(note.id, note);
       });
-      
+
       // Rebuild indices
       this.searchEngine.rebuildIndex(notes);
       this.graphBuilder.rebuildGraph(notes);
@@ -409,31 +416,36 @@ export class PKMSystem {
   async initializePlugins(): Promise<void> {
     try {
       console.log('PKM: Starting plugin initialization...');
-      
+
       // Load persisted plugins first
       await this.pluginManager.loadPersistedPlugins();
-      
+
       // If no plugins are loaded, load some basic ones
       const loadedPlugins = this.pluginManager.getLoadedPlugins();
-      console.log('PKM: Found', loadedPlugins.length, 'persisted plugins:', loadedPlugins.map(p => p.name));
-      
+      console.log(
+        'PKM: Found',
+        loadedPlugins.length,
+        'persisted plugins:',
+        loadedPlugins.map(p => p.name)
+      );
+
       // ALWAYS load core plugins regardless of persisted plugins
       console.log('PKM: Loading core plugins...');
-      
+
       // Import and load core plugins
       const { enhancedWordCountPlugin } = await import('../plugins/enhanced-word-count');
       const { dailyNotesPlugin } = await import('../plugins/daily-notes');
       const { tableOfContentsPlugin } = await import('../plugins/table-of-contents');
-      
+
       console.log('PKM: Imported core plugin manifests');
-      
+
       // Load each core plugin if not already loaded
       const corePlugins = [
         { plugin: enhancedWordCountPlugin, name: 'Enhanced Word Count' },
         { plugin: dailyNotesPlugin, name: 'Daily Notes' },
-        { plugin: tableOfContentsPlugin, name: 'Table of Contents' }
+        { plugin: tableOfContentsPlugin, name: 'Table of Contents' },
       ];
-      
+
       for (const { plugin, name } of corePlugins) {
         const isAlreadyLoaded = this.pluginManager.getLoadedPlugins().some(p => p.id === plugin.id);
         if (!isAlreadyLoaded) {
@@ -448,10 +460,13 @@ export class PKMSystem {
           console.log(`PKM: ${name} plugin already loaded`);
         }
       }
-      
+
       const finalLoadedPlugins = this.pluginManager.getLoadedPlugins();
-      console.log(`Plugin system initialized with ${finalLoadedPlugins.length} plugins:`, finalLoadedPlugins.map(p => p.name));
-      
+      console.log(
+        `Plugin system initialized with ${finalLoadedPlugins.length} plugins:`,
+        finalLoadedPlugins.map(p => p.name)
+      );
+
       // Debug: Check commands
       const allCommands = this.pluginManager.getAllCommands();
       console.log(`PKM: Found ${allCommands.length} total commands from plugins:`, allCommands);

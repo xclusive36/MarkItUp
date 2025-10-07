@@ -857,5 +857,164 @@
       "noteContext": true
     },
     "sessionId": "session_1759867739460_u862xrtul"
+  },
+  {
+    "id": "event_1759868687720_82w4fvo44",
+    "type": "session_ended",
+    "timestamp": "2025-10-07T20:24:47.720Z",
+    "data": {
+      "duration": 948260
+    },
+    "sessionId": "session_1759867739460_u862xrtul"
+  },
+  {
+    "id": "event_1759868692815_6te7wlre3",
+    "type": "session_started",
+    "timestamp": "2025-10-07T20:24:52.815Z",
+    "data": {},
+    "sessionId": "session_1759868692815_nvfiqce88"
+  },
+  {
+    "id": "event_1759868700902_vjzfe8h3b",
+    "type": "session_ended",
+    "timestamp": "2025-10-07T20:25:00.902Z",
+    "data": {
+      "duration": 8087
+    },
+    "sessionId": "session_1759868692815_nvfiqce88"
+  },
+  {
+    "id": "event_1759868702279_s31tfepow",
+    "type": "session_started",
+    "timestamp": "2025-10-07T20:25:02.279Z",
+    "data": {},
+    "sessionId": "session_1759868702279_ozv70qxm2"
+  },
+  {
+    "id": "event_1759868704185_lnhy7abrf",
+    "type": "session_ended",
+    "timestamp": "2025-10-07T20:25:04.185Z",
+    "data": {
+      "duration": 1906
+    },
+    "sessionId": "session_1759868702279_ozv70qxm2"
+  },
+  {
+    "id": "event_1759868705280_qot30jds7",
+    "type": "session_started",
+    "timestamp": "2025-10-07T20:25:05.280Z",
+    "data": {},
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868705465_2hmei288s",
+    "type": "session_started",
+    "timestamp": "2025-10-07T20:25:05.465Z",
+    "data": {
+      "timestamp": "2025-10-07T20:25:05.465Z"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868713300_ygrr51efh",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:13.300Z",
+    "data": {
+      "mode": "wysiwyg"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868715567_h7h8i1bhx",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:15.567Z",
+    "data": {
+      "mode": "preview"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868716900_05inwmaah",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:16.900Z",
+    "data": {
+      "mode": "edit"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868718834_2nc6f93g5",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:18.834Z",
+    "data": {
+      "mode": "markdown"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868720684_831t5aemd",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:20.684Z",
+    "data": {
+      "mode": "wysiwyg"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868722116_yy1vtomhq",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:22.116Z",
+    "data": {
+      "mode": "markdown"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868722817_7yykolc6j",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:22.817Z",
+    "data": {
+      "mode": "wysiwyg"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868723533_ehydx6rff",
+    "type": "mode_switched",
+    "timestamp": "2025-10-07T20:25:23.533Z",
+    "data": {
+      "mode": "markdown"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868728834_zz8xy4ili",
+    "type": "ai_analysis",
+    "timestamp": "2025-10-07T20:25:28.834Z",
+    "data": {
+      "action": "open_writing_assistant",
+      "noteContext": true
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868758367_eulmhd9fb",
+    "type": "ai_analysis",
+    "timestamp": "2025-10-07T20:25:58.367Z",
+    "data": {
+      "action": "apply_suggestion",
+      "suggestionType": "writing_improvement"
+    },
+    "sessionId": "session_1759868705280_thre22321"
+  },
+  {
+    "id": "event_1759868769017_2omiy0dud",
+    "type": "ai_chat",
+    "timestamp": "2025-10-07T20:26:09.017Z",
+    "data": {
+      "action": "open_chat",
+      "noteContext": true
+    },
+    "sessionId": "session_1759868705280_thre22321"
   }
 ]
