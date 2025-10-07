@@ -13,6 +13,7 @@ COPY . .
 RUN mkdir -p /app/markdown
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 FROM gcr.io/distroless/nodejs20-debian12:nonroot AS runner
