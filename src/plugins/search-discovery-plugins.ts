@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let smartSearchInstance: SmartSearchPlugin | null = null;
@@ -728,7 +727,7 @@ class TagManagerPlugin {
   constructor(private api: PluginAPI) {}
 
   async addTag(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Adding tag to ${noteId || 'current note'}. Enter tag name (supports hierarchical tags like "work/projects/urgent")`,
@@ -757,7 +756,7 @@ class ContentDiscoveryPlugin {
   constructor(private api: PluginAPI) {}
 
   async findSimilar(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Finding notes similar to ${noteId || 'current note'}...\nSimilar notes found:\n- "Project Requirements" (85% similar)\n- "Planning Guidelines" (72% similar)`,
@@ -766,7 +765,7 @@ class ContentDiscoveryPlugin {
   }
 
   async suggestConnections(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Suggesting connections for ${noteId || 'current note'}...\nPotential links:\n- Link to "Team Structure"?\n- Reference "Methodology Doc"?`,

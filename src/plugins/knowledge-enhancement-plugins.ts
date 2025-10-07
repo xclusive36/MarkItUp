@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let knowledgeGraphInstance: KnowledgeGraphPlugin | null = null;
@@ -726,7 +725,7 @@ class KnowledgeGraphPlugin {
   }
 
   async centerCurrentNote(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Centering graph on ${noteId || 'current note'}. Showing direct connections and related nodes`,
@@ -755,7 +754,7 @@ class LearningPathPlugin {
   }
 
   async addToPath(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Adding ${noteId || 'current note'} to learning path. Choose path: JavaScript Fundamentals, Data Science Basics, etc.`,
@@ -800,7 +799,7 @@ class QuestionBankPlugin {
   constructor(private api: PluginAPI) {}
 
   async generateQuestions(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to generate questions from', 'info');
@@ -835,7 +834,7 @@ class KnowledgeExtractionPlugin {
   constructor(private api: PluginAPI) {}
 
   async extractKnowledge(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to extract knowledge from', 'info');
@@ -849,7 +848,7 @@ class KnowledgeExtractionPlugin {
   }
 
   async createSummary(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to summarize', 'info');

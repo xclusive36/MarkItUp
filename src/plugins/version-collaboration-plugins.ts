@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let versionHistoryInstance: VersionHistoryPlugin | null = null;
@@ -612,7 +611,7 @@ class VersionHistoryPlugin {
   constructor(private api: PluginAPI) {}
 
   async showHistory(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Version History for ${noteId || 'current note'}:\n- 2 hours ago: +127 words, -15 words\n- 1 day ago: +45 words, -3 words`,
@@ -621,7 +620,7 @@ class VersionHistoryPlugin {
   }
 
   async restoreVersion(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Restoring ${noteId || 'note'} to previous version... Select version from history panel`,
@@ -630,7 +629,7 @@ class VersionHistoryPlugin {
   }
 
   async compareVersions(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Comparing versions for ${noteId || 'current note'}. Showing diff view...`,
@@ -643,7 +642,7 @@ class CommentSystemPlugin {
   constructor(private api: PluginAPI) {}
 
   async addComment(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Adding comment to ${noteId || 'current note'}. Select text to annotate`,
@@ -652,7 +651,7 @@ class CommentSystemPlugin {
   }
 
   async showAllComments(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Comments for ${noteId || 'current note'}:\n- Alice: "Great insight about the methodology!" (2 hours ago)\n- Bob: "Could you clarify this section?" (Resolved)`,
@@ -669,7 +668,7 @@ class ReviewWorkflowPlugin {
   constructor(private api: PluginAPI) {}
 
   async submitForReview(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Submitting ${noteId || 'note'} for review. Enter reviewers (comma-separated)`,
@@ -678,7 +677,7 @@ class ReviewWorkflowPlugin {
   }
 
   async approveNote(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Approving ${noteId || 'note'}. Status changed to Approved`,
@@ -687,7 +686,7 @@ class ReviewWorkflowPlugin {
   }
 
   async requestChanges(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Requesting changes for ${noteId || 'note'}. Enter feedback for reviewer`,
@@ -707,7 +706,7 @@ class ConflictResolutionPlugin {
   }
 
   async acceptLocal(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Accepting local changes for ${noteId || 'note'}. Remote version discarded`,
@@ -716,7 +715,7 @@ class ConflictResolutionPlugin {
   }
 
   async acceptRemote(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Accepting remote changes for ${noteId || 'note'}. Local version discarded`,

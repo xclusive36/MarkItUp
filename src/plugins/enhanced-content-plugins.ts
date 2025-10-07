@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let advancedMarkdownEditorInstance: AdvancedMarkdownEditorPlugin | null = null;
@@ -688,7 +687,7 @@ class AdvancedMarkdownEditorPlugin {
   }
 
   async formatDocument(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to format', 'info');
@@ -702,10 +701,10 @@ class AdvancedMarkdownEditorPlugin {
   }
 
   async insertTable(): Promise<void> {
-    const currentContent = this.api.getEditorContent();
+    const currentContent = this.api.ui.getEditorContent();
     const tableMarkdown = `\n| Header 1 | Header 2 | Header 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |\n`;
 
-    this.api.setEditorContent((currentContent || '') + tableMarkdown);
+    this.api.ui.setEditorContent((currentContent || '') + tableMarkdown);
     this.api.ui.showNotification('Table inserted. Enter number of rows and columns', 'info');
   }
 }
@@ -714,7 +713,7 @@ class TemplateEnginePlugin {
   constructor(private api: PluginAPI) {}
 
   async createTemplate(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to save as template', 'info');
@@ -746,7 +745,7 @@ class ContentStructurePlugin {
   constructor(private api: PluginAPI) {}
 
   async generateOutline(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to analyze', 'info');
@@ -767,7 +766,7 @@ class ContentStructurePlugin {
   }
 
   async validateStructure(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to validate', 'info');
@@ -785,8 +784,8 @@ class MultiFormatExportPlugin {
   constructor(private api: PluginAPI) {}
 
   async exportPDF(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
-    const content = this.api.getEditorContent();
+    const noteId = this.api.notes.getActiveNoteId();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to export', 'info');
@@ -800,8 +799,8 @@ class MultiFormatExportPlugin {
   }
 
   async exportDOCX(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
-    const content = this.api.getEditorContent();
+    const noteId = this.api.notes.getActiveNoteId();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to export', 'info');
@@ -828,7 +827,7 @@ class ContentStatisticsPlugin {
   constructor(private api: PluginAPI) {}
 
   async analyzeReadability(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to analyze', 'info');
@@ -844,7 +843,7 @@ class ContentStatisticsPlugin {
   }
 
   async generateReport(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to analyze', 'info');
@@ -862,7 +861,7 @@ class ContentStatisticsPlugin {
   }
 
   async wordFrequency(): Promise<void> {
-    const content = this.api.getEditorContent();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to analyze', 'info');

@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let crmLiteInstance: CRMLitePlugin | null = null;
@@ -454,7 +453,7 @@ Thank you for your business! Payment is due within 30 days.
 ---
 *Invoice generated on ${new Date().toLocaleDateString()}*
 `;
-      this.api.ui.showNotification(`Invoice ${invoiceNumber} created for ${clientName}`, 'success');
+      this.api.ui.showNotification(`Invoice ${invoiceNumber} created for ${clientName}`, 'info');
       console.log('Invoice created:', invoice);
     }
   }
@@ -488,7 +487,7 @@ class ExpenseTrackerPlugin {
 
 ---
 `;
-      this.api.ui.showNotification(`Expense of $${amount} logged`, 'success');
+      this.api.ui.showNotification(`Expense of $${amount} logged`, 'info');
       console.log('Expense logged:', expense);
     }
   }
@@ -520,7 +519,7 @@ class ExpenseTrackerPlugin {
 ## Tax Deductible Total: $1,850.00
 ## Client Billable Total: $650.00
 `;
-    this.api.ui.showNotification('Expense report generated', 'success');
+    this.api.ui.showNotification('Expense report generated', 'info');
     console.log('Expense report:', report);
   }
 }
@@ -586,7 +585,7 @@ This agreement shall be governed by the laws of [State/Country].
 
 *This is a template and should be reviewed by legal counsel before use.*
 `;
-      this.api.ui.showNotification(`Freelance contract created for ${clientName}`, 'success');
+      this.api.ui.showNotification(`Freelance contract created for ${clientName}`, 'info');
       console.log('Contract template:', contract);
     }
   }
@@ -624,7 +623,7 @@ This Agreement shall be governed by [State/Country] law.
 
 **Receiving Party:** ________________ Date: _______
 `;
-    this.api.ui.showNotification('NDA template created', 'success');
+    this.api.ui.showNotification('NDA template created', 'info');
     console.log('NDA template:', template);
   }
 }
@@ -728,7 +727,7 @@ class BusinessPlanPlugin {
 - Market research data
 - Legal documents
 `;
-      this.api.ui.showNotification(`Business plan created for ${businessName}`, 'success');
+      this.api.ui.showNotification(`Business plan created for ${businessName}`, 'info');
       console.log('Business plan:', plan);
     }
   }
@@ -767,7 +766,7 @@ class TimeTrackerPlugin {
 
 ---
 `;
-      this.api.ui.showNotification(`Time logged: ${hours} hours for ${project}`, 'success');
+      this.api.ui.showNotification(`Time logged: ${hours} hours for ${project}`, 'info');
       console.log('Time entry:', entry);
     }
   }

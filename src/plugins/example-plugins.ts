@@ -1,5 +1,4 @@
-import { PluginManifest, ContentProcessor, Command, PluginSetting } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, ContentProcessor, Command, PluginSetting, PluginAPI } from '../lib/types';
 
 // Global instances
 let wordCountInstance: WordCountPlugin | null = null;
@@ -971,7 +970,7 @@ class TOCPlugin {
   }
 
   async updateTOC(): Promise<void> {
-    this.api.ui.showNotification('Updating existing table of contents', 'success');
+    this.api.ui.showNotification('Updating existing table of contents', 'info');
   }
 }
 
@@ -997,7 +996,7 @@ class CitationsPlugin {
   async generateBibliography(): Promise<void> {
     this.api.ui.showNotification(
       'Generating bibliography for all citations in current note',
-      'success'
+      'info'
     );
   }
 }
