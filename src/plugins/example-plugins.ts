@@ -1,4 +1,17 @@
 import { PluginManifest, ContentProcessor, Command, PluginSetting } from '../lib/types';
+import { PluginAPI } from '../lib/PluginAPI';
+
+// Global instances (for future PluginAPI integration)
+const wordCountInstance: any | null = null;
+const markdownExportInstance: any | null = null;
+const darkThemeInstance: any | null = null;
+const dailyNotesInstance: any | null = null;
+const tocInstance: any | null = null;
+const backupInstance: any | null = null;
+const citationsInstance: any | null = null;
+const kanbanInstance: any | null = null;
+const aiWritingInstance: any | null = null;
+const spacedRepetitionInstance: any | null = null;
 
 // Example: Word Count Plugin
 export const wordCountPlugin: PluginManifest = {
@@ -8,22 +21,22 @@ export const wordCountPlugin: PluginManifest = {
   description: 'Simple word count statistics and reading time estimates',
   author: 'MarkItUp Community',
   main: 'word-count-plugin.js',
-  
+
   settings: [
     {
       id: 'reading-speed',
       name: 'Reading Speed (WPM)',
       type: 'number',
       default: 225,
-      description: 'Average words per minute for reading time calculation'
+      description: 'Average words per minute for reading time calculation',
     },
     {
       id: 'show-character-count',
       name: 'Show Character Count',
       type: 'boolean',
       default: true,
-      description: 'Display character count in addition to word count'
-    }
+      description: 'Display character count in addition to word count',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -32,11 +45,11 @@ export const wordCountPlugin: PluginManifest = {
       name: 'Show Detailed Statistics',
       description: 'Display detailed statistics for the current note',
       keybinding: 'Cmd+Shift+S',
-      callback: async function() {
+      callback: async function () {
         // This would be implemented when the plugin is loaded
         console.log('Showing detailed statistics...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
   processors: [
@@ -48,19 +61,19 @@ export const wordCountPlugin: PluginManifest = {
         // Add word count metadata to content
         const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
         const charCount = content.length;
-        
+
         return content + `\n\n<!-- Word Count: ${wordCount}, Characters: ${charCount} -->`;
-      }
-    }
+      },
+    },
   ] as ContentProcessor[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Enhanced Word Count plugin loaded');
   },
 
-  onUnload: async function() {
+  onUnload: async function () {
     console.log('Enhanced Word Count plugin unloaded');
-  }
+  },
 };
 
 // Example: Markdown Export Plugin
@@ -71,12 +84,12 @@ export const markdownExportPlugin: PluginManifest = {
   description: 'Export notes to various formats (PDF, HTML, DOCX)',
   author: 'MarkItUp Community',
   main: 'export-plugin.js',
-  
+
   permissions: [
     {
       type: 'file-system',
-      description: 'Required to save exported files'
-    }
+      description: 'Required to save exported files',
+    },
   ],
 
   settings: [
@@ -88,10 +101,10 @@ export const markdownExportPlugin: PluginManifest = {
       options: [
         { label: 'PDF', value: 'pdf' },
         { label: 'HTML', value: 'html' },
-        { label: 'DOCX', value: 'docx' }
+        { label: 'DOCX', value: 'docx' },
       ],
-      description: 'Default format for exports'
-    }
+      description: 'Default format for exports',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -100,18 +113,18 @@ export const markdownExportPlugin: PluginManifest = {
       name: 'Export Current Note',
       description: 'Export the current note to selected format',
       keybinding: 'Cmd+E',
-      callback: async function() {
+      callback: async function () {
         console.log('Exporting current note...');
-      }
+      },
     },
     {
       id: 'batch-export',
       name: 'Batch Export',
       description: 'Export multiple notes at once',
-      callback: async function() {
+      callback: async function () {
         console.log('Starting batch export...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
   processors: [
@@ -136,13 +149,13 @@ export const markdownExportPlugin: PluginManifest = {
   ${content}
 </body>
 </html>`;
-      }
-    }
+      },
+    },
   ] as ContentProcessor[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Markdown Export plugin loaded');
-  }
+  },
 };
 
 // Example: Theme Plugin
@@ -164,19 +177,19 @@ export const darkThemePlugin: PluginManifest = {
         { label: 'Blue', value: 'blue' },
         { label: 'Green', value: 'green' },
         { label: 'Purple', value: 'purple' },
-        { label: 'Orange', value: 'orange' }
-      ]
+        { label: 'Orange', value: 'orange' },
+      ],
     },
     {
       id: 'sidebar-opacity',
       name: 'Sidebar Opacity',
       type: 'number',
       default: 0.95,
-      description: 'Opacity level for sidebar (0.1 - 1.0)'
-    }
+      description: 'Opacity level for sidebar (0.1 - 1.0)',
+    },
   ] as PluginSetting[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     // Apply theme styles
     if (typeof document !== 'undefined') {
       const style = document.createElement('style');
@@ -192,10 +205,10 @@ export const darkThemePlugin: PluginManifest = {
     }
   },
 
-  onUnload: async function() {
+  onUnload: async function () {
     // Remove theme styles
     console.log('Dark theme unloaded');
-  }
+  },
 };
 
 // Example: Daily Notes Plugin
@@ -213,48 +226,48 @@ export const dailyNotesPlugin: PluginManifest = {
       name: 'Daily Notes Folder',
       type: 'string',
       default: 'Daily Notes',
-      description: 'Folder where daily notes will be stored'
+      description: 'Folder where daily notes will be stored',
     },
     {
       id: 'template',
       name: 'Daily Note Template',
       type: 'string',
       default: '# {{date}}\n\n## Tasks\n- [ ] \n\n## Notes\n\n## Reflection\n',
-      description: 'Template for new daily notes (use {{date}} for current date)'
+      description: 'Template for new daily notes (use {{date}} for current date)',
     },
     {
       id: 'auto-create',
-      name: 'Auto-create Today\'s Note',
+      name: "Auto-create Today's Note",
       type: 'boolean',
       default: true,
-      description: 'Automatically create today\'s note on startup'
-    }
+      description: "Automatically create today's note on startup",
+    },
   ] as PluginSetting[],
 
   commands: [
     {
       id: 'open-today',
-      name: 'Open Today\'s Note',
-      description: 'Open or create today\'s daily note',
+      name: "Open Today's Note",
+      description: "Open or create today's daily note",
       keybinding: 'Cmd+T',
-      callback: async function() {
-        console.log('Opening today\'s note...');
-      }
+      callback: async function () {
+        console.log("Opening today's note...");
+      },
     },
     {
       id: 'open-yesterday',
-      name: 'Open Yesterday\'s Note',
-      description: 'Open yesterday\'s daily note',
+      name: "Open Yesterday's Note",
+      description: "Open yesterday's daily note",
       keybinding: 'Cmd+Shift+T',
-      callback: async function() {
-        console.log('Opening yesterday\'s note...');
-      }
-    }
+      callback: async function () {
+        console.log("Opening yesterday's note...");
+      },
+    },
   ] as Command[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Daily Notes plugin loaded');
-  }
+  },
 };
 
 // Example: Table of Contents Plugin
@@ -272,22 +285,22 @@ export const tocPlugin: PluginManifest = {
       name: 'Maximum Heading Depth',
       type: 'number',
       default: 3,
-      description: 'Maximum heading level to include in TOC (1-6)'
+      description: 'Maximum heading level to include in TOC (1-6)',
     },
     {
       id: 'auto-update',
       name: 'Auto-update TOC',
       type: 'boolean',
       default: true,
-      description: 'Automatically update TOC when content changes'
+      description: 'Automatically update TOC when content changes',
     },
     {
       id: 'include-numbers',
       name: 'Include Numbers',
       type: 'boolean',
       default: false,
-      description: 'Include section numbers in TOC'
-    }
+      description: 'Include section numbers in TOC',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -296,18 +309,18 @@ export const tocPlugin: PluginManifest = {
       name: 'Insert Table of Contents',
       description: 'Insert TOC at cursor position',
       keybinding: 'Cmd+Shift+O',
-      callback: async function() {
+      callback: async function () {
         console.log('Inserting table of contents...');
-      }
+      },
     },
     {
       id: 'update-toc',
       name: 'Update Table of Contents',
       description: 'Update existing TOC in current note',
-      callback: async function() {
+      callback: async function () {
         console.log('Updating table of contents...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
   processors: [
@@ -318,21 +331,26 @@ export const tocPlugin: PluginManifest = {
       process: async (content: string) => {
         // Extract headings and generate TOC
         const headings = content.match(/^#{1,6}\s+.+$/gm) || [];
-        const toc = headings.map(heading => {
-          const level = heading.match(/^#+/)?.[0].length || 1;
-          const text = heading.replace(/^#+\s+/, '');
-          const indent = '  '.repeat(level - 1);
-          return `${indent}- [${text}](#${text.toLowerCase().replace(/\s+/g, '-')})`;
-        }).join('\n');
+        const toc = headings
+          .map(heading => {
+            const level = heading.match(/^#+/)?.[0].length || 1;
+            const text = heading.replace(/^#+\s+/, '');
+            const indent = '  '.repeat(level - 1);
+            return `${indent}- [${text}](#${text.toLowerCase().replace(/\s+/g, '-')})`;
+          })
+          .join('\n');
 
-        return content.replace(/<!-- TOC -->[\s\S]*?<!-- \/TOC -->/, `<!-- TOC -->\n${toc}\n<!-- /TOC -->`);
-      }
-    }
+        return content.replace(
+          /<!-- TOC -->[\s\S]*?<!-- \/TOC -->/,
+          `<!-- TOC -->\n${toc}\n<!-- /TOC -->`
+        );
+      },
+    },
   ] as ContentProcessor[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Table of Contents plugin loaded');
-  }
+  },
 };
 
 // Example: Backup Plugin
@@ -347,12 +365,12 @@ export const backupPlugin: PluginManifest = {
   permissions: [
     {
       type: 'file-system',
-      description: 'Required to create backup files'
+      description: 'Required to create backup files',
     },
     {
       type: 'network',
-      description: 'Required for cloud backup services'
-    }
+      description: 'Required for cloud backup services',
+    },
   ],
 
   settings: [
@@ -361,7 +379,7 @@ export const backupPlugin: PluginManifest = {
       name: 'Backup Interval (minutes)',
       type: 'number',
       default: 30,
-      description: 'How often to create backups'
+      description: 'How often to create backups',
     },
     {
       id: 'backup-location',
@@ -372,16 +390,16 @@ export const backupPlugin: PluginManifest = {
         { label: 'Local Directory', value: 'local' },
         { label: 'Google Drive', value: 'gdrive' },
         { label: 'Dropbox', value: 'dropbox' },
-        { label: 'GitHub', value: 'github' }
-      ]
+        { label: 'GitHub', value: 'github' },
+      ],
     },
     {
       id: 'max-backups',
       name: 'Maximum Backup Count',
       type: 'number',
       default: 10,
-      description: 'Maximum number of backups to keep'
-    }
+      description: 'Maximum number of backups to keep',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -389,23 +407,23 @@ export const backupPlugin: PluginManifest = {
       id: 'backup-now',
       name: 'Backup Now',
       description: 'Create an immediate backup',
-      callback: async function() {
+      callback: async function () {
         console.log('Creating backup...');
-      }
+      },
     },
     {
       id: 'restore-backup',
       name: 'Restore from Backup',
       description: 'Restore notes from a backup',
-      callback: async function() {
+      callback: async function () {
         console.log('Restoring from backup...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Auto Backup plugin loaded');
-  }
+  },
 };
 
 // Example: Citations Plugin
@@ -427,16 +445,16 @@ export const citationsPlugin: PluginManifest = {
         { label: 'APA', value: 'apa' },
         { label: 'MLA', value: 'mla' },
         { label: 'Chicago', value: 'chicago' },
-        { label: 'Harvard', value: 'harvard' }
-      ]
+        { label: 'Harvard', value: 'harvard' },
+      ],
     },
     {
       id: 'bibliography-title',
       name: 'Bibliography Title',
       type: 'string',
       default: 'References',
-      description: 'Title for the bibliography section'
-    }
+      description: 'Title for the bibliography section',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -445,18 +463,18 @@ export const citationsPlugin: PluginManifest = {
       name: 'Insert Citation',
       description: 'Insert a citation at cursor position',
       keybinding: 'Cmd+Shift+C',
-      callback: async function() {
+      callback: async function () {
         console.log('Inserting citation...');
-      }
+      },
     },
     {
       id: 'generate-bibliography',
       name: 'Generate Bibliography',
       description: 'Generate bibliography for current note',
-      callback: async function() {
+      callback: async function () {
         console.log('Generating bibliography...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
   processors: [
@@ -467,18 +485,18 @@ export const citationsPlugin: PluginManifest = {
       process: async (content: string) => {
         // Process citations and generate bibliography
         const citations = content.match(/@\w+/g) || [];
-        const bibliography = citations.map(cite => 
-          `${cite.substring(1)}. (2025). Sample Reference. Journal Name.`
-        ).join('\n');
+        const bibliography = citations
+          .map(cite => `${cite.substring(1)}. (2025). Sample Reference. Journal Name.`)
+          .join('\n');
 
         return content + (bibliography ? `\n\n## References\n\n${bibliography}` : '');
-      }
-    }
+      },
+    },
   ] as ContentProcessor[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Citations plugin loaded');
-  }
+  },
 };
 
 // Example: Kanban Board Plugin
@@ -496,15 +514,15 @@ export const kanbanPlugin: PluginManifest = {
       name: 'Default Columns',
       type: 'string',
       default: 'To Do,In Progress,Done',
-      description: 'Default column names (comma-separated)'
+      description: 'Default column names (comma-separated)',
     },
     {
       id: 'auto-archive',
       name: 'Auto-archive Completed',
       type: 'boolean',
       default: false,
-      description: 'Automatically archive completed tasks'
-    }
+      description: 'Automatically archive completed tasks',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -512,24 +530,24 @@ export const kanbanPlugin: PluginManifest = {
       id: 'create-kanban',
       name: 'Create Kanban Board',
       description: 'Convert current note to kanban board',
-      callback: async function() {
+      callback: async function () {
         console.log('Creating kanban board...');
-      }
+      },
     },
     {
       id: 'toggle-kanban-view',
       name: 'Toggle Kanban View',
       description: 'Toggle between list and kanban view',
       keybinding: 'Cmd+K',
-      callback: async function() {
+      callback: async function () {
         console.log('Toggling kanban view...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Kanban Board plugin loaded');
-  }
+  },
 };
 
 // Example: AI Writing Assistant Plugin
@@ -544,8 +562,8 @@ export const aiWritingPlugin: PluginManifest = {
   permissions: [
     {
       type: 'network',
-      description: 'Required to connect to AI services'
-    }
+      description: 'Required to connect to AI services',
+    },
   ],
 
   settings: [
@@ -557,30 +575,30 @@ export const aiWritingPlugin: PluginManifest = {
       options: [
         { label: 'OpenAI GPT', value: 'openai' },
         { label: 'Claude', value: 'claude' },
-        { label: 'Local Model', value: 'local' }
-      ]
+        { label: 'Local Model', value: 'local' },
+      ],
     },
     {
       id: 'api-key',
       name: 'API Key',
       type: 'string',
       default: '',
-      description: 'API key for the selected AI provider'
+      description: 'API key for the selected AI provider',
     },
     {
       id: 'auto-suggestions',
       name: 'Auto Suggestions',
       type: 'boolean',
       default: true,
-      description: 'Show writing suggestions automatically'
+      description: 'Show writing suggestions automatically',
     },
     {
       id: 'suggestion-delay',
       name: 'Suggestion Delay (ms)',
       type: 'number',
       default: 2000,
-      description: 'Delay before showing suggestions while typing'
-    }
+      description: 'Delay before showing suggestions while typing',
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -589,35 +607,35 @@ export const aiWritingPlugin: PluginManifest = {
       name: 'Improve Writing',
       description: 'Get AI suggestions to improve selected text',
       keybinding: 'Cmd+Shift+I',
-      callback: async function() {
+      callback: async function () {
         console.log('Getting AI writing suggestions...');
-      }
+      },
     },
     {
       id: 'check-grammar',
       name: 'Check Grammar',
       description: 'Check grammar and spelling in current note',
       keybinding: 'Cmd+Shift+G',
-      callback: async function() {
+      callback: async function () {
         console.log('Checking grammar...');
-      }
+      },
     },
     {
       id: 'summarize-note',
       name: 'Summarize Note',
       description: 'Generate AI summary of current note',
-      callback: async function() {
+      callback: async function () {
         console.log('Generating summary...');
-      }
+      },
     },
     {
       id: 'expand-outline',
       name: 'Expand Outline',
       description: 'Expand bullet points into full paragraphs',
-      callback: async function() {
+      callback: async function () {
         console.log('Expanding outline...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
   processors: [
@@ -633,13 +651,13 @@ export const aiWritingPlugin: PluginManifest = {
           .replace(/\. +/g, '. '); // Fix spacing
 
         return enhanced;
-      }
-    }
+      },
+    },
   ] as ContentProcessor[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('AI Writing Assistant plugin loaded');
-  }
+  },
 };
 
 // Example: Spaced Repetition Plugin
@@ -657,14 +675,14 @@ export const spacedRepetitionPlugin: PluginManifest = {
       name: 'Daily Review Time',
       type: 'string',
       default: '09:00',
-      description: 'Preferred time for daily reviews (HH:MM format)'
+      description: 'Preferred time for daily reviews (HH:MM format)',
     },
     {
       id: 'cards-per-session',
       name: 'Cards per Session',
       type: 'number',
       default: 20,
-      description: 'Maximum number of cards to review per session'
+      description: 'Maximum number of cards to review per session',
     },
     {
       id: 'difficulty-algorithm',
@@ -674,9 +692,9 @@ export const spacedRepetitionPlugin: PluginManifest = {
       options: [
         { label: 'SM-2 (SuperMemo 2)', value: 'sm2' },
         { label: 'Anki Algorithm', value: 'anki' },
-        { label: 'Simple Intervals', value: 'simple' }
-      ]
-    }
+        { label: 'Simple Intervals', value: 'simple' },
+      ],
+    },
   ] as PluginSetting[],
 
   commands: [
@@ -685,31 +703,31 @@ export const spacedRepetitionPlugin: PluginManifest = {
       name: 'Create Flashcard',
       description: 'Create flashcard from selected text',
       keybinding: 'Cmd+Shift+F',
-      callback: async function() {
+      callback: async function () {
         console.log('Creating flashcard...');
-      }
+      },
     },
     {
       id: 'start-review',
       name: 'Start Review Session',
       description: 'Begin reviewing due flashcards',
       keybinding: 'Cmd+R',
-      callback: async function() {
+      callback: async function () {
         console.log('Starting review session...');
-      }
+      },
     },
     {
       id: 'view-statistics',
       name: 'View Statistics',
       description: 'Show learning progress and statistics',
-      callback: async function() {
+      callback: async function () {
         console.log('Showing statistics...');
-      }
-    }
+      },
+    },
   ] as Command[],
 
-  onLoad: async function() {
+  onLoad: async function () {
     console.log('Spaced Repetition plugin loaded');
     // Initialize review scheduler
-  }
+  },
 };
