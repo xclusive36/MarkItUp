@@ -1,5 +1,4 @@
-import { PluginManifest } from '../lib/types';
-import { PluginAPI } from '../lib/PluginAPI';
+import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
 let webhookIntegrationInstance: WebhookIntegrationPlugin | null = null;
@@ -575,8 +574,8 @@ class WebhookIntegrationPlugin {
   constructor(private api: PluginAPI) {}
 
   async sendToWebhook(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
-    const content = this.api.getEditorContent();
+    const noteId = this.api.notes.getActiveNoteId();
+    const content = this.api.ui.getEditorContent();
 
     if (!content) {
       this.api.ui.showNotification('No content to send', 'info');
@@ -620,7 +619,7 @@ class ScheduleReminderPlugin {
   constructor(private api: PluginAPI) {}
 
   async addReminder(): Promise<void> {
-    const noteId = this.api.getActiveNoteId();
+    const noteId = this.api.notes.getActiveNoteId();
 
     this.api.ui.showNotification(
       `Adding reminder to ${noteId || 'current note'}. Enter time (YYYY-MM-DD HH:MM) and message`,
