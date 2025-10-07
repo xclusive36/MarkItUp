@@ -3,11 +3,11 @@ import { PluginAPI } from '../lib/PluginAPI';
 
 // Global instances
 let crmLiteInstance: CRMLitePlugin | null = null;
-const invoiceGeneratorInstance: InvoiceGeneratorPlugin | null = null;
-const expenseTrackerInstance: ExpenseTrackerPlugin | null = null;
-const contractTemplatesInstance: ContractTemplatesPlugin | null = null;
-const businessPlanInstance: BusinessPlanPlugin | null = null;
-const timeTrackerInstance: TimeTrackerPlugin | null = null;
+let invoiceGeneratorInstance: InvoiceGeneratorPlugin | null = null;
+let expenseTrackerInstance: ExpenseTrackerPlugin | null = null;
+let contractTemplatesInstance: ContractTemplatesPlugin | null = null;
+let businessPlanInstance: BusinessPlanPlugin | null = null;
+let timeTrackerInstance: TimeTrackerPlugin | null = null;
 
 // CRM Lite Plugin - Contact management and interaction tracking
 export const crmLitePlugin: PluginManifest = {
@@ -121,12 +121,304 @@ export const invoiceGeneratorPlugin: PluginManifest = {
       name: 'Create Invoice',
       description: 'Generate a new invoice',
       callback: async () => {
-        const clientName = prompt('Client name:');
-        const invoiceNumber = prompt('Invoice number:') || `INV-${Date.now()}`;
-        const amount = prompt('Total amount:');
+        try {
+          if (invoiceGeneratorInstance) {
+            await invoiceGeneratorInstance.createInvoice();
+          }
+        } catch (error) {
+          console.error('Error creating invoice:', error);
+        }
+      },
+    },
+  ],
 
-        if (clientName && amount) {
-          const invoice = `# Invoice ${invoiceNumber}
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      invoiceGeneratorInstance = new InvoiceGeneratorPlugin(api);
+    }
+    console.log('Invoice Generator plugin loaded');
+  },
+
+  onUnload: () => {
+    invoiceGeneratorInstance = null;
+  },
+};
+
+// Expense Tracker Plugin - Log business expenses
+export const expenseTrackerPlugin: PluginManifest = {
+  id: 'expense-tracker',
+  name: 'Expense Tracker',
+  version: '1.0.0',
+  description: 'Log business expenses, categorize, and track receipts',
+  author: 'MarkItUp Team',
+  main: 'expense-tracker.js',
+
+  commands: [
+    {
+      id: 'log-expense',
+      name: 'Log Expense',
+      description: 'Log a new business expense',
+      keybinding: 'Ctrl+Shift+E',
+      callback: async () => {
+        try {
+          if (expenseTrackerInstance) {
+            await expenseTrackerInstance.logExpense();
+          }
+        } catch (error) {
+          console.error('Error logging expense:', error);
+        }
+      },
+    },
+    {
+      id: 'expense-report',
+      name: 'Generate Expense Report',
+      description: 'Generate monthly expense report',
+      callback: async () => {
+        try {
+          if (expenseTrackerInstance) {
+            await expenseTrackerInstance.generateReport();
+          }
+        } catch (error) {
+          console.error('Error generating report:', error);
+        }
+      },
+    },
+  ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      expenseTrackerInstance = new ExpenseTrackerPlugin(api);
+    }
+    console.log('Expense Tracker plugin loaded');
+  },
+
+  onUnload: () => {
+    expenseTrackerInstance = null;
+  },
+};
+
+// Contract Templates Plugin - Legal document templates
+export const contractTemplatesPlugin: PluginManifest = {
+  id: 'contract-templates',
+  name: 'Contract Templates',
+  version: '1.0.0',
+  description: 'Legal document templates, clause library, and version tracking',
+  author: 'MarkItUp Team',
+  main: 'contract-templates.js',
+
+  commands: [
+    {
+      id: 'freelance-contract',
+      name: 'Freelance Contract',
+      description: 'Generate freelance contract template',
+      callback: async () => {
+        try {
+          if (contractTemplatesInstance) {
+            await contractTemplatesInstance.generateFreelanceContract();
+          }
+        } catch (error) {
+          console.error('Error generating contract:', error);
+        }
+      },
+    },
+    {
+      id: 'nda-template',
+      name: 'NDA Template',
+      description: 'Generate non-disclosure agreement',
+      callback: async () => {
+        try {
+          if (contractTemplatesInstance) {
+            await contractTemplatesInstance.generateNDA();
+          }
+        } catch (error) {
+          console.error('Error generating NDA:', error);
+        }
+      },
+    },
+  ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      contractTemplatesInstance = new ContractTemplatesPlugin(api);
+    }
+    console.log('Contract Templates plugin loaded');
+  },
+
+  onUnload: () => {
+    contractTemplatesInstance = null;
+  },
+};
+
+// Business Plan Generator Plugin - Structured business plans
+export const businessPlanPlugin: PluginManifest = {
+  id: 'business-plan-generator',
+  name: 'Business Plan Generator',
+  version: '1.0.0',
+  description: 'Structured business plan templates with financial projections',
+  author: 'MarkItUp Team',
+  main: 'business-plan.js',
+
+  commands: [
+    {
+      id: 'create-business-plan',
+      name: 'Create Business Plan',
+      description: 'Generate comprehensive business plan',
+      callback: async () => {
+        try {
+          if (businessPlanInstance) {
+            await businessPlanInstance.createBusinessPlan();
+          }
+        } catch (error) {
+          console.error('Error creating business plan:', error);
+        }
+      },
+    },
+  ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      businessPlanInstance = new BusinessPlanPlugin(api);
+    }
+    console.log('Business Plan Generator plugin loaded');
+  },
+
+  onUnload: () => {
+    businessPlanInstance = null;
+  },
+};
+
+// Time Tracker Plugin - Pomodoro timer and project time logging
+export const timeTrackerPlugin: PluginManifest = {
+  id: 'time-tracker',
+  name: 'Time Tracker',
+  version: '1.0.0',
+  description: 'Pomodoro timer, project time logging, and productivity analytics',
+  author: 'MarkItUp Team',
+  main: 'time-tracker.js',
+
+  settings: [
+    {
+      id: 'pomodoroLength',
+      name: 'Pomodoro Length (minutes)',
+      type: 'number',
+      default: 25,
+      description: 'Length of each pomodoro session',
+    },
+    {
+      id: 'shortBreak',
+      name: 'Short Break (minutes)',
+      type: 'number',
+      default: 5,
+      description: 'Length of short breaks',
+    },
+    {
+      id: 'longBreak',
+      name: 'Long Break (minutes)',
+      type: 'number',
+      default: 15,
+      description: 'Length of long breaks',
+    },
+  ],
+
+  commands: [
+    {
+      id: 'start-pomodoro',
+      name: 'Start Pomodoro',
+      description: 'Start a pomodoro timer',
+      keybinding: 'Ctrl+Shift+T',
+      callback: async () => {
+        try {
+          if (timeTrackerInstance) {
+            await timeTrackerInstance.startPomodoro();
+          }
+        } catch (error) {
+          console.error('Error starting pomodoro:', error);
+        }
+      },
+    },
+    {
+      id: 'log-time-entry',
+      name: 'Log Time Entry',
+      description: 'Log time spent on a project',
+      callback: async () => {
+        try {
+          if (timeTrackerInstance) {
+            await timeTrackerInstance.logTimeEntry();
+          }
+        } catch (error) {
+          console.error('Error logging time:', error);
+        }
+      },
+    },
+  ],
+
+  views: [
+    {
+      id: 'pomodoro-timer',
+      name: 'Timer',
+      type: 'statusbar',
+      icon: '⏰',
+      component: () => {
+        return `
+          <div class="pomodoro-timer">
+            <span class="timer-display">25:00</span>
+            <button onclick="alert('Start timer')" class="timer-btn">▶️</button>
+          </div>
+        `;
+      },
+    },
+  ],
+
+  onLoad: (api?: PluginAPI) => {
+    if (api) {
+      timeTrackerInstance = new TimeTrackerPlugin(api);
+    }
+    const style = document.createElement('style');
+    style.textContent = `
+      .pomodoro-timer { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8em; }
+      .timer-display { font-family: monospace; color: #dc2626; }
+      .timer-btn { border: none; background: transparent; cursor: pointer; }
+    `;
+    document.head.appendChild(style);
+    console.log('Time Tracker plugin loaded');
+  },
+
+  onUnload: () => {
+    timeTrackerInstance = null;
+  },
+};
+
+// Implementation Classes
+
+class CRMLitePlugin {
+  constructor(private api: PluginAPI) {}
+
+  async addContact(): Promise<void> {
+    this.api.ui.showNotification(
+      'Adding new contact to CRM... Enter contact details: name, company, email, phone',
+      'info'
+    );
+  }
+
+  async logInteraction(): Promise<void> {
+    this.api.ui.showNotification(
+      'Logging interaction... Select contact and enter interaction type (call/email/meeting) and notes',
+      'info'
+    );
+  }
+}
+
+class InvoiceGeneratorPlugin {
+  constructor(private api: PluginAPI) {}
+
+  async createInvoice(): Promise<void> {
+    // Get invoice details from user
+    const clientName = prompt('Client name:');
+    const invoiceNumber = prompt('Invoice number:') || `INV-${Date.now()}`;
+    const amount = prompt('Total amount:');
+
+    if (clientName && amount) {
+      const invoice = `# Invoice ${invoiceNumber}
 
 ## Bill To
 **${clientName}**  
@@ -150,7 +442,7 @@ export const invoiceGeneratorPlugin: PluginManifest = {
 ## Summary
 **Subtotal:** $1,600.00  
 **Tax (8.5%):** $136.00  
-****Total:** $${amount}**
+**Total:** $${amount}**
 
 ## Payment Information
 **Payment Method:** [Bank Transfer/Check/PayPal]  
@@ -162,39 +454,22 @@ Thank you for your business! Payment is due within 30 days.
 ---
 *Invoice generated on ${new Date().toLocaleDateString()}*
 `;
-          console.log('Invoice created:', invoice);
-        }
-      },
-    },
-  ],
+      this.api.ui.showNotification(`Invoice ${invoiceNumber} created for ${clientName}`, 'success');
+      console.log('Invoice created:', invoice);
+    }
+  }
+}
 
-  onLoad: async () => {
-    console.log('Invoice Generator plugin loaded');
-  },
-};
+class ExpenseTrackerPlugin {
+  constructor(private api: PluginAPI) {}
 
-// Expense Tracker Plugin - Log business expenses
-export const expenseTrackerPlugin: PluginManifest = {
-  id: 'expense-tracker',
-  name: 'Expense Tracker',
-  version: '1.0.0',
-  description: 'Log business expenses, categorize, and track receipts',
-  author: 'MarkItUp Team',
-  main: 'expense-tracker.js',
+  async logExpense(): Promise<void> {
+    const amount = prompt('Expense amount:');
+    const category = prompt('Category (travel/meals/office/software):');
+    const description = prompt('Description:');
 
-  commands: [
-    {
-      id: 'log-expense',
-      name: 'Log Expense',
-      description: 'Log a new business expense',
-      keybinding: 'Ctrl+Shift+E',
-      callback: async () => {
-        const amount = prompt('Expense amount:');
-        const category = prompt('Category (travel/meals/office/software):');
-        const description = prompt('Description:');
-
-        if (amount && description) {
-          const expense = `
+    if (amount && description) {
+      const expense = `
 ## Expense Entry - ${new Date().toLocaleDateString()}
 
 **Amount:** $${amount}  
@@ -213,16 +488,13 @@ export const expenseTrackerPlugin: PluginManifest = {
 
 ---
 `;
-          console.log('Expense logged:', expense);
-        }
-      },
-    },
-    {
-      id: 'expense-report',
-      name: 'Generate Expense Report',
-      description: 'Generate monthly expense report',
-      callback: async () => {
-        const report = `# Monthly Expense Report - ${new Date().toLocaleDateString().split('/')[0]}/${new Date().getFullYear()}
+      this.api.ui.showNotification(`Expense of $${amount} logged`, 'success');
+      console.log('Expense logged:', expense);
+    }
+  }
+
+  async generateReport(): Promise<void> {
+    const report = `# Monthly Expense Report - ${new Date().toLocaleDateString().split('/')[0]}/${new Date().getFullYear()}
 
 ## Summary by Category
 
@@ -248,37 +520,21 @@ export const expenseTrackerPlugin: PluginManifest = {
 ## Tax Deductible Total: $1,850.00
 ## Client Billable Total: $650.00
 `;
-        console.log('Expense report:', report);
-      },
-    },
-  ],
+    this.api.ui.showNotification('Expense report generated', 'success');
+    console.log('Expense report:', report);
+  }
+}
 
-  onLoad: async () => {
-    console.log('Expense Tracker plugin loaded');
-  },
-};
+class ContractTemplatesPlugin {
+  constructor(private api: PluginAPI) {}
 
-// Contract Templates Plugin - Legal document templates
-export const contractTemplatesPlugin: PluginManifest = {
-  id: 'contract-templates',
-  name: 'Contract Templates',
-  version: '1.0.0',
-  description: 'Legal document templates, clause library, and version tracking',
-  author: 'MarkItUp Team',
-  main: 'contract-templates.js',
+  async generateFreelanceContract(): Promise<void> {
+    const clientName = prompt('Client name:');
+    const projectName = prompt('Project name:');
+    const rate = prompt('Hourly rate or project fee:');
 
-  commands: [
-    {
-      id: 'freelance-contract',
-      name: 'Freelance Contract',
-      description: 'Generate freelance contract template',
-      callback: async () => {
-        const clientName = prompt('Client name:');
-        const projectName = prompt('Project name:');
-        const rate = prompt('Hourly rate or project fee:');
-
-        if (clientName && projectName) {
-          const contract = `# Freelance Services Agreement
+    if (clientName && projectName) {
+      const contract = `# Freelance Services Agreement
 
 **Effective Date:** ${new Date().toLocaleDateString()}
 
@@ -330,16 +586,13 @@ This agreement shall be governed by the laws of [State/Country].
 
 *This is a template and should be reviewed by legal counsel before use.*
 `;
-          console.log('Contract template:', contract);
-        }
-      },
-    },
-    {
-      id: 'nda-template',
-      name: 'NDA Template',
-      description: 'Generate non-disclosure agreement',
-      callback: async () => {
-        const template = `# Non-Disclosure Agreement (NDA)
+      this.api.ui.showNotification(`Freelance contract created for ${clientName}`, 'success');
+      console.log('Contract template:', contract);
+    }
+  }
+
+  async generateNDA(): Promise<void> {
+    const template = `# Non-Disclosure Agreement (NDA)
 
 **Effective Date:** ${new Date().toLocaleDateString()}
 
@@ -371,36 +624,20 @@ This Agreement shall be governed by [State/Country] law.
 
 **Receiving Party:** ________________ Date: _______
 `;
-        console.log('NDA template:', template);
-      },
-    },
-  ],
+    this.api.ui.showNotification('NDA template created', 'success');
+    console.log('NDA template:', template);
+  }
+}
 
-  onLoad: async () => {
-    console.log('Contract Templates plugin loaded');
-  },
-};
+class BusinessPlanPlugin {
+  constructor(private api: PluginAPI) {}
 
-// Business Plan Generator Plugin - Structured business plans
-export const businessPlanPlugin: PluginManifest = {
-  id: 'business-plan-generator',
-  name: 'Business Plan Generator',
-  version: '1.0.0',
-  description: 'Structured business plan templates with financial projections',
-  author: 'MarkItUp Team',
-  main: 'business-plan.js',
+  async createBusinessPlan(): Promise<void> {
+    const businessName = prompt('Business name:');
+    const industry = prompt('Industry:');
 
-  commands: [
-    {
-      id: 'create-business-plan',
-      name: 'Create Business Plan',
-      description: 'Generate comprehensive business plan',
-      callback: async () => {
-        const businessName = prompt('Business name:');
-        const industry = prompt('Industry:');
-
-        if (businessName) {
-          const plan = `# Business Plan: ${businessName}
+    if (businessName) {
+      const plan = `# Business Plan: ${businessName}
 
 **Date:** ${new Date().toLocaleDateString()}  
 **Industry:** ${industry || '[Industry]'}
@@ -491,75 +728,30 @@ export const businessPlanPlugin: PluginManifest = {
 - Market research data
 - Legal documents
 `;
-          console.log('Business plan:', plan);
-        }
-      },
-    },
-  ],
+      this.api.ui.showNotification(`Business plan created for ${businessName}`, 'success');
+      console.log('Business plan:', plan);
+    }
+  }
+}
 
-  onLoad: async () => {
-    console.log('Business Plan Generator plugin loaded');
-  },
-};
+class TimeTrackerPlugin {
+  constructor(private api: PluginAPI) {}
 
-// Time Tracker Plugin - Pomodoro timer and project time logging
-export const timeTrackerPlugin: PluginManifest = {
-  id: 'time-tracker',
-  name: 'Time Tracker',
-  version: '1.0.0',
-  description: 'Pomodoro timer, project time logging, and productivity analytics',
-  author: 'MarkItUp Team',
-  main: 'time-tracker.js',
+  async startPomodoro(): Promise<void> {
+    const task = prompt('What task are you working on?');
+    if (task) {
+      this.api.ui.showNotification(`Pomodoro started for: ${task}. Focus for 25 minutes!`, 'info');
+      console.log(`Starting 25-minute pomodoro for: ${task}`);
+    }
+  }
 
-  settings: [
-    {
-      id: 'pomodoroLength',
-      name: 'Pomodoro Length (minutes)',
-      type: 'number',
-      default: 25,
-      description: 'Length of each pomodoro session',
-    },
-    {
-      id: 'shortBreak',
-      name: 'Short Break (minutes)',
-      type: 'number',
-      default: 5,
-      description: 'Length of short breaks',
-    },
-    {
-      id: 'longBreak',
-      name: 'Long Break (minutes)',
-      type: 'number',
-      default: 15,
-      description: 'Length of long breaks',
-    },
-  ],
+  async logTimeEntry(): Promise<void> {
+    const project = prompt('Project name:');
+    const hours = prompt('Hours worked:');
+    const description = prompt('Description of work:');
 
-  commands: [
-    {
-      id: 'start-pomodoro',
-      name: 'Start Pomodoro',
-      description: 'Start a pomodoro timer',
-      keybinding: 'Ctrl+Shift+T',
-      callback: async () => {
-        const task = prompt('What task are you working on?');
-        if (task) {
-          console.log(`Starting 25-minute pomodoro for: ${task}`);
-          alert('Pomodoro started! Focus for 25 minutes.');
-        }
-      },
-    },
-    {
-      id: 'log-time-entry',
-      name: 'Log Time Entry',
-      description: 'Log time spent on a project',
-      callback: async () => {
-        const project = prompt('Project name:');
-        const hours = prompt('Hours worked:');
-        const description = prompt('Description of work:');
-
-        if (project && hours) {
-          const entry = `
+    if (project && hours) {
+      const entry = `
 ## Time Entry - ${new Date().toLocaleDateString()}
 
 **Project:** ${project}  
@@ -575,112 +767,8 @@ export const timeTrackerPlugin: PluginManifest = {
 
 ---
 `;
-          console.log('Time entry:', entry);
-        }
-      },
-    },
-  ],
-
-  views: [
-    {
-      id: 'pomodoro-timer',
-      name: 'Timer',
-      type: 'statusbar',
-      icon: '⏰',
-      component: () => {
-        return `
-          <div class="pomodoro-timer">
-            <span class="timer-display">25:00</span>
-            <button onclick="alert('Start timer')" class="timer-btn">▶️</button>
-          </div>
-        `;
-      },
-    },
-  ],
-
-  onLoad: async () => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .pomodoro-timer { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8em; }
-      .timer-display { font-family: monospace; color: #dc2626; }
-      .timer-btn { border: none; background: transparent; cursor: pointer; }
-    `;
-    document.head.appendChild(style);
-    console.log('Time Tracker plugin loaded');
-  },
-};
-
-// Implementation Classes
-
-class CRMLitePlugin {
-  constructor(private api: PluginAPI) {}
-
-  async addContact(): Promise<void> {
-    this.api.ui.showNotification(
-      'Adding new contact to CRM... Enter contact details: name, company, email, phone',
-      'info'
-    );
-  }
-
-  async logInteraction(): Promise<void> {
-    this.api.ui.showNotification(
-      'Logging interaction... Select contact and enter interaction type (call/email/meeting) and notes',
-      'info'
-    );
-  }
-}
-
-class InvoiceGeneratorPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async createInvoice(): Promise<void> {
-    this.api.ui.showNotification(
-      'Creating new invoice... Enter client name, invoice number, and amount',
-      'info'
-    );
-  }
-}
-
-class ExpenseTrackerPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async addExpense(): Promise<void> {
-    this.api.ui.showNotification(
-      'Adding expense... Enter amount, category, description, and attach receipt',
-      'info'
-    );
-  }
-}
-
-class ContractTemplatesPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async generateContract(): Promise<void> {
-    this.api.ui.showNotification(
-      'Generating contract... Choose template (NDA, Service Agreement, Employment, Partnership)',
-      'info'
-    );
-  }
-}
-
-class BusinessPlanPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async createBusinessPlan(): Promise<void> {
-    this.api.ui.showNotification(
-      'Creating business plan... Enter business name and select plan structure',
-      'info'
-    );
-  }
-}
-
-class TimeTrackerPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async startTimer(): Promise<void> {
-    this.api.ui.showNotification(
-      'Starting time tracker... Enter task name and project. Timer will run in background',
-      'info'
-    );
+      this.api.ui.showNotification(`Time logged: ${hours} hours for ${project}`, 'success');
+      console.log('Time entry:', entry);
+    }
   }
 }
