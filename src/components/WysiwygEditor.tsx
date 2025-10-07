@@ -223,6 +223,7 @@ const MenuBar = ({ editor, theme }: { editor: Editor | null; theme: string }) =>
 
 const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange, theme }) => {
   const editor = useEditor({
+    immediatelyRender: false, // Fix SSR hydration mismatch
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We'll use CodeBlockLowlight instead
@@ -253,7 +254,8 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange, theme })
     content: value,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm lg:prose dark:prose-invert max-w-none focus:outline-none p-4 lg:p-6',
+        class:
+          'prose prose-sm lg:prose dark:prose-invert max-w-none focus:outline-none p-4 lg:p-6 [&_a]:no-underline [&_a]:text-blue-600 dark:[&_a]:text-blue-400 [&_a:hover]:underline [&_a::before]:content-none',
       },
     },
     onUpdate: ({ editor }) => {
@@ -266,7 +268,14 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange, theme })
 
   // Update editor content when value prop changes (but not from editor itself)
   React.useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
+    if (!editor) return;
+
+    // Get current markdown content from editor
+    const storage = editor.storage as unknown as Record<string, { getMarkdown?: () => string }>;
+    const currentMarkdown = storage.markdown?.getMarkdown?.() || '';
+
+    // Only update if the external value is different from what's in the editor
+    if (value !== currentMarkdown) {
       editor.commands.setContent(value);
     }
   }, [value, editor]);
