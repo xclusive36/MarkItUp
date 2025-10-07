@@ -16,11 +16,19 @@ import { GeminiProvider } from './providers/gemini';
 import { Note, SearchResult } from '../types';
 import { analytics } from '../analytics';
 
+// Minimal PKM interface for AI service needs
+interface PKMSystemInterface {
+  getNote(id: string): Note | undefined;
+  search?(query: string, options?: Record<string, unknown>): SearchResult[];
+  getLinks?(noteId: string): Promise<Array<{ source: string; target: string }>>;
+  getAllNotes?(): Note[];
+}
+
 export class AIService {
   private providers: Map<string, unknown> = new Map();
   private settings: AISettings;
   private chatSessions: Map<string, ChatSession> = new Map();
-  private pkm: unknown; // Will be injected
+  private pkm?: PKMSystemInterface;
 
   constructor(settings: AISettings) {
     this.settings = settings;
@@ -28,7 +36,7 @@ export class AIService {
     this.loadChatSessions();
   }
 
-  setPKMSystem(pkm: unknown) {
+  setPKMSystem(pkm: PKMSystemInterface) {
     this.pkm = pkm;
   }
 
@@ -462,7 +470,7 @@ export function getAIService(): AIService {
   return aiServiceInstance;
 }
 
-export function initializeAIService(pkmSystem: unknown): AIService {
+export function initializeAIService(pkmSystem: PKMSystemInterface): AIService {
   const aiService = getAIService();
   aiService.setPKMSystem(pkmSystem);
   return aiService;
