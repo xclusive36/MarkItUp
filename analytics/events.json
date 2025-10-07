@@ -847,5 +847,15 @@
       "tagCount": 3
     },
     "sessionId": "session_1759867739460_u862xrtul"
+  },
+  {
+    "id": "event_1759868009997_tbp1vqb8u",
+    "type": "ai_chat",
+    "timestamp": "2025-10-07T20:13:29.997Z",
+    "data": {
+      "action": "open_chat",
+      "noteContext": true
+    },
+    "sessionId": "session_1759867739460_u862xrtul"
   }
 ]

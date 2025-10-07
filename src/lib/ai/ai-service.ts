@@ -1,23 +1,26 @@
-import { 
-  AIProvider, 
-  AIMessage, 
-  AIResponse, 
-  AIContext, 
-  AISettings, 
-  ChatSession, 
+import {
+  AIProvider,
+  AIMessage,
+  AIResponse,
+  AIContext,
+  AISettings,
+  ChatSession,
   AIError,
   ChatRequest,
-  ChatResponse
+  ChatResponse,
 } from './types';
 import { OpenAIProvider } from './providers/openai';
+import { AnthropicProvider } from './providers/anthropic';
+import { OllamaProvider } from './providers/ollama';
+import { GeminiProvider } from './providers/gemini';
 import { Note, SearchResult } from '../types';
 import { analytics } from '../analytics';
 
 export class AIService {
-  private providers: Map<string, any> = new Map();
+  private providers: Map<string, unknown> = new Map();
   private settings: AISettings;
   private chatSessions: Map<string, ChatSession> = new Map();
-  private pkm: any; // Will be injected
+  private pkm: unknown; // Will be injected
 
   constructor(settings: AISettings) {
     this.settings = settings;
@@ -25,23 +28,58 @@ export class AIService {
     this.loadChatSessions();
   }
 
-  setPKMSystem(pkm: any) {
+  setPKMSystem(pkm: unknown) {
     this.pkm = pkm;
   }
 
   private initializeProviders() {
     // Initialize OpenAI provider if API key is provided
-    if (this.settings.apiKey && this.settings.provider === 'openai') {
+    if (this.settings.provider === 'openai' && this.settings.apiKey) {
       this.providers.set('openai', new OpenAIProvider(this.settings.apiKey));
+    }
+
+    // Initialize Anthropic provider if API key is provided
+    if (this.settings.provider === 'anthropic' && this.settings.apiKey) {
+      this.providers.set('anthropic', new AnthropicProvider(this.settings.apiKey));
+    }
+
+    // Initialize Gemini provider if API key is provided
+    if (this.settings.provider === 'gemini' && this.settings.apiKey) {
+      this.providers.set('gemini', new GeminiProvider(this.settings.apiKey));
+    }
+
+    // Initialize Ollama provider (no API key required)
+    if (this.settings.provider === 'ollama') {
+      this.providers.set('ollama', new OllamaProvider());
     }
   }
 
-  private getCurrentProvider() {
+  private getCurrentProvider(): {
+    getProviderInfo(): AIProvider;
+    chat(
+      messages: AIMessage[],
+      context: AIContext,
+      options?: Record<string, unknown>
+    ): Promise<AIResponse>;
+    complete(prompt: string, options?: Record<string, unknown>): Promise<string>;
+    analyze(content: string, analysisType?: string): Promise<string | Record<string, unknown>>;
+  } {
     const provider = this.providers.get(this.settings.provider);
     if (!provider) {
-      throw new Error(`Provider ${this.settings.provider} not available. Please check your API key.`);
+      throw new Error(
+        `Provider ${this.settings.provider} not available. Please check your API key.`
+      );
     }
-    return provider;
+    return provider as {
+      getProviderInfo(): AIProvider;
+      chat(
+        messages: AIMessage[],
+        context: AIContext,
+        options?: Record<string, unknown>
+      ): Promise<AIResponse>;
+      complete(prompt: string, options?: Record<string, unknown>): Promise<string>;
+      analyze(content: string, analysisType?: string): Promise<string | Record<string, unknown>>;
+    };
   }
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
@@ -61,7 +99,7 @@ export class AIService {
         role: 'user',
         content: request.message,
         timestamp: new Date().toISOString(),
-        context
+        context,
       };
 
       // Add to session
@@ -75,7 +113,7 @@ export class AIService {
       const response = await provider.chat(recentMessages, context, {
         model: request.model || this.settings.model,
         temperature: request.temperature || this.settings.temperature,
-        maxTokens: request.maxTokens || this.settings.maxTokens
+        maxTokens: request.maxTokens || this.settings.maxTokens,
       });
 
       // Create assistant message
@@ -86,7 +124,7 @@ export class AIService {
         timestamp: response.timestamp,
         tokens: response.usage.totalTokens,
         model: response.model,
-        context
+        context,
       };
 
       // Add to session
@@ -112,35 +150,34 @@ export class AIService {
         cost: response.usage.estimatedCost,
         hasContext: context.relatedNotes.length > 0,
         contextNotes: context.relatedNotes.length,
-        responseLength: response.content.length
+        responseLength: response.content.length,
       });
 
       return {
         success: true,
         data: response,
-        sessionId: session.id
+        sessionId: session.id,
       };
-
     } catch (error) {
       console.error('AI Chat error:', error);
-      
+
       const aiError: AIError = {
         code: 'CHAT_ERROR',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         timestamp: new Date().toISOString(),
-        provider: this.settings.provider
+        provider: this.settings.provider,
       };
 
       analytics.trackEvent('ai_error', {
         error: aiError.code,
         message: aiError.message,
-        provider: this.settings.provider
+        provider: this.settings.provider,
       });
 
       return {
         success: false,
         error: aiError,
-        sessionId: request.sessionId || 'default'
+        sessionId: request.sessionId || 'default',
       };
     }
   }
@@ -149,7 +186,7 @@ export class AIService {
     const context: AIContext = {
       relatedNotes: [],
       searchResults: [],
-      conversationHistory: []
+      conversationHistory: [],
     };
 
     if (!request.includeContext && !this.settings.enableContext) {
@@ -170,14 +207,14 @@ export class AIService {
       if (this.pkm && this.pkm.search) {
         const searchResults = await this.pkm.search(request.message, {
           limit: this.settings.maxContextNotes || 5,
-          includeContent: true
+          includeContent: true,
         });
 
         context.searchResults = searchResults.map((result: SearchResult) => ({
           noteId: result.noteId,
           noteName: result.noteName,
           snippet: result.matches.length > 0 ? result.matches[0].context : '',
-          score: result.score
+          score: result.score,
         }));
 
         // Convert high-scoring search results to related notes
@@ -192,12 +229,11 @@ export class AIService {
               id: note.id,
               name: note.name,
               relevantContent: this.extractRelevantContent(note.content, request.message),
-              relevanceScore: result.score
+              relevanceScore: result.score,
             });
           }
         }
       }
-
     } catch (error) {
       console.warn('Error building AI context:', error);
     }
@@ -205,12 +241,14 @@ export class AIService {
     return context;
   }
 
-  private async getRelatedNotes(note: Note): Promise<Array<{
-    id: string;
-    name: string;
-    relevantContent: string;
-    relevanceScore: number;
-  }>> {
+  private async getRelatedNotes(note: Note): Promise<
+    Array<{
+      id: string;
+      name: string;
+      relevantContent: string;
+      relevanceScore: number;
+    }>
+  > {
     const related: Array<{
       id: string;
       name: string;
@@ -223,7 +261,7 @@ export class AIService {
     try {
       // Get notes linked to this note
       const links = this.pkm.getLinks ? await this.pkm.getLinks(note.id) : [];
-      
+
       for (const link of links.slice(0, 3)) {
         const linkedNote = this.pkm.getNote(link.target !== note.id ? link.target : link.source);
         if (linkedNote) {
@@ -231,15 +269,18 @@ export class AIService {
             id: linkedNote.id,
             name: linkedNote.name,
             relevantContent: linkedNote.content.substring(0, 300),
-            relevanceScore: 0.8
+            relevanceScore: 0.8,
           });
         }
       }
 
       // Get notes with similar tags
-      const similarNotes = this.pkm.getAllNotes ? this.pkm.getAllNotes()
-        .filter((n: Note) => n.id !== note.id && n.tags.some(tag => note.tags.includes(tag)))
-        .slice(0, 2) : [];
+      const similarNotes = this.pkm.getAllNotes
+        ? this.pkm
+            .getAllNotes()
+            .filter((n: Note) => n.id !== note.id && n.tags.some(tag => note.tags.includes(tag)))
+            .slice(0, 2)
+        : [];
 
       for (const similarNote of similarNotes) {
         if (!related.find(r => r.id === similarNote.id)) {
@@ -247,11 +288,10 @@ export class AIService {
             id: similarNote.id,
             name: similarNote.name,
             relevantContent: similarNote.content.substring(0, 300),
-            relevanceScore: 0.6
+            relevanceScore: 0.6,
           });
         }
       }
-
     } catch (error) {
       console.warn('Error getting related notes:', error);
     }
@@ -261,10 +301,13 @@ export class AIService {
 
   private extractRelevantContent(content: string, query: string): string {
     // Simple relevance extraction - find paragraphs containing query terms
-    const queryTerms = query.toLowerCase().split(' ').filter(term => term.length > 2);
+    const queryTerms = query
+      .toLowerCase()
+      .split(' ')
+      .filter(term => term.length > 2);
     const paragraphs = content.split('\n\n');
-    
-    const relevantParagraphs = paragraphs.filter(paragraph => 
+
+    const relevantParagraphs = paragraphs.filter(paragraph =>
       queryTerms.some(term => paragraph.toLowerCase().includes(term))
     );
 
@@ -277,7 +320,7 @@ export class AIService {
 
   private createNewSession(sessionId?: string): ChatSession {
     const id = sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const session: ChatSession = {
       id,
       title: 'New Conversation',
@@ -285,7 +328,7 @@ export class AIService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       totalTokens: 0,
-      totalCost: 0
+      totalCost: 0,
     };
 
     return session;
@@ -293,10 +336,8 @@ export class AIService {
 
   private generateSessionTitle(firstMessage: string): string {
     // Extract a meaningful title from the first message
-    const title = firstMessage.length > 50 
-      ? firstMessage.substring(0, 47) + '...'
-      : firstMessage;
-    
+    const title = firstMessage.length > 50 ? firstMessage.substring(0, 47) + '...' : firstMessage;
+
     return title.charAt(0).toUpperCase() + title.slice(1);
   }
 
@@ -306,8 +347,9 @@ export class AIService {
   }
 
   getAllChatSessions(): ChatSession[] {
-    return Array.from(this.chatSessions.values())
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return Array.from(this.chatSessions.values()).sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
   }
 
   deleteChatSession(sessionId: string): boolean {
@@ -331,7 +373,12 @@ export class AIService {
 
   // Provider management
   getAvailableProviders(): AIProvider[] {
-    return Array.from(this.providers.values()).map(provider => provider.getProviderInfo());
+    return Array.from(this.providers.values()).map(provider => {
+      const p = provider as {
+        getProviderInfo(): AIProvider;
+      };
+      return p.getProviderInfo();
+    });
   }
 
   // Persistence
@@ -399,7 +446,7 @@ export class AIService {
       contextSearchDepth: 10,
       enableUsageTracking: true,
       monthlyLimit: 10.0, // $10 USD
-      enableLocalFallback: false
+      enableLocalFallback: false,
     };
   }
 }
@@ -415,7 +462,7 @@ export function getAIService(): AIService {
   return aiServiceInstance;
 }
 
-export function initializeAIService(pkmSystem: any): AIService {
+export function initializeAIService(pkmSystem: unknown): AIService {
   const aiService = getAIService();
   aiService.setPKMSystem(pkmSystem);
   return aiService;
