@@ -17,7 +17,7 @@ export interface UnifiedPluginManifest extends PluginManifest {
     supportedProviders?: string[];
     minTokens?: number;
   };
-  
+
   // Enhanced metadata
   category?: string;
   tags?: string[];
@@ -27,7 +27,7 @@ export interface UnifiedPluginManifest extends PluginManifest {
   license?: string;
   homepage?: string;
   repository?: string;
-  
+
   // Plugin capabilities
   capabilities?: {
     chat?: boolean;
@@ -37,17 +37,20 @@ export interface UnifiedPluginManifest extends PluginManifest {
     visualization?: boolean;
     realtime?: boolean;
   };
-  
+
   // Enhanced settings with UI metadata
-  enhancedSettings?: Record<string, {
-    type: 'text' | 'password' | 'number' | 'boolean' | 'select' | 'apikey';
-    label?: string;
-    description?: string;
-    required?: boolean;
-    default?: any;
-    placeholder?: string;
-    options?: Array<{ value: string; label: string }>;
-  }>;
+  enhancedSettings?: Record<
+    string,
+    {
+      type: 'text' | 'password' | 'number' | 'boolean' | 'select' | 'apikey';
+      label?: string;
+      description?: string;
+      required?: boolean;
+      default?: any;
+      placeholder?: string;
+      options?: Array<{ value: string; label: string }>;
+    }
+  >;
 }
 
 export interface LoadedUnifiedPlugin {
@@ -123,12 +126,12 @@ export class UnifiedPluginManager {
         health: {
           status: 'healthy',
           executionCount: 0,
-          errorCount: 0
+          errorCount: 0,
         },
         metrics: {
           usageCount: 0,
-          averageExecutionTime: 0
-        }
+          averageExecutionTime: 0,
+        },
       };
 
       // Register commands, views, processors
@@ -139,19 +142,19 @@ export class UnifiedPluginManager {
       }
 
       this.plugins.set(manifest.id, loadedPlugin);
-      
+
       // Execute onLoad if defined
       if (manifest.onLoad) {
         await manifest.onLoad();
       }
 
       this.savePersistedSettings();
-      analytics.trackEvent('mode_switched', { 
+      analytics.trackEvent('mode_switched', {
         view: 'plugin_loaded',
-        pluginId: manifest.id, 
-        isAI: !!manifest.aiIntegration 
+        pluginId: manifest.id,
+        isAI: !!manifest.aiIntegration,
       });
-      
+
       console.log(`Plugin ${manifest.id} loaded successfully (AI: ${!!manifest.aiIntegration})`);
       return true;
     } catch (error) {
@@ -172,11 +175,11 @@ export class UnifiedPluginManager {
 
       this.plugins.delete(pluginId);
       this.savePersistedSettings();
-      
-      analytics.trackEvent('mode_switched', { 
+
+      analytics.trackEvent('mode_switched', {
         view: 'plugin_unloaded',
-        pluginId, 
-        isAI: plugin.isAIPlugin 
+        pluginId,
+        isAI: plugin.isAIPlugin,
       });
       return true;
     } catch (error) {
@@ -206,18 +209,20 @@ export class UnifiedPluginManager {
   }
 
   getPluginsByCapability(capability: string): LoadedUnifiedPlugin[] {
-    return this.getLoadedPlugins().filter(p => 
-      p.manifest.capabilities?.[capability as keyof typeof p.manifest.capabilities] === true
+    return this.getLoadedPlugins().filter(
+      p => p.manifest.capabilities?.[capability as keyof typeof p.manifest.capabilities] === true
     );
   }
 
   searchPlugins(query: string): LoadedUnifiedPlugin[] {
     const searchLower = query.toLowerCase();
-    return this.getLoadedPlugins().filter(plugin => 
-      plugin.manifest.name.toLowerCase().includes(searchLower) ||
-      plugin.manifest.description.toLowerCase().includes(searchLower) ||
-      plugin.manifest.author.toLowerCase().includes(searchLower) ||
-      (plugin.manifest.tags && plugin.manifest.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+    return this.getLoadedPlugins().filter(
+      plugin =>
+        plugin.manifest.name.toLowerCase().includes(searchLower) ||
+        plugin.manifest.description.toLowerCase().includes(searchLower) ||
+        plugin.manifest.author.toLowerCase().includes(searchLower) ||
+        (plugin.manifest.tags &&
+          plugin.manifest.tags.some(tag => tag.toLowerCase().includes(searchLower)))
     );
   }
 
@@ -225,7 +230,12 @@ export class UnifiedPluginManager {
   // AI-SPECIFIC FUNCTIONALITY
   // =====================================================
 
-  async executeAICapability(pluginId: string, action: string, input: any, context?: any): Promise<any> {
+  async executeAICapability(
+    pluginId: string,
+    action: string,
+    input: any,
+    context?: any
+  ): Promise<any> {
     const plugin = this.plugins.get(pluginId);
     if (!plugin || !plugin.isAIPlugin) {
       throw new Error(`AI plugin ${pluginId} not found`);
@@ -233,32 +243,32 @@ export class UnifiedPluginManager {
 
     try {
       const startTime = Date.now();
-      
+
       // Execute AI capability through the plugin's API
       const result = await this.callPluginMethod(pluginId, action, input, context);
-      
+
       // Update metrics
       const executionTime = Date.now() - startTime;
       plugin.metrics.usageCount++;
       plugin.metrics.lastUsed = new Date();
-      plugin.metrics.averageExecutionTime = 
+      plugin.metrics.averageExecutionTime =
         (plugin.metrics.averageExecutionTime + executionTime) / 2;
-      
+
       plugin.health.executionCount++;
       plugin.health.lastExecuted = new Date();
-      
-      analytics.trackEvent('ai_analysis', { 
+
+      analytics.trackEvent('ai_analysis', {
         action: 'ai_plugin_executed',
-        pluginId, 
-        executionTime 
+        pluginId,
+        executionTime,
       });
-      
+
       return result;
     } catch (error) {
       plugin.health.errorCount++;
       plugin.health.lastError = error instanceof Error ? error.message : 'Unknown error';
       plugin.health.status = 'error';
-      
+
       console.error(`AI plugin execution failed for ${pluginId}:`, error);
       throw error;
     }
@@ -302,11 +312,15 @@ export class UnifiedPluginManager {
         create: async (content: string, title?: string) => {
           return this.pkmSystem.createNote(title || 'Untitled', content);
         },
-        update: async (id: string, updates: Partial<Note>) => this.pkmSystem.updateNote(id, updates),
+        update: async (id: string, updates: Partial<Note>) =>
+          this.pkmSystem.updateNote(id, updates),
         delete: async (id: string) => this.pkmSystem.deleteNote(id),
         search: (query: string) => this.pkmSystem.search(query),
+        getActiveNoteId: () => {
+          return this.pkmSystem.viewState?.activeNoteId;
+        },
       },
-      
+
       // AI extensions (only available for AI plugins)
       ...(isAI && {
         ai: {
@@ -328,32 +342,55 @@ export class UnifiedPluginManager {
             // Implementation would go here
             return { analysis: 'Analysis result placeholder' };
           },
-        }
+        },
       }),
 
       ui: {
-        showNotification: (message: string, type = 'info') => {
-          console.log(`[${type}] ${message}`);
-          // Integration with notification system would go here
+        showNotification: (message: string, type?: string) => {
+          console.log(`[Notification ${type || 'info'}]:`, message);
+          // Use event listeners directly since we can't reference events API here
+          const listeners = this.eventListeners.get('notification');
+          if (listeners) {
+            listeners.forEach(callback => callback({ message, type }));
+          }
         },
         showModal: async (title: string, content: any) => {
-          console.log(`Modal: ${title}`);
-          return Promise.resolve();
+          console.log('Show modal:', title);
+          const listeners = this.eventListeners.get('modal');
+          if (listeners) {
+            listeners.forEach(callback => callback({ title, content }));
+          }
         },
         addCommand: (command: Command) => {
-          const plugin = this.plugins.get(pluginId);
-          if (plugin) {
-            plugin.commands.set(command.id, command);
+          console.log('Add command:', command.id);
+          const listeners = this.eventListeners.get('command');
+          if (listeners) {
+            listeners.forEach(callback => callback(command));
           }
         },
         addView: (view: PluginView) => {
-          const plugin = this.plugins.get(pluginId);
-          if (plugin) {
-            plugin.views.set(view.id, view);
+          console.log('Add view:', view.id);
+          const listeners = this.eventListeners.get('view');
+          if (listeners) {
+            listeners.forEach(callback => callback(view));
           }
         },
         setStatusBarText: (text: string) => {
-          console.log(`Status: ${text}`);
+          console.log('Status bar:', text);
+          const listeners = this.eventListeners.get('status-bar');
+          if (listeners) {
+            listeners.forEach(callback => callback({ text }));
+          }
+        },
+        getEditorContent: () => {
+          console.log('Getting editor content');
+          return '';
+        },
+        setEditorContent: (content: string) => {
+          console.log('Setting editor content:', content.substring(0, 50));
+        },
+        openNote: (noteId: string) => {
+          console.log('Opening note:', noteId);
         },
       },
 
@@ -409,7 +446,7 @@ export class UnifiedPluginManager {
     const plugins = this.getLoadedPlugins();
     const aiPlugins = this.getAIPlugins();
     const regularPlugins = this.getRegularPlugins();
-    
+
     return {
       totalPlugins: plugins.length,
       aiPlugins: aiPlugins.length,
