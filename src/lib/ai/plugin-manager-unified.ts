@@ -12,28 +12,37 @@ export interface AIPluginMetadata extends PluginManifest {
     inputTypes: string[];
     outputTypes: string[];
   };
-  
+
   // Analytics and usage tracking
   analytics?: {
     trackUsage: boolean;
     collectMetrics: string[];
   };
-  
+
   // Content generation capability flag
   contentGeneration?: boolean;
-  
+
   // Required permissions for AI features
   requiredPermissions?: string[];
-  
+
   // Plugin state
   enabled?: boolean;
   config?: Record<string, any>;
-  
+
   // Tags for categorization and search
   tags?: string[];
-  
+
   // Plugin category (extended from Phase 5)
-  category?: 'ai-chat' | 'knowledge-enhancement' | 'automation' | 'analysis' | 'Core' | 'Productivity' | 'Utility' | 'AI & Learning' | 'Theming';
+  category?:
+    | 'ai-chat'
+    | 'knowledge-enhancement'
+    | 'automation'
+    | 'analysis'
+    | 'Core'
+    | 'Productivity'
+    | 'Utility'
+    | 'AI & Learning'
+    | 'Theming';
 }
 
 export interface LoadedAIPlugin {
@@ -222,19 +231,20 @@ export class UnifiedAIPluginManager {
 
   searchPlugins(query: string): AIPluginMetadata[] {
     const searchLower = query.toLowerCase();
-    return this.getInstalledPlugins().filter(plugin => 
-      plugin.name.toLowerCase().includes(searchLower) ||
-      plugin.description.toLowerCase().includes(searchLower) ||
-      plugin.author.toLowerCase().includes(searchLower) ||
-      (plugin.tags && plugin.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+    return this.getInstalledPlugins().filter(
+      plugin =>
+        plugin.name.toLowerCase().includes(searchLower) ||
+        plugin.description.toLowerCase().includes(searchLower) ||
+        plugin.author.toLowerCase().includes(searchLower) ||
+        (plugin.tags && plugin.tags.some(tag => tag.toLowerCase().includes(searchLower)))
     );
   }
 
   // Plugin capabilities
-  getPluginsByCapability(capability: 'content-generation' | 'analysis' | 'enhancement' | 'automation'): AIPluginMetadata[] {
-    return this.getEnabledPlugins().filter(plugin => 
-      plugin.aiIntegration?.type === capability
-    );
+  getPluginsByCapability(
+    capability: 'content-generation' | 'analysis' | 'enhancement' | 'automation'
+  ): AIPluginMetadata[] {
+    return this.getEnabledPlugins().filter(plugin => plugin.aiIntegration?.type === capability);
   }
 
   async executePluginCapability(pluginId: string, input: any, context?: any): Promise<any> {
@@ -287,13 +297,7 @@ export class UnifiedAIPluginManager {
 
   // Private helper methods
   private validatePlugin(manifest: AIPluginMetadata): boolean {
-    return !!(
-      manifest.id &&
-      manifest.name &&
-      manifest.version &&
-      manifest.author &&
-      manifest.main
-    );
+    return !!(manifest.id && manifest.name && manifest.version && manifest.author && manifest.main);
   }
 
   private createPluginAPI(pluginId: string): PluginAPI {
@@ -324,6 +328,10 @@ export class UnifiedAIPluginManager {
           console.log(`Searching notes: ${query}`);
           return [];
         },
+        getActiveNoteId: () => {
+          console.log('Getting active note ID');
+          return undefined;
+        },
       },
       ui: {
         showNotification: (message: string, type = 'info') => {
@@ -347,6 +355,16 @@ export class UnifiedAIPluginManager {
         },
         setStatusBarText: (text: string) => {
           console.log(`Status: ${text}`);
+        },
+        getEditorContent: () => {
+          console.log('Getting editor content');
+          return '';
+        },
+        setEditorContent: (content: string) => {
+          console.log(`Setting editor content: ${content.substring(0, 50)}...`);
+        },
+        openNote: (noteId: string) => {
+          console.log(`Opening note: ${noteId}`);
         },
       },
       events: {
@@ -389,12 +407,12 @@ export class UnifiedAIPluginManager {
       if (saved) {
         try {
           const state = JSON.parse(saved);
-          
+
           // Restore settings
           if (state.settings) {
             this.pluginSettings = new Map(state.settings);
           }
-          
+
           // Note: Plugin manifests would need to be reinstalled/reloaded
           // This just restores the state, not the actual plugin code
           console.log('AI Plugin state loaded from localStorage');
