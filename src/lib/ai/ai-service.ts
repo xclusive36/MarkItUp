@@ -18,7 +18,7 @@ import { analytics } from '../analytics';
 
 // Minimal PKM interface for AI service needs
 interface PKMSystemInterface {
-  getNote(id: string): Note | undefined;
+  getNote(id: string): Note | null | undefined;
   search?(query: string, options?: Record<string, unknown>): SearchResult[];
   getLinks?(noteId: string): Promise<Array<{ source: string; target: string }>>;
   getAllNotes?(): Note[];
