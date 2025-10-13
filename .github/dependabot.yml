@@ -1,0 +1,74 @@
+# Dependabot configuration for automated dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "xclusive36"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    groups:
+      # Group all Next.js related packages together
+      nextjs:
+        patterns:
+          - "next*"
+          - "@next/*"
+      # Group all React related packages together
+      react:
+        patterns:
+          - "react*"
+          - "@react/*"
+      # Group all TypeScript related packages together
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "ts-*"
+      # Group all testing related packages together
+      testing:
+        patterns:
+          - "*jest*"
+          - "@testing-library/*"
+          - "vitest*"
+      # Group all linting/formatting packages together
+      code-quality:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+          - "prettier*"
+      # Group all TipTap editor packages together
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+          - "tiptap*"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"
