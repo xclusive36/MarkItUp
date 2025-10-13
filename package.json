@@ -33,7 +33,7 @@
     "@tiptap/react": "^3.6.5",
     "@tiptap/starter-kit": "^3.6.5",
     "d3": "^7.9.0",
-    "framer-motion": "^12.23.12",
+    "framer-motion": "^12.23.24",
     "katex": "^0.16.22",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.545.0",
