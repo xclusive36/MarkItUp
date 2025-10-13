@@ -4,6 +4,12 @@
 
 ![Screenshot](docs/screenshot.png)
 
+## 🆕 What's New
+
+- **✨ WYSIWYG Editor** - Rich text editing with TipTap, toggle between markdown and visual editing
+- **🤖 Multi-Provider AI** - Choose from 4 AI providers: OpenAI, Anthropic Claude, Google Gemini, or Ollama (local)
+- **🐳 Optimized Docker Builds** - Improved build process with system fonts for faster deployment
+
 ## 🚀 Quick Start
 
 ```bash
@@ -31,7 +37,7 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Writing Assistant** - Advanced content analysis and improvement suggestions
 - **Knowledge Discovery** - AI-powered gap analysis and content recommendations
 - **Research Assistant** - Semantic search with intelligent note creation
-- **Multi-Provider Support** - OpenAI integration with plans for local AI
+- **Multi-Provider Support** - Choose from OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash), or Ollama (local AI)
 
 ### 🤝 Real-time Collaboration
 
@@ -47,9 +53,10 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Content Processors** - Transform content during import/export
 - **Event System** - Plugin communication through events
 
-### � Advanced Markdown Features
+### 📝 Advanced Markdown Features
 
-- **Multi-mode Editor** - Edit, preview, or split-view modes
+- **WYSIWYG Editor** - Rich text editing with TipTap, seamless markdown conversion
+- **Multi-mode Editor** - Edit, preview, split-view, or WYSIWYG modes
 - **LaTeX Math** - Inline `$math$` and block `$$math$$` equations
 - **TikZ Diagrams** - Create vector graphics directly in markdown
 - **GitHub Flavored Markdown** - Tables, task lists, and more
