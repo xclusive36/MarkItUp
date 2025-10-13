@@ -36,7 +36,7 @@
     "framer-motion": "^12.23.12",
     "katex": "^0.16.22",
     "lowlight": "^3.3.0",
-    "lucide-react": "^0.469.0",
+    "lucide-react": "^0.545.0",
     "next": "15.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
