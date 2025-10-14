@@ -12,7 +12,6 @@ import { PluginManifest } from '../lib/types';
 
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
-import { advancedMarkdownEditorPlugin } from './enhanced-content-plugins';
 import { darkThemePlugin } from './example-plugins';
 
 /**
@@ -20,7 +19,6 @@ import { darkThemePlugin } from './example-plugins';
  */
 export const AVAILABLE_PLUGINS: PluginManifest[] = [
   enhancedWordCountPlugin, // ✅ Word count functionality works
-  advancedMarkdownEditorPlugin, // ✅ Live preview toggle and format work
   darkThemePlugin, // ✅ Theme toggle works
 ];
 
@@ -28,7 +26,6 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
  * Plugin Categories - Organized functional plugins by type
  */
 export const PLUGIN_CATEGORIES = {
-  '✨ Editor Tools': [advancedMarkdownEditorPlugin],
   '📊 Analytics': [enhancedWordCountPlugin],
   '🎨 Appearance': [darkThemePlugin],
 };
@@ -36,11 +33,7 @@ export const PLUGIN_CATEGORIES = {
 /**
  * Featured Plugins - Highlight the most useful ones
  */
-export const FEATURED_PLUGINS: PluginManifest[] = [
-  enhancedWordCountPlugin,
-  advancedMarkdownEditorPlugin,
-  darkThemePlugin,
-];
+export const FEATURED_PLUGINS: PluginManifest[] = [enhancedWordCountPlugin, darkThemePlugin];
 
 /**
  * Plugin Metadata - Enhanced information for functional plugins
@@ -53,16 +46,6 @@ export const PLUGIN_METADATA = {
     rating: '4.9',
     downloadCount: '1.2k',
     tags: ['analytics', 'word-count'],
-    featured: true,
-    functional: true,
-  },
-  [advancedMarkdownEditorPlugin.id]: {
-    category: 'Editor',
-    difficulty: 'beginner',
-    timeToSetup: '1 min',
-    rating: '4.8',
-    downloadCount: '980',
-    tags: ['editor', 'markdown', 'preview'],
     featured: true,
     functional: true,
   },
@@ -82,7 +65,7 @@ export const PLUGIN_METADATA = {
  * User Type Recommendations - Suggest plugins based on user needs
  */
 export const USER_TYPE_RECOMMENDATIONS = {
-  'all-users': [enhancedWordCountPlugin, advancedMarkdownEditorPlugin, darkThemePlugin],
+  'all-users': [enhancedWordCountPlugin, darkThemePlugin],
 };
 
 /**

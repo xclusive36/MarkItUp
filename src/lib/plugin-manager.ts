@@ -148,10 +148,29 @@ export class PluginManager {
 
       // Mark as inactive and remove
       plugin.isActive = false;
+      console.log(
+        `🗑️ About to delete ${pluginId}. Current plugins:`,
+        Array.from(this.plugins.keys())
+      );
       this.plugins.delete(pluginId);
+      console.log(`🗑️ After delete. Remaining plugins:`, Array.from(this.plugins.keys()));
 
       // Persist the updated plugin list
       this.persistLoadedPlugins();
+
+      // Verify persistence (debugging)
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('markitup-enabled-plugins');
+        console.log('Verification after unload - localStorage contains:', saved);
+        if (saved) {
+          const ids = JSON.parse(saved);
+          if (ids.includes(pluginId)) {
+            console.error(`ERROR: Plugin ${pluginId} still in localStorage after unload!`);
+          } else {
+            console.log(`✓ Confirmed: Plugin ${pluginId} successfully removed from persistence`);
+          }
+        }
+      }
 
       console.log(`Plugin ${pluginId} unloaded successfully`);
       return true;
@@ -508,10 +527,13 @@ export class PluginManager {
     // Load previously enabled plugins from localStorage
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('markitup-enabled-plugins');
+      console.log('🔍 loadPersistedPlugins called');
+      console.log('📦 Raw localStorage value:', saved);
+
       if (saved) {
         try {
           const pluginIds = JSON.parse(saved);
-          console.log('Found persisted plugins:', pluginIds);
+          console.log('✅ Parsed plugin IDs from localStorage:', pluginIds);
 
           // Import the plugin registry to get plugin manifests
           const { AVAILABLE_PLUGINS } = await import('../plugins/plugin-registry');
@@ -520,15 +542,24 @@ export class PluginManager {
           for (const pluginId of pluginIds) {
             const plugin = AVAILABLE_PLUGINS.find(p => p.id === pluginId);
             if (plugin && !this.plugins.has(pluginId)) {
-              console.log('Auto-loading persisted plugin:', pluginId);
+              console.log(`🔄 Auto-loading persisted plugin: ${pluginId} (${plugin.name})`);
               await this.loadPluginWithoutPersisting(plugin);
+            } else if (this.plugins.has(pluginId)) {
+              console.log(`⏭️  Skipping ${pluginId} - already loaded`);
+            } else {
+              console.warn(
+                `⚠️  Plugin ${pluginId} not found in registry - removing from persistence`
+              );
+              // Remove invalid plugin IDs from persistence
+              const updatedIds = pluginIds.filter((id: string) => id !== pluginId);
+              localStorage.setItem('markitup-enabled-plugins', JSON.stringify(updatedIds));
             }
           }
         } catch (error) {
-          console.error('Failed to load persisted plugins:', error);
+          console.error('❌ Failed to load persisted plugins:', error);
         }
       } else {
-        console.log('No persisted plugins found');
+        console.log('ℹ️  No persisted plugins found - starting fresh');
       }
     }
   }

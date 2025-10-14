@@ -1,136 +1,10 @@
 import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global instances
-let advancedMarkdownEditorInstance: AdvancedMarkdownEditorPlugin | null = null;
 let templateEngineInstance: TemplateEnginePlugin | null = null;
 let contentStructureInstance: ContentStructurePlugin | null = null;
 let multiFormatExportInstance: MultiFormatExportPlugin | null = null;
 let contentStatisticsInstance: ContentStatisticsPlugin | null = null;
-
-// Advanced Markdown Editor Plugin - Enhanced editing features
-export const advancedMarkdownEditorPlugin: PluginManifest = {
-  id: 'advanced-markdown-editor',
-  name: 'Advanced Markdown Editor',
-  version: '1.0.0',
-  description:
-    'Enhanced markdown editing with live preview, syntax highlighting, and advanced formatting',
-  author: 'MarkItUp Team',
-  main: 'advanced-markdown-editor.js',
-
-  permissions: [
-    {
-      type: 'clipboard',
-      description: 'Enhanced editor functionality',
-    },
-  ],
-
-  settings: [
-    {
-      id: 'livePreview',
-      name: 'Live Preview',
-      type: 'boolean',
-      default: true,
-      description: 'Show live preview while editing',
-    },
-    {
-      id: 'syntaxHighlighting',
-      name: 'Syntax Highlighting',
-      type: 'select',
-      options: [
-        { label: 'GitHub Style', value: 'github' },
-        { label: 'VS Code Style', value: 'vscode' },
-        { label: 'Sublime Style', value: 'sublime' },
-      ],
-      default: 'github',
-      description: 'Choose syntax highlighting theme',
-    },
-    {
-      id: 'autoComplete',
-      name: 'Auto-complete',
-      type: 'boolean',
-      default: true,
-      description: 'Enable markdown auto-completion',
-    },
-  ],
-
-  commands: [
-    {
-      id: 'toggle-preview',
-      name: 'Toggle Live Preview',
-      description: 'Toggle live preview on/off',
-      keybinding: 'Ctrl+Shift+P',
-      callback: async () => {
-        try {
-          if (advancedMarkdownEditorInstance) {
-            await advancedMarkdownEditorInstance.togglePreview();
-          }
-        } catch (error) {
-          console.error('Error toggling preview:', error);
-        }
-      },
-    },
-    {
-      id: 'format-document',
-      name: 'Format Document',
-      description: 'Auto-format current markdown document',
-      keybinding: 'Ctrl+Shift+F',
-      callback: async () => {
-        try {
-          if (advancedMarkdownEditorInstance) {
-            await advancedMarkdownEditorInstance.formatDocument();
-          }
-        } catch (error) {
-          console.error('Error formatting document:', error);
-        }
-      },
-    },
-    {
-      id: 'insert-table',
-      name: 'Insert Table',
-      description: 'Insert a markdown table',
-      callback: async () => {
-        try {
-          if (advancedMarkdownEditorInstance) {
-            await advancedMarkdownEditorInstance.insertTable();
-          }
-        } catch (error) {
-          console.error('Error inserting table:', error);
-        }
-      },
-    },
-  ],
-
-  onLoad: (api?: PluginAPI) => {
-    if (api) {
-      advancedMarkdownEditorInstance = new AdvancedMarkdownEditorPlugin(api);
-    }
-  },
-
-  onUnload: () => {
-    advancedMarkdownEditorInstance = null;
-  },
-
-  views: [
-    {
-      id: 'markdown-toolbar',
-      name: 'Formatting',
-      type: 'toolbar',
-      icon: '🎨',
-      component: () => {
-        return `
-          <div class="markdown-toolbar">
-            <button onclick="alert('Bold')" title="Bold">B</button>
-            <button onclick="alert('Italic')" title="Italic">I</button>
-            <button onclick="alert('Link')" title="Link">🔗</button>
-            <button onclick="alert('Image')" title="Image">🖼️</button>
-            <button onclick="alert('Code')" title="Code">💻</button>
-            <button onclick="alert('Table')" title="Table">📊</button>
-          </div>
-        `;
-      },
-    },
-  ],
-};
 
 // Template Engine Plugin - Custom templates and snippets
 export const templateEnginePlugin: PluginManifest = {
@@ -675,39 +549,6 @@ export const contentStatisticsPlugin: PluginManifest = {
 };
 
 // Implementation Classes
-
-class AdvancedMarkdownEditorPlugin {
-  constructor(private api: PluginAPI) {}
-
-  async togglePreview(): Promise<void> {
-    this.api.ui.showNotification(
-      'Toggling live preview mode... (Toggle between split view and editor-only view)',
-      'info'
-    );
-  }
-
-  async formatDocument(): Promise<void> {
-    const content = this.api.ui.getEditorContent();
-
-    if (!content) {
-      this.api.ui.showNotification('No content to format', 'info');
-      return;
-    }
-
-    this.api.ui.showNotification(
-      'Formatting document... Auto-formatting headings, lists, code blocks, and tables',
-      'info'
-    );
-  }
-
-  async insertTable(): Promise<void> {
-    const currentContent = this.api.ui.getEditorContent();
-    const tableMarkdown = `\n| Header 1 | Header 2 | Header 3 |\n|----------|----------|----------|\n| Cell 1   | Cell 2   | Cell 3   |\n| Cell 4   | Cell 5   | Cell 6   |\n`;
-
-    this.api.ui.setEditorContent((currentContent || '') + tableMarkdown);
-    this.api.ui.showNotification('Table inserted. Enter number of rows and columns', 'info');
-  }
-}
 
 class TemplateEnginePlugin {
   constructor(private api: PluginAPI) {}

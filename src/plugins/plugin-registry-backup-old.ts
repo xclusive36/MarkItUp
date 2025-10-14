@@ -116,7 +116,7 @@ import {
 
 // Import Phase 2 expansion plugins
 import {
-  advancedMarkdownEditorPlugin,
+  // advancedMarkdownEditorPlugin, // REMOVED - redundant with WYSIWYG editor
   templateEnginePlugin,
   contentStructurePlugin,
   multiFormatExportPlugin,
@@ -224,7 +224,7 @@ import {
 export const AVAILABLE_PLUGINS = [
   // ✨ FUNCTIONAL PLUGINS ONLY
   enhancedWordCountPlugin, // Word count works
-  advancedMarkdownEditorPlugin, // Live preview toggle and format work
+  // advancedMarkdownEditorPlugin, // REMOVED - redundant with WYSIWYG editor
   darkThemePlugin, // Theme toggle works
 
   // 📋 ORGANIZATION PLUGINS
@@ -304,7 +304,7 @@ export const AVAILABLE_PLUGINS = [
   teamDashboardPlugin,
 
   // ✨ PHASE 2: ENHANCED CONTENT CREATION PLUGINS
-  advancedMarkdownEditorPlugin,
+  // advancedMarkdownEditorPlugin, // REMOVED - redundant with WYSIWYG editor
   templateEnginePlugin,
   contentStructurePlugin,
   multiFormatExportPlugin,
@@ -484,7 +484,7 @@ export const PLUGIN_CATEGORIES = {
     teamDashboardPlugin,
   ],
   '✨ Enhanced Content Creation': [
-    advancedMarkdownEditorPlugin,
+    // advancedMarkdownEditorPlugin, // REMOVED - redundant with WYSIWYG editor
     templateEnginePlugin,
     contentStructurePlugin,
     multiFormatExportPlugin,
@@ -773,15 +773,15 @@ export const PLUGIN_METADATA = {
   },
 
   // Phase 2 Enhanced Content Creation
-  [advancedMarkdownEditorPlugin.id]: {
-    category: 'Content Creation',
-    difficulty: 'intermediate',
-    timeToSetup: '5 min',
-    rating: '4.8',
-    downloadCount: '623',
-    tags: ['editor', 'markdown'],
-    featured: false,
-  },
+  // [advancedMarkdownEditorPlugin.id]: { // REMOVED - redundant with WYSIWYG editor
+  //   category: 'Content Creation',
+  //   difficulty: 'intermediate',
+  //   timeToSetup: '5 min',
+  //   rating: '4.8',
+  //   downloadCount: '623',
+  //   tags: ['editor', 'markdown'],
+  //   featured: false,
+  // },
   [templateEnginePlugin.id]: {
     category: 'Content Creation',
     difficulty: 'beginner',
@@ -886,7 +886,7 @@ export const USER_TYPE_RECOMMENDATIONS = {
     enhancedWordCountPlugin,
     tableOfContentsPlugin,
     goalTrackerPlugin,
-    advancedMarkdownEditorPlugin,
+    // advancedMarkdownEditorPlugin, // REMOVED - redundant with WYSIWYG editor
     templateEnginePlugin,
     contentStructurePlugin,
   ],

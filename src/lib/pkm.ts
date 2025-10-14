@@ -420,7 +420,7 @@ export class PKMSystem {
       // Load persisted plugins first
       await this.pluginManager.loadPersistedPlugins();
 
-      // If no plugins are loaded, load some basic ones
+      // Get loaded plugins
       const loadedPlugins = this.pluginManager.getLoadedPlugins();
       console.log(
         'PKM: Found',
@@ -429,37 +429,8 @@ export class PKMSystem {
         loadedPlugins.map(p => p.name)
       );
 
-      // ALWAYS load core plugins regardless of persisted plugins
-      console.log('PKM: Loading core plugins...');
-
-      // Import and load core plugins
-      const { enhancedWordCountPlugin } = await import('../plugins/enhanced-word-count');
-      const { dailyNotesPlugin } = await import('../plugins/daily-notes');
-      const { tableOfContentsPlugin } = await import('../plugins/table-of-contents');
-
-      console.log('PKM: Imported core plugin manifests');
-
-      // Load each core plugin if not already loaded
-      const corePlugins = [
-        { plugin: enhancedWordCountPlugin, name: 'Enhanced Word Count' },
-        { plugin: dailyNotesPlugin, name: 'Daily Notes' },
-        { plugin: tableOfContentsPlugin, name: 'Table of Contents' },
-      ];
-
-      for (const { plugin, name } of corePlugins) {
-        const isAlreadyLoaded = this.pluginManager.getLoadedPlugins().some(p => p.id === plugin.id);
-        if (!isAlreadyLoaded) {
-          try {
-            console.log(`PKM: Loading ${name} plugin...`);
-            await this.pluginManager.loadPlugin(plugin);
-            console.log(`PKM: Loaded ${name} plugin successfully`);
-          } catch (error) {
-            console.warn(`Failed to load ${name} plugin:`, error);
-          }
-        } else {
-          console.log(`PKM: ${name} plugin already loaded`);
-        }
-      }
+      // DON'T auto-load core plugins - respect user's plugin choices from persistence
+      // Users can enable/disable plugins through the Plugin Manager UI
 
       const finalLoadedPlugins = this.pluginManager.getLoadedPlugins();
       console.log(

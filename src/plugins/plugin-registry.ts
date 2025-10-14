@@ -12,7 +12,6 @@ import { PluginManifest } from '../lib/types';
 
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
-import { advancedMarkdownEditorPlugin } from './enhanced-content-plugins';
 import { wordCountPlugin, tocPlugin, aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 import { themeCreatorPlugin } from './theme-creator';
@@ -22,7 +21,6 @@ import { themeCreatorPlugin } from './theme-creator';
  */
 export const AVAILABLE_PLUGINS: PluginManifest[] = [
   enhancedWordCountPlugin, // ✅ Word count functionality works
-  advancedMarkdownEditorPlugin, // ✅ Live preview toggle and format work
   themeCreatorPlugin, // ✅ Theme creator with visual editor
 
   // Plugins that were not tested by user - restoring for evaluation
@@ -36,7 +34,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
  * Plugin Categories - Organized functional plugins by type
  */
 export const PLUGIN_CATEGORIES = {
-  '✨ Editor Tools': [advancedMarkdownEditorPlugin, tocPlugin],
+  '✨ Editor Tools': [tocPlugin],
   '📊 Analytics': [enhancedWordCountPlugin, wordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
   '🤖 AI Tools': [aiWritingPlugin],
@@ -49,7 +47,6 @@ export const PLUGIN_CATEGORIES = {
 export const FEATURED_PLUGINS: PluginManifest[] = [
   themeCreatorPlugin,
   enhancedWordCountPlugin,
-  advancedMarkdownEditorPlugin,
   dailyNotesPlugin,
 ];
 
@@ -74,16 +71,6 @@ export const PLUGIN_METADATA = {
     rating: '4.9',
     downloadCount: '1.2k',
     tags: ['analytics', 'word-count'],
-    featured: true,
-    functional: true,
-  },
-  [advancedMarkdownEditorPlugin.id]: {
-    category: 'Editor',
-    difficulty: 'beginner',
-    timeToSetup: '1 min',
-    rating: '4.8',
-    downloadCount: '980',
-    tags: ['editor', 'markdown', 'preview'],
     featured: true,
     functional: true,
   },
@@ -133,13 +120,8 @@ export const PLUGIN_METADATA = {
  * User Type Recommendations - Suggest plugins based on use case
  */
 export const USER_TYPE_RECOMMENDATIONS = {
-  'all-users': [
-    themeCreatorPlugin,
-    enhancedWordCountPlugin,
-    advancedMarkdownEditorPlugin,
-    dailyNotesPlugin,
-  ],
-  writers: [advancedMarkdownEditorPlugin, enhancedWordCountPlugin, aiWritingPlugin, tocPlugin],
+  'all-users': [themeCreatorPlugin, enhancedWordCountPlugin, dailyNotesPlugin],
+  writers: [enhancedWordCountPlugin, aiWritingPlugin, tocPlugin],
   'journal-users': [dailyNotesPlugin],
   customizers: [themeCreatorPlugin],
 };

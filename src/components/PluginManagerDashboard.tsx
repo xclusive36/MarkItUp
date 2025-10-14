@@ -5,7 +5,12 @@ import PluginAnalytics from './PluginAnalytics';
 import PluginHealthMonitor from './PluginHealthMonitor';
 import PluginPermissionsUI from './PluginPermissionsUI';
 import PluginDevelopmentTools from './PluginDevelopmentTools';
-import { AVAILABLE_PLUGINS, FEATURED_PLUGINS, PLUGIN_CATEGORIES, PLUGIN_METADATA } from '../plugins/plugin-registry';
+import {
+  AVAILABLE_PLUGINS,
+  FEATURED_PLUGINS,
+  PLUGIN_CATEGORIES,
+  PLUGIN_METADATA,
+} from '../plugins/plugin-registry';
 import { PluginManager } from '../lib/plugin-manager';
 import { initializePluginSystem, getPluginManager } from '../lib/plugin-init';
 import { PluginManifest } from '../lib/types';
@@ -43,14 +48,14 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
             setManager(pluginMgr);
           }
         }
-        
+
         // Get currently loaded plugins after manager is ready
         if (manager) {
           const currentPlugins = manager.getLoadedPlugins();
           // Convert Plugin[] to LoadedPlugin[] format expected by the UI
           const loadedPlugins = currentPlugins.map(plugin => ({
             manifest: plugin,
-            isActive: true // All loaded plugins are considered active
+            isActive: true, // All loaded plugins are considered active
           }));
           setLoadedPlugins(loadedPlugins);
         }
@@ -76,7 +81,7 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
       const currentPlugins = manager.getLoadedPlugins();
       const loadedPluginsList: LoadedPlugin[] = currentPlugins.map(plugin => ({
         manifest: plugin,
-        isActive: true
+        isActive: true,
       }));
       setLoadedPlugins(loadedPluginsList);
     }
@@ -84,16 +89,33 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '📊', description: 'Plugin system overview' },
-    { id: 'analytics', label: 'Analytics', icon: '📈', description: 'Usage analytics and performance' },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: '📈',
+      description: 'Usage analytics and performance',
+    },
     { id: 'health', label: 'Health', icon: '🏥', description: 'Monitor plugin health and status' },
-    { id: 'permissions', label: 'Permissions', icon: '🔐', description: 'Manage plugin permissions' },
-    { id: 'development', label: 'Development', icon: '🛠️', description: 'Create and test plugins' }
+    {
+      id: 'permissions',
+      label: 'Permissions',
+      icon: '🔐',
+      description: 'Manage plugin permissions',
+    },
+    { id: 'development', label: 'Development', icon: '🛠️', description: 'Create and test plugins' },
   ];
 
   const renderActiveTab = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab pluginManager={manager} loadedPlugins={loadedPlugins} isLoading={isLoading} onRefresh={refreshPlugins} />;
+        return (
+          <OverviewTab
+            pluginManager={manager}
+            loadedPlugins={loadedPlugins}
+            isLoading={isLoading}
+            onRefresh={refreshPlugins}
+          />
+        );
       case 'analytics':
         return <PluginAnalytics pluginManager={manager as any} />;
       case 'health':
@@ -103,7 +125,14 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
       case 'development':
         return <PluginDevelopmentTools />;
       default:
-        return <OverviewTab pluginManager={manager} loadedPlugins={loadedPlugins} isLoading={isLoading} onRefresh={refreshPlugins} />;
+        return (
+          <OverviewTab
+            pluginManager={manager}
+            loadedPlugins={loadedPlugins}
+            isLoading={isLoading}
+            onRefresh={refreshPlugins}
+          />
+        );
     }
   };
 
@@ -112,9 +141,7 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="py-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Plugin Manager
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Plugin Manager</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage, monitor, and develop plugins for MarkItUp
           </p>
@@ -142,17 +169,20 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
         </div>
 
         {/* Tab Content */}
-        <div className="pb-8">
-          {renderActiveTab()}
-        </div>
+        <div className="pb-8">{renderActiveTab()}</div>
       </div>
     </div>
   );
 }
 
 // Overview Tab Component
-function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: { 
-  pluginManager?: PluginManager | null; 
+function OverviewTab({
+  pluginManager,
+  loadedPlugins,
+  isLoading,
+  onRefresh,
+}: {
+  pluginManager?: PluginManager | null;
   loadedPlugins: LoadedPlugin[];
   isLoading: boolean;
   onRefresh?: () => void;
@@ -162,7 +192,7 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
     activePlugins: 0,
     healthyPlugins: 0,
     pluginsWithIssues: 0,
-    availableUpdates: 0
+    availableUpdates: 0,
   });
 
   useEffect(() => {
@@ -180,7 +210,7 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
           activePlugins: plugins.filter(p => p.isActive !== false).length,
           healthyPlugins: healthyCount,
           pluginsWithIssues: issuesCount,
-          availableUpdates: 0 // Mock for now
+          availableUpdates: 0, // Mock for now
         });
       } catch (error) {
         console.error('Failed to load plugin stats:', error);
@@ -196,7 +226,8 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-6 text-white">
         <h2 className="text-2xl font-bold mb-2">Welcome to Plugin Manager</h2>
         <p className="opacity-90">
-          Extend MarkItUp with powerful plugins. Monitor performance, manage permissions, and develop custom functionality.
+          Extend MarkItUp with powerful plugins. Monitor performance, manage permissions, and
+          develop custom functionality.
         </p>
       </div>
 
@@ -217,7 +248,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Available</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalPlugins}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.totalPlugins}
+              </p>
             </div>
           </div>
         </div>
@@ -229,7 +262,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.activePlugins}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.activePlugins}
+              </p>
             </div>
           </div>
         </div>
@@ -241,7 +276,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Healthy</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.healthyPlugins}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.healthyPlugins}
+              </p>
             </div>
           </div>
         </div>
@@ -253,7 +290,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Issues</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.pluginsWithIssues}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.pluginsWithIssues}
+              </p>
             </div>
           </div>
         </div>
@@ -265,7 +304,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Updates</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.availableUpdates}</p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {stats.availableUpdates}
+              </p>
             </div>
           </div>
         </div>
@@ -280,9 +321,12 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
           {FEATURED_PLUGINS.slice(0, 4).map(plugin => {
             const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
             const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
-            
+
             return (
-              <div key={plugin.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div
+                key={plugin.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              >
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white">{plugin.name}</h4>
@@ -297,7 +341,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{plugin.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  {plugin.description}
+                </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>⭐ {metadata?.rating || '4.5'}</span>
@@ -305,7 +351,10 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
                   </div>
                   <div className="flex space-x-1">
                     {metadata?.tags?.slice(0, 2).map(tag => (
-                      <span key={tag} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
+                      <span
+                        key={tag}
+                        className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -335,24 +384,36 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
                 {plugins.map(plugin => {
                   const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
                   const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
-                  
+
                   return (
-                    <div key={plugin.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                    <div
+                      key={plugin.id}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h5 className="font-medium text-gray-900 dark:text-white text-sm">{plugin.name}</h5>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">v{plugin.version} by {plugin.author}</p>
+                          <h5 className="font-medium text-gray-900 dark:text-white text-sm">
+                            {plugin.name}
+                          </h5>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            v{plugin.version} by {plugin.author}
+                          </p>
                         </div>
                         <div className="flex items-center space-x-1">
                           {isLoaded && (
-                            <span className="w-2 h-2 bg-green-500 rounded-full" title="Loaded"></span>
+                            <span
+                              className="w-2 h-2 bg-green-500 rounded-full"
+                              title="Loaded"
+                            ></span>
                           )}
                           {metadata?.featured && (
                             <span className="text-xs text-yellow-600">⭐</span>
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{plugin.description}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        {plugin.description}
+                      </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-xs text-gray-500">
                           <span>⭐ {metadata?.rating || '4.5'}</span>
@@ -364,10 +425,12 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
                               alert('Plugin manager not available');
                               return;
                             }
-                            
+
                             try {
                               if (isLoaded) {
+                                console.log(`🔴 UI: Attempting to unload plugin: ${plugin.id}`);
                                 const success = await pluginManager.unloadPlugin(plugin.id);
+                                console.log(`🔴 UI: unloadPlugin returned:`, success);
                                 if (success) {
                                   alert(`${plugin.name} unloaded successfully!`);
                                   onRefresh?.();
@@ -448,7 +511,9 @@ function OverviewTab({ pluginManager, loadedPlugins, isLoading, onRefresh }: {
         <div className="space-y-3">
           <div className="flex items-center space-x-3 text-sm">
             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span className="text-gray-600 dark:text-gray-400">Featured plugins loaded successfully</span>
+            <span className="text-gray-600 dark:text-gray-400">
+              Featured plugins loaded successfully
+            </span>
             <span className="text-gray-400 text-xs">just now</span>
           </div>
           <div className="flex items-center space-x-3 text-sm">
