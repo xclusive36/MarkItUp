@@ -6,7 +6,7 @@ let pluginInstance: EnhancedWordCountPlugin | null = null;
 // Enhanced Word Count Plugin - Provides detailed writing statistics
 export const enhancedWordCountPlugin: PluginManifest = {
   id: 'enhanced-word-count',
-  name: 'Enhanced Word Count',
+  name: 'Detailed Writing Statistics',
   version: '1.2.0',
   description: 'Advanced word counting with reading time, character count, and writing analytics',
   author: 'MarkItUp Team',
@@ -76,21 +76,8 @@ export const enhancedWordCountPlugin: PluginManifest = {
     },
   ],
 
-  commands: [
-    {
-      id: 'show-detailed-stats',
-      name: 'Show Detailed Writing Statistics',
-      description: 'Display comprehensive writing statistics for the current note',
-      keybinding: 'Ctrl+Shift+W',
-      callback: async function () {
-        if (pluginInstance) {
-          await pluginInstance.showDetailedStats();
-        } else {
-          console.error('Enhanced Word Count plugin instance not initialized');
-        }
-      },
-    },
-  ],
+  // Commands removed - statistics now displayed in dedicated WritingStatsBar component
+  commands: [],
 
   onLoad: async function (api?: PluginAPI) {
     console.log('Enhanced Word Count plugin loaded');
@@ -161,6 +148,20 @@ export class EnhancedWordCountPlugin {
     this.api.events.on('note-updated', this.handleNoteUpdate.bind(this));
     this.api.events.on('note-created', this.handleNoteUpdate.bind(this));
 
+    // Add real-time content tracking (update stats as user types)
+    this.api.events.on('editor-content-changed', this.handleEditorChange.bind(this));
+
+    // Poll for content changes every 2 seconds as fallback
+    setInterval(() => {
+      if (this.isActive) {
+        const content = this.api.ui.getEditorContent();
+        if (content) {
+          const stats = calculateWordStats(content);
+          this.updateStatusBar(stats);
+        }
+      }
+    }, 2000);
+
     // Add status bar item
     this.updateStatusBar();
   }
@@ -191,6 +192,19 @@ export class EnhancedWordCountPlugin {
     });
   }
 
+  private handleEditorChange(data: { content: string }) {
+    if (!this.isActive) return;
+
+    const stats = calculateWordStats(data.content);
+    this.updateStatusBar(stats);
+
+    // Emit analytics event
+    this.api.events.emit('word-count-updated', {
+      stats,
+      source: 'editor',
+    });
+  }
+
   private updateStatusBar(stats?: any) {
     if (!stats) {
       this.api.ui.setStatusBarText('📊 Enhanced Word Count Active');
@@ -208,52 +222,6 @@ export class EnhancedWordCountPlugin {
     }
 
     this.api.ui.setStatusBarText(statusText);
-  }
-
-  // Public method for command
-  async showDetailedStats(): Promise<void> {
-    // Get current editor content
-    const content = this.api.ui.getEditorContent();
-
-    if (!content || content.trim().length === 0) {
-      this.api.ui.showNotification('No content to analyze', 'warning');
-      return;
-    }
-
-    const stats = calculateWordStats(content);
-
-    // Format detailed statistics as a markdown comment block
-    const statsBlock = `
-<!--
-📊 WRITING STATISTICS
-Generated: ${new Date().toLocaleString()}
-
-📝 Content Metrics:
-• Words: ${stats.words}
-• Characters: ${stats.characters} (${stats.charactersNoSpaces} without spaces)
-• Paragraphs: ${stats.paragraphs}
-• Sentences: ${stats.sentences}
-
-⏱️ Reading & Structure:
-• Reading Time: ${stats.readingTime} minute${stats.readingTime !== 1 ? 's' : ''} (at 200 WPM)
-• Average Words per Sentence: ${stats.averageWordsPerSentence}
-• Average Words per Paragraph: ${stats.averageWordsPerParagraph}
--->
-
-`.trim();
-
-    // Insert stats at the top of the document
-    const updatedContent = statsBlock + '\n\n' + content;
-    this.api.ui.setEditorContent(updatedContent);
-
-    // Also log to console
-    console.log('Detailed Writing Statistics:', stats);
-
-    // Show success notification
-    this.api.ui.showNotification(
-      `Statistics inserted! ${stats.words} words, ${stats.readingTime} min read`,
-      'info'
-    );
   }
 
   updateSettings(newSettings: any) {

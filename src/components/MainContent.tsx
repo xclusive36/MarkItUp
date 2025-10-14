@@ -2,6 +2,7 @@ import EditorModeToggle from './EditorModeToggle';
 import MarkdownEditor from './MarkdownEditor';
 import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
+import WritingStatsBar from './WritingStatsBar';
 import React, { useState } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
 
@@ -71,6 +72,9 @@ const MainContent: React.FC<MainContentProps> = ({
           theme={theme}
         />
       </div>
+
+      {/* Writing Statistics Bar - shown in all modes */}
+      <WritingStatsBar markdown={markdown} theme={theme} />
 
       {viewMode === 'edit' && (
         <div className="flex-grow flex flex-col h-full">
