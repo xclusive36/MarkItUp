@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePluginManager } from './PluginSystemInitializer';
 
 interface WritingStats {
   words: number;
@@ -19,8 +20,22 @@ interface WritingStatsBarProps {
 }
 
 const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) => {
+  const pluginManager = usePluginManager();
   const [stats, setStats] = useState<WritingStats | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isPluginLoaded, setIsPluginLoaded] = useState(false);
+
+  // Check if the Detailed Writing Statistics plugin is loaded
+  useEffect(() => {
+    if (!pluginManager) {
+      setIsPluginLoaded(false);
+      return;
+    }
+
+    const loadedPlugins = pluginManager.getLoadedPlugins();
+    const isLoaded = loadedPlugins.some(plugin => plugin.id === 'enhanced-word-count');
+    setIsPluginLoaded(isLoaded);
+  }, [pluginManager]);
 
   useEffect(() => {
     const calculateStats = (content: string): WritingStats => {
@@ -57,6 +72,11 @@ const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) =>
       setStats(null);
     }
   }, [markdown]);
+
+  // Don't show the bar if the plugin is not loaded
+  if (!isPluginLoaded) {
+    return null;
+  }
 
   if (!stats) {
     return null;
