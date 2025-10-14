@@ -5,6 +5,10 @@
   --foreground: #171717;
   --font-geist-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Use Theme Creator variables if available */
+  --background: var(--theme-bg-primary, #ffffff);
+  --foreground: var(--theme-text-primary, #171717);
 }
 
 @theme inline {
@@ -16,34 +20,34 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--theme-bg-primary, #0a0a0a);
+    --foreground: var(--theme-text-primary, #ededed);
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--theme-font-base, Arial, Helvetica, sans-serif);
 }
 
 /* Override manual-theme.css for editor textareas to match card backgrounds */
 .editor-textarea {
-  background-color: #ffffff !important;
-  color: #111827 !important;
+  background-color: var(--bg-secondary, #ffffff) !important;
+  color: var(--text-primary, #111827) !important;
   border-color: transparent !important;
 }
 
 html.dark .editor-textarea {
-  background-color: #1f2937 !important;
-  color: #f9fafb !important;
+  background-color: var(--bg-secondary, #1f2937) !important;
+  color: var(--text-primary, #f9fafb) !important;
   border-color: transparent !important;
 }
 
 html.dark .editor-textarea::placeholder {
-  color: #9ca3af !important;
+  color: var(--text-secondary, #9ca3af) !important;
 }
 
 html:not(.dark) .editor-textarea::placeholder {
-  color: #6b7280 !important;
+  color: var(--text-secondary, #6b7280) !important;
 }

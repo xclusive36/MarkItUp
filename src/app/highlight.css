@@ -32,7 +32,10 @@
 }
 
 /* Ensure dark mode variant colors */
-.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4 {
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4 {
   color: var(--color-foreground);
 }
 
@@ -53,58 +56,102 @@ html.dark .prose h4 {
 
 /* Light theme syntax highlighting */
 .hljs {
-  background: #f6f8fa !important;
-  color: #24292e !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.hljs-keyword {
+  color: var(--syntax-keyword) !important;
+}
+
+.hljs-string {
+  color: var(--syntax-string) !important;
+}
+
+.hljs-comment {
+  color: var(--syntax-comment) !important;
+}
+
+.hljs-number {
+  color: var(--syntax-number) !important;
+}
+
+.hljs-function {
+  color: var(--syntax-function) !important;
+}
+
+.hljs-variable {
+  color: var(--syntax-variable) !important;
+}
+
+.hljs-built_in {
+  color: var(--syntax-function) !important;
+}
+
+.hljs-title {
+  color: var(--syntax-function) !important;
+}
+
+.hljs-attr {
+  color: var(--syntax-variable) !important;
+}
+
+.hljs-tag {
+  color: var(--syntax-keyword) !important;
+}
+
+.hljs-subst {
+  color: var(--text-primary) !important;
 }
 
 /* Dark theme syntax highlighting */
 .dark .hljs {
-  background: #1e1e1e !important;
-  color: #d4d4d4 !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
 }
 
 .dark .hljs-keyword {
-  color: #569cd6 !important;
+  color: var(--syntax-keyword) !important;
 }
 
 .dark .hljs-string {
-  color: #ce9178 !important;
+  color: var(--syntax-string) !important;
 }
 
 .dark .hljs-comment {
-  color: #6a9955 !important;
+  color: var(--syntax-comment) !important;
 }
 
 .dark .hljs-number {
-  color: #b5cea8 !important;
+  color: var(--syntax-number) !important;
 }
 
 .dark .hljs-function {
-  color: #dcdcaa !important;
+  color: var(--syntax-function) !important;
 }
 
 .dark .hljs-variable {
-  color: #9cdcfe !important;
+  color: var(--syntax-variable) !important;
 }
 
 .dark .hljs-built_in {
-  color: #4ec9b0 !important;
+  color: var(--syntax-function) !important;
 }
 
 .dark .hljs-title {
-  color: #dcdcaa !important;
+  color: var(--syntax-function) !important;
 }
 
 .dark .hljs-attr {
-  color: #92c5f8 !important;
+  color: var(--syntax-variable) !important;
 }
 
 .dark .hljs-tag {
-  color: #569cd6 !important;
+  color: var(--syntax-keyword) !important;
 }
 
 .dark .hljs-subst {
-  color: #d4d4d4 !important;
+  color: var(--text-primary) !important;
 }
 
 /* Ensure code blocks are visible in both themes */
@@ -117,28 +164,28 @@ pre code {
 
 /* Light theme code blocks */
 pre {
-  background-color: #f6f8fa;
-  border: 1px solid #e1e4e8;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
 }
 
 /* Dark theme code blocks */
 .dark pre {
-  background-color: #1e1e1e;
-  border: 1px solid #374151;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
 }
 
 /* Inline code styling */
 code:not(pre code) {
-  background-color: #f3f4f6;
-  color: #ef4444;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875em;
 }
 
 .dark code:not(pre code) {
-  background-color: #374151;
-  color: #fbbf24;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
 }
 
 /* List styles for markdown content */

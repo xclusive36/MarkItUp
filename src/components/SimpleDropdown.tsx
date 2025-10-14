@@ -18,11 +18,11 @@ interface SimpleDropdownProps {
     title: string;
   };
   items: DropdownItem[];
-  theme: 'light' | 'dark';
+  theme?: 'light' | 'dark'; // Optional for backward compatibility
   className?: string;
 }
 
-export function SimpleDropdown({ trigger, items, theme, className = '' }: SimpleDropdownProps) {
+export function SimpleDropdown({ trigger, items, className = '' }: SimpleDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -70,8 +70,8 @@ export function SimpleDropdown({ trigger, items, theme, className = '' }: Simple
         onClick={toggleDropdown}
         className="flex items-center space-x-1 p-2 rounded-md transition-colors hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
         style={{
-          backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-          color: theme === 'dark' ? '#f9fafb' : '#111827',
+          backgroundColor: 'var(--bg-tertiary)',
+          color: 'var(--text-primary)',
         }}
         title={trigger.title}
       >
@@ -85,8 +85,8 @@ export function SimpleDropdown({ trigger, items, theme, className = '' }: Simple
         <div
           className="absolute right-0 mt-2 w-56 rounded-md shadow-lg z-50 border"
           style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)',
           }}
         >
           <div className="py-1">
@@ -96,13 +96,7 @@ export function SimpleDropdown({ trigger, items, theme, className = '' }: Simple
                 onClick={() => handleItemClick(item)}
                 className="flex items-center w-full px-4 py-2 text-sm transition-colors hover:bg-opacity-10 hover:bg-blue-500 focus:outline-none focus:bg-opacity-10 focus:bg-blue-500"
                 style={{
-                  color: item.active
-                    ? theme === 'dark'
-                      ? '#60a5fa'
-                      : '#2563eb'
-                    : theme === 'dark'
-                      ? '#f9fafb'
-                      : '#111827',
+                  color: item.active ? 'var(--accent-primary)' : 'var(--text-primary)',
                 }}
               >
                 {item.icon && <span className="w-4 h-4 mr-3">{item.icon}</span>}

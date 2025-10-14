@@ -16,14 +16,14 @@ const modes: Array<{ key: 'edit' | 'preview' | 'split'; label: string }> = [
 const EditorModeToggle: React.FC<EditorModeToggleProps> = ({
   viewMode,
   setViewMode,
-  theme,
+  // theme, // No longer needed - using CSS variables
   onModeChange,
 }) => (
   <div
     className="inline-flex gap-2 p-1 rounded-lg shadow-sm"
     style={{
       background: 'transparent',
-      boxShadow: theme === 'dark' ? '0 1px 4px rgba(0,0,0,0.25)' : '0 1px 4px rgba(0,0,0,0.06)',
+      boxShadow: 'var(--theme-shadow, 0 1px 4px rgba(0,0,0,0.1))',
     }}
   >
     {modes.map(({ key, label }) => (
@@ -33,16 +33,27 @@ const EditorModeToggle: React.FC<EditorModeToggleProps> = ({
           setViewMode(key);
           onModeChange?.(key);
         }}
-        className={`px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-          viewMode === key
-            ? theme === 'dark'
-              ? 'bg-gray-600 text-gray-100 border border-blue-500'
-              : 'bg-white text-gray-900 border border-blue-500'
-            : theme === 'dark'
-              ? 'bg-transparent text-gray-300 border border-transparent hover:bg-gray-700 hover:text-white'
-              : 'bg-transparent text-gray-500 border border-transparent hover:bg-gray-100 hover:text-gray-900'
-        }`}
-        style={{ minWidth: 70 }}
+        className="px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{
+          minWidth: 70,
+          backgroundColor: viewMode === key ? 'var(--bg-secondary)' : 'transparent',
+          color: viewMode === key ? 'var(--text-primary)' : 'var(--text-secondary)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: viewMode === key ? 'var(--accent-primary)' : 'transparent',
+        }}
+        onMouseEnter={e => {
+          if (viewMode !== key) {
+            e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }
+        }}
+        onMouseLeave={e => {
+          if (viewMode !== key) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }
+        }}
       >
         {label}
       </button>

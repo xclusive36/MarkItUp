@@ -236,14 +236,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
+        className="rounded-lg shadow-sm border p-4 mb-4 lg:mb-6"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
         }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">
+          <h2
+            className="text-base lg:text-lg font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
             New Note
           </h2>
           <button
@@ -261,11 +264,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             value={fileName}
             onChange={e => setFileName(e.target.value)}
             placeholder="Note title..."
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             style={{
-              backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-              color: theme === 'dark' ? '#f9fafb' : '#111827',
-              borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderColor: 'var(--border-secondary)',
+              color: 'var(--text-primary)',
               opacity: currentView !== 'editor' ? 0.5 : 1,
               cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
             }}
@@ -276,11 +279,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             value={folder}
             onChange={e => setFolder(e.target.value)}
             placeholder="Folder (optional)..."
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             style={{
-              backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-              color: theme === 'dark' ? '#f9fafb' : '#111827',
-              borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderColor: 'var(--border-secondary)',
+              color: 'var(--text-primary)',
               opacity: currentView !== 'editor' ? 0.5 : 1,
               cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
             }}
@@ -339,13 +342,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
       {/* Quick Stats */}
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 lg:mb-6"
+        className="rounded-lg shadow-sm border p-4 mb-4 lg:mb-6"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
         }}
       >
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
           Knowledge Graph
         </h3>
         {loadingStats ? (
@@ -400,16 +403,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
       {/* Notes List - Collapsible on mobile */}
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
+        className="rounded-lg shadow-sm border p-4"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
         }}
       >
-        <h3
-          className="text-sm font-semibold mb-3"
-          style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-        >
+        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
           Recent Notes
         </h3>
         <div ref={notesListRef} className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
@@ -426,20 +426,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 key={note.id}
                 className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border flex items-center ${draggedNoteId === note.id ? 'opacity-50' : ''}`}
                 style={{
-                  backgroundColor:
-                    activeNote?.id === note.id
-                      ? theme === 'dark'
-                        ? 'rgba(59, 130, 246, 0.1)'
-                        : '#eff6ff'
-                      : 'transparent',
+                  backgroundColor: activeNote?.id === note.id ? 'var(--accent-bg)' : 'transparent',
                   borderColor:
-                    activeNote?.id === note.id
-                      ? theme === 'dark'
-                        ? '#1e40af'
-                        : '#bfdbfe'
-                      : theme === 'dark'
-                        ? '#374151'
-                        : '#f3f4f6',
+                    activeNote?.id === note.id ? 'var(--accent-border)' : 'var(--border-secondary)',
                 }}
                 draggable
                 onDragStart={e => handleDragStart(e, note.id)}
@@ -449,8 +438,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onContextMenu={e => handleContextMenu(e, note)}
                 onMouseEnter={e => {
                   if (activeNote?.id !== note.id) {
-                    e.currentTarget.style.backgroundColor =
-                      theme === 'dark' ? '#374151' : '#f9fafb';
+                    e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
                   }
                 }}
                 onMouseLeave={e => {
@@ -472,7 +460,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <input
                       className="text-xs lg:text-sm font-medium truncate bg-transparent border-b border-blue-400 outline-none px-1 py-0.5"
                       style={{
-                        color: theme === 'dark' ? '#f9fafb' : '#111827',
+                        color: 'var(--text-primary)',
                         minWidth: 0,
                         width: '90%',
                       }}
@@ -485,7 +473,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   ) : (
                     <h4
                       className="text-xs lg:text-sm font-medium truncate"
-                      style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                      style={{ color: 'var(--text-primary)' }}
                     >
                       {note.name.replace('.md', '')}
                     </h4>
@@ -493,7 +481,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {note.folder && (
                     <p
                       className="text-xs flex items-center gap-1"
-                      style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                      style={{ color: 'var(--text-secondary)' }}
                     >
                       <Folder className="w-3 h-3" />
                       {note.folder}
@@ -556,24 +544,52 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Context Menu */}
           {contextMenu && contextMenu.note && (
             <div
-              className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg py-1 text-sm"
-              style={{ top: contextMenu.y, left: contextMenu.x, minWidth: 120 }}
+              className="fixed z-50 border rounded shadow-lg py-1 text-sm"
+              style={{
+                top: contextMenu.y,
+                left: contextMenu.x,
+                minWidth: 120,
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-primary)',
+                color: 'var(--text-primary)',
+              }}
               onMouseLeave={handleCloseContextMenu}
             >
               <button
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full text-left px-4 py-2 transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
                 onClick={handleRename}
               >
                 Rename
               </button>
               <button
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="block w-full text-left px-4 py-2 transition-colors"
+                style={{ color: 'var(--text-primary)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
                 onClick={handleDuplicate}
               >
                 Duplicate
               </button>
               <button
-                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                className="block w-full text-left px-4 py-2 transition-colors"
+                style={{ color: 'var(--error-color)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
                 onClick={handleDelete}
               >
                 Delete

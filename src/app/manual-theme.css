@@ -22,6 +22,65 @@ html.dark {
   --border-secondary: #4b5563;
 }
 
+/* Theme Creator override - if custom theme variables are set, use them */
+:root {
+  /* Override with Theme Creator variables if they exist */
+  --bg-primary: var(--theme-bg-primary, #f9fafb);
+  --bg-secondary: var(--theme-bg-secondary, #ffffff);
+  --bg-tertiary: var(--theme-bg-tertiary, #f3f4f6);
+  --bg-hover: var(--theme-bg-hover, #f3f4f6);
+  --text-primary: var(--theme-text-primary, #111827);
+  --text-secondary: var(--theme-text-secondary, #6b7280);
+  --text-muted: var(--theme-text-muted, #9ca3af);
+  --border-primary: var(--theme-border-primary, #e5e7eb);
+  --border-secondary: var(--theme-border-secondary, #d1d5db);
+  --accent-primary: var(--theme-accent-primary, #3b82f6);
+  --accent-secondary: var(--theme-accent-secondary, #8b5cf6);
+  --accent-bg: var(--theme-accent-bg, rgba(59, 130, 246, 0.1));
+  --accent-border: var(--theme-accent-border, #bfdbfe);
+  --link-color: var(--theme-link-color, #3b82f6);
+  --success-color: var(--theme-success-color, #10b981);
+  --warning-color: var(--theme-warning-color, #f59e0b);
+  --error-color: var(--theme-error-color, #ef4444);
+
+  /* Syntax highlighting colors */
+  --syntax-keyword: var(--theme-syntax-keyword, #0000ff);
+  --syntax-string: var(--theme-syntax-string, #a31515);
+  --syntax-comment: var(--theme-syntax-comment, #008000);
+  --syntax-number: var(--theme-syntax-number, #098658);
+  --syntax-function: var(--theme-syntax-function, #795e26);
+  --syntax-variable: var(--theme-syntax-variable, #001080);
+}
+
+html.dark {
+  /* Override with Theme Creator variables if they exist */
+  --bg-primary: var(--theme-bg-primary, #111827);
+  --bg-secondary: var(--theme-bg-secondary, #1f2937);
+  --bg-tertiary: var(--theme-bg-tertiary, #374151);
+  --bg-hover: var(--theme-bg-hover, #374151);
+  --text-primary: var(--theme-text-primary, #f9fafb);
+  --text-secondary: var(--theme-text-secondary, #9ca3af);
+  --text-muted: var(--theme-text-muted, #6b7280);
+  --border-primary: var(--theme-border-primary, #374151);
+  --border-secondary: var(--theme-border-secondary, #4b5563);
+  --accent-primary: var(--theme-accent-primary, #3b82f6);
+  --accent-secondary: var(--theme-accent-secondary, #8b5cf6);
+  --accent-bg: var(--theme-accent-bg, rgba(59, 130, 246, 0.1));
+  --accent-border: var(--theme-accent-border, #1e40af);
+  --link-color: var(--theme-link-color, #60a5fa);
+  --success-color: var(--theme-success-color, #34d399);
+  --warning-color: var(--theme-warning-color, #fbbf24);
+  --error-color: var(--theme-error-color, #f87171);
+
+  /* Syntax highlighting colors for dark mode */
+  --syntax-keyword: var(--theme-syntax-keyword, #569cd6);
+  --syntax-string: var(--theme-syntax-string, #ce9178);
+  --syntax-comment: var(--theme-syntax-comment, #6a9955);
+  --syntax-number: var(--theme-syntax-number, #b5cea8);
+  --syntax-function: var(--theme-syntax-function, #dcdcaa);
+  --syntax-variable: var(--theme-syntax-variable, #9cdcfe);
+}
+
 /* Force main backgrounds to use theme colors */
 html.dark body {
   background-color: var(--bg-primary) !important;
@@ -54,68 +113,68 @@ html.dark .primary-border {
 
 /* Ensure Tailwind dark mode classes work with higher specificity */
 html.dark .dark\:bg-gray-900 {
-  background-color: #111827 !important;
+  background-color: var(--bg-primary) !important;
 }
 
 html.dark .dark\:bg-gray-800 {
-  background-color: #1f2937 !important;
+  background-color: var(--bg-secondary) !important;
 }
 
 html.dark .dark\:bg-gray-700 {
-  background-color: #374151 !important;
+  background-color: var(--bg-tertiary) !important;
 }
 
 html.dark .dark\:text-white {
-  color: #f9fafb !important;
+  color: var(--text-primary) !important;
 }
 
 html.dark .dark\:text-gray-300 {
-  color: #d1d5db !important;
+  color: var(--text-primary) !important;
 }
 
 html.dark .dark\:text-gray-400 {
-  color: #9ca3af !important;
+  color: var(--text-secondary) !important;
 }
 
 html.dark .dark\:border-gray-700 {
-  border-color: #374151 !important;
+  border-color: var(--border-primary) !important;
 }
 
 html.dark .dark\:border-gray-600 {
-  border-color: #4b5563 !important;
+  border-color: var(--border-secondary) !important;
 }
 
 /* Force form elements to respect theme */
-html.dark input[type="text"],
-html.dark input[type="email"],
-html.dark input[type="password"],
+html.dark input[type='text'],
+html.dark input[type='email'],
+html.dark input[type='password'],
 html.dark textarea {
-  background-color: #374151 !important;
-  color: #f9fafb !important;
-  border-color: #4b5563 !important;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-secondary) !important;
 }
 
-html.dark input[type="text"]::placeholder,
-html.dark input[type="email"]::placeholder,
-html.dark input[type="password"]::placeholder,
+html.dark input[type='text']::placeholder,
+html.dark input[type='email']::placeholder,
+html.dark input[type='password']::placeholder,
 html.dark textarea::placeholder {
-  color: #9ca3af !important;
+  color: var(--text-secondary) !important;
 }
 
-html:not(.dark) input[type="text"],
-html:not(.dark) input[type="email"],
-html:not(.dark) input[type="password"],
+html:not(.dark) input[type='text'],
+html:not(.dark) input[type='email'],
+html:not(.dark) input[type='password'],
 html:not(.dark) textarea {
-  background-color: #ffffff !important;
-  color: #111827 !important;
-  border-color: #d1d5db !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-secondary) !important;
 }
 
-html:not(.dark) input[type="text"]::placeholder,
-html:not(.dark) input[type="email"]::placeholder,
-html:not(.dark) input[type="password"]::placeholder,
+html:not(.dark) input[type='text']::placeholder,
+html:not(.dark) input[type='email']::placeholder,
+html:not(.dark) input[type='password']::placeholder,
 html:not(.dark) textarea::placeholder {
-  color: #6b7280 !important;
+  color: var(--text-secondary) !important;
 }
 
 /* Specific targeting for file items */
@@ -192,7 +251,7 @@ html:not(.dark) .prose ul,
 html:not(.dark) .prose ol,
 html:not(.dark) .prose li,
 html:not(.dark) .prose p {
-  color: rgb(23, 23, 23) !important; /* dark color for light theme */
+  color: var(--text-primary) !important;
 }
 
 /* Dark mode - light text */
@@ -204,5 +263,116 @@ html.dark .prose ul,
 html.dark .prose ol,
 html.dark .prose li,
 html.dark .prose p {
-  color: rgb(249, 250, 251) !important; /* very light gray for better contrast */
+  color: var(--text-primary) !important;
+}
+
+/* Additional prose elements with theme support */
+.prose strong,
+.prose b {
+  color: var(--text-primary) !important;
+}
+
+.prose em,
+.prose i {
+  color: var(--text-primary) !important;
+}
+
+.prose code {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.prose pre {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.prose pre code {
+  color: var(--text-primary) !important;
+}
+
+.prose blockquote {
+  color: var(--text-secondary) !important;
+  border-left-color: var(--border-primary) !important;
+}
+
+.prose a {
+  color: var(--link-color) !important;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose table {
+  color: var(--text-primary) !important;
+}
+
+.prose thead {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border-primary) !important;
+}
+
+.prose tbody tr {
+  border-bottom-color: var(--border-secondary) !important;
+}
+
+/* Theme support for links */
+a,
+.link {
+  color: var(--link-color, #3b82f6);
+}
+
+a:hover,
+.link:hover {
+  color: var(--theme-link-hover, var(--link-color, #3b82f6));
+  opacity: 0.8;
+}
+
+/* Theme support for buttons with accent colors */
+.btn-primary,
+button.primary {
+  background-color: var(--theme-button-bg, var(--accent-primary, #3b82f6));
+  color: var(--theme-button-text, white);
+}
+
+.btn-primary:hover,
+button.primary:hover {
+  background-color: var(--theme-button-hover, var(--accent-primary, #3b82f6));
+  opacity: 0.9;
+}
+
+/* Status colors */
+.text-success {
+  color: var(--success-color, #10b981);
+}
+
+.text-warning {
+  color: var(--warning-color, #f59e0b);
+}
+
+.text-error {
+  color: var(--error-color, #ef4444);
+}
+
+.bg-success {
+  background-color: var(--success-color, #10b981);
+}
+
+.bg-warning {
+  background-color: var(--warning-color, #f59e0b);
+}
+
+.bg-error {
+  background-color: var(--error-color, #ef4444);
+}
+
+/* Sidebar and toolbar theming */
+.sidebar {
+  background-color: var(--theme-sidebar-bg, var(--bg-secondary));
+  color: var(--theme-sidebar-text, var(--text-primary));
+}
+
+.toolbar {
+  background-color: var(--theme-toolbar-bg, var(--bg-secondary));
+  color: var(--theme-toolbar-text, var(--text-primary));
 }

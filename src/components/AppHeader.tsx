@@ -37,7 +37,7 @@ export function AppHeader({
   theme,
   currentView,
   settings,
-  isMounted,
+  // isMounted, // Currently unused
   onViewChange,
   onButtonClick,
   onAnalyticsTrack,
@@ -161,8 +161,8 @@ export function AppHeader({
       {/* App Title as Home Link */}
       <Link
         href="/"
-        className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 no-underline hover:no-underline"
-        style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+        className="text-xl sm:text-2xl font-bold flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 no-underline hover:no-underline"
+        style={{ color: 'var(--text-primary)' }}
         onClick={e => {
           e.preventDefault();
           if (typeof window !== 'undefined') {
@@ -211,8 +211,8 @@ export function AppHeader({
           onClick={() => onButtonClick('command-palette')}
           className="p-2 rounded-md hover:bg-opacity-80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           style={{
-            backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-            color: theme === 'dark' ? '#f9fafb' : '#111827',
+            backgroundColor: 'var(--bg-tertiary)',
+            color: 'var(--text-primary)',
           }}
           title="Command Palette (Alt+P)"
         >

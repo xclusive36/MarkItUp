@@ -717,9 +717,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         }
       `}</style>
       <div
-        className="min-h-screen bg-gray-50 dark:bg-gray-900"
+        className="min-h-screen"
         style={{
-          backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+          backgroundColor: 'var(--bg-primary)',
           margin: 0,
           padding: 0,
           width: '100%',
@@ -727,10 +727,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       >
         {/* Header */}
         <header
-          className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 header-container"
+          className="shadow-sm border-b header-container"
           style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)',
             width: '100%',
             margin: 0,
           }}

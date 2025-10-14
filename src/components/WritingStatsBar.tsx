@@ -19,7 +19,9 @@ interface WritingStatsBarProps {
   theme: string;
 }
 
-const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) => {
+const WritingStatsBar: React.FC<WritingStatsBarProps> = ({
+  markdown /* theme - no longer needed */,
+}) => {
   const pluginManager = usePluginManager();
   const [stats, setStats] = useState<WritingStats | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -86,8 +88,8 @@ const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) =>
     <div
       className="border-b transition-all duration-200"
       style={{
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+        backgroundColor: 'var(--bg-primary)',
+        borderColor: 'var(--border-primary)',
       }}
     >
       <div className="px-4 py-2">
@@ -95,86 +97,50 @@ const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) =>
           <div className="flex items-center gap-4 flex-wrap text-sm">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">📊</span>
-              <span
-                className="font-medium"
-                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-              >
+              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
                 Writing Statistics
               </span>
             </div>
 
             {!isCollapsed && (
               <>
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-                  >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
                     {stats.words.toLocaleString()}
                   </span>
                   <span>words</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-                  >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
                     {stats.characters.toLocaleString()}
                   </span>
                   <span>characters</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-                  >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
                     {stats.paragraphs}
                   </span>
                   <span>paragraphs</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-                  >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
                     {stats.sentences}
                   </span>
                   <span>sentences</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                   <span>⏱️</span>
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
-                  >
+                  <span className="font-semibold" style={{ color: 'var(--accent-primary)' }}>
                     {stats.readingTime}
                   </span>
                   <span>min read</span>
                 </div>
 
-                <div
-                  className="flex items-center gap-1"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                >
+                <div className="flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
                   <span>~{stats.averageWordsPerSentence} words/sentence</span>
                 </div>
               </>
@@ -183,8 +149,14 @@ const WritingStatsBar: React.FC<WritingStatsBarProps> = ({ markdown, theme }) =>
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-xs px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            className="text-xs px-2 py-1 rounded transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             title={isCollapsed ? 'Expand statistics' : 'Collapse statistics'}
           >
             {isCollapsed ? '▼' : '▲'}

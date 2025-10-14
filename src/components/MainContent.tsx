@@ -3,8 +3,10 @@ import MarkdownEditor from './MarkdownEditor';
 import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
 import WritingStatsBar from './WritingStatsBar';
-import React, { useState } from 'react';
+import { ThemeCreator } from './ThemeCreator';
+import React, { useState, useEffect } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
+import { getThemeCreatorPluginInstance } from '@/plugins/theme-creator';
 
 interface MainContentProps {
   markdown: string;
@@ -29,37 +31,66 @@ const MainContent: React.FC<MainContentProps> = ({
   analytics,
 }) => {
   const [editorType, setEditorType] = useState<'markdown' | 'wysiwyg'>('markdown');
+  const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
+
+  // Register the theme creator open callback with the plugin
+  useEffect(() => {
+    const pluginInstance = getThemeCreatorPluginInstance();
+    if (pluginInstance) {
+      pluginInstance.registerOpenCreatorCallback(() => {
+        setIsThemeCreatorOpen(true);
+      });
+    }
+  }, []);
 
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full min-h-screen"
+      className="rounded-lg shadow-sm border flex flex-col h-full min-h-screen"
       style={{
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--border-primary)',
         minHeight: '100vh',
       }}
     >
       {/* Editor Mode Toggle and WYSIWYG Toggle */}
       <div className="flex justify-between items-center w-full px-4 pt-4 mb-4">
-        {/* WYSIWYG Toggle (left side) */}
-        {viewMode === 'edit' && (
+        {/* Left side buttons */}
+        <div className="flex items-center gap-2">
+          {/* WYSIWYG Toggle */}
+          {viewMode === 'edit' && (
+            <button
+              onClick={() => {
+                const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
+                setEditorType(newType);
+                analytics.trackEvent('mode_switched', { mode: newType });
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-secondary)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
+              <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
+            </button>
+          )}
+
+          {/* Theme Creator Button */}
           <button
-            onClick={() => {
-              const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
-              setEditorType(newType);
-              analytics.trackEvent('mode_switched', { mode: newType });
-            }}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+            onClick={() => setIsThemeCreatorOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80"
             style={{
-              backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-              borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-              color: theme === 'dark' ? '#f9fafb' : '#111827',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderColor: 'var(--border-secondary)',
+              color: 'var(--text-primary)',
             }}
+            title="Open Theme Creator (Ctrl+Shift+T)"
           >
-            <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
-            <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
+            <span>🎨</span>
+            <span>Themes</span>
           </button>
-        )}
+        </div>
         {viewMode !== 'edit' && <div />}
 
         {/* View Mode Toggle (right side) */}
@@ -100,6 +131,18 @@ const MainContent: React.FC<MainContentProps> = ({
           </div>
         </div>
       )}
+
+      {/* Theme Creator Modal */}
+      <ThemeCreator
+        isOpen={isThemeCreatorOpen}
+        onClose={() => {
+          setIsThemeCreatorOpen(false);
+          const pluginInstance = getThemeCreatorPluginInstance();
+          if (pluginInstance) {
+            pluginInstance.closeThemeCreator();
+          }
+        }}
+      />
     </div>
   );
 };
