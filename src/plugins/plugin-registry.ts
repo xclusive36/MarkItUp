@@ -13,13 +13,7 @@ import { PluginManifest } from '../lib/types';
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
 import { advancedMarkdownEditorPlugin } from './enhanced-content-plugins';
-import {
-  darkThemePlugin,
-  wordCountPlugin,
-  dailyNotesPlugin as dailyNotesExamplePlugin,
-  tocPlugin,
-  aiWritingPlugin,
-} from './example-plugins';
+import { darkThemePlugin, wordCountPlugin, tocPlugin, aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 
 /**
@@ -33,7 +27,6 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
   // Plugins that were not tested by user - restoring for evaluation
   dailyNotesPlugin, // 📅 Daily notes (advanced version) - not tested
   wordCountPlugin, // 📊 Basic word count - mentioned as working without enabling
-  dailyNotesExamplePlugin, // 📅 Daily notes (example version) - not tested
   tocPlugin, // 📑 Table of contents (basic) - not tested
   aiWritingPlugin, // 🤖 AI writing assistant - not tested
 ];
@@ -45,7 +38,7 @@ export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [advancedMarkdownEditorPlugin, tocPlugin],
   '📊 Analytics': [enhancedWordCountPlugin, wordCountPlugin],
   '🎨 Appearance': [darkThemePlugin],
-  '📅 Daily Notes': [dailyNotesPlugin, dailyNotesExamplePlugin],
+  '📅 Daily Notes': [dailyNotesPlugin],
   '🤖 AI Tools': [aiWritingPlugin],
 };
 
@@ -146,7 +139,7 @@ export const USER_TYPE_RECOMMENDATIONS = {
     dailyNotesPlugin,
   ],
   writers: [advancedMarkdownEditorPlugin, enhancedWordCountPlugin, aiWritingPlugin, tocPlugin],
-  'journal-users': [dailyNotesPlugin, dailyNotesExamplePlugin],
+  'journal-users': [dailyNotesPlugin],
 };
 
 /**
