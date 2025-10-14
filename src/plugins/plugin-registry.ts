@@ -13,7 +13,7 @@ import { PluginManifest } from '../lib/types';
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
 import { advancedMarkdownEditorPlugin } from './enhanced-content-plugins';
-import { darkThemePlugin, wordCountPlugin, tocPlugin, aiWritingPlugin } from './example-plugins';
+import { wordCountPlugin, tocPlugin, aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 
 /**
@@ -22,7 +22,6 @@ import { dailyNotesPlugin } from './daily-notes';
 export const AVAILABLE_PLUGINS: PluginManifest[] = [
   enhancedWordCountPlugin, // ✅ Word count functionality works
   advancedMarkdownEditorPlugin, // ✅ Live preview toggle and format work
-  darkThemePlugin, // ✅ Theme toggle works
 
   // Plugins that were not tested by user - restoring for evaluation
   dailyNotesPlugin, // 📅 Daily notes (advanced version) - not tested
@@ -37,7 +36,6 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
 export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [advancedMarkdownEditorPlugin, tocPlugin],
   '📊 Analytics': [enhancedWordCountPlugin, wordCountPlugin],
-  '🎨 Appearance': [darkThemePlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
   '🤖 AI Tools': [aiWritingPlugin],
 };
@@ -48,7 +46,6 @@ export const PLUGIN_CATEGORIES = {
 export const FEATURED_PLUGINS: PluginManifest[] = [
   enhancedWordCountPlugin,
   advancedMarkdownEditorPlugin,
-  darkThemePlugin,
   dailyNotesPlugin,
 ];
 
@@ -73,16 +70,6 @@ export const PLUGIN_METADATA = {
     rating: '4.8',
     downloadCount: '980',
     tags: ['editor', 'markdown', 'preview'],
-    featured: true,
-    functional: true,
-  },
-  [darkThemePlugin.id]: {
-    category: 'Appearance',
-    difficulty: 'beginner',
-    timeToSetup: '1 min',
-    rating: '4.7',
-    downloadCount: '856',
-    tags: ['theme', 'appearance', 'dark-mode'],
     featured: true,
     functional: true,
   },
@@ -129,15 +116,10 @@ export const PLUGIN_METADATA = {
 };
 
 /**
- * User Type Recommendations - Suggest plugins based on user needs
+ * User Type Recommendations - Suggest plugins based on use case
  */
 export const USER_TYPE_RECOMMENDATIONS = {
-  'all-users': [
-    enhancedWordCountPlugin,
-    advancedMarkdownEditorPlugin,
-    darkThemePlugin,
-    dailyNotesPlugin,
-  ],
+  'all-users': [enhancedWordCountPlugin, advancedMarkdownEditorPlugin, dailyNotesPlugin],
   writers: [advancedMarkdownEditorPlugin, enhancedWordCountPlugin, aiWritingPlugin, tocPlugin],
   'journal-users': [dailyNotesPlugin],
 };
