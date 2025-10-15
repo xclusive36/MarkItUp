@@ -237,6 +237,36 @@ export interface PluginAPI {
     set: (key: string, value: any) => void;
   };
 
+  // AI capabilities
+  ai?: {
+    analyzeContent: (
+      content: string,
+      noteId?: string
+    ) => Promise<{
+      summary: string;
+      keyTopics: string[];
+      suggestedTags: string[];
+      suggestedConnections: Array<{
+        noteId: string;
+        noteName: string;
+        reason: string;
+        confidence: number;
+      }>;
+      sentiment: 'positive' | 'neutral' | 'negative';
+      complexity: number;
+      readabilityScore: number;
+    }>;
+    isAvailable: () => boolean;
+    getProvider: () => string;
+  };
+
+  // Graph data access
+  graph?: {
+    getLinks: (noteId: string) => Link[];
+    getAllLinks: () => Link[];
+    getTags: () => Tag[];
+  };
+
   // File system (if permitted)
   fs?: {
     readFile: (path: string) => Promise<string>;

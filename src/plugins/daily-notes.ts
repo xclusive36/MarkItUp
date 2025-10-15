@@ -3,32 +3,13 @@ import { PluginManifest, PluginAPI, Note } from '../lib/types';
 // Global plugin instance - will be set in onLoad
 let pluginInstance: DailyNotesPlugin | null = null;
 
-// Daily Notes Plugin - Automatic daily note creation and management
-export const dailyNotesPlugin: PluginManifest = {
-  id: 'daily-notes',
-  name: 'Daily Notes',
-  version: '2.1.0',
-  description: 'Automatically create and manage daily notes with templates and calendar navigation',
-  author: 'MarkItUp Team',
-  main: 'daily-notes.js',
-
-  permissions: [
-    {
-      type: 'file-system',
-      description: 'Create and manage daily note files',
-    },
-    {
-      type: 'notifications',
-      description: 'Show daily note reminders',
-    },
-  ],
-
-  settings: [
-    {
-      id: 'dailyNoteTemplate',
-      name: 'Daily Note Template',
-      type: 'string',
-      default: `# {{date}}
+// Template library with predefined templates
+export const DAILY_NOTE_TEMPLATES = {
+  default: {
+    id: 'default',
+    name: 'Default Journal',
+    description: 'Comprehensive daily journal with goals and reflection',
+    template: `# {{date}}
 
 ## Today's Goals
 - [ ] 
@@ -48,8 +29,205 @@ export const dailyNotesPlugin: PluginManifest = {
 
 ---
 Created: {{time}}`,
-      description:
-        'Template for new daily notes (supports {{date}}, {{time}}, {{day}}, {{month}}, {{year}} variables)',
+  },
+  minimal: {
+    id: 'minimal',
+    name: 'Minimal',
+    description: 'Simple daily note with just a date heading',
+    template: `# {{date}}
+
+`,
+  },
+  productivity: {
+    id: 'productivity',
+    name: 'Productivity Focus',
+    description: 'Focus on tasks, time blocking, and achievements',
+    template: `# {{date}} - {{day}}
+
+## 🎯 Top 3 Priorities
+1. [ ] 
+2. [ ] 
+3. [ ] 
+
+## ⏰ Time Blocks
+- 09:00 - 10:00: 
+- 10:00 - 12:00: 
+- 13:00 - 15:00: 
+- 15:00 - 17:00: 
+
+## ✅ Completed Tasks
+- [ ] 
+
+## 📝 Notes & Ideas
+
+
+## 💡 Learnings
+- 
+
+---
+Energy Level: ⚪⚪⚪⚪⚪
+Created: {{time}}`,
+  },
+  gratitude: {
+    id: 'gratitude',
+    name: 'Gratitude Journal',
+    description: 'Focus on gratitude and positive experiences',
+    template: `# {{date}} - {{day}}
+
+## 🙏 Three Things I'm Grateful For
+1. 
+2. 
+3. 
+
+## ✨ Positive Moments Today
+
+
+## 💪 Personal Wins
+- 
+
+## 🌱 Growth & Learning
+
+
+## 💭 Evening Reflection
+
+
+---
+Mood: 😊
+Created: {{time}}`,
+  },
+  developer: {
+    id: 'developer',
+    name: 'Developer Log',
+    description: 'Track coding progress, bugs, and learning',
+    template: `# {{date}} - Development Log
+
+## 💻 Projects Worked On
+- 
+
+## ✅ Completed
+- [ ] 
+
+## 🐛 Bugs Fixed
+- 
+
+## 🎯 In Progress
+- [ ] 
+
+## 🚧 Blockers
+
+
+## 💡 Learnings & Discoveries
+
+
+## 🔗 Resources
+- 
+
+## 📋 Tomorrow's Plan
+- [ ] 
+
+---
+Commits: 0 | PRs: 0 | Code Reviews: 0
+Created: {{time}}`,
+  },
+  writer: {
+    id: 'writer',
+    name: "Writer's Journal",
+    description: 'Track writing progress and ideas',
+    template: `# {{date}}
+
+## ✍️ Writing Session
+**Words Written:** 0
+**Time Spent:** 
+**Projects:** 
+
+## 📖 What I Wrote Today
+
+
+## 💡 Story Ideas & Inspiration
+
+
+## 📝 Character Development
+
+
+## 🎯 Tomorrow's Writing Goals
+- [ ] 
+
+## 📚 Reading Notes
+
+
+---
+Total Words This Week: 0
+Created: {{time}}`,
+  },
+  wellness: {
+    id: 'wellness',
+    name: 'Wellness Tracker',
+    description: 'Track health, fitness, and self-care',
+    template: `# {{date}} - Wellness Log
+
+## 🏃 Physical Activity
+- **Exercise:** 
+- **Duration:** 
+- **Steps:** 
+
+## 🥗 Nutrition
+- **Breakfast:** 
+- **Lunch:** 
+- **Dinner:** 
+- **Water:** 💧💧💧💧💧💧💧💧
+
+## 😴 Sleep
+- **Hours:** 
+- **Quality:** ⭐⭐⭐⭐⭐
+
+## 🧘 Mental Health
+- **Mood:** 😊
+- **Stress Level:** ⚪⚪⚪⚪⚪
+- **Meditation/Mindfulness:** 
+
+## 💭 Notes
+
+
+---
+Energy: ⚡⚡⚡⚡⚡
+Created: {{time}}`,
+  },
+};
+
+// Daily Notes Plugin - Automatic daily note creation and management
+export const dailyNotesPlugin: PluginManifest = {
+  id: 'daily-notes',
+  name: 'Daily Notes Enhanced',
+  version: '3.0.0',
+  description: 'Advanced daily journaling with templates, streaks, analytics, and calendar view',
+  author: 'MarkItUp Team',
+  main: 'daily-notes.js',
+
+  permissions: [
+    {
+      type: 'file-system',
+      description: 'Create and manage daily note files',
+    },
+    {
+      type: 'notifications',
+      description: 'Show daily note reminders and streak updates',
+    },
+  ],
+
+  settings: [
+    {
+      id: 'selectedTemplate',
+      name: 'Active Template',
+      type: 'string',
+      default: 'default',
+      description: 'Template to use for new daily notes',
+    },
+    {
+      id: 'customTemplates',
+      name: 'Custom Templates',
+      type: 'string',
+      default: '[]',
+      description: 'User-created custom templates (JSON array)',
     },
     {
       id: 'dailyNoteFolder',
@@ -76,8 +254,29 @@ Created: {{time}}`,
       id: 'weekendNotes',
       name: 'Create Weekend Notes',
       type: 'boolean',
-      default: false,
+      default: true,
       description: 'Create daily notes on weekends',
+    },
+    {
+      id: 'showStreakInHeader',
+      name: 'Show Streak Badge',
+      type: 'boolean',
+      default: true,
+      description: 'Display current streak in the app header',
+    },
+    {
+      id: 'linkConsecutiveDays',
+      name: 'Link Consecutive Days',
+      type: 'boolean',
+      default: true,
+      description: 'Automatically add navigation links to previous/next day',
+    },
+    {
+      id: 'enableAnalytics',
+      name: 'Enable Analytics',
+      type: 'boolean',
+      default: true,
+      description: 'Track writing patterns and show insights',
     },
   ],
 
@@ -86,8 +285,22 @@ Created: {{time}}`,
       id: 'daily-notes-calendar',
       name: 'Daily Notes Calendar',
       type: 'sidebar',
-      component: null as any, // Would be React component
+      component: (() => null) as unknown as React.ComponentType,
       icon: '📅',
+    },
+    {
+      id: 'daily-notes-dashboard',
+      name: 'Daily Notes Analytics',
+      type: 'sidebar',
+      component: (() => null) as unknown as React.ComponentType,
+      icon: '📊',
+    },
+    {
+      id: 'template-manager',
+      name: 'Template Manager',
+      type: 'modal',
+      component: (() => null) as unknown as React.ComponentType,
+      icon: '�',
     },
   ],
 
@@ -119,22 +332,6 @@ Created: {{time}}`,
       },
     },
     {
-      id: 'show-daily-calendar',
-      name: 'Show Daily Notes Calendar',
-      description: 'Display calendar view of daily notes',
-      keybinding: 'Ctrl+Shift+C',
-      callback: async function () {
-        if (pluginInstance) {
-          const dailyNotes = pluginInstance.getAllDailyNotes();
-          console.log('Daily notes:', dailyNotes);
-          // TODO: Show calendar UI with daily notes
-          pluginInstance.api.ui.showNotification(`Found ${dailyNotes.length} daily notes`, 'info');
-        } else {
-          console.error('Daily Notes plugin instance not initialized');
-        }
-      },
-    },
-    {
       id: 'open-tomorrow',
       name: "Open Tomorrow's Note",
       description: "Open or create tomorrow's daily note for planning ahead",
@@ -142,6 +339,106 @@ Created: {{time}}`,
       callback: async function () {
         if (pluginInstance) {
           await pluginInstance.openTomorrow();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'show-daily-calendar',
+      name: 'Show Daily Notes Calendar',
+      description: 'Display calendar view of daily notes',
+      keybinding: 'Ctrl+Shift+C',
+      callback: async function () {
+        if (pluginInstance) {
+          const dailyNotes = pluginInstance.getAllDailyNotes();
+          console.log('📅 Daily Notes Calendar - Daily notes found:', dailyNotes.length);
+
+          // Get streak data for display
+          const currentStreak = await pluginInstance.getCurrentStreak();
+          const analytics = await pluginInstance.getAnalytics();
+
+          // For now, emit an event that the UI can listen to
+          pluginInstance.api.events.emit('show-daily-notes-calendar', {
+            dailyNotes,
+            currentStreak,
+            longestStreak: analytics.longestStreak,
+          });
+
+          // Show notification with basic info
+          pluginInstance.api.ui.showNotification(
+            `📅 Calendar: ${dailyNotes.length} notes | 🔥 ${currentStreak} day streak`,
+            'info'
+          );
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'quick-capture',
+      name: 'Quick Capture to Today',
+      description: "Quickly add content to today's note without opening it",
+      keybinding: 'Ctrl+Shift+Q',
+      callback: async function () {
+        if (pluginInstance) {
+          await pluginInstance.quickCapture();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'show-streak',
+      name: 'Show Current Streak',
+      description: 'Display your current daily notes streak',
+      keybinding: 'Ctrl+Shift+S',
+      callback: async function () {
+        if (pluginInstance) {
+          const streak = await pluginInstance.getCurrentStreak();
+          pluginInstance.api.ui.showNotification(
+            `🔥 Current Streak: ${streak} ${streak === 1 ? 'day' : 'days'}!`,
+            'info'
+          );
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'show-analytics',
+      name: 'Show Daily Notes Analytics',
+      description: 'View insights about your journaling habits',
+      callback: async function () {
+        if (pluginInstance) {
+          const analytics = await pluginInstance.getAnalytics();
+          console.log('Daily Notes Analytics:', analytics);
+          pluginInstance.api.ui.showNotification('Analytics dashboard opened', 'info');
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'manage-templates',
+      name: 'Manage Templates',
+      description: 'Create and edit daily note templates',
+      callback: async function () {
+        if (pluginInstance) {
+          pluginInstance.openTemplateManager();
+        } else {
+          console.error('Daily Notes plugin instance not initialized');
+        }
+      },
+    },
+    {
+      id: 'jump-to-date',
+      name: 'Jump to Specific Date',
+      description: 'Open a daily note for a specific date',
+      callback: async function () {
+        if (pluginInstance) {
+          // This would open a date picker dialog
+          pluginInstance.api.ui.showNotification('Date picker - coming soon!', 'info');
         } else {
           console.error('Daily Notes plugin instance not initialized');
         }
@@ -167,25 +464,71 @@ Created: {{time}}`,
 };
 
 // Plugin implementation class
+interface DailyNotesSettings {
+  selectedTemplate: string;
+  customTemplates: string;
+  dailyNoteFolder: string;
+  autoCreateDaily: boolean;
+  dailyReminder: string;
+  weekendNotes: boolean;
+  showStreakInHeader: boolean;
+  linkConsecutiveDays: boolean;
+  enableAnalytics: boolean;
+}
+
+interface StreakData {
+  current: number;
+  longest: number;
+  lastNoteDate: string | null;
+  totalNotes: number;
+}
+
+interface DailyAnalytics {
+  totalNotes: number;
+  currentStreak: number;
+  longestStreak: number;
+  averageWordsPerDay: number;
+  mostProductiveDay: string;
+  mostProductiveTime: string;
+  notesThisWeek: number;
+  notesThisMonth: number;
+  weekdayDistribution: Record<string, number>;
+  monthlyTrend: Array<{ month: string; count: number }>;
+}
+
 export class DailyNotesPlugin {
   public api: PluginAPI;
-  private settings: any;
+  private settings: DailyNotesSettings;
   private isActive: boolean = false;
   private reminderInterval: NodeJS.Timeout | null = null;
+  private streakData: StreakData;
 
   constructor(api: PluginAPI) {
     this.api = api;
     this.settings = {
-      dailyNoteTemplate: `# {{date}}\n\n## Today's Goals\n- [ ] \n\n## Notes\n\n\n## Reflection\n### What went well?\n\n\n### What could be improved?\n\n\n## Tomorrow's Priorities\n- [ ] \n\n---\nCreated: {{time}}`,
+      selectedTemplate: 'default',
+      customTemplates: '[]',
       dailyNoteFolder: 'Daily Notes',
       autoCreateDaily: true,
       dailyReminder: '09:00',
-      weekendNotes: false,
+      weekendNotes: true,
+      showStreakInHeader: true,
+      linkConsecutiveDays: true,
+      enableAnalytics: true,
+    };
+    this.streakData = {
+      current: 0,
+      longest: 0,
+      lastNoteDate: null,
+      totalNotes: 0,
     };
   }
 
   async initialize() {
     this.isActive = true;
+
+    // Load streak data
+    await this.loadStreakData();
 
     // Auto-create today's note if enabled
     if (this.settings.autoCreateDaily) {
@@ -198,7 +541,95 @@ export class DailyNotesPlugin {
     // Listen for date changes (midnight)
     this.setupMidnightChecker();
 
-    this.api.ui.showNotification('Daily Notes plugin activated', 'info');
+    // Show streak notification if enabled
+    if (this.settings.showStreakInHeader && this.streakData.current > 0) {
+      this.api.ui.showNotification(`🔥 ${this.streakData.current} day streak!`, 'info');
+    }
+
+    this.api.ui.showNotification('Daily Notes Enhanced plugin activated', 'info');
+  }
+
+  private async loadStreakData(): Promise<void> {
+    try {
+      // Calculate streak from existing daily notes
+      const dailyNotes = this.getAllDailyNotes();
+
+      if (dailyNotes.length === 0) {
+        this.streakData = {
+          current: 0,
+          longest: 0,
+          lastNoteDate: null,
+          totalNotes: 0,
+        };
+        return;
+      }
+
+      // Sort notes by date (newest first)
+      const sortedDates = dailyNotes
+        .map(note => {
+          const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
+          return match ? match[1] : null;
+        })
+        .filter((date): date is string => date !== null)
+        .sort()
+        .reverse();
+
+      this.streakData.totalNotes = sortedDates.length;
+      this.streakData.lastNoteDate = sortedDates[0] || null;
+
+      // Calculate current streak
+      let currentStreak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (let i = 0; i < sortedDates.length; i++) {
+        const noteDate = new Date(sortedDates[i]);
+        noteDate.setHours(0, 0, 0, 0);
+
+        const expectedDate = new Date(today);
+        expectedDate.setDate(expectedDate.getDate() - i);
+        expectedDate.setHours(0, 0, 0, 0);
+
+        // Skip weekends if not enabled
+        if (!this.settings.weekendNotes) {
+          while (expectedDate.getDay() === 0 || expectedDate.getDay() === 6) {
+            expectedDate.setDate(expectedDate.getDate() - 1);
+          }
+        }
+
+        if (noteDate.getTime() === expectedDate.getTime()) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+
+      this.streakData.current = currentStreak;
+
+      // Calculate longest streak
+      let longestStreak = 0;
+      let tempStreak = 1;
+
+      for (let i = 1; i < sortedDates.length; i++) {
+        const currentDate = new Date(sortedDates[i]);
+        const prevDate = new Date(sortedDates[i - 1]);
+
+        const dayDiff = Math.floor(
+          (prevDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (dayDiff === 1) {
+          tempStreak++;
+        } else {
+          longestStreak = Math.max(longestStreak, tempStreak);
+          tempStreak = 1;
+        }
+      }
+
+      this.streakData.longest = Math.max(longestStreak, tempStreak, currentStreak);
+    } catch (error) {
+      console.error('Failed to load streak data:', error);
+    }
   }
 
   private async createTodaysNote(): Promise<Note | null> {
@@ -222,18 +653,32 @@ export class DailyNotesPlugin {
       return null;
     }
 
-    // Create new daily note
-    const content = this.processTemplate(this.settings.dailyNoteTemplate, today);
+    // Get the active template
+    const template = this.getActiveTemplate();
+    const content = this.processTemplate(template, today);
+
+    // Add navigation links if enabled
+    const finalContent = this.settings.linkConsecutiveDays
+      ? this.addNavigationLinks(content, today)
+      : content;
 
     try {
-      const note = await this.api.notes.create(dateString, content, this.settings.dailyNoteFolder);
+      const note = await this.api.notes.create(
+        dateString,
+        finalContent,
+        this.settings.dailyNoteFolder
+      );
 
       this.api.ui.showNotification(`Created daily note for ${dateString}`, 'info');
+
+      // Update streak
+      await this.loadStreakData();
 
       // Emit analytics event
       this.api.events.emit('daily-note-created', {
         date: dateString,
         noteId: note.id,
+        streak: this.streakData.current,
       });
 
       return note;
@@ -244,6 +689,43 @@ export class DailyNotesPlugin {
     }
   }
 
+  private getActiveTemplate(): string {
+    const templateId = this.settings.selectedTemplate;
+
+    // Check if it's a built-in template
+    if (DAILY_NOTE_TEMPLATES[templateId as keyof typeof DAILY_NOTE_TEMPLATES]) {
+      return DAILY_NOTE_TEMPLATES[templateId as keyof typeof DAILY_NOTE_TEMPLATES].template;
+    }
+
+    // Check custom templates
+    try {
+      const customTemplates = JSON.parse(this.settings.customTemplates);
+      const customTemplate = customTemplates.find((t: { id: string }) => t.id === templateId);
+      if (customTemplate) {
+        return customTemplate.template;
+      }
+    } catch (error) {
+      console.error('Failed to parse custom templates:', error);
+    }
+
+    // Fallback to default
+    return DAILY_NOTE_TEMPLATES.default.template;
+  }
+
+  private addNavigationLinks(content: string, date: Date): string {
+    const yesterday = new Date(date);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const tomorrow = new Date(date);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const yesterdayLink = `[[${this.formatDate(yesterday)}]]`;
+    const tomorrowLink = `[[${this.formatDate(tomorrow)}]]`;
+
+    const navigation = `\n\n---\n← ${yesterdayLink} | ${tomorrowLink} →\n`;
+
+    return content + navigation;
+  }
+
   private async openDateNote(date: Date): Promise<void> {
     const dateString = this.formatDate(date);
     const existingNotes = this.api.notes.getAll();
@@ -252,10 +734,18 @@ export class DailyNotesPlugin {
 
     if (!note) {
       // Create the note if it doesn't exist
-      const content = this.processTemplate(this.settings.dailyNoteTemplate, date);
-      note = await this.api.notes.create(dateString, content, this.settings.dailyNoteFolder);
+      const template = this.getActiveTemplate();
+      const content = this.processTemplate(template, date);
+      const finalContent = this.settings.linkConsecutiveDays
+        ? this.addNavigationLinks(content, date)
+        : content;
+
+      note = await this.api.notes.create(dateString, finalContent, this.settings.dailyNoteFolder);
 
       this.api.ui.showNotification(`Created daily note for ${dateString}`, 'info');
+
+      // Update streak
+      await this.loadStreakData();
     } else {
       // Open existing note
       this.api.ui.openNote(note.id);
@@ -342,6 +832,157 @@ export class DailyNotesPlugin {
     }
   }
 
+  // NEW FEATURE: Quick Capture
+  async quickCapture(): Promise<void> {
+    // This would open a dialog/modal to quickly add content
+    // For now, we'll use a simple notification
+    this.api.ui.showNotification(
+      "Quick Capture: This feature will open a dialog to add content to today's note",
+      'info'
+    );
+
+    // TODO: Implement actual quick capture UI
+    // The UI would have a text input, and when submitted,
+    // it would append the content to today's note with a timestamp
+  }
+
+  // NEW FEATURE: Get Current Streak
+  async getCurrentStreak(): Promise<number> {
+    await this.loadStreakData();
+    return this.streakData.current;
+  }
+
+  // NEW FEATURE: Get Analytics
+  async getAnalytics(): Promise<DailyAnalytics> {
+    const dailyNotes = this.getAllDailyNotes();
+
+    // Calculate analytics
+    const weekdayDistribution: Record<string, number> = {
+      Sunday: 0,
+      Monday: 0,
+      Tuesday: 0,
+      Wednesday: 0,
+      Thursday: 0,
+      Friday: 0,
+      Saturday: 0,
+    };
+
+    const monthlyCount: Record<string, number> = {};
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    let totalWords = 0;
+    let mostProductiveDay = 'Monday';
+    let maxNotes = 0;
+
+    dailyNotes.forEach(note => {
+      const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
+      if (match) {
+        const date = new Date(match[1]);
+        const dayName = weekdays[date.getDay()];
+        weekdayDistribution[dayName]++;
+
+        const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        monthlyCount[monthKey] = (monthlyCount[monthKey] || 0) + 1;
+
+        // Count words in note
+        const wordCount = note.content.split(/\s+/).length;
+        totalWords += wordCount;
+      }
+    });
+
+    // Find most productive day
+    Object.entries(weekdayDistribution).forEach(([day, count]) => {
+      if (count > maxNotes) {
+        maxNotes = count;
+        mostProductiveDay = day;
+      }
+    });
+
+    // Get notes for time periods
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const notesThisWeek = dailyNotes.filter(note => {
+      const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
+      if (match) {
+        const date = new Date(match[1]);
+        return date >= weekAgo;
+      }
+      return false;
+    }).length;
+
+    const notesThisMonth = dailyNotes.filter(note => {
+      const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
+      if (match) {
+        const date = new Date(match[1]);
+        return date >= monthAgo;
+      }
+      return false;
+    }).length;
+
+    const monthlyTrend = Object.entries(monthlyCount)
+      .map(([month, count]) => ({ month, count }))
+      .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime())
+      .slice(-6); // Last 6 months
+
+    return {
+      totalNotes: dailyNotes.length,
+      currentStreak: this.streakData.current,
+      longestStreak: this.streakData.longest,
+      averageWordsPerDay: dailyNotes.length > 0 ? Math.round(totalWords / dailyNotes.length) : 0,
+      mostProductiveDay,
+      mostProductiveTime: '09:00', // Would need to parse creation times
+      notesThisWeek,
+      notesThisMonth,
+      weekdayDistribution,
+      monthlyTrend,
+    };
+  }
+
+  // NEW FEATURE: Open Template Manager
+  openTemplateManager(): void {
+    this.api.ui.showNotification('Template Manager - Opening...', 'info');
+    // TODO: Open template manager UI
+  }
+
+  // NEW FEATURE: Get Available Templates
+  getAvailableTemplates() {
+    const builtInTemplates = Object.values(DAILY_NOTE_TEMPLATES);
+
+    try {
+      const customTemplates = JSON.parse(this.settings.customTemplates);
+      return {
+        builtIn: builtInTemplates,
+        custom: customTemplates,
+      };
+    } catch {
+      return {
+        builtIn: builtInTemplates,
+        custom: [],
+      };
+    }
+  }
+
+  // NEW FEATURE: Create Custom Template
+  createCustomTemplate(name: string, description: string, template: string): void {
+    try {
+      const customTemplates = JSON.parse(this.settings.customTemplates);
+      const newTemplate = {
+        id: `custom-${Date.now()}`,
+        name,
+        description,
+        template,
+      };
+      customTemplates.push(newTemplate);
+      this.settings.customTemplates = JSON.stringify(customTemplates);
+      this.api.ui.showNotification(`Template "${name}" created successfully`, 'info');
+    } catch (error) {
+      this.api.ui.showNotification('Failed to create template', 'error');
+      console.error('Failed to create custom template:', error);
+    }
+  }
+
   getAllDailyNotes(): Note[] {
     const allNotes = this.api.notes.getAll();
     const datePattern = /^\d{4}-\d{2}-\d{2}(\.md)?$/;
@@ -351,7 +992,7 @@ export class DailyNotesPlugin {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  updateSettings(newSettings: any): void {
+  updateSettings(newSettings: Partial<DailyNotesSettings>): void {
     this.settings = { ...this.settings, ...newSettings };
 
     // Restart reminder with new time

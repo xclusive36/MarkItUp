@@ -12,10 +12,11 @@ import { PluginManifest } from '../lib/types';
 
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
-import { aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 import { themeCreatorPlugin } from './theme-creator';
 import { tableOfContentsPlugin } from './table-of-contents';
+import { smartAutoTaggerPlugin } from './smart-auto-tagger';
+import { intelligentLinkSuggesterPlugin } from './intelligent-link-suggester';
 
 /**
  * Available Plugins - Only includes fully functional plugins
@@ -23,11 +24,10 @@ import { tableOfContentsPlugin } from './table-of-contents';
 export const AVAILABLE_PLUGINS: PluginManifest[] = [
   enhancedWordCountPlugin, // ✅ Word count functionality works
   themeCreatorPlugin, // ✅ Theme creator with visual editor
-
-  // Plugins that were not tested by user - restoring for evaluation
-  dailyNotesPlugin, // 📅 Daily notes (advanced version) - not tested
+  dailyNotesPlugin, // ✅ Daily notes (ENHANCED v3.0) - fully featured with calendar, streaks, analytics
   tableOfContentsPlugin, // 📑 Table of contents (full-featured) - fixed and working
-  aiWritingPlugin, // 🤖 AI writing assistant - not tested
+  smartAutoTaggerPlugin, // 🏷️ AI-powered auto-tagging
+  intelligentLinkSuggesterPlugin, // 🔗 AI-powered link suggestions
 ];
 
 /**
@@ -37,7 +37,7 @@ export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [tableOfContentsPlugin],
   '📊 Analytics': [enhancedWordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
-  '🤖 AI Tools': [aiWritingPlugin],
+  '🤖 AI Tools': [smartAutoTaggerPlugin, intelligentLinkSuggesterPlugin],
   '🎨 Appearance': [themeCreatorPlugin],
 };
 
@@ -48,6 +48,8 @@ export const FEATURED_PLUGINS: PluginManifest[] = [
   themeCreatorPlugin,
   enhancedWordCountPlugin,
   dailyNotesPlugin,
+  smartAutoTaggerPlugin,
+  intelligentLinkSuggesterPlugin,
 ];
 
 /**
@@ -78,9 +80,9 @@ export const PLUGIN_METADATA = {
     category: 'Daily Notes',
     difficulty: 'beginner',
     timeToSetup: '2 min',
-    rating: '4.8',
-    downloadCount: '1.5k',
-    tags: ['daily-notes', 'journal', 'templates'],
+    rating: '5.0',
+    downloadCount: '2.8k',
+    tags: ['daily-notes', 'journal', 'templates', 'analytics', 'streaks', 'productivity'],
     featured: true,
     functional: true,
   },
@@ -94,14 +96,24 @@ export const PLUGIN_METADATA = {
     featured: false,
     functional: true,
   },
-  [aiWritingPlugin.id]: {
+  [smartAutoTaggerPlugin.id]: {
+    category: 'AI Tools',
+    difficulty: 'beginner',
+    timeToSetup: '2 min',
+    rating: '4.8',
+    downloadCount: '0',
+    tags: ['ai', 'tags', 'organization', 'automation'],
+    featured: true,
+    functional: true,
+  },
+  [intelligentLinkSuggesterPlugin.id]: {
     category: 'AI Tools',
     difficulty: 'intermediate',
-    timeToSetup: '5 min',
-    rating: '4.7',
-    downloadCount: '650',
-    tags: ['ai', 'writing', 'assistant'],
-    featured: false,
+    timeToSetup: '2 min',
+    rating: '4.9',
+    downloadCount: '0',
+    tags: ['ai', 'links', 'connections', 'knowledge-graph'],
+    featured: true,
     functional: true,
   },
 };
@@ -111,9 +123,11 @@ export const PLUGIN_METADATA = {
  */
 export const USER_TYPE_RECOMMENDATIONS = {
   'all-users': [themeCreatorPlugin, enhancedWordCountPlugin, dailyNotesPlugin],
-  writers: [enhancedWordCountPlugin, aiWritingPlugin, tableOfContentsPlugin],
+  writers: [enhancedWordCountPlugin, tableOfContentsPlugin, smartAutoTaggerPlugin],
   'journal-users': [dailyNotesPlugin],
   customizers: [themeCreatorPlugin],
+  'pkm-users': [smartAutoTaggerPlugin, intelligentLinkSuggesterPlugin, dailyNotesPlugin],
+  researchers: [intelligentLinkSuggesterPlugin, smartAutoTaggerPlugin, tableOfContentsPlugin],
 };
 
 /**

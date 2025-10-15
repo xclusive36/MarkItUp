@@ -5,6 +5,7 @@ import PluginAnalytics from './PluginAnalytics';
 import PluginHealthMonitor from './PluginHealthMonitor';
 import PluginPermissionsUI from './PluginPermissionsUI';
 import PluginDevelopmentTools from './PluginDevelopmentTools';
+import PluginSettingsModal from './PluginSettingsModal';
 import {
   AVAILABLE_PLUGINS,
   FEATURED_PLUGINS,
@@ -194,6 +195,25 @@ function OverviewTab({
     pluginsWithIssues: 0,
     availableUpdates: 0,
   });
+
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [selectedPlugin, setSelectedPlugin] = useState<PluginManifest | null>(null);
+
+  const openSettings = (plugin: PluginManifest) => {
+    setSelectedPlugin(plugin);
+    setSettingsModalOpen(true);
+  };
+
+  const closeSettings = () => {
+    setSettingsModalOpen(false);
+    setSelectedPlugin(null);
+  };
+
+  const handleSaveSettings = (pluginId: string, settings: Record<string, unknown>) => {
+    console.log(`Settings saved for ${pluginId}:`, settings);
+    // Settings are already saved to localStorage in the modal
+    // You could add additional logic here if needed
+  };
 
   useEffect(() => {
     if (!pluginManager || isLoading) return;
@@ -419,47 +439,65 @@ function OverviewTab({
                           <span>⭐ {metadata?.rating || '4.5'}</span>
                           <span>📊 {metadata?.downloadCount || '0'}</span>
                         </div>
-                        <button
-                          onClick={async () => {
-                            if (!pluginManager) {
-                              alert('Plugin manager not available');
-                              return;
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => openSettings(plugin)}
+                            disabled={!plugin.settings || plugin.settings.length === 0}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              plugin.settings && plugin.settings.length > 0
+                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                : 'bg-gray-50 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed'
+                            }`}
+                            title={
+                              plugin.settings && plugin.settings.length > 0
+                                ? 'Configure plugin settings'
+                                : 'No settings available'
                             }
-
-                            try {
-                              if (isLoaded) {
-                                console.log(`🔴 UI: Attempting to unload plugin: ${plugin.id}`);
-                                const success = await pluginManager.unloadPlugin(plugin.id);
-                                console.log(`🔴 UI: unloadPlugin returned:`, success);
-                                if (success) {
-                                  alert(`${plugin.name} unloaded successfully!`);
-                                  onRefresh?.();
-                                } else {
-                                  alert(`Failed to unload ${plugin.name}`);
-                                }
-                              } else {
-                                const success = await pluginManager.loadPlugin(plugin);
-                                if (success) {
-                                  alert(`${plugin.name} loaded successfully!`);
-                                  onRefresh?.();
-                                } else {
-                                  alert(`Failed to load ${plugin.name}`);
-                                }
+                          >
+                            ⚙️
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!pluginManager) {
+                                alert('Plugin manager not available');
+                                return;
                               }
-                            } catch (error) {
-                              alert(`Error: ${error}`);
-                              console.error('Plugin load/unload error:', error);
-                            }
-                          }}
-                          disabled={isLoading}
-                          className={`text-xs px-2 py-1 rounded transition-colors ${
-                            isLoaded
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300'
-                          }`}
-                        >
-                          {isLoaded ? 'Unload' : 'Load'}
-                        </button>
+
+                              try {
+                                if (isLoaded) {
+                                  console.log(`🔴 UI: Attempting to unload plugin: ${plugin.id}`);
+                                  const success = await pluginManager.unloadPlugin(plugin.id);
+                                  console.log(`🔴 UI: unloadPlugin returned:`, success);
+                                  if (success) {
+                                    alert(`${plugin.name} unloaded successfully!`);
+                                    onRefresh?.();
+                                  } else {
+                                    alert(`Failed to unload ${plugin.name}`);
+                                  }
+                                } else {
+                                  const success = await pluginManager.loadPlugin(plugin);
+                                  if (success) {
+                                    alert(`${plugin.name} loaded successfully!`);
+                                    onRefresh?.();
+                                  } else {
+                                    alert(`Failed to load ${plugin.name}`);
+                                  }
+                                }
+                              } catch (error) {
+                                alert(`Error: ${error}`);
+                                console.error('Plugin load/unload error:', error);
+                              }
+                            }}
+                            disabled={isLoading}
+                            className={`text-xs px-2 py-1 rounded transition-colors ${
+                              isLoaded
+                                ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300'
+                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300'
+                            }`}
+                          >
+                            {isLoaded ? 'Unload' : 'Load'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -528,6 +566,16 @@ function OverviewTab({
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {selectedPlugin && (
+        <PluginSettingsModal
+          plugin={selectedPlugin}
+          isOpen={settingsModalOpen}
+          onClose={closeSettings}
+          onSave={handleSaveSettings}
+        />
+      )}
     </div>
   );
 }

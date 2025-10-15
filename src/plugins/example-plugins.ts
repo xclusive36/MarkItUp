@@ -29,7 +29,6 @@ let tocInstance: TOCPlugin | null = null;
 let backupInstance: BackupPlugin | null = null;
 let citationsInstance: CitationsPlugin | null = null;
 let kanbanInstance: KanbanPlugin | null = null;
-let aiWritingInstance: AIWritingPlugin | null = null;
 let spacedRepetitionInstance: SpacedRepetitionPlugin | null = null;
 
 // Example: Word Count Plugin
@@ -696,7 +695,11 @@ export const kanbanPlugin: PluginManifest = {
   },
 };
 
-// Example: AI Writing Assistant Plugin
+// ⚠️ DEPRECATED: AI Writing Assistant Plugin
+// This plugin has been removed from the registry as it was non-functional (only showed notifications).
+// MarkItUp now has fully functional AI features via the AI Chat component (Brain icon in header).
+// For AI-powered plugins, see: Smart Auto-Tagger and Intelligent Link Suggester plugins.
+/*
 export const aiWritingPlugin: PluginManifest = {
   id: 'ai-writing-assistant',
   name: 'AI Writing Assistant',
@@ -836,6 +839,7 @@ export const aiWritingPlugin: PluginManifest = {
     aiWritingInstance = null;
   },
 };
+*/
 
 // Example: Spaced Repetition Plugin
 export const spacedRepetitionPlugin: PluginManifest = {
@@ -1033,6 +1037,7 @@ class KanbanPlugin {
   }
 }
 
+/*
 class AIWritingPlugin {
   constructor(private api: PluginAPI) {}
 
@@ -1052,6 +1057,7 @@ class AIWritingPlugin {
     this.api.ui.showNotification('Expanding bullet points into full paragraphs with AI', 'info');
   }
 }
+*/
 
 class SpacedRepetitionPlugin {
   constructor(private api: PluginAPI) {}

@@ -19,6 +19,7 @@ import KnowledgeDiscovery from '@/components/KnowledgeDiscovery';
 import ResearchAssistant from '@/components/ResearchAssistant';
 import KnowledgeMap from '@/components/KnowledgeMap';
 import BatchAnalyzer from '@/components/BatchAnalyzer';
+import DailyNotesCalendarModal from '@/components/DailyNotesCalendarModal';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 
@@ -81,6 +82,12 @@ export default function Home() {
 
   // Command Palette state
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  // Daily Notes Calendar state
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // Plugin state - track if Daily Notes plugin is loaded
+  const [isDailyNotesLoaded, setIsDailyNotesLoaded] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -209,6 +216,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       switch (buttonType) {
         case 'command-palette':
           setShowCommandPalette(true);
+          break;
+        case 'calendar':
+          setShowCalendar(true);
+          analytics.trackEvent('mode_switched', { view: 'daily-notes-calendar' });
           break;
         case 'ai-chat':
           setShowAIChat(true);
@@ -356,6 +367,32 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       initializePKM();
     }, 100); // Increased timeout slightly
   }, [pkm]);
+
+  // Check if Daily Notes plugin is loaded
+  useEffect(() => {
+    const checkDailyNotesPlugin = () => {
+      try {
+        // Check localStorage for enabled plugins (stored as array of plugin IDs)
+        const enabledPluginsData = localStorage.getItem('markitup-enabled-plugins');
+        if (enabledPluginsData) {
+          const enabledPluginIds: string[] = JSON.parse(enabledPluginsData);
+          const isDailyNotesActive = enabledPluginIds.includes('daily-notes');
+          setIsDailyNotesLoaded(isDailyNotesActive);
+        } else {
+          setIsDailyNotesLoaded(false);
+        }
+      } catch (error) {
+        console.error('Error checking Daily Notes plugin:', error);
+        setIsDailyNotesLoaded(false);
+      }
+    };
+
+    // Check on mount and after a delay to ensure plugins are loaded
+    checkDailyNotesPlugin();
+    const interval = setInterval(checkDailyNotesPlugin, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Refresh all PKM data
   const refreshData = useCallback(async () => {
@@ -777,6 +814,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 viewMode={viewMode}
                 settings={settings}
                 isMounted={isMounted}
+                isDailyNotesLoaded={isDailyNotesLoaded}
                 onViewChange={view =>
                   setCurrentView(view as 'editor' | 'graph' | 'search' | 'analytics' | 'plugins')
                 }
@@ -1057,6 +1095,33 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             pkm={pkm}
           />
         )}
+
+        {/* Daily Notes Calendar */}
+        <DailyNotesCalendarModal
+          isOpen={showCalendar}
+          onClose={() => setShowCalendar(false)}
+          onDateSelect={async dateStr => {
+            // Find or create the note for this date
+            const note = notes.find(n => n.name.includes(dateStr));
+            if (note) {
+              setActiveNote(note);
+              setMarkdown(note.content);
+              setFileName(note.name);
+              setFolder(note.folder || '');
+            } else {
+              // Create a new daily note
+              const noteName = `${dateStr}.md`;
+              setFileName(noteName);
+              setFolder('Daily Notes');
+              setMarkdown(
+                `# ${dateStr}\n\n## Today's Goals\n- [ ] \n\n## Notes\n\n\n## Reflection\n\n`
+              );
+              setActiveNote(null);
+            }
+            setCurrentView('editor');
+          }}
+          theme={theme}
+        />
       </div>
     </>
   );

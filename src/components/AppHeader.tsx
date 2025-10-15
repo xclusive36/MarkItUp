@@ -27,6 +27,7 @@ interface HeaderProps {
     enableCollaboration: boolean;
   };
   isMounted: boolean;
+  isDailyNotesLoaded?: boolean; // Whether Daily Notes plugin is loaded
   onViewChange: (view: string) => void;
   onViewModeChange: (mode: string) => void;
   onButtonClick: (buttonType: string) => void;
@@ -37,6 +38,7 @@ export function AppHeader({
   theme,
   currentView,
   settings,
+  isDailyNotesLoaded = false,
   // isMounted, // Currently unused
   onViewChange,
   onButtonClick,
@@ -218,6 +220,21 @@ export function AppHeader({
         >
           <Command className="w-4 h-4" />
         </button>
+
+        {/* Daily Notes Calendar Button - Only show when Daily Notes plugin is loaded */}
+        {isDailyNotesLoaded && (
+          <button
+            onClick={() => onButtonClick('calendar')}
+            className="p-2 rounded-md hover:bg-opacity-80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+            }}
+            title="Daily Notes Calendar"
+          >
+            <span className="text-sm">📅</span>
+          </button>
+        )}
 
         {/* Theme Toggle */}
         <ThemeToggle />
