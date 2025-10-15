@@ -12,7 +12,7 @@ import { PluginManifest } from '../lib/types';
 
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
-import { wordCountPlugin, aiWritingPlugin } from './example-plugins';
+import { aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 import { themeCreatorPlugin } from './theme-creator';
 import { tableOfContentsPlugin } from './table-of-contents';
@@ -26,7 +26,6 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
 
   // Plugins that were not tested by user - restoring for evaluation
   dailyNotesPlugin, // 📅 Daily notes (advanced version) - not tested
-  wordCountPlugin, // 📊 Basic word count - mentioned as working without enabling
   tableOfContentsPlugin, // 📑 Table of contents (full-featured) - fixed and working
   aiWritingPlugin, // 🤖 AI writing assistant - not tested
 ];
@@ -36,7 +35,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
  */
 export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [tableOfContentsPlugin],
-  '📊 Analytics': [enhancedWordCountPlugin, wordCountPlugin],
+  '📊 Analytics': [enhancedWordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
   '🤖 AI Tools': [aiWritingPlugin],
   '🎨 Appearance': [themeCreatorPlugin],
@@ -85,16 +84,6 @@ export const PLUGIN_METADATA = {
     featured: true,
     functional: true,
   },
-  [wordCountPlugin.id]: {
-    category: 'Analytics',
-    difficulty: 'beginner',
-    timeToSetup: '1 min',
-    rating: '4.6',
-    downloadCount: '890',
-    tags: ['analytics', 'word-count', 'basic'],
-    featured: false,
-    functional: true,
-  },
   [tableOfContentsPlugin.id]: {
     category: 'Editor Tools',
     difficulty: 'beginner',
@@ -133,8 +122,8 @@ export const USER_TYPE_RECOMMENDATIONS = {
 export const PLUGIN_STATS = {
   totalPlugins: AVAILABLE_PLUGINS.length,
   totalCategories: Object.keys(PLUGIN_CATEGORIES).length,
-  averageRating: 4.7,
-  totalDownloads: 5306,
+  averageRating: 4.8,
+  totalDownloads: 4416,
   mostPopularCategory: '📅 Daily Notes',
   functionalPlugins: AVAILABLE_PLUGINS.length,
   placeholderPlugins: 0, // All placeholder plugins removed
