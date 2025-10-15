@@ -17,6 +17,8 @@ import { themeCreatorPlugin } from './theme-creator';
 import { tableOfContentsPlugin } from './table-of-contents';
 import { smartAutoTaggerPlugin } from './smart-auto-tagger';
 import { intelligentLinkSuggesterPlugin } from './intelligent-link-suggester';
+import { contentOutlinerExpanderPlugin } from './content-outliner-expander';
+import { knowledgeGraphAutoMapperPlugin } from './knowledge-graph-auto-mapper';
 
 /**
  * Available Plugins - Only includes fully functional plugins
@@ -28,6 +30,8 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
   tableOfContentsPlugin, // 📑 Table of contents (full-featured) - fixed and working
   smartAutoTaggerPlugin, // 🏷️ AI-powered auto-tagging
   intelligentLinkSuggesterPlugin, // 🔗 AI-powered link suggestions
+  contentOutlinerExpanderPlugin, // 📝 AI-powered content expansion/compression
+  knowledgeGraphAutoMapperPlugin, // 🗺️ AI-powered graph organization
 ];
 
 /**
@@ -37,7 +41,12 @@ export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [tableOfContentsPlugin],
   '📊 Analytics': [enhancedWordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
-  '🤖 AI Tools': [smartAutoTaggerPlugin, intelligentLinkSuggesterPlugin],
+  '🤖 AI Tools': [
+    smartAutoTaggerPlugin,
+    intelligentLinkSuggesterPlugin,
+    contentOutlinerExpanderPlugin,
+    knowledgeGraphAutoMapperPlugin,
+  ],
   '🎨 Appearance': [themeCreatorPlugin],
 };
 
@@ -50,6 +59,8 @@ export const FEATURED_PLUGINS: PluginManifest[] = [
   dailyNotesPlugin,
   smartAutoTaggerPlugin,
   intelligentLinkSuggesterPlugin,
+  contentOutlinerExpanderPlugin,
+  knowledgeGraphAutoMapperPlugin,
 ];
 
 /**
@@ -116,6 +127,26 @@ export const PLUGIN_METADATA = {
     featured: true,
     functional: true,
   },
+  [contentOutlinerExpanderPlugin.id]: {
+    category: 'AI Tools',
+    difficulty: 'beginner',
+    timeToSetup: '2 min',
+    rating: '5.0',
+    downloadCount: '0',
+    tags: ['ai', 'writing', 'expansion', 'outlining', 'content-generation'],
+    featured: true,
+    functional: true,
+  },
+  [knowledgeGraphAutoMapperPlugin.id]: {
+    category: 'AI Tools',
+    difficulty: 'intermediate',
+    timeToSetup: '3 min',
+    rating: '5.0',
+    downloadCount: '0',
+    tags: ['ai', 'knowledge-graph', 'organization', 'clustering', 'moc'],
+    featured: true,
+    functional: true,
+  },
 };
 
 /**
@@ -123,11 +154,26 @@ export const PLUGIN_METADATA = {
  */
 export const USER_TYPE_RECOMMENDATIONS = {
   'all-users': [themeCreatorPlugin, enhancedWordCountPlugin, dailyNotesPlugin],
-  writers: [enhancedWordCountPlugin, tableOfContentsPlugin, smartAutoTaggerPlugin],
+  writers: [
+    enhancedWordCountPlugin,
+    tableOfContentsPlugin,
+    smartAutoTaggerPlugin,
+    contentOutlinerExpanderPlugin,
+  ],
   'journal-users': [dailyNotesPlugin],
   customizers: [themeCreatorPlugin],
-  'pkm-users': [smartAutoTaggerPlugin, intelligentLinkSuggesterPlugin, dailyNotesPlugin],
-  researchers: [intelligentLinkSuggesterPlugin, smartAutoTaggerPlugin, tableOfContentsPlugin],
+  'pkm-users': [
+    smartAutoTaggerPlugin,
+    intelligentLinkSuggesterPlugin,
+    knowledgeGraphAutoMapperPlugin,
+    dailyNotesPlugin,
+  ],
+  researchers: [
+    intelligentLinkSuggesterPlugin,
+    smartAutoTaggerPlugin,
+    tableOfContentsPlugin,
+    knowledgeGraphAutoMapperPlugin,
+  ],
 };
 
 /**
