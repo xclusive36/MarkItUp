@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Settings, 
-  ToggleLeft, 
-  ToggleRight, 
-  Trash2, 
+import {
+  Settings,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
@@ -27,14 +27,20 @@ import {
   Download,
   Tag,
   Cpu,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
-import { AVAILABLE_PLUGINS, FEATURED_PLUGINS, PLUGIN_CATEGORIES, PLUGIN_METADATA } from '../plugins/plugin-registry';
+import {
+  AVAILABLE_PLUGINS,
+  FEATURED_PLUGINS,
+  PLUGIN_CATEGORIES,
+  PLUGIN_METADATA,
+} from '../plugins/plugin-registry';
 import { PluginManager } from '../lib/plugin-manager';
 import { initializePluginSystem, getPluginManager } from '../lib/plugin-init';
 import { PluginManifest } from '../lib/types';
 import { analytics } from '../lib/analytics';
+import PluginSettingsModal from './PluginSettingsModal';
 
 interface UnifiedPluginManagerProps {
   pluginManager?: PluginManager;
@@ -66,25 +72,27 @@ type ViewMode = 'all' | 'regular' | 'ai' | 'featured';
 type SortMode = 'name' | 'rating' | 'downloads' | 'category';
 
 const categoryIcons: Record<string, any> = {
-  'ai': Brain,
+  ai: Brain,
   'content-generation': Wand2,
-  'analysis': BarChart3,
-  'visualization': BarChart3,
-  'automation': Zap,
-  'integration': ExternalLink,
-  'utility': Package,
-  'core': Cpu,
-  'productivity': Sparkles
+  analysis: BarChart3,
+  visualization: BarChart3,
+  automation: Zap,
+  integration: ExternalLink,
+  utility: Package,
+  core: Cpu,
+  productivity: Sparkles,
 };
 
 export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProps) {
   const { theme } = useSimpleTheme();
-  const [activeTab, setActiveTab] = useState<'overview' | 'store' | 'installed' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'store' | 'installed' | 'settings'>(
+    'overview'
+  );
   const [viewMode, setViewMode] = useState<ViewMode>('all');
   const [sortMode, setSortMode] = useState<SortMode>('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  
+
   const [loadedPlugins, setLoadedPlugins] = useState<LoadedPlugin[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<PluginStats>({
@@ -94,8 +102,12 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
     aiPlugins: 0,
     healthyPlugins: 0,
     pluginsWithIssues: 0,
-    featuredPlugins: FEATURED_PLUGINS.length
+    featuredPlugins: FEATURED_PLUGINS.length,
   });
+
+  // Settings Modal State
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [selectedPlugin, setSelectedPlugin] = useState<PluginManifest | null>(null);
 
   // Initialize plugin manager if not provided
   const [manager, setManager] = useState<PluginManager | null>(pluginManager || null);
@@ -103,7 +115,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
   const initializePluginManager = useCallback(async () => {
     try {
       setIsLoading(true);
-      
+
       if (!manager) {
         const existingManager = getPluginManager();
         if (existingManager) {
@@ -114,7 +126,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
           setManager(newManager);
         }
       }
-      
+
       refreshPlugins();
     } catch (error) {
       console.error('Failed to initialize plugin manager:', error);
@@ -131,9 +143,12 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
       const enhancedPlugins: LoadedPlugin[] = loaded.map(plugin => {
         // Enhance plugins with metadata
         const metadata = PLUGIN_METADATA[plugin.id] || {};
-        const isAI = plugin.id.includes('ai-') || plugin.id.includes('ml-') || 
-                   plugin.id.includes('neural-') || plugin.id.includes('chatbot');
-        
+        const isAI =
+          plugin.id.includes('ai-') ||
+          plugin.id.includes('ml-') ||
+          plugin.id.includes('neural-') ||
+          plugin.id.includes('chatbot');
+
         return {
           manifest: plugin,
           isActive: true, // Loaded plugins are active
@@ -143,16 +158,16 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
           rating: parseFloat(metadata.rating) || 4.0,
           downloads: parseInt(metadata.downloadCount?.replace(/k/g, '000') || '0') || 0,
           pricing: 'free' as const,
-          featured: metadata.featured || false
+          featured: metadata.featured || false,
         };
       });
 
       setLoadedPlugins(enhancedPlugins);
-      
+
       // Update stats
       const regularCount = enhancedPlugins.filter(p => !p.isAIPlugin).length;
       const aiCount = enhancedPlugins.filter(p => p.isAIPlugin).length;
-      
+
       setStats({
         totalPlugins: AVAILABLE_PLUGINS.length,
         activePlugins: enhancedPlugins.length,
@@ -160,16 +175,15 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
         aiPlugins: aiCount,
         healthyPlugins: enhancedPlugins.length, // Assume loaded = healthy
         pluginsWithIssues: 0,
-        featuredPlugins: FEATURED_PLUGINS.length
+        featuredPlugins: FEATURED_PLUGINS.length,
       });
 
       analytics.trackEvent('mode_switched', {
         view: 'plugin_refresh',
         total: enhancedPlugins.length,
         regular: regularCount,
-        ai: aiCount
+        ai: aiCount,
       });
-      
     } catch (error) {
       console.error('Failed to refresh plugins:', error);
     }
@@ -184,17 +198,22 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      if (!plugin.name.toLowerCase().includes(query) && 
-          !plugin.description.toLowerCase().includes(query) &&
-          !plugin.author.toLowerCase().includes(query)) {
+      if (
+        !plugin.name.toLowerCase().includes(query) &&
+        !plugin.description.toLowerCase().includes(query) &&
+        !plugin.author.toLowerCase().includes(query)
+      ) {
         return false;
       }
     }
 
     // View mode filter
-    const isAI = plugin.id.includes('ai-') || plugin.id.includes('ml-') || 
-                plugin.id.includes('neural-') || plugin.id.includes('chatbot');
-    
+    const isAI =
+      plugin.id.includes('ai-') ||
+      plugin.id.includes('ml-') ||
+      plugin.id.includes('neural-') ||
+      plugin.id.includes('chatbot');
+
     if (viewMode === 'ai' && !isAI) return false;
     if (viewMode === 'regular' && isAI) return false;
     if (viewMode === 'featured' && !FEATURED_PLUGINS.includes(plugin)) return false;
@@ -215,8 +234,12 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
         const ratingB = parseFloat(PLUGIN_METADATA[b.id]?.rating || '4.0');
         return ratingB - ratingA;
       case 'downloads':
-        const downloadsA = parseInt(PLUGIN_METADATA[a.id]?.downloadCount?.replace(/k/g, '000') || '0');
-        const downloadsB = parseInt(PLUGIN_METADATA[b.id]?.downloadCount?.replace(/k/g, '000') || '0');
+        const downloadsA = parseInt(
+          PLUGIN_METADATA[a.id]?.downloadCount?.replace(/k/g, '000') || '0'
+        );
+        const downloadsB = parseInt(
+          PLUGIN_METADATA[b.id]?.downloadCount?.replace(/k/g, '000') || '0'
+        );
         return downloadsB - downloadsA;
       case 'category':
         const categoryA = PLUGIN_METADATA[a.id]?.category || 'Utility';
@@ -227,10 +250,18 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
     }
   });
 
-  const categories = Array.from(new Set(Object.values(PLUGIN_METADATA).map(m => m.category).filter(Boolean)));
+  const categories = Array.from(
+    new Set(
+      Object.values(PLUGIN_METADATA)
+        .map(m => m.category)
+        .filter(Boolean)
+    )
+  );
 
   return (
-    <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div
+      className={`h-full flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}
+    >
       {/* Header */}
       <div className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} p-4`}>
         <div className="flex items-center justify-between mb-4">
@@ -247,9 +278,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             onClick={refreshPlugins}
             disabled={isLoading}
             className={`flex items-center gap-2 px-4 py-2 rounded-md ${
-              theme === 'dark' 
-                ? 'bg-blue-600 hover:bg-blue-700' 
-                : 'bg-blue-500 hover:bg-blue-600'
+              theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
             } text-white transition-colors`}
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -318,7 +347,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'store', label: 'Plugin Store', icon: Package },
             { id: 'installed', label: 'Installed', icon: CheckCircle },
-            { id: 'settings', label: 'Settings', icon: Settings }
+            { id: 'settings', label: 'Settings', icon: Settings },
           ].map(tab => (
             <button
               key={tab.id}
@@ -350,7 +379,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
                   type="text"
                   placeholder="Search plugins..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className={`w-full pl-10 pr-4 py-2 border rounded-md ${
                     theme === 'dark'
                       ? 'bg-gray-800 border-gray-600 text-white'
@@ -366,7 +395,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
                 { id: 'all', label: 'All', icon: Package },
                 { id: 'regular', label: 'Regular', icon: Cpu },
                 { id: 'ai', label: 'AI', icon: Brain },
-                { id: 'featured', label: 'Featured', icon: Star }
+                { id: 'featured', label: 'Featured', icon: Star },
               ].map(mode => (
                 <button
                   key={mode.id}
@@ -390,7 +419,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             {/* Category Filter */}
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={e => setSelectedCategory(e.target.value)}
               className={`px-3 py-2 border rounded-md ${
                 theme === 'dark'
                   ? 'bg-gray-800 border-gray-600 text-white'
@@ -399,14 +428,16 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category} value={category}>
+                  {category}
+                </option>
               ))}
             </select>
 
             {/* Sort */}
             <select
               value={sortMode}
-              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              onChange={e => setSortMode(e.target.value as SortMode)}
               className={`px-3 py-2 border rounded-md ${
                 theme === 'dark'
                   ? 'bg-gray-800 border-gray-600 text-white'
@@ -425,7 +456,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
       {/* Content */}
       <div className="flex-1 overflow-auto p-4">
         {activeTab === 'overview' && (
-          <OverviewTab 
+          <OverviewTab
             stats={stats}
             loadedPlugins={loadedPlugins}
             isLoading={isLoading}
@@ -434,31 +465,34 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
         )}
 
         {activeTab === 'store' && (
-          <PluginStoreTab 
+          <PluginStoreTab
             plugins={filteredPlugins}
             loadedPlugins={loadedPlugins}
             manager={manager}
             theme={theme}
             onPluginAction={refreshPlugins}
+            onOpenSettings={(plugin: PluginManifest) => {
+              setSelectedPlugin(plugin);
+              setSettingsModalOpen(true);
+            }}
           />
         )}
 
         {activeTab === 'installed' && (
-          <InstalledPluginsTab 
+          <InstalledPluginsTab
             plugins={filteredPlugins.filter(p => loadedPlugins.some(l => l.manifest.id === p.id))}
             loadedPlugins={loadedPlugins}
             manager={manager}
             theme={theme}
             onPluginAction={refreshPlugins}
+            onOpenSettings={(plugin: PluginManifest) => {
+              setSelectedPlugin(plugin);
+              setSettingsModalOpen(true);
+            }}
           />
         )}
 
-        {activeTab === 'settings' && (
-          <SettingsTab 
-            theme={theme}
-            manager={manager}
-          />
-        )}
+        {activeTab === 'settings' && <SettingsTab theme={theme} manager={manager} />}
       </div>
 
       {/* Command Palette Usage Info - Footer (only on overview tab) */}
@@ -469,26 +503,32 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
               <Key className={`h-4 w-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-1`}>
+              <h3
+                className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-1`}
+              >
                 💡 How to Use Plugin Commands
               </h3>
               <p className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
                 Access plugin commands through the Command Palette:
               </p>
               <div className="flex items-center space-x-2 text-xs">
-                <kbd className={`px-2 py-1 text-xs font-semibold rounded border ${
-                  theme === 'dark' 
-                    ? 'bg-gray-700 text-gray-200 border-gray-600' 
-                    : 'bg-gray-100 text-gray-900 border-gray-300'
-                }`}>
+                <kbd
+                  className={`px-2 py-1 text-xs font-semibold rounded border ${
+                    theme === 'dark'
+                      ? 'bg-gray-700 text-gray-200 border-gray-600'
+                      : 'bg-gray-100 text-gray-900 border-gray-300'
+                  }`}
+                >
                   Ctrl+K
                 </kbd>
                 <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>or</span>
-                <kbd className={`px-2 py-1 text-xs font-semibold rounded border ${
-                  theme === 'dark' 
-                    ? 'bg-gray-700 text-gray-200 border-gray-600' 
-                    : 'bg-gray-100 text-gray-900 border-gray-300'
-                }`}>
+                <kbd
+                  className={`px-2 py-1 text-xs font-semibold rounded border ${
+                    theme === 'dark'
+                      ? 'bg-gray-700 text-gray-200 border-gray-600'
+                      : 'bg-gray-100 text-gray-900 border-gray-300'
+                  }`}
+                >
                   Cmd+K
                 </kbd>
                 <span className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -498,6 +538,23 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             </div>
           </div>
         </div>
+      )}
+
+      {/* Plugin Settings Modal */}
+      {selectedPlugin && (
+        <PluginSettingsModal
+          plugin={selectedPlugin}
+          isOpen={settingsModalOpen}
+          onClose={() => {
+            setSettingsModalOpen(false);
+            setSelectedPlugin(null);
+          }}
+          onSave={(pluginId, settings) => {
+            console.log(`Settings saved for ${pluginId}:`, settings);
+            setSettingsModalOpen(false);
+            setSelectedPlugin(null);
+          }}
+        />
       )}
     </div>
   );
@@ -519,7 +576,7 @@ function StatCard({ title, value, icon: Icon, color, theme }: StatCardProps) {
     purple: theme === 'dark' ? 'bg-purple-900 text-purple-300' : 'bg-purple-50 text-purple-700',
     pink: theme === 'dark' ? 'bg-pink-900 text-pink-300' : 'bg-pink-50 text-pink-700',
     yellow: theme === 'dark' ? 'bg-yellow-900 text-yellow-300' : 'bg-yellow-50 text-yellow-700',
-    red: theme === 'dark' ? 'bg-red-900 text-red-300' : 'bg-red-50 text-red-700'
+    red: theme === 'dark' ? 'bg-red-900 text-red-300' : 'bg-red-50 text-red-700',
   };
 
   return (
@@ -541,14 +598,18 @@ function OverviewTab({ stats, loadedPlugins, isLoading, theme }: any) {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Plugin System Overview</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div
+          className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
+        >
           <h3 className="font-semibold mb-2">System Status</h3>
           <p>✅ Plugin system operational</p>
           <p>📊 {stats.totalPlugins} plugins available</p>
           <p>🔌 {stats.activePlugins} plugins loaded</p>
           <p>🤖 {stats.aiPlugins} AI-powered plugins</p>
         </div>
-        <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div
+          className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
+        >
           <h3 className="font-semibold mb-2">Recent Activity</h3>
           <p>Last refresh: Just now</p>
           <p>Health: All systems green</p>
@@ -559,19 +620,27 @@ function OverviewTab({ stats, loadedPlugins, isLoading, theme }: any) {
   );
 }
 
-function PluginStoreTab({ plugins, loadedPlugins, manager, theme, onPluginAction }: any) {
+function PluginStoreTab({
+  plugins,
+  loadedPlugins,
+  manager,
+  theme,
+  onPluginAction,
+  onOpenSettings,
+}: any) {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Plugin Store ({plugins.length} plugins)</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {plugins.map((plugin: PluginManifest) => (
-          <PluginCard 
+          <PluginCard
             key={plugin.id}
             plugin={plugin}
             isLoaded={loadedPlugins.some((l: any) => l.manifest.id === plugin.id)}
             theme={theme}
             onAction={onPluginAction}
             manager={manager}
+            onOpenSettings={onOpenSettings}
           />
         ))}
       </div>
@@ -579,20 +648,27 @@ function PluginStoreTab({ plugins, loadedPlugins, manager, theme, onPluginAction
   );
 }
 
-function InstalledPluginsTab({ plugins, loadedPlugins, manager, theme, onPluginAction }: any) {
+function InstalledPluginsTab({
+  plugins,
+  loadedPlugins,
+  manager,
+  theme,
+  onPluginAction,
+  onOpenSettings,
+}: any) {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Installed Plugins ({plugins.length} active)</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {plugins.map((plugin: PluginManifest) => (
-          <PluginCard 
+          <PluginCard
             key={plugin.id}
             plugin={plugin}
             isLoaded={true}
             theme={theme}
             onAction={onPluginAction}
             manager={manager}
-            showAdvanced={true}
+            onOpenSettings={onOpenSettings}
           />
         ))}
       </div>
@@ -605,7 +681,9 @@ function SettingsTab({ theme, manager }: any) {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Plugin System Settings</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div
+          className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
+        >
           <h3 className="font-semibold mb-4">API Configuration</h3>
           <div className="space-y-3">
             <div>
@@ -614,9 +692,7 @@ function SettingsTab({ theme, manager }: any) {
                 type="password"
                 placeholder="sk-..."
                 className={`w-full px-3 py-2 border rounded-md ${
-                  theme === 'dark'
-                    ? 'bg-gray-800 border-gray-600'
-                    : 'bg-white border-gray-300'
+                  theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
                 }`}
               />
             </div>
@@ -626,15 +702,15 @@ function SettingsTab({ theme, manager }: any) {
                 type="password"
                 placeholder="sk-ant-..."
                 className={`w-full px-3 py-2 border rounded-md ${
-                  theme === 'dark'
-                    ? 'bg-gray-800 border-gray-600'
-                    : 'bg-white border-gray-300'
+                  theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
                 }`}
               />
             </div>
           </div>
         </div>
-        <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div
+          className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
+        >
           <h3 className="font-semibold mb-4">System Preferences</h3>
           <div className="space-y-3">
             <label className="flex items-center">
@@ -656,10 +732,13 @@ function SettingsTab({ theme, manager }: any) {
   );
 }
 
-function PluginCard({ plugin, isLoaded, theme, onAction, manager, showAdvanced = false }: any) {
+function PluginCard({ plugin, isLoaded, theme, onAction, manager, onOpenSettings }: any) {
   const metadata = PLUGIN_METADATA[plugin.id] || {};
-  const isAI = plugin.id.includes('ai-') || plugin.id.includes('ml-') || 
-              plugin.id.includes('neural-') || plugin.id.includes('chatbot');
+  const isAI =
+    plugin.id.includes('ai-') ||
+    plugin.id.includes('ml-') ||
+    plugin.id.includes('neural-') ||
+    plugin.id.includes('chatbot');
 
   const handleLoad = async () => {
     if (manager && !isLoaded) {
@@ -683,8 +762,12 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, showAdvanced =
     }
   };
 
+  const hasSettings = plugin.settings && plugin.settings.length > 0;
+
   return (
-    <div className={`p-4 border rounded-lg ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+    <div
+      className={`p-4 border rounded-lg ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}
+    >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -694,61 +777,83 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, showAdvanced =
                 AI
               </span>
             )}
-            {metadata.featured && (
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-            )}
+            {metadata.featured && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
           </div>
           <p className="text-sm opacity-70 line-clamp-2">{plugin.description}</p>
-          
+
           {/* Show commands for loaded plugins */}
-          {isLoaded && manager && (
+          {isLoaded &&
+            manager &&
             (() => {
-              const pluginCommands = manager.getAllCommands().filter((cmd: any) => cmd.pluginId === plugin.id);
+              const pluginCommands = manager
+                .getAllCommands()
+                .filter((cmd: any) => cmd.pluginId === plugin.id);
               return pluginCommands.length > 0 ? (
-                <div className={`mt-2 p-2 rounded-md ${
-                  theme === 'dark' 
-                    ? 'bg-green-900/20 border border-green-800/50' 
-                    : 'bg-green-50 border border-green-200'
-                }`}>
+                <div
+                  className={`mt-2 p-2 rounded-md ${
+                    theme === 'dark'
+                      ? 'bg-green-900/20 border border-green-800/50'
+                      : 'bg-green-50 border border-green-200'
+                  }`}
+                >
                   <div className="flex items-center space-x-1 mb-1">
-                    <Zap className={`h-3 w-3 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
-                    <span className={`text-xs font-medium ${theme === 'dark' ? 'text-green-200' : 'text-green-800'}`}>
+                    <Zap
+                      className={`h-3 w-3 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}
+                    />
+                    <span
+                      className={`text-xs font-medium ${theme === 'dark' ? 'text-green-200' : 'text-green-800'}`}
+                    >
                       {pluginCommands.length} command{pluginCommands.length > 1 ? 's' : ''}
                     </span>
                   </div>
-                  <div className={`text-xs ${theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}>
+                  <div
+                    className={`text-xs ${theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}
+                  >
                     {pluginCommands.slice(0, 2).map((cmd: any) => (
                       <div key={cmd.command.id} className="flex items-center justify-between">
                         <span>• {cmd.command.name}</span>
                         {cmd.command.keybinding && (
-                          <kbd className={`px-1 py-0.5 text-xs rounded ${
-                            theme === 'dark' 
-                              ? 'bg-green-800 text-green-200' 
-                              : 'bg-green-200 text-green-800'
-                          }`}>
+                          <kbd
+                            className={`px-1 py-0.5 text-xs rounded ${
+                              theme === 'dark'
+                                ? 'bg-green-800 text-green-200'
+                                : 'bg-green-200 text-green-800'
+                            }`}
+                          >
                             {cmd.command.keybinding}
                           </kbd>
                         )}
                       </div>
                     ))}
                     {pluginCommands.length > 2 && (
-                      <div className={`text-xs mt-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                      <div
+                        className={`text-xs mt-1 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}
+                      >
                         +{pluginCommands.length - 2} more commands
                       </div>
                     )}
                   </div>
-                  <div className={`mt-1 text-xs ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
-                    Press <kbd className={`px-1 py-0.5 rounded ${
-                      theme === 'dark' ? 'bg-green-800 text-green-200' : 'bg-green-200 text-green-800'
-                    }`}>Ctrl/Cmd+K</kbd> to access
+                  <div
+                    className={`mt-1 text-xs ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}
+                  >
+                    Press{' '}
+                    <kbd
+                      className={`px-1 py-0.5 rounded ${
+                        theme === 'dark'
+                          ? 'bg-green-800 text-green-200'
+                          : 'bg-green-200 text-green-800'
+                      }`}
+                    >
+                      Ctrl/Cmd+K
+                    </kbd>{' '}
+                    to access
                   </div>
                 </div>
               ) : null;
-            })()
-          )}
+            })()}
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between text-xs opacity-70 mb-3">
         <span>{plugin.author}</span>
         <span>v{plugin.version}</span>
@@ -769,37 +874,39 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, showAdvanced =
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="text-xs opacity-70">
-          {metadata.category || 'Utility'}
-        </div>
-        <div className="flex gap-2">
-          {isLoaded ? (
-            <>
-              {showAdvanced && (
-                <button
-                  className={`p-1 rounded ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                  title="Plugin Settings"
-                >
-                  <Settings className="h-4 w-4" />
-                </button>
-              )}
-              <button
-                onClick={handleUnload}
-                className="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded"
-              >
-                Unload
-              </button>
-            </>
-          ) : (
+      <div className="text-xs opacity-70 mb-3">{metadata.category || 'Utility'}</div>
+
+      <div className="flex gap-2 w-full">
+        {isLoaded ? (
+          <>
             <button
-              onClick={handleLoad}
-              className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+              onClick={() => onOpenSettings?.(plugin)}
+              disabled={!hasSettings}
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded transition-colors flex-1 ${
+                hasSettings
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  : 'bg-gray-400 cursor-not-allowed text-white opacity-50'
+              }`}
+              title={hasSettings ? 'Configure Plugin Settings' : 'No settings available'}
             >
-              Load
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
             </button>
-          )}
-        </div>
+            <button
+              onClick={handleUnload}
+              className="flex items-center justify-center px-3 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded flex-1"
+            >
+              Unload
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handleLoad}
+            className="flex items-center justify-center px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded w-full"
+          >
+            Load
+          </button>
+        )}
       </div>
     </div>
   );
