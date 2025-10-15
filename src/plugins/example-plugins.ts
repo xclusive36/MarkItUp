@@ -1,5 +1,25 @@
 import { PluginManifest, ContentProcessor, Command, PluginSetting, PluginAPI } from '../lib/types';
 
+/**
+ * EXAMPLE PLUGINS
+ *
+ * This file contains example plugin implementations. Most are templates/examples only.
+ *
+ * ✅ ACTIVE PLUGINS (used in plugin-registry.ts):
+ * - wordCountPlugin: Basic word count functionality
+ * - aiWritingPlugin: AI-powered writing assistance
+ *
+ * ⚠️ DEPRECATED/UNUSED PLUGINS (for reference only):
+ * - markdownExportPlugin: Export to various formats (not in registry)
+ * - darkThemePlugin: Dark theme (replaced by Theme Creator plugin)
+ * - dailyNotesPlugin: Daily notes (replaced by version in daily-notes.ts)
+ * - tocPlugin: Table of contents (replaced by full version in table-of-contents.ts)
+ * - backupPlugin: Auto backup (not in registry)
+ * - citationsPlugin: Citations management (not in registry)
+ * - kanbanPlugin: Kanban board (not in registry)
+ * - spacedRepetitionPlugin: Flashcards (not in registry)
+ */
+
 // Global instances
 let wordCountInstance: WordCountPlugin | null = null;
 let markdownExportInstance: MarkdownExportPlugin | null = null;
