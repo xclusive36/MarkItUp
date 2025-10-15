@@ -324,23 +324,35 @@ export class UnifiedPluginManager {
       // AI extensions (only available for AI plugins)
       ...(isAI && {
         ai: {
-          chat: async (messages: Array<{ role: string; content: string }>) => {
+          analyzeContent: async (content: string, noteId?: string) => {
             const apiKey = this.getApiKey('openai');
-            if (!apiKey) throw new Error('OpenAI API key not configured');
-            // Implementation would go here
-            return 'AI response placeholder';
+            if (!apiKey) {
+              throw new Error('AI API key not configured');
+            }
+            // TODO: Implement actual AI analysis
+            // For now, return mock data matching the expected interface
+            return {
+              summary: 'Content analysis placeholder',
+              keyTopics: [],
+              suggestedTags: [],
+              suggestedConnections: [],
+              sentiment: 'neutral' as const,
+              complexity: 0,
+              readabilityScore: 0,
+            };
           },
-          generate: async (prompt: string, options?: any) => {
-            const apiKey = this.getApiKey('openai');
-            if (!apiKey) throw new Error('OpenAI API key not configured');
-            // Implementation would go here
-            return 'Generated content placeholder';
+          isAvailable: () => {
+            return (
+              !!this.getApiKey('openai') ||
+              !!this.getApiKey('anthropic') ||
+              !!this.getApiKey('gemini')
+            );
           },
-          analyze: async (content: string, type: string) => {
-            const apiKey = this.getApiKey('openai');
-            if (!apiKey) throw new Error('OpenAI API key not configured');
-            // Implementation would go here
-            return { analysis: 'Analysis result placeholder' };
+          getProvider: () => {
+            if (this.getApiKey('openai')) return 'openai';
+            if (this.getApiKey('anthropic')) return 'anthropic';
+            if (this.getApiKey('gemini')) return 'gemini';
+            return 'none';
           },
         },
       }),

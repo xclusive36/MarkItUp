@@ -614,5 +614,62 @@
       "timestamp": "2025-10-15T23:13:44.350Z"
     },
     "sessionId": "session_1760570024166_ju61x0kt3"
+  },
+  {
+    "id": "event_1760570209939_nloolwtm7",
+    "type": "session_ended",
+    "timestamp": "2025-10-15T23:16:49.939Z",
+    "data": {
+      "duration": 185773
+    },
+    "sessionId": "session_1760570024166_ju61x0kt3"
+  },
+  {
+    "id": "event_1760570212893_vh90iy8v6",
+    "type": "session_started",
+    "timestamp": "2025-10-15T23:16:52.893Z",
+    "data": {},
+    "sessionId": "session_1760570212893_hn9rpfswb"
+  },
+  {
+    "id": "event_1760570309760_6t6332h1y",
+    "type": "session_ended",
+    "timestamp": "2025-10-15T23:18:29.760Z",
+    "data": {
+      "duration": 96867
+    },
+    "sessionId": "session_1760570212893_hn9rpfswb"
+  },
+  {
+    "id": "event_1760570311221_tniiv183y",
+    "type": "session_started",
+    "timestamp": "2025-10-15T23:18:31.221Z",
+    "data": {},
+    "sessionId": "session_1760570311221_370wdlscn"
+  },
+  {
+    "id": "event_1760570311425_vrdk4vqn5",
+    "type": "session_started",
+    "timestamp": "2025-10-15T23:18:31.425Z",
+    "data": {
+      "timestamp": "2025-10-15T23:18:31.425Z"
+    },
+    "sessionId": "session_1760570311221_370wdlscn"
+  },
+  {
+    "id": "event_1760570314788_7wms2bp2j",
+    "type": "mode_switched",
+    "timestamp": "2025-10-15T23:18:34.788Z",
+    "data": {
+      "view": "graph"
+    },
+    "sessionId": "session_1760570311221_370wdlscn"
+  },
+  {
+    "id": "event_1760570314791_qew5mh6dx",
+    "type": "graph_viewed",
+    "timestamp": "2025-10-15T23:18:34.791Z",
+    "data": {},
+    "sessionId": "session_1760570311221_370wdlscn"
   }
 ]
