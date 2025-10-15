@@ -12,9 +12,10 @@ import { PluginManifest } from '../lib/types';
 
 // Import only the functional plugins
 import { enhancedWordCountPlugin } from './enhanced-word-count';
-import { wordCountPlugin, tocPlugin, aiWritingPlugin } from './example-plugins';
+import { wordCountPlugin, aiWritingPlugin } from './example-plugins';
 import { dailyNotesPlugin } from './daily-notes';
 import { themeCreatorPlugin } from './theme-creator';
+import { tableOfContentsPlugin } from './table-of-contents';
 
 /**
  * Available Plugins - Only includes fully functional plugins
@@ -26,7 +27,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
   // Plugins that were not tested by user - restoring for evaluation
   dailyNotesPlugin, // 📅 Daily notes (advanced version) - not tested
   wordCountPlugin, // 📊 Basic word count - mentioned as working without enabling
-  tocPlugin, // 📑 Table of contents (basic) - not tested
+  tableOfContentsPlugin, // 📑 Table of contents (full-featured) - fixed and working
   aiWritingPlugin, // 🤖 AI writing assistant - not tested
 ];
 
@@ -34,7 +35,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
  * Plugin Categories - Organized functional plugins by type
  */
 export const PLUGIN_CATEGORIES = {
-  '✨ Editor Tools': [tocPlugin],
+  '✨ Editor Tools': [tableOfContentsPlugin],
   '📊 Analytics': [enhancedWordCountPlugin, wordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
   '🤖 AI Tools': [aiWritingPlugin],
@@ -94,7 +95,7 @@ export const PLUGIN_METADATA = {
     featured: false,
     functional: true,
   },
-  [tocPlugin.id]: {
+  [tableOfContentsPlugin.id]: {
     category: 'Editor Tools',
     difficulty: 'beginner',
     timeToSetup: '1 min',
@@ -121,7 +122,7 @@ export const PLUGIN_METADATA = {
  */
 export const USER_TYPE_RECOMMENDATIONS = {
   'all-users': [themeCreatorPlugin, enhancedWordCountPlugin, dailyNotesPlugin],
-  writers: [enhancedWordCountPlugin, aiWritingPlugin, tocPlugin],
+  writers: [enhancedWordCountPlugin, aiWritingPlugin, tableOfContentsPlugin],
   'journal-users': [dailyNotesPlugin],
   customizers: [themeCreatorPlugin],
 };
