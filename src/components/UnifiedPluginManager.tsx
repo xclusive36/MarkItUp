@@ -40,7 +40,7 @@ import { PluginManager } from '../lib/plugin-manager';
 import { initializePluginSystem, getPluginManager } from '../lib/plugin-init';
 import { PluginManifest } from '../lib/types';
 import { analytics } from '../lib/analytics';
-import PluginSettingsModal from '@/components/PluginSettingsModal';
+import PluginSettingsModal from './PluginSettingsModal';
 
 interface UnifiedPluginManagerProps {
   pluginManager?: PluginManager;
