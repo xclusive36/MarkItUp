@@ -7,6 +7,7 @@ import { ThemeCreator } from './ThemeCreator';
 import React, { useState, useEffect } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
 import { getThemeCreatorPluginInstance } from '@/plugins/theme-creator';
+import { getPluginManager } from '@/lib/plugin-init';
 
 interface MainContentProps {
   markdown: string;
@@ -32,6 +33,27 @@ const MainContent: React.FC<MainContentProps> = ({
 }) => {
   const [editorType, setEditorType] = useState<'markdown' | 'wysiwyg'>('markdown');
   const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
+  const [isThemeCreatorPluginLoaded, setIsThemeCreatorPluginLoaded] = useState(false);
+
+  // Check if Theme Creator plugin is loaded
+  useEffect(() => {
+    const checkPluginStatus = () => {
+      const pluginManager = getPluginManager();
+      if (pluginManager) {
+        const loadedPlugins = pluginManager.getLoadedPlugins();
+        const isLoaded = loadedPlugins.some(plugin => plugin.id === 'theme-creator');
+        setIsThemeCreatorPluginLoaded(isLoaded);
+      }
+    };
+
+    // Check immediately
+    checkPluginStatus();
+
+    // Set up an interval to check periodically (in case plugin is loaded/unloaded)
+    const interval = setInterval(checkPluginStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Register the theme creator open callback with the plugin
   useEffect(() => {
@@ -76,20 +98,22 @@ const MainContent: React.FC<MainContentProps> = ({
             </button>
           )}
 
-          {/* Theme Creator Button */}
-          <button
-            onClick={() => setIsThemeCreatorOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-secondary)',
-              color: 'var(--text-primary)',
-            }}
-            title="Open Theme Creator (Ctrl+Shift+T)"
-          >
-            <span>🎨</span>
-            <span>Themes</span>
-          </button>
+          {/* Theme Creator Button - Only show if plugin is loaded */}
+          {isThemeCreatorPluginLoaded && (
+            <button
+              onClick={() => setIsThemeCreatorOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-secondary)',
+                color: 'var(--text-primary)',
+              }}
+              title="Open Theme Creator (Ctrl+Shift+T)"
+            >
+              <span>🎨</span>
+              <span>Themes</span>
+            </button>
+          )}
         </div>
         {viewMode !== 'edit' && <div />}
 
