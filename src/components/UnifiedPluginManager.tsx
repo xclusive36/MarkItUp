@@ -40,7 +40,7 @@ import { PluginManager } from '../lib/plugin-manager';
 import { initializePluginSystem, getPluginManager } from '../lib/plugin-init';
 import { PluginManifest } from '../lib/types';
 import { analytics } from '../lib/analytics';
-import PluginSettingsModal from './PluginSettingsModal';
+import PluginSettingsModal from '@/components/PluginSettingsModal';
 
 interface UnifiedPluginManagerProps {
   pluginManager?: PluginManager;
@@ -549,7 +549,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
             setSettingsModalOpen(false);
             setSelectedPlugin(null);
           }}
-          onSave={(pluginId, settings) => {
+          onSave={(pluginId: string, settings: Record<string, unknown>) => {
             console.log(`Settings saved for ${pluginId}:`, settings);
             setSettingsModalOpen(false);
             setSelectedPlugin(null);
