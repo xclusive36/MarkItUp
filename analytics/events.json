@@ -2211,5 +2211,14 @@
       "view": "plugins"
     },
     "sessionId": "session_1760656322581_tfhs4xqgb"
+  },
+  {
+    "id": "event_1760657799018_pxx4lhz61",
+    "type": "session_ended",
+    "timestamp": "2025-10-16T23:36:39.018Z",
+    "data": {
+      "duration": 1476437
+    },
+    "sessionId": "session_1760656322581_tfhs4xqgb"
   }
 ]
