@@ -481,10 +481,24 @@ export class PluginManager {
       },
       graph: {
         getLinks: (noteId: string) => {
-          return this.pkmSystem.getLinksForNote(noteId);
+          // Return both backlinks and outgoing links
+          const backlinks = this.pkmSystem.getBacklinks(noteId);
+          const outgoing = this.pkmSystem.getOutgoingLinks(noteId);
+          return [...backlinks, ...outgoing];
         },
         getAllLinks: () => {
-          return this.pkmSystem.getAllLinks();
+          // Get all links from the graph - convert edges to links
+          const graph = this.pkmSystem.getGraph();
+          return graph.edges.map(edge => ({
+            id: `${edge.source}-${edge.target}`,
+            source: edge.source,
+            target: edge.target,
+            type: (edge.type === 'link' ? 'wikilink' : 'tag') as
+              | 'wikilink'
+              | 'backlink'
+              | 'tag'
+              | 'block',
+          }));
         },
         getTags: () => {
           return this.pkmSystem.getAllTags();

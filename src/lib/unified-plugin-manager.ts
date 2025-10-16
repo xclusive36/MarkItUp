@@ -404,6 +404,20 @@ export class UnifiedPluginManager {
         openNote: (noteId: string) => {
           console.log('Opening note:', noteId);
         },
+        getSelection: () => {
+          console.log('Getting editor selection');
+          return { text: '', start: 0, end: 0 };
+        },
+        replaceSelection: (text: string) => {
+          console.log('Replacing selection with:', text);
+        },
+        getCursorPosition: () => {
+          console.log('Getting cursor position');
+          return 0;
+        },
+        setCursorPosition: (position: number) => {
+          console.log('Setting cursor position to:', position);
+        },
       },
 
       events: {

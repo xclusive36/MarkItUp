@@ -356,7 +356,8 @@ class IntelligentLinkSuggesterPlugin {
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        root.render(React.createElement(LinkSuggestionsPanel, props as object));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root.render(React.createElement(LinkSuggestionsPanel, props as any));
       } else if (panelType === 'bridge') {
         const BridgeNoteSuggestionPanel = (await import('../components/BridgeNoteSuggestionPanel'))
           .default;
@@ -364,14 +365,16 @@ class IntelligentLinkSuggesterPlugin {
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        root.render(React.createElement(BridgeNoteSuggestionPanel, props as object));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root.render(React.createElement(BridgeNoteSuggestionPanel, props as any));
       } else if (panelType === 'map') {
         const ConnectionMapPanel = (await import('../components/ConnectionMapPanel')).default;
         const { createRoot } = await import('react-dom/client');
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        root.render(React.createElement(ConnectionMapPanel, props as object));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        root.render(React.createElement(ConnectionMapPanel, props as any));
       }
     } catch (error) {
       this.showNotification('Failed to load UI panel', 'error');
@@ -484,7 +487,12 @@ class IntelligentLinkSuggesterPlugin {
     noteId: string,
     suggestion: { noteName: string; confidence: number }
   ): Promise<void> {
-    await this.insertWikilinks(noteId, [suggestion]);
+    await this.insertWikilinks(noteId, [
+      {
+        noteName: suggestion.noteName,
+        reason: `Accepted with ${Math.round(suggestion.confidence * 100)}% confidence`,
+      },
+    ]);
     this.recordDecision('accept', noteId, suggestion.noteName, suggestion.confidence);
     this.showNotification(`Added link to [[${suggestion.noteName}]]`, 'info');
   }
