@@ -222,6 +222,11 @@ export interface PluginAPI {
     getEditorContent: () => string;
     setEditorContent: (content: string) => void;
     openNote: (noteId: string) => void;
+    // Editor selection methods
+    getSelection: () => { text: string; start: number; end: number } | null;
+    replaceSelection: (text: string) => void;
+    getCursorPosition: () => number;
+    setCursorPosition: (position: number) => void;
   };
 
   // Event system
@@ -265,6 +270,9 @@ export interface PluginAPI {
     getLinks: (noteId: string) => Link[];
     getAllLinks: () => Link[];
     getTags: () => Tag[];
+    addLink: (sourceId: string, targetId: string, type?: string) => Promise<void>;
+    removeLink: (sourceId: string, targetId: string) => Promise<void>;
+    updateLink: (sourceId: string, targetId: string, newType: string) => Promise<void>;
   };
 
   // File system (if permitted)

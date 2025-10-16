@@ -20,6 +20,9 @@ import ResearchAssistant from '@/components/ResearchAssistant';
 import KnowledgeMap from '@/components/KnowledgeMap';
 import BatchAnalyzer from '@/components/BatchAnalyzer';
 import DailyNotesCalendarModal from '@/components/DailyNotesCalendarModal';
+import { AnalyticsDashboard as KnowledgeGraphAnalytics } from '@/components/KnowledgeGraphAnalytics';
+import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal';
+import MOCSuggestionsModal from '@/components/MOCSuggestionsModal';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 
@@ -58,6 +61,9 @@ export default function Home() {
   // Ref for NotesComponent refresh
   const notesComponentRefreshRef = useRef<(() => Promise<void>) | null>(null);
 
+  // Ref for editor textarea (for plugin selection support)
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+
   // Collaboration UI state
   const [showCollabSettings, setShowCollabSettings] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -88,6 +94,14 @@ export default function Home() {
 
   // Plugin state - track if Daily Notes plugin is loaded
   const [isDailyNotesLoaded, setIsDailyNotesLoaded] = useState(false);
+
+  // Knowledge Graph Auto-Mapper modals state
+  const [showGraphAnalytics, setShowGraphAnalytics] = useState(false);
+  const [graphAnalyticsData, setGraphAnalyticsData] = useState<any>(null);
+  const [showConnectionSuggestions, setShowConnectionSuggestions] = useState(false);
+  const [connectionSuggestionsData, setConnectionSuggestionsData] = useState<any[]>([]);
+  const [showMOCSuggestions, setShowMOCSuggestions] = useState(false);
+  const [mocSuggestionsData, setMOCSuggestionsData] = useState<any[]>([]);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -307,6 +321,41 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       getMarkdown: () => markdown,
       getFileName: () => fileName,
       getFolder: () => folder,
+      // Selection methods for plugin support
+      getSelection: () => {
+        const textarea = editorRef.current;
+        if (!textarea) return null;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value.substring(start, end);
+        return { text, start, end };
+      },
+      replaceSelection: (text: string) => {
+        const textarea = editorRef.current;
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const before = textarea.value.substring(0, start);
+        const after = textarea.value.substring(end);
+        const newContent = before + text + after;
+        setMarkdown(newContent);
+        // Update cursor position after replacement
+        setTimeout(() => {
+          textarea.focus();
+          const newPos = start + text.length;
+          textarea.setSelectionRange(newPos, newPos);
+        }, 0);
+      },
+      getCursorPosition: () => {
+        return editorRef.current?.selectionStart || 0;
+      },
+      setCursorPosition: (position: number) => {
+        const textarea = editorRef.current;
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(position, position);
+        }
+      },
     });
 
     return pkmSystem;
@@ -443,6 +492,40 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       refreshData();
     }
   }, [isMounted, refreshData]);
+
+  // Knowledge Graph Auto-Mapper event listeners
+  useEffect(() => {
+    const handleShowAnalytics = (event: CustomEvent) => {
+      setGraphAnalyticsData(event.detail.analytics);
+      setShowGraphAnalytics(true);
+    };
+
+    const handleShowConnectionSuggestions = (event: CustomEvent) => {
+      setConnectionSuggestionsData(event.detail.connections || []);
+      setShowConnectionSuggestions(true);
+    };
+
+    const handleShowMOCSuggestions = (event: CustomEvent) => {
+      setMOCSuggestionsData(event.detail.suggestions || []);
+      setShowMOCSuggestions(true);
+    };
+
+    window.addEventListener('showAnalyticsDashboard', handleShowAnalytics as EventListener);
+    window.addEventListener(
+      'showConnectionSuggestions',
+      handleShowConnectionSuggestions as EventListener
+    );
+    window.addEventListener('showMOCSuggestions', handleShowMOCSuggestions as EventListener);
+
+    return () => {
+      window.removeEventListener('showAnalyticsDashboard', handleShowAnalytics as EventListener);
+      window.removeEventListener(
+        'showConnectionSuggestions',
+        handleShowConnectionSuggestions as EventListener
+      );
+      window.removeEventListener('showMOCSuggestions', handleShowMOCSuggestions as EventListener);
+    };
+  }, []);
 
   // Command Palette keyboard shortcut
   useEffect(() => {
@@ -928,6 +1011,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   processedMarkdown={processedMarkdown}
                   theme={theme}
                   analytics={analytics}
+                  editorRef={editorRef}
                   graph={graph}
                   activeNote={activeNote}
                   handleGraphNodeClick={handleGraphNodeClick}
@@ -1122,6 +1206,68 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           }}
           theme={theme}
         />
+
+        {/* Knowledge Graph Auto-Mapper Modals */}
+        {graphAnalyticsData && (
+          <KnowledgeGraphAnalytics
+            analytics={graphAnalyticsData}
+            isOpen={showGraphAnalytics}
+            onClose={() => {
+              setShowGraphAnalytics(false);
+              setGraphAnalyticsData(null);
+            }}
+          />
+        )}
+
+        {connectionSuggestionsData.length > 0 && (
+          <ConnectionSuggestionsModal
+            connections={connectionSuggestionsData}
+            isOpen={showConnectionSuggestions}
+            onClose={() => {
+              setShowConnectionSuggestions(false);
+              setConnectionSuggestionsData([]);
+            }}
+            onApply={async (source, target, reason) => {
+              // This will be handled by the plugin via events
+              window.dispatchEvent(
+                new CustomEvent('applyConnection', {
+                  detail: { source, target, reason },
+                })
+              );
+            }}
+            onApplyAll={async minConfidence => {
+              // This will be handled by the plugin via events
+              window.dispatchEvent(
+                new CustomEvent('applyAllConnections', {
+                  detail: { minConfidence },
+                })
+              );
+            }}
+          />
+        )}
+
+        {mocSuggestionsData.length > 0 && (
+          <MOCSuggestionsModal
+            suggestions={mocSuggestionsData}
+            isOpen={showMOCSuggestions}
+            onClose={() => {
+              setShowMOCSuggestions(false);
+              setMOCSuggestionsData([]);
+            }}
+            onCreate={async (title, noteIds, reason) => {
+              // This will be handled by the plugin via events
+              window.dispatchEvent(
+                new CustomEvent('createMOC', {
+                  detail: { title, noteIds, reason },
+                })
+              );
+            }}
+            onCreateAll={async () => {
+              // This will be handled by the plugin via events
+              window.dispatchEvent(new CustomEvent('createAllMOCs'));
+            }}
+          />
+        )}
       </div>
     </>
   );

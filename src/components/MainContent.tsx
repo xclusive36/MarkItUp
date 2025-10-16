@@ -17,6 +17,7 @@ interface MainContentProps {
   processedMarkdown: string;
   theme: string;
   analytics: AnalyticsSystem;
+  editorRef?: React.RefObject<HTMLTextAreaElement | null>;
   // Add more props as needed for your use case
 }
 // ...existing code...
@@ -30,6 +31,7 @@ const MainContent: React.FC<MainContentProps> = ({
   processedMarkdown,
   theme,
   analytics,
+  editorRef,
 }) => {
   const [editorType, setEditorType] = useState<'markdown' | 'wysiwyg'>('markdown');
   const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
@@ -134,7 +136,12 @@ const MainContent: React.FC<MainContentProps> = ({
       {viewMode === 'edit' && (
         <div className="flex-grow flex flex-col h-full">
           {editorType === 'markdown' ? (
-            <MarkdownEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+            <MarkdownEditor
+              ref={editorRef}
+              value={markdown}
+              onChange={handleMarkdownChange}
+              theme={theme}
+            />
           ) : (
             <WysiwygEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
           )}
@@ -145,7 +152,12 @@ const MainContent: React.FC<MainContentProps> = ({
         <div className="flex flex-col lg:flex-row h-full flex-grow min-h-0">
           <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col min-h-0">
             {editorType === 'markdown' ? (
-              <MarkdownEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+              <MarkdownEditor
+                ref={editorRef}
+                value={markdown}
+                onChange={handleMarkdownChange}
+                theme={theme}
+              />
             ) : (
               <WysiwygEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
             )}

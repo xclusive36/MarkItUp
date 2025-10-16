@@ -18,6 +18,11 @@ interface UICallbacks {
   getMarkdown?: () => string;
   getFileName?: () => string;
   getFolder?: () => string;
+  // Editor selection methods
+  getSelection?: () => { text: string; start: number; end: number } | null;
+  replaceSelection?: (text: string) => void;
+  getCursorPosition?: () => number;
+  setCursorPosition?: (position: number) => void;
 }
 
 export class PluginManager {
@@ -433,6 +438,22 @@ export class PluginManager {
             this.pkmSystem.setActiveNote(noteId);
           }
         },
+        getSelection: () => {
+          return this.uiCallbacks?.getSelection?.() || null;
+        },
+        replaceSelection: (text: string) => {
+          if (this.uiCallbacks?.replaceSelection) {
+            this.uiCallbacks.replaceSelection(text);
+          }
+        },
+        getCursorPosition: () => {
+          return this.uiCallbacks?.getCursorPosition?.() || 0;
+        },
+        setCursorPosition: (position: number) => {
+          if (this.uiCallbacks?.setCursorPosition) {
+            this.uiCallbacks.setCursorPosition(position);
+          }
+        },
       },
       events: {
         on: (event, callback) => {
@@ -457,6 +478,56 @@ export class PluginManager {
       settings: {
         get: key => this.getPluginSettings(pluginId)[key],
         set: (key, value) => this.setPluginSetting(pluginId, key, value),
+      },
+      graph: {
+        getLinks: (noteId: string) => {
+          return this.pkmSystem.getLinksForNote(noteId);
+        },
+        getAllLinks: () => {
+          return this.pkmSystem.getAllLinks();
+        },
+        getTags: () => {
+          return this.pkmSystem.getAllTags();
+        },
+        addLink: async (sourceId: string, targetId: string, type?: string) => {
+          // Add link to PKM system
+          const sourceNote = this.pkmSystem.getNote(sourceId);
+          const targetNote = this.pkmSystem.getNote(targetId);
+
+          if (!sourceNote || !targetNote) {
+            throw new Error('Source or target note not found');
+          }
+
+          // The actual link will be created by updating the note content
+          // This is a placeholder for graph-level link tracking
+          console.log(`Adding link: ${sourceId} -> ${targetId} (${type || 'default'})`);
+
+          // Emit event for graph updates
+          this.emitPluginEvent('graphLinkAdded', {
+            sourceId,
+            targetId,
+            type: type || 'default',
+          });
+        },
+        removeLink: async (sourceId: string, targetId: string) => {
+          console.log(`Removing link: ${sourceId} -> ${targetId}`);
+
+          // Emit event for graph updates
+          this.emitPluginEvent('graphLinkRemoved', {
+            sourceId,
+            targetId,
+          });
+        },
+        updateLink: async (sourceId: string, targetId: string, newType: string) => {
+          console.log(`Updating link: ${sourceId} -> ${targetId} to type ${newType}`);
+
+          // Emit event for graph updates
+          this.emitPluginEvent('graphLinkUpdated', {
+            sourceId,
+            targetId,
+            newType,
+          });
+        },
       },
     };
   }

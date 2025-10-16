@@ -6,6 +6,19 @@
 
 ## 🆕 What's New
 
+### v3.2 - October 2025 🎉
+- **🔗 Intelligent Link Suggester v3.2** - The most advanced link suggestion system in the PKM space:
+  - 📜 **Suggestion History & Undo** - Track all link decisions with one-click undo (Cmd+Shift+H)
+  - 📥 **Export Suggestions Report** - Download link opportunities as markdown with confidence scores
+  - ⚙️ **Custom Debounce Timing** - Configure real-time delay (1-10 seconds) for your typing speed
+  - 📊 **Visual Status Indicator** - Floating status showing when real-time analysis is active
+  - 🚀 **Batch Orphan Analysis** - Find link opportunities across all unconnected notes at once
+  - 💡 **Link Context Visualization** - See exactly where and why links are suggested with visual excerpts
+  - ⚡ **Real-Time Suggestions** - Optional auto-analysis while typing (Cmd+Shift+R to toggle)
+  - 🧠 **Pattern Learning** - System learns from your accept/reject decisions to improve suggestions
+  - 🌉 **Bridge Note Generation** - AI suggests notes to connect isolated knowledge clusters
+
+### Previous Updates
 - **✨ WYSIWYG Editor** - Rich text editing with TipTap, toggle between markdown and visual editing
 - **🤖 Multi-Provider AI** - Choose from 4 AI providers: OpenAI, Anthropic Claude, Google Gemini, or Ollama (local)
 - **🐳 Optimized Docker Builds** - Improved build process with system fonts for faster deployment
@@ -33,6 +46,14 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 
 ### 🤖 AI-Powered Intelligence
 
+- **Intelligent Link Suggester** - AI finds connection opportunities in your knowledge base:
+  - 🔍 Context-aware wikilink suggestions with confidence scoring
+  - 🚀 Batch orphan analysis for vault-wide optimization
+  - 💡 Visual context preview shows where links will be inserted
+  - ⚡ Real-time suggestions while typing (optional)
+  - 🧠 Pattern learning adapts to your preferences
+  - 🌉 Bridge note suggestions to connect isolated clusters
+  - 📊 Knowledge base health visualization
 - **Context-Aware AI Chat** - AI assistant that understands your knowledge graph
 - **Writing Assistant** - Advanced content analysis and improvement suggestions
 - **Knowledge Discovery** - AI-powered gap analysis and content recommendations
@@ -86,7 +107,77 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 **⚡ Modern Stack:** Built with Next.js 15 and TypeScript for speed and reliability
 
 **🆓 Truly Free:** Open-source with no licensing fees or feature restrictions
+
 **🚀 Extensible:** Modern plugin architecture for unlimited customization
+
+## 🔮 Future Enhancements
+
+We're constantly improving MarkItUp. Here's what's on the roadmap:
+
+### 🔗 Intelligent Link Suggester (Planned for v3.3)
+- **Batch Accept for Orphans** - One-click to apply all suggestions to unconnected notes
+- **Priority Scoring** - AI ranks orphans by importance and potential impact
+- **Pause/Resume Batch Analysis** - Better control over long-running operations
+- **Analytics Dashboard** - Acceptance rate trends, confidence distribution, most-suggested notes
+- **Batch Undo** - Undo last N suggestions, by note, or by date range
+- **Smart Notifications** - Desktop alerts when analysis completes with summary
+
+### 📚 Knowledge Base Features
+- **Advanced Graph View** - 3D visualization, clustering, and interactive filtering
+- **Template System** - Quick note creation with customizable templates
+- **Folder-based Contexts** - Different AI personalities per folder
+- **Version History** - Git-style versioning with diff viewer
+- **Advanced Search Operators** - Regex support, proximity search, and more
+- **Citation Management** - BibTeX integration and automatic bibliography
+
+### 🤖 AI Enhancements
+- **Multi-Note Context** - AI analyzes relationships across multiple notes
+- **Smart Summarization** - Automatic note summaries and highlights
+- **Content Outliner** - AI-powered document structure suggestions
+- **Knowledge Graph Auto-Mapper** - Automatic relationship detection
+- **Writing Style Analysis** - Consistency checking and style suggestions
+- **Language Translation** - Real-time note translation
+
+### 🤝 Collaboration Features
+- **Comment Threads** - Inline discussions on specific content
+- **Change Tracking** - Detailed edit history with user attribution
+- **Role-Based Permissions** - Fine-grained access control
+- **Workspace Sharing** - Team workspaces with shared knowledge bases
+- **Review Workflow** - Approval process for collaborative editing
+
+### 🔌 Plugin Ecosystem
+- **Plugin Marketplace** - Discover and install community plugins
+- **Visual Plugin Builder** - No-code plugin creation interface
+- **Plugin Analytics** - Usage statistics and performance monitoring
+- **Plugin Testing Framework** - Automated testing for plugin developers
+- **Hot Module Reloading** - Develop plugins without restart
+
+### 📱 Platform Extensions
+- **Mobile Apps** - Native iOS and Android applications
+- **Desktop App** - Electron-based desktop client
+- **Browser Extension** - Clip web content directly to MarkItUp
+- **Email Integration** - Forward emails as notes
+- **API Webhooks** - Integration with third-party services
+
+### 🎨 Customization
+- **Advanced Theme Builder** - Visual theme editor with preview
+- **Custom Font Support** - Upload and use custom fonts
+- **Layout Presets** - Save and share custom workspace layouts
+- **Keyboard Shortcuts Editor** - Fully customizable keybindings
+- **CSS Snippets** - User stylesheets for advanced customization
+
+### 📊 Analytics & Insights
+- **Knowledge Map** - Visualize topic coverage and gaps
+- **Writing Analytics** - Track productivity and habits
+- **Link Quality Score** - Measure knowledge base connectivity
+- **Reading Time Estimates** - Automatic reading duration calculation
+- **Progress Tracking** - Goals and milestones for knowledge building
+
+### Want to Contribute?
+Vote on features, suggest new ones, or help build them! Join the discussion:
+- 💬 [GitHub Discussions](https://github.com/xclusive36/MarkItUp/discussions)
+- 🐛 [Feature Requests](https://github.com/xclusive36/MarkItUp/issues/new?labels=enhancement)
+- 🤝 [Contributing Guide](CONTRIBUTING.md)
 
 ## 🐳 Quick Deploy
 

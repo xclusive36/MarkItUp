@@ -13,6 +13,11 @@ interface UICallbacks {
   getMarkdown?: () => string;
   getFileName?: () => string;
   getFolder?: () => string;
+  // Editor selection methods
+  getSelection?: () => { text: string; start: number; end: number } | null;
+  replaceSelection?: (text: string) => void;
+  getCursorPosition?: () => number;
+  setCursorPosition?: (position: number) => void;
 }
 
 export class PKMSystem {

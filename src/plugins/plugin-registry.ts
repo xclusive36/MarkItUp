@@ -17,7 +17,7 @@ import { themeCreatorPlugin } from './theme-creator';
 import { tableOfContentsPlugin } from './table-of-contents';
 import { smartAutoTaggerPlugin } from './smart-auto-tagger';
 import { intelligentLinkSuggesterPlugin } from './intelligent-link-suggester';
-import { contentOutlinerExpanderPlugin } from './content-outliner-expander';
+import { contentStructurerPlugin } from './content-outliner-expander';
 import { knowledgeGraphAutoMapperPlugin } from './knowledge-graph-auto-mapper';
 
 /**
@@ -30,7 +30,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
   tableOfContentsPlugin, // 📑 Table of contents (full-featured) - fixed and working
   smartAutoTaggerPlugin, // 🏷️ AI-powered auto-tagging
   intelligentLinkSuggesterPlugin, // 🔗 AI-powered link suggestions
-  contentOutlinerExpanderPlugin, // 📝 AI-powered content expansion/compression
+  contentStructurerPlugin, // 🎯 AI-powered content structure analysis & transformation (v3.0)
   knowledgeGraphAutoMapperPlugin, // 🗺️ AI-powered graph organization
 ];
 
@@ -44,7 +44,7 @@ export const PLUGIN_CATEGORIES = {
   '🤖 AI Tools': [
     smartAutoTaggerPlugin,
     intelligentLinkSuggesterPlugin,
-    contentOutlinerExpanderPlugin,
+    contentStructurerPlugin,
     knowledgeGraphAutoMapperPlugin,
   ],
   '🎨 Appearance': [themeCreatorPlugin],
@@ -59,7 +59,7 @@ export const FEATURED_PLUGINS: PluginManifest[] = [
   dailyNotesPlugin,
   smartAutoTaggerPlugin,
   intelligentLinkSuggesterPlugin,
-  contentOutlinerExpanderPlugin,
+  contentStructurerPlugin,
   knowledgeGraphAutoMapperPlugin,
 ];
 
@@ -127,13 +127,13 @@ export const PLUGIN_METADATA = {
     featured: true,
     functional: true,
   },
-  [contentOutlinerExpanderPlugin.id]: {
+  [contentStructurerPlugin.id]: {
     category: 'AI Tools',
     difficulty: 'beginner',
     timeToSetup: '2 min',
     rating: '5.0',
     downloadCount: '0',
-    tags: ['ai', 'writing', 'expansion', 'outlining', 'content-generation'],
+    tags: ['ai', 'writing', 'structure', 'analysis', 'organization', 'academic', 'outlining'],
     featured: true,
     functional: true,
   },
@@ -158,7 +158,7 @@ export const USER_TYPE_RECOMMENDATIONS = {
     enhancedWordCountPlugin,
     tableOfContentsPlugin,
     smartAutoTaggerPlugin,
-    contentOutlinerExpanderPlugin,
+    contentStructurerPlugin,
   ],
   'journal-users': [dailyNotesPlugin],
   customizers: [themeCreatorPlugin],

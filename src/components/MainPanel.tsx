@@ -31,6 +31,7 @@ interface MainPanelProps {
   processedMarkdown: string;
   theme: string;
   analytics: AnalyticsSystem;
+  editorRef?: React.RefObject<HTMLTextAreaElement | null>;
   // GraphView props
   graph: Graph;
   activeNote: Note | null;
@@ -56,6 +57,7 @@ const MainPanel: React.FC<MainPanelProps> = ({
   processedMarkdown,
   theme,
   analytics,
+  editorRef,
   graph,
   activeNote,
   handleGraphNodeClick,
@@ -78,6 +80,7 @@ const MainPanel: React.FC<MainPanelProps> = ({
         processedMarkdown={processedMarkdown}
         theme={theme}
         analytics={analytics}
+        editorRef={editorRef}
       />
     );
   }
