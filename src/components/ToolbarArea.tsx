@@ -34,6 +34,7 @@ export default function ToolbarArea({
       style={{
         backgroundColor: 'var(--bg-secondary)',
         borderColor: 'var(--border-primary)',
+        paddingRight: '4rem', // Extra padding to avoid overlap with collapsed right panel
       }}
     >
       {/* Left: Primary Actions */}

@@ -708,5 +708,12 @@
       "isOverwrite": true
     },
     "sessionId": "session_1760732176261_vzzurwixi"
+  },
+  {
+    "id": "event_1760732315744_2n3vmu0sf",
+    "type": "session_started",
+    "timestamp": "2025-10-17T20:18:35.744Z",
+    "data": {},
+    "sessionId": "session_1760732315744_ubb0z1zna"
   }
 ]

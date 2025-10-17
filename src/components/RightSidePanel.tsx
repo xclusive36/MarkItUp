@@ -8,7 +8,6 @@ import {
   List,
   Link2,
   Brain,
-  PanelRightClose,
   PanelRightOpen,
   GripVertical,
   Info,
@@ -182,28 +181,6 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
               </button>
             );
           })}
-
-          <div className="flex-1" />
-
-          <button
-            onClick={onToggleOpen}
-            className="p-2 rounded transition-all"
-            style={{
-              backgroundColor: 'transparent',
-              color: 'var(--text-primary)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            title="Close panel"
-          >
-            <PanelRightClose className="w-5 h-5" />
-          </button>
         </div>
       ) : (
         /* Expanded state - full panel */
