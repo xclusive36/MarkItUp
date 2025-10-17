@@ -6,7 +6,13 @@
 
 ## 🆕 What's New
 
-### v3.2 - October 2025 🎉
+### v3.3.0 - October 2025 🎉
+- **🎨 Enhanced UI/UX** - Refined interface for better workflow:
+  - 📐 **Right Panel Collapsed by Default** - More screen space for your content on startup
+  - 🔄 **Consistent Chevron Icons** - Unified expand/collapse controls across both sidebars
+  - ⚡ **Improved Layout Balance** - Better default workspace configuration
+
+### v3.2 - October 2025
 - **🔗 Intelligent Link Suggester v3.2** - The most advanced link suggestion system in the PKM space:
   - 📜 **Suggestion History & Undo** - Track all link decisions with one-click undo (Cmd+Shift+H)
   - 📥 **Export Suggestions Report** - Download link opportunities as markdown with confidence scores
@@ -168,7 +174,7 @@ MarkItUp offers the most flexible AI integration in any PKM system:
 
 We're constantly improving MarkItUp. Here's what's on the roadmap:
 
-### 🔗 Intelligent Link Suggester (Planned for v3.3)
+### 🔗 Intelligent Link Suggester Enhancements
 - **Batch Accept for Orphans** - One-click to apply all suggestions to unconnected notes
 - **Priority Scoring** - AI ranks orphans by importance and potential impact
 - **Pause/Resume Batch Analysis** - Better control over long-running operations
