@@ -11,13 +11,15 @@ import {
   PanelRightClose,
   PanelRightOpen,
   GripVertical,
+  Info,
 } from 'lucide-react';
 import { Note } from '@/lib/types';
 import DocumentOutlinePanel from './DocumentOutlinePanel';
 import BacklinksPanel from './BacklinksPanel';
+import MetadataPanel from './MetadataPanel';
 import { useResizablePanel } from '@/hooks/useResizablePanel';
 
-type PanelTab = 'outline' | 'backlinks' | 'ai';
+type PanelTab = 'outline' | 'backlinks' | 'metadata' | 'ai';
 
 interface RightSidePanelProps {
   // Panel state
@@ -87,6 +89,7 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   const tabs = [
     { id: 'outline' as PanelTab, label: 'Outline', icon: List },
     { id: 'backlinks' as PanelTab, label: 'Backlinks', icon: Link2 },
+    { id: 'metadata' as PanelTab, label: 'Metadata', icon: Info },
     ...(showAITools ? [{ id: 'ai' as PanelTab, label: 'AI Tools', icon: Brain }] : []),
   ];
 
@@ -302,6 +305,10 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
                 onNoteClick={onNoteClick}
                 theme={theme}
               />
+            )}
+
+            {activeTab === 'metadata' && (
+              <MetadataPanel note={currentNote} allNotes={allNotes} theme={theme} />
             )}
 
             {activeTab === 'ai' && showAITools && (

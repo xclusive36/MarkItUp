@@ -603,6 +603,38 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markdown, fileName, folder]);
 
+  // Command Palette custom event listeners
+  useEffect(() => {
+    const handleOpenAIChat = () => setShowAIChat(true);
+    const handleOpenWritingAssistant = () => setShowWritingAssistant(true);
+    const handleOpenKnowledgeDiscovery = () => setShowKnowledgeDiscovery(true);
+    const handleOpenResearchAssistant = () => setShowResearchAssistant(true);
+    const handleOpenKnowledgeMap = () => setShowKnowledgeMap(true);
+    const handleOpenBatchAnalyzer = () => setShowBatchAnalyzer(true);
+    const handleToggleRightPanel = () => setIsRightPanelOpen(prev => !prev);
+    const handleToggleSidebar = () => setShowMobileSidebar(prev => !prev);
+
+    window.addEventListener('openAIChat', handleOpenAIChat);
+    window.addEventListener('openWritingAssistant', handleOpenWritingAssistant);
+    window.addEventListener('openKnowledgeDiscovery', handleOpenKnowledgeDiscovery);
+    window.addEventListener('openResearchAssistant', handleOpenResearchAssistant);
+    window.addEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
+    window.addEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
+    window.addEventListener('toggleRightPanel', handleToggleRightPanel);
+    window.addEventListener('toggleSidebar', handleToggleSidebar);
+
+    return () => {
+      window.removeEventListener('openAIChat', handleOpenAIChat);
+      window.removeEventListener('openWritingAssistant', handleOpenWritingAssistant);
+      window.removeEventListener('openKnowledgeDiscovery', handleOpenKnowledgeDiscovery);
+      window.removeEventListener('openResearchAssistant', handleOpenResearchAssistant);
+      window.removeEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
+      window.removeEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
+      window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
+      window.removeEventListener('toggleSidebar', handleToggleSidebar);
+    };
+  }, []);
+
   // Handle search
   type SearchOptions = {
     limit?: number;
@@ -1433,10 +1465,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         {/* Status Bar */}
         <StatusBar
-          wordCount={markdown.split(/\s+/).filter(word => word.length > 0).length}
-          readingTime={Math.ceil(
-            markdown.split(/\s+/).filter(word => word.length > 0).length / 200
-          )}
+          markdown={markdown}
+          currentView={currentView}
           isCollaborationActive={settings.enableCollaboration}
           collaboratorCount={0}
           isOnline={true}

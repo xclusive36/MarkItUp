@@ -338,6 +338,149 @@ html.dark .custom-scrollbar::-webkit-scrollbar-thumb {
 .stagger-item:nth-child(4) {
   animation-delay: 0.2s;
 }
+
+/* ============================================
+   TABLET OPTIMIZATIONS (640px - 1023px)
+   ============================================ */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Optimize panel widths for tablet */
+  .right-panel-expanded {
+    width: 280px !important;
+  }
+
+  .sidebar {
+    width: 260px !important;
+  }
+
+  /* Adjust font sizes for better readability */
+  .sidebar h3 {
+    font-size: 0.875rem;
+  }
+
+  .sidebar .note-item {
+    font-size: 0.8125rem;
+    padding: 0.625rem;
+  }
+
+  /* Optimize command palette for tablet */
+  .command-palette {
+    max-width: 90vw !important;
+  }
+
+  /* Better spacing for touch targets */
+  button,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Adjust graph controls for tablet */
+  .graph-controls {
+    scale: 0.9;
+  }
+
+  /* Optimize status bar for tablet */
+  .status-bar {
+    font-size: 0.75rem;
+  }
+
+  .status-bar .status-item {
+    padding: 0 0.5rem;
+  }
+
+  /* Adjust header for tablet */
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .app-header button {
+    padding: 0.5rem;
+  }
+}
+
+/* Additional mobile optimizations for safe areas */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+
+  .safe-area-top {
+    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+  }
+}
+
+/* Success animation for checkmark */
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.checkmark-animation {
+  animation: checkmark-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Link creation animation */
+@keyframes link-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.link-created {
+  animation: link-pulse 0.6s;
+}
+
+/* Sparkle effect for AI suggestions */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.sparkle-effect {
+  position: relative;
+}
+
+.sparkle-effect::before,
+.sparkle-effect::after {
+  content: '✨';
+  position: absolute;
+  font-size: 1rem;
+  animation: sparkle 0.8s ease-in-out;
+  pointer-events: none;
+}
+
+.sparkle-effect::before {
+  top: -10px;
+  right: -10px;
+}
+
+.sparkle-effect::after {
+  bottom: -10px;
+  left: -10px;
+  animation-delay: 0.2s;
+}
 .stagger-item:nth-child(5) {
   animation-delay: 0.25s;
 }

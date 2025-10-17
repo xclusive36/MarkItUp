@@ -76,7 +76,7 @@ export const enhancedWordCountPlugin: PluginManifest = {
     },
   ],
 
-  // Commands removed - statistics now displayed in dedicated WritingStatsBar component
+  // Commands removed - statistics now displayed in StatusBar component's expandable panel
   commands: [],
 
   onLoad: async function (api?: PluginAPI) {
