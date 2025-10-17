@@ -257,7 +257,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Right side panel state
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(true);
 
   // Status bar state
   const [lastSaved, setLastSaved] = useState<Date | null>(null);

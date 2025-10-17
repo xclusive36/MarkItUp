@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { PanelLeftOpen, ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { Note, Tag } from '@/lib/types';
 
@@ -90,7 +90,7 @@ const CollapsibleSidebar: React.FC<CollapsibleSidebarProps> = ({
           title="Expand sidebar"
           aria-label="Expand sidebar"
         >
-          <PanelLeftOpen className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5" />
         </button>
 
         {/* Vertical text label */}
