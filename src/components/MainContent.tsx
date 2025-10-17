@@ -4,10 +4,11 @@ import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
 import WritingStatsBar from './WritingStatsBar';
 import { ThemeCreator } from './ThemeCreator';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
 import { getThemeCreatorPluginInstance } from '@/plugins/theme-creator';
 import { getPluginManager } from '@/lib/plugin-init';
+import { MoreVertical, FileText, Palette, Sparkles } from 'lucide-react';
 
 interface MainContentProps {
   markdown: string;
@@ -18,6 +19,8 @@ interface MainContentProps {
   theme: string;
   analytics: AnalyticsSystem;
   editorRef?: React.RefObject<HTMLTextAreaElement | null>;
+  isRightPanelOpen?: boolean;
+  isRightPanelCollapsed?: boolean;
   // Add more props as needed for your use case
 }
 // ...existing code...
@@ -32,10 +35,24 @@ const MainContent: React.FC<MainContentProps> = ({
   theme,
   analytics,
   editorRef,
+  isRightPanelOpen = false,
+  isRightPanelCollapsed = false,
 }) => {
   const [editorType, setEditorType] = useState<'markdown' | 'wysiwyg'>('markdown');
   const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
   const [isThemeCreatorPluginLoaded, setIsThemeCreatorPluginLoaded] = useState(false);
+  const [isEditorOptionsOpen, setIsEditorOptionsOpen] = useState(false);
+  const editorOptionsRef = useRef<HTMLDivElement>(null);
+
+  // Determine which breakpoint to use based on right panel state
+  // When right panel is open and expanded (384px), we need more space
+  // to accommodate both left sidebar (320px at lg:) and right panel (384px)
+  // Total: ~704px + ~500px content = ~1204px minimum
+  // So use xl: breakpoint (1280px) when right panel is expanded
+  // Otherwise use md: breakpoint (768px)
+  const shouldUseLargerBreakpoint = isRightPanelOpen && !isRightPanelCollapsed;
+  const desktopShowClass = shouldUseLargerBreakpoint ? 'hidden xl:flex' : 'hidden md:flex';
+  const mobileShowClass = shouldUseLargerBreakpoint ? 'xl:hidden' : 'md:hidden';
 
   // Check if Theme Creator plugin is loaded
   useEffect(() => {
@@ -56,6 +73,23 @@ const MainContent: React.FC<MainContentProps> = ({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editorOptionsRef.current && !editorOptionsRef.current.contains(event.target as Node)) {
+        setIsEditorOptionsOpen(false);
+      }
+    };
+
+    if (isEditorOptionsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditorOptionsOpen]);
 
   // Register the theme creator open callback with the plugin
   useEffect(() => {
@@ -80,41 +114,136 @@ const MainContent: React.FC<MainContentProps> = ({
       <div className="flex justify-between items-center w-full px-4 pt-4 mb-4">
         {/* Left side buttons */}
         <div className="flex items-center gap-2">
-          {/* WYSIWYG Toggle */}
+          {/* Desktop: Individual Buttons (visible on md and up) */}
           {viewMode === 'edit' && (
-            <button
-              onClick={() => {
-                const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
-                setEditorType(newType);
-                analytics.trackEvent('mode_switched', { mode: newType });
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
-              style={{
-                backgroundColor: 'var(--bg-tertiary)',
-                borderColor: 'var(--border-secondary)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
-              <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
-            </button>
-          )}
+            <>
+              {/* WYSIWYG Toggle - Desktop */}
+              <button
+                onClick={() => {
+                  const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
+                  setEditorType(newType);
+                  analytics.trackEvent('mode_switched', { mode: newType });
+                }}
+                className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors`}
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)',
+                  borderColor: 'var(--border-secondary)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
+                <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
+              </button>
 
-          {/* Theme Creator Button - Only show if plugin is loaded */}
-          {isThemeCreatorPluginLoaded && (
-            <button
-              onClick={() => setIsThemeCreatorOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80"
-              style={{
-                backgroundColor: 'var(--bg-tertiary)',
-                borderColor: 'var(--border-secondary)',
-                color: 'var(--text-primary)',
-              }}
-              title="Open Theme Creator (Ctrl+Shift+T)"
-            >
-              <span>🎨</span>
-              <span>Themes</span>
-            </button>
+              {/* Theme Creator Button - Desktop - Only show if plugin is loaded */}
+              {isThemeCreatorPluginLoaded && (
+                <button
+                  onClick={() => setIsThemeCreatorOpen(true)}
+                  className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80`}
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    borderColor: 'var(--border-secondary)',
+                    color: 'var(--text-primary)',
+                  }}
+                  title="Open Theme Creator (Ctrl+Shift+T)"
+                >
+                  <span>🎨</span>
+                  <span>Themes</span>
+                </button>
+              )}
+
+              {/* Mobile: Dropdown Menu (visible below md/lg) */}
+              <div className={`${mobileShowClass} relative`} ref={editorOptionsRef}>
+                <button
+                  onClick={() => setIsEditorOptionsOpen(!isEditorOptionsOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    borderColor: 'var(--border-secondary)',
+                    color: 'var(--text-primary)',
+                  }}
+                  aria-label="Editor options menu"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span className="text-xs">Editor</span>
+                  <MoreVertical className="w-3 h-3 ml-1" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isEditorOptionsOpen && (
+                  <div
+                    className="absolute left-0 top-full mt-1 min-w-[160px] rounded-lg shadow-lg border z-50 py-1"
+                    style={{
+                      backgroundColor: 'var(--bg-secondary)',
+                      borderColor: 'var(--border-primary)',
+                    }}
+                  >
+                    {/* Markdown/WYSIWYG Toggle */}
+                    <button
+                      onClick={() => {
+                        const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
+                        setEditorType(newType);
+                        analytics.trackEvent('mode_switched', { mode: newType });
+                        setIsEditorOptionsOpen(false);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                      style={{
+                        color: 'var(--text-primary)',
+                        backgroundColor: 'transparent',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      {editorType === 'markdown' ? (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          <span>Switch to WYSIWYG</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4" />
+                          <span>Switch to Markdown</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Theme Creator Option - Only show if plugin is loaded */}
+                    {isThemeCreatorPluginLoaded && (
+                      <>
+                        <div
+                          className="h-px my-1"
+                          style={{ backgroundColor: 'var(--border-primary)' }}
+                        />
+                        <button
+                          onClick={() => {
+                            setIsThemeCreatorOpen(true);
+                            setIsEditorOptionsOpen(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                          style={{
+                            color: 'var(--text-primary)',
+                            backgroundColor: 'transparent',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <Palette className="w-4 h-4" />
+                          <span>Open Themes</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
         {viewMode !== 'edit' && <div />}
@@ -127,6 +256,8 @@ const MainContent: React.FC<MainContentProps> = ({
             analytics.trackEvent('mode_switched', { mode });
           }}
           theme={theme}
+          isRightPanelOpen={isRightPanelOpen}
+          isRightPanelCollapsed={isRightPanelCollapsed}
         />
       </div>
 

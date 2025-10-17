@@ -2146,5 +2146,168 @@
       "tagCount": 0
     },
     "sessionId": "session_1760717319827_4o8ghbbch"
+  },
+  {
+    "id": "event_1760718618886_mwrcp1emt",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:30:18.886Z",
+    "data": {
+      "timestamp": "2025-10-17T16:30:18.886Z"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718641899_zki8m03q4",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:30:41.899Z",
+    "data": {
+      "mode": "preview"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718646864_gqbso654g",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:30:46.865Z",
+    "data": {
+      "mode": "split"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718649181_s71mdeaml",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:30:49.181Z",
+    "data": {
+      "mode": "preview"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718650231_r9u5ogwqy",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:30:50.231Z",
+    "data": {
+      "mode": "edit"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718653714_kjcnupcte",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:30:53.714Z",
+    "data": {
+      "mode": "wysiwyg"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760718660331_vc080yjqx",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:31:00.331Z",
+    "data": {
+      "mode": "markdown"
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760719298803_76wulxxn4",
+    "type": "session_ended",
+    "timestamp": "2025-10-17T16:41:38.803Z",
+    "data": {
+      "duration": 680139
+    },
+    "sessionId": "session_1760718618664_6b7bekxws"
+  },
+  {
+    "id": "event_1760719301062_837oays2b",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:41:41.062Z",
+    "data": {},
+    "sessionId": "session_1760719301062_wfvlzfsqm"
+  },
+  {
+    "id": "event_1760719301292_fgijevv72",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:41:41.292Z",
+    "data": {
+      "timestamp": "2025-10-17T16:41:41.292Z"
+    },
+    "sessionId": "session_1760719301062_wfvlzfsqm"
+  },
+  {
+    "id": "event_1760719358526_bwg1o6ssx",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:42:38.526Z",
+    "data": {
+      "mode": "wysiwyg"
+    },
+    "sessionId": "session_1760719301062_wfvlzfsqm"
+  },
+  {
+    "id": "event_1760719359294_1bzv50tbr",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T16:42:39.294Z",
+    "data": {
+      "mode": "markdown"
+    },
+    "sessionId": "session_1760719301062_wfvlzfsqm"
+  },
+  {
+    "id": "event_1760720060279_ne1dvfajq",
+    "type": "session_ended",
+    "timestamp": "2025-10-17T16:54:20.279Z",
+    "data": {
+      "duration": 759217
+    },
+    "sessionId": "session_1760719301062_wfvlzfsqm"
+  },
+  {
+    "id": "event_1760720062815_lt5dagndq",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:54:22.815Z",
+    "data": {},
+    "sessionId": "session_1760720062815_g1b7h7726"
+  },
+  {
+    "id": "event_1760720067485_q4wo0ie9l",
+    "type": "session_ended",
+    "timestamp": "2025-10-17T16:54:27.485Z",
+    "data": {
+      "duration": 4670
+    },
+    "sessionId": "session_1760720062815_g1b7h7726"
+  },
+  {
+    "id": "event_1760720068700_aum0db4sj",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:54:28.700Z",
+    "data": {},
+    "sessionId": "session_1760720068700_2owkwyn8e"
+  },
+  {
+    "id": "event_1760720072035_7pc09nj8r",
+    "type": "session_ended",
+    "timestamp": "2025-10-17T16:54:32.035Z",
+    "data": {
+      "duration": 3335
+    },
+    "sessionId": "session_1760720068700_2owkwyn8e"
+  },
+  {
+    "id": "event_1760720073276_qnfv517jo",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:54:33.276Z",
+    "data": {},
+    "sessionId": "session_1760720073276_5wcd6595u"
+  },
+  {
+    "id": "event_1760720073503_2yexnfct6",
+    "type": "session_started",
+    "timestamp": "2025-10-17T16:54:33.503Z",
+    "data": {
+      "timestamp": "2025-10-17T16:54:33.503Z"
+    },
+    "sessionId": "session_1760720073276_5wcd6595u"
   }
 ]

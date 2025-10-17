@@ -43,6 +43,9 @@ interface MainPanelProps {
   folders: Array<{ name: string; count: number }>;
   // Analytics props
   notes: Note[];
+  // Right panel state
+  isRightPanelOpen?: boolean;
+  isRightPanelCollapsed?: boolean;
   // Plugins
   // ...add more as needed
   // End of MainPanelProps interface
@@ -59,6 +62,8 @@ const MainPanel: React.FC<MainPanelProps> = ({
   analytics,
   editorRef,
   graph,
+  isRightPanelOpen = false,
+  isRightPanelCollapsed = false,
   activeNote,
   handleGraphNodeClick,
   handleSearch,
@@ -81,6 +86,8 @@ const MainPanel: React.FC<MainPanelProps> = ({
         theme={theme}
         analytics={analytics}
         editorRef={editorRef}
+        isRightPanelOpen={isRightPanelOpen}
+        isRightPanelCollapsed={isRightPanelCollapsed}
       />
     );
   }

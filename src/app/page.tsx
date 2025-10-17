@@ -39,6 +39,8 @@ import Sidebar from '@/components/Sidebar';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { QuickActionsMenu } from '@/components/QuickActionsMenu';
 import { X } from 'lucide-react';
+import StatusBar from '@/components/StatusBar';
+import RightSidePanel from '@/components/RightSidePanel';
 
 // Styles
 import 'highlight.js/styles/github.css';
@@ -228,6 +230,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Mobile sidebar state
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+  // Right side panel state
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+
+  // Status bar state
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Simplified button handler with event delegation
   const handleButtonClick = useCallback(
@@ -680,9 +691,16 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const saveNote = async (forceOverwrite = false) => {
     if (!fileName.trim()) {
       setSaveStatus('Please enter a filename');
-      setTimeout(() => setSaveStatus(''), 3000);
+      setSaveError('Please enter a filename');
+      setTimeout(() => {
+        setSaveStatus('');
+        setSaveError(null);
+      }, 3000);
       return;
     }
+
+    setIsSaving(true);
+    setSaveError(null);
 
     try {
       const fullPath = folder.trim()
@@ -700,6 +718,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
       if (response.ok) {
         setSaveStatus('Note saved successfully! 🎉');
+        setLastSaved(new Date());
+        setSaveError(null);
 
         // Track note save
         const wordCount = markdown.split(/\s+/).filter(word => word.length > 0).length;
@@ -742,20 +762,38 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             await saveNote(true);
           } else {
             setSaveStatus('File not overwritten.');
-            setTimeout(() => setSaveStatus(''), 3000);
+            setSaveError('File not overwritten.');
+            setTimeout(() => {
+              setSaveStatus('');
+              setSaveError(null);
+            }, 3000);
           }
         } else {
           setSaveStatus(data.error || 'Error saving file');
-          setTimeout(() => setSaveStatus(''), 3000);
+          setSaveError(data.error || 'Error saving file');
+          setTimeout(() => {
+            setSaveStatus('');
+            setSaveError(null);
+          }, 3000);
         }
       } else {
         setSaveStatus('Error saving file');
-        setTimeout(() => setSaveStatus(''), 3000);
+        setSaveError('Error saving file');
+        setTimeout(() => {
+          setSaveStatus('');
+          setSaveError(null);
+        }, 3000);
       }
     } catch (error) {
       setSaveStatus('Error saving file');
-      setTimeout(() => setSaveStatus(''), 3000);
+      setSaveError('Network error');
+      setTimeout(() => {
+        setSaveStatus('');
+        setSaveError(null);
+      }, 3000);
       console.error('Error saving file:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -961,7 +999,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             paddingLeft: '1rem',
             paddingRight: '1rem',
             paddingTop: '1rem',
-            paddingBottom: '1.5rem',
+            paddingBottom: '2.5rem', // Extra padding for status bar
           }}
           data-main-container
         >
@@ -1040,7 +1078,17 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               />
             </div>
             {/* Main Content Area */}
-            <div className="flex-1 min-w-0 order-1 lg:order-2">
+            <div
+              className="flex-1 min-w-0 order-1 lg:order-2 transition-all duration-300"
+              style={{
+                marginRight:
+                  isRightPanelOpen && !isRightPanelCollapsed
+                    ? '24rem'
+                    : isRightPanelOpen
+                      ? '3rem'
+                      : '0',
+              }}
+            >
               {currentView === 'notes' ? (
                 <NotesComponent refreshNotes={notesComponentRefreshRef} />
               ) : (
@@ -1062,6 +1110,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   tags={tags}
                   folders={folders}
                   notes={notes}
+                  isRightPanelOpen={isRightPanelOpen}
+                  isRightPanelCollapsed={isRightPanelCollapsed}
                 />
               )}
             </div>
@@ -1330,6 +1380,54 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           onGraphView={() => setCurrentView('graph')}
           onAIChat={() => setShowAIChat(true)}
           onKeyboardHelp={() => setShowKeyboardHelp(true)}
+        />
+
+        {/* Right Side Panel */}
+        <RightSidePanel
+          isOpen={isRightPanelOpen}
+          isCollapsed={isRightPanelCollapsed}
+          onToggleOpen={() => setIsRightPanelOpen(!isRightPanelOpen)}
+          onToggleCollapse={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
+          markdown={markdown}
+          currentNote={activeNote}
+          allNotes={notes}
+          onHeadingClick={line => {
+            // Scroll to heading line in editor
+            const textarea = editorRef.current;
+            if (textarea) {
+              const lines = textarea.value.split('\n');
+              let charCount = 0;
+              for (let i = 0; i < line && i < lines.length; i++) {
+                charCount += lines[i].length + 1; // +1 for newline
+              }
+              textarea.focus();
+              textarea.setSelectionRange(charCount, charCount);
+              textarea.scrollTop = (line / lines.length) * textarea.scrollHeight;
+            }
+          }}
+          onNoteClick={handleNoteSelect}
+          theme={theme}
+        />
+
+        {/* Status Bar */}
+        <StatusBar
+          wordCount={markdown.split(/\s+/).filter(word => word.length > 0).length}
+          readingTime={Math.ceil(
+            markdown.split(/\s+/).filter(word => word.length > 0).length / 200
+          )}
+          isCollaborationActive={settings.enableCollaboration}
+          collaboratorCount={0}
+          isOnline={true}
+          aiProvider={undefined}
+          aiStatus="idle"
+          lastSaved={lastSaved}
+          isSaving={isSaving}
+          saveError={saveError}
+          linkCount={(markdown.match(/\[\[([^\]]+)\]\]/g) || []).length}
+          backlinksCount={notes.filter(n => n.content.includes(`[[${fileName}`)).length}
+          currentNoteName={fileName || activeNote?.name.replace('.md', '')}
+          currentFolder={folder || activeNote?.folder}
+          theme={theme}
         />
       </div>
     </>
