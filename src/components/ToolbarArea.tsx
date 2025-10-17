@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Save, Plus, Eye, Edit, Columns } from 'lucide-react';
+import { Save, Eye, Edit, Columns } from 'lucide-react';
 
 interface ToolbarAreaProps {
   onSave: () => void;
-  onNewNote: () => void;
   viewMode: 'edit' | 'preview' | 'split';
   onViewModeChange: (mode: 'edit' | 'preview' | 'split') => void;
   isSaving?: boolean;
@@ -15,7 +14,6 @@ interface ToolbarAreaProps {
 
 export default function ToolbarArea({
   onSave,
-  onNewNote,
   viewMode,
   onViewModeChange,
   isSaving = false,
@@ -51,19 +49,6 @@ export default function ToolbarArea({
         >
           <Save className={`w-4 h-4 ${isSaving ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
-        </button>
-
-        <button
-          onClick={onNewNote}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-            color: theme === 'dark' ? '#f9fafb' : '#111827',
-          }}
-          title="New note (Cmd+N)"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New</span>
         </button>
       </div>
 

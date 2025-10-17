@@ -1060,7 +1060,6 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         {currentView === 'editor' && (
           <ToolbarArea
             onSave={saveNote}
-            onNewNote={createNewNote}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             isSaving={isSaving}
@@ -1100,11 +1099,6 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                     setFileName={setFileName}
                     folder={folder}
                     setFolder={setFolder}
-                    saveNote={() => {
-                      saveNote();
-                      setShowMobileSidebar(false);
-                    }}
-                    saveStatus={saveStatus}
                     createNewNote={() => {
                       createNewNote();
                       setShowMobileSidebar(false);
@@ -1147,8 +1141,6 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 setFileName={setFileName}
                 folder={folder}
                 setFolder={setFolder}
-                saveNote={saveNote}
-                saveStatus={saveStatus}
                 createNewNote={createNewNote}
                 graphStats={graphStats}
                 tags={tags}
@@ -1532,7 +1524,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentView={currentView}
           onViewChange={view => setCurrentView(view)}
           onNewNote={createNewNote}
-          onOpenMenu={() => setShowMobileSidebar(true)}
+          onAIChat={() => setShowAIChat(true)}
           theme={theme as 'light' | 'dark'}
         />
 

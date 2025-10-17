@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Home, Search, PlusCircle, Network, Menu } from 'lucide-react';
+import { Home, Search, PlusCircle, Network, MessageSquare } from 'lucide-react';
 
 interface BottomNavProps {
   currentView: 'editor' | 'graph' | 'search' | 'analytics' | 'plugins' | 'notes';
   onViewChange: (view: 'editor' | 'graph' | 'search' | 'analytics' | 'plugins' | 'notes') => void;
   onNewNote: () => void;
-  onOpenMenu: () => void;
+  onAIChat?: () => void;
   theme: 'light' | 'dark';
 }
 
@@ -15,7 +15,7 @@ export default function BottomNav({
   currentView,
   onViewChange,
   onNewNote,
-  onOpenMenu,
+  onAIChat,
   theme,
 }: BottomNavProps) {
   const navItems = [
@@ -45,23 +45,23 @@ export default function BottomNav({
       action: () => onViewChange('graph'),
     },
     {
-      id: 'more',
-      label: 'More',
-      icon: Menu,
-      action: onOpenMenu,
+      id: 'ai',
+      label: 'AI Chat',
+      icon: MessageSquare,
+      action: onAIChat,
     },
   ];
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t safe-area-bottom"
       style={{
         backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
         borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <div className="flex items-center justify-around h-16">
+      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto">
         {navItems.map(item => {
           const Icon = item.icon;
           const isActive = currentView === item.id || (item.isSpecial && false); // New button never "active"

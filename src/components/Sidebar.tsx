@@ -4,7 +4,6 @@ import {
   FileText,
   Link as LinkIcon,
   Hash,
-  Save,
   Plus,
   X,
   Folder,
@@ -31,8 +30,6 @@ interface SidebarProps {
   setFileName: (v: string) => void;
   folder: string;
   setFolder: (v: string) => void;
-  saveNote: () => void;
-  saveStatus: string;
   createNewNote: () => void;
   graphStats: {
     totalNotes: number;
@@ -53,15 +50,12 @@ interface SidebarProps {
 }
 
 import { useEffect, useState } from 'react';
-import FolderTree from './FolderTree';
 
 const Sidebar: React.FC<SidebarProps> = ({
   fileName,
   setFileName,
   folder,
   setFolder,
-  saveNote,
-  saveStatus,
   createNewNote,
   graphStats: initialGraphStats,
   tags,
@@ -256,66 +250,68 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="text-base lg:text-lg font-semibold"
             style={{ color: 'var(--text-primary)' }}
           >
-            New Note
+            Note Details
           </h2>
           <button
             onClick={createNewNote}
             className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
             disabled={currentView !== 'editor'}
             style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            title="Create new note"
           >
             <Plus className="w-4 h-4" />
           </button>
         </div>
         <div className="space-y-3">
-          <input
-            type="text"
-            value={fileName}
-            onChange={e => setFileName(e.target.value)}
-            placeholder="Note title..."
-            className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-secondary)',
-              color: 'var(--text-primary)',
-              opacity: currentView !== 'editor' ? 0.5 : 1,
-              cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
-            }}
-            disabled={currentView !== 'editor'}
-          />
-          <input
-            type="text"
-            value={folder}
-            onChange={e => setFolder(e.target.value)}
-            placeholder="Folder (optional)..."
-            className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            style={{
-              backgroundColor: 'var(--bg-tertiary)',
-              borderColor: 'var(--border-secondary)',
-              color: 'var(--text-primary)',
-              opacity: currentView !== 'editor' ? 0.5 : 1,
-              cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
-            }}
-            disabled={currentView !== 'editor'}
-          />
-          <button
-            onClick={() => saveNote()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            disabled={currentView !== 'editor'}
-            style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-          >
-            <Save className="w-4 h-4" />
-            Save Note
-          </button>
-          {saveStatus && (
-            <p
-              className={`text-xs text-center ${
-                saveStatus.includes('Error') ? 'text-red-600' : 'text-green-600'
-              }`}
+          <div>
+            <label
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
             >
-              {saveStatus}
-            </p>
-          )}
+              Note Name
+            </label>
+            <input
+              type="text"
+              value={fileName}
+              onChange={e => setFileName(e.target.value)}
+              placeholder="Enter note title..."
+              className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-secondary)',
+                color: 'var(--text-primary)',
+                opacity: currentView !== 'editor' ? 0.5 : 1,
+                cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
+              }}
+              disabled={currentView !== 'editor'}
+            />
+          </div>
+          <div>
+            <label
+              className="block text-xs font-medium mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              Folder Location
+            </label>
+            <input
+              type="text"
+              value={folder}
+              onChange={e => setFolder(e.target.value)}
+              placeholder="Enter folder path (optional)..."
+              className="w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-secondary)',
+                color: 'var(--text-primary)',
+                opacity: currentView !== 'editor' ? 0.5 : 1,
+                cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
+              }}
+              disabled={currentView !== 'editor'}
+            />
+          </div>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Changes will be applied when you save the note (Cmd+S)
+          </p>
         </div>
       </div>
       {/* Quick Stats - moved from header for better UX */}

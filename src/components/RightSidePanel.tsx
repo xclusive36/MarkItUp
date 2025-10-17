@@ -100,7 +100,12 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
       style={{
         backgroundColor: 'var(--bg-secondary)',
         borderColor: 'var(--border-primary)',
-        width: isCollapsed ? '48px' : `${width}px`,
+        width: isCollapsed
+          ? '48px'
+          : typeof window !== 'undefined'
+            ? `${Math.min(width, window.innerWidth * 0.9)}px`
+            : `${width}px`,
+        maxWidth: isCollapsed ? '48px' : '90vw',
         transition: isResizing ? 'none' : 'all 0.3s ease-in-out',
       }}
     >
