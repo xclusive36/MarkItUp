@@ -33,6 +33,8 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   // UI state
   const [showSettings, setShowSettings] = useState(false);
@@ -49,6 +51,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
       loadSessions();
       loadSettings();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Auto-scroll to bottom when messages change
@@ -119,111 +122,182 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
   const sendMessage = async () => {
     if (!message.trim() || isLoading) return;
 
-    // Check if AI is configured
-    if (!settings?.apiKey) {
+    // Check if AI is configured (allow Ollama without API key)
+    if (!settings?.apiKey && settings?.provider !== 'ollama') {
       setError('AI not configured. Please add your API key in settings.');
       setShowSettings(true);
       return;
     }
 
+    const useStreaming = settings?.provider === 'ollama' && settings?.enableStreaming !== false;
+
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: message.trim(),
-          sessionId: currentSession?.id,
-          noteContext: currentNoteId,
-          includeContext: true,
-        }),
+    // Add user message immediately
+    const userMessage: AIMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: message.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
+    if (currentSession) {
+      setCurrentSession({
+        ...currentSession,
+        messages: [...currentSession.messages, userMessage],
       });
+    } else {
+      // Create new session
+      const newSession: ChatSession = {
+        id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: message.length > 50 ? message.substring(0, 47) + '...' : message,
+        messages: [userMessage],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        totalTokens: 0,
+        totalCost: 0,
+        noteContext: currentNoteId,
+      };
+      setCurrentSession(newSession);
+    }
 
-      const data = await response.json();
+    const currentMessage = message.trim();
+    setMessage('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
-      if (data.success) {
-        // Update current session or create new one
-        if (currentSession) {
-          const updatedSession = {
-            ...currentSession,
-            messages: [
-              ...currentSession.messages,
-              {
-                id: `user_${Date.now()}`,
-                role: 'user' as const,
-                content: message,
-                timestamp: new Date().toISOString(),
-              },
-              {
-                id: data.data.id,
-                role: 'assistant' as const,
-                content: data.data.content,
-                timestamp: data.data.timestamp,
-                tokens: data.data.usage.totalTokens,
-                model: data.data.model,
-              },
-            ],
-            updatedAt: new Date().toISOString(),
-            totalTokens: currentSession.totalTokens + data.data.usage.totalTokens,
-            totalCost: currentSession.totalCost + data.data.usage.estimatedCost,
-          };
+    try {
+      if (useStreaming) {
+        // Streaming mode for Ollama
+        setIsStreaming(true);
+        setStreamingMessage('');
 
-          // Update title if it's the first message
-          if (currentSession.messages.length === 0) {
-            updatedSession.title = message.length > 50 ? message.substring(0, 47) + '...' : message;
-          }
-
-          setCurrentSession(updatedSession);
-        } else {
-          // Create new session with the response
-          const newSession: ChatSession = {
-            id: data.sessionId,
-            title: message.length > 50 ? message.substring(0, 47) + '...' : message,
-            messages: [
-              {
-                id: `user_${Date.now()}`,
-                role: 'user',
-                content: message,
-                timestamp: new Date().toISOString(),
-              },
-              {
-                id: data.data.id,
-                role: 'assistant',
-                content: data.data.content,
-                timestamp: data.data.timestamp,
-                tokens: data.data.usage.totalTokens,
-                model: data.data.model,
-              },
-            ],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            totalTokens: data.data.usage.totalTokens,
-            totalCost: data.data.usage.estimatedCost,
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: currentMessage,
+            sessionId: currentSession?.id,
             noteContext: currentNoteId,
-          };
-          setCurrentSession(newSession);
+            includeContext: true,
+            stream: true,
+          }),
+        });
+
+        if (!response.ok || !response.body) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Refresh sessions list
-        loadSessions();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
 
-        // Clear input
-        setMessage('');
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        // Resize textarea
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto';
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+
+                if (data.error) {
+                  throw new Error(data.error);
+                }
+
+                if (data.content) {
+                  fullContent += data.content;
+                  setStreamingMessage(fullContent);
+                }
+
+                if (data.done) {
+                  // Finalize the message
+                  const assistantMessage: AIMessage = {
+                    id: `ai_${Date.now()}`,
+                    role: 'assistant',
+                    content: fullContent,
+                    timestamp: new Date().toISOString(),
+                    tokens: data.usage?.totalTokens,
+                    model: data.model,
+                  };
+
+                  setCurrentSession(prev => {
+                    if (!prev) return prev;
+                    return {
+                      ...prev,
+                      messages: [...prev.messages, assistantMessage],
+                      updatedAt: new Date().toISOString(),
+                      totalTokens: prev.totalTokens + (data.usage?.totalTokens || 0),
+                      totalCost: prev.totalCost + (data.usage?.estimatedCost || 0),
+                    };
+                  });
+
+                  setStreamingMessage('');
+                  setIsStreaming(false);
+                  loadSessions();
+                }
+              } catch (e) {
+                console.warn('Failed to parse streaming chunk:', e);
+              }
+            }
+          }
         }
       } else {
-        setError(data.error?.message || 'Failed to send message');
+        // Non-streaming mode (default for all providers)
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: currentMessage,
+            sessionId: currentSession?.id,
+            noteContext: currentNoteId,
+            includeContext: true,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Add assistant response to current session
+          const assistantMessage: AIMessage = {
+            id: data.data.id,
+            role: 'assistant',
+            content: data.data.content,
+            timestamp: data.data.timestamp,
+            tokens: data.data.usage.totalTokens,
+            model: data.data.model,
+          };
+
+          setCurrentSession(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: [...prev.messages, assistantMessage],
+              updatedAt: new Date().toISOString(),
+              totalTokens: prev.totalTokens + data.data.usage.totalTokens,
+              totalCost: prev.totalCost + data.data.usage.estimatedCost,
+            };
+          });
+
+          loadSessions();
+        } else {
+          setError(data.error?.message || 'Failed to send message');
+        }
       }
     } catch (error) {
       console.error('Failed to send message:', error);
-      setError('Failed to connect to AI service');
+      setError(error instanceof Error ? error.message : 'Failed to connect to AI service');
+      setIsStreaming(false);
+      setStreamingMessage('');
     } finally {
       setIsLoading(false);
     }
@@ -476,6 +550,28 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
             {currentSession.messages.map(msg => (
               <ChatMessage key={msg.id} message={msg} theme={theme} />
             ))}
+            {/* Streaming message display */}
+            {isStreaming && streamingMessage && (
+              <div className="flex justify-start">
+                <div
+                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                    theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'
+                  }`}
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-1" />
+                    <div className="whitespace-pre-wrap break-words text-sm">
+                      {streamingMessage}
+                      <span className="inline-block w-1 h-4 bg-current animate-pulse ml-1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </>
         )}
@@ -616,6 +712,42 @@ function AISettingsPanel({
   const [modelToPull, setModelToPull] = useState('');
   const [showAdvancedOllama, setShowAdvancedOllama] = useState(false);
 
+  // V3.0 Enhancement states
+  const [showPresetManager, setShowPresetManager] = useState(false);
+  const [showPerformancePanel, setShowPerformancePanel] = useState(false);
+  const [showModelLibrary, setShowModelLibrary] = useState(false);
+  const [showAutoDiscovery, setShowAutoDiscovery] = useState(false);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoveredServers, setDiscoveredServers] = useState<
+    Array<{
+      url: string;
+      name?: string;
+      version?: string;
+      modelCount?: number;
+      responseTime: number;
+    }>
+  >([]);
+  const [presetName, setPresetName] = useState('');
+  const [presetDescription, setPresetDescription] = useState('');
+  const [modelLibrary, setModelLibrary] = useState<
+    Array<{
+      name: string;
+      displayName: string;
+      description: string;
+      tags: string[];
+      size?: string;
+      parameterSize?: string;
+      isInstalled: boolean;
+    }>
+  >([]);
+  const [loadingLibrary, setLoadingLibrary] = useState(false);
+  const [contextUsage, setContextUsage] = useState<{
+    used: number;
+    limit: number;
+    percentage: number;
+    warning: boolean;
+  } | null>(null);
+
   const fetchOllamaModels = useCallback(async () => {
     setLoadingModels(true);
     setModelError(null);
@@ -691,25 +823,60 @@ function AISettingsPanel({
       if (response.ok) {
         const data = await response.json();
         const modelCount = data.models?.length || 0;
+
+        // Try to get version info for more details
+        let versionInfo = '';
+        try {
+          const versionResponse = await fetch(`${ollamaUrl}/api/version`);
+          if (versionResponse.ok) {
+            const versionData = await versionResponse.json();
+            versionInfo = versionData.version ? ` (v${versionData.version})` : '';
+          }
+        } catch {
+          // Version endpoint might not exist
+        }
+
         setConnectionStatus({
           connected: true,
-          message: `✓ Connected! Found ${modelCount} model${modelCount !== 1 ? 's' : ''}`,
+          message: `✓ Connected${versionInfo}! Found ${modelCount} model${modelCount !== 1 ? 's' : ''}`,
         });
+
+        // Auto-fetch models if connected
+        if (modelCount > 0) {
+          fetchOllamaModels();
+        }
       } else {
         setConnectionStatus({
           connected: false,
-          message: `✗ Connection failed: ${response.status}`,
+          message: `✗ Connection failed (HTTP ${response.status}). Check if Ollama is running.`,
         });
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let helpText = '';
+
+      // Provide specific troubleshooting hints
+      if (errorMessage.includes('ECONNREFUSED')) {
+        helpText = ' → Make sure Ollama is running: `ollama serve`';
+      } else if (errorMessage.includes('ENOTFOUND')) {
+        helpText = ' → Check the hostname/URL';
+      } else if (errorMessage.includes('ETIMEDOUT')) {
+        helpText = ' → Check network connection and firewall settings';
+      } else if (
+        errorMessage.includes('NetworkError') ||
+        errorMessage.includes('Failed to fetch')
+      ) {
+        helpText = ' → Cannot reach server. Is Ollama running?';
+      }
+
       setConnectionStatus({
         connected: false,
-        message: `✗ Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `✗ ${errorMessage}${helpText}`,
       });
     } finally {
       setTestingConnection(false);
     }
-  }, [formData.ollamaUrl]);
+  }, [formData.ollamaUrl, fetchOllamaModels]);
 
   // Pull a model from Ollama
   const handlePullModel = useCallback(async () => {
@@ -776,6 +943,186 @@ function AISettingsPanel({
       }, 3000);
     }
   }, [modelToPull, formData.ollamaUrl, fetchOllamaModels]);
+
+  // V3.0 Enhancement Functions
+  const handleSavePreset = useCallback(() => {
+    if (!presetName.trim()) return;
+
+    const newPreset = {
+      id: `preset_${Date.now()}`,
+      name: presetName.trim(),
+      url: formData.ollamaUrl || 'http://localhost:11434',
+      description: presetDescription.trim() || undefined,
+      createdAt: new Date().toISOString(),
+      isDefault: (formData.ollamaPresets || []).length === 0,
+    };
+
+    const updatedPresets = [...(formData.ollamaPresets || []), newPreset];
+    setFormData({ ...formData, ollamaPresets: updatedPresets, activeOllamaPreset: newPreset.id });
+    setPresetName('');
+    setPresetDescription('');
+  }, [presetName, presetDescription, formData]);
+
+  const handleLoadPreset = useCallback(
+    (presetId: string) => {
+      const preset = formData.ollamaPresets?.find(p => p.id === presetId);
+      if (preset) {
+        setFormData({ ...formData, ollamaUrl: preset.url, activeOllamaPreset: presetId });
+        // Update lastUsed
+        const updatedPresets = formData.ollamaPresets?.map(p =>
+          p.id === presetId ? { ...p, lastUsed: new Date().toISOString() } : p
+        );
+        setFormData({
+          ...formData,
+          ollamaPresets: updatedPresets,
+          ollamaUrl: preset.url,
+          activeOllamaPreset: presetId,
+        });
+      }
+    },
+    [formData]
+  );
+
+  const handleDeletePreset = useCallback(
+    (presetId: string) => {
+      const updatedPresets = formData.ollamaPresets?.filter(p => p.id !== presetId);
+      setFormData({
+        ...formData,
+        ollamaPresets: updatedPresets,
+        activeOllamaPreset:
+          formData.activeOllamaPreset === presetId ? undefined : formData.activeOllamaPreset,
+      });
+    },
+    [formData]
+  );
+
+  const handleDiscoverServers = useCallback(async () => {
+    setDiscovering(true);
+    setDiscoveredServers([]);
+
+    try {
+      // Simulate server discovery (in real implementation, use OllamaProvider.discoverServers())
+      const commonUrls = ['http://localhost:11434', 'http://127.0.0.1:11434'];
+
+      const results = await Promise.all(
+        commonUrls.map(async url => {
+          try {
+            const startTime = Date.now();
+            const response = await fetch(`${url}/api/tags`, {
+              method: 'GET',
+              signal: AbortSignal.timeout(3000),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              const responseTime = Date.now() - startTime;
+
+              // Try to get version
+              let version: string | undefined;
+              try {
+                const versionResponse = await fetch(`${url}/api/version`);
+                if (versionResponse.ok) {
+                  const versionData = await versionResponse.json();
+                  version = versionData.version;
+                }
+              } catch {
+                // Ignore
+              }
+
+              return {
+                url,
+                name: `Ollama Server (${new URL(url).hostname})`,
+                version,
+                modelCount: data.models?.length || 0,
+                responseTime,
+              };
+            }
+          } catch {
+            // Server not available
+          }
+          return null;
+        })
+      );
+
+      const found = results.filter((r): r is NonNullable<typeof r> => r !== null);
+      setDiscoveredServers(found);
+    } catch (error) {
+      console.error('Error discovering servers:', error);
+    } finally {
+      setDiscovering(false);
+    }
+  }, []);
+
+  const handleLoadModelLibrary = useCallback(async () => {
+    setLoadingLibrary(true);
+    try {
+      // Curated model library (in real implementation, use OllamaProvider.getModelLibrary())
+      const installedModels = ollamaModels.map(m => m.value);
+
+      const library = [
+        {
+          name: 'llama3.2',
+          displayName: 'Llama 3.2',
+          description: "Meta's latest Llama model, excellent general-purpose AI",
+          tags: ['general', 'chat', 'recommended'],
+          size: '2.0 GB',
+          parameterSize: '3B',
+          isInstalled: installedModels.includes('llama3.2'),
+        },
+        {
+          name: 'codellama',
+          displayName: 'Code Llama',
+          description: 'Specialized for code generation and programming',
+          tags: ['code', 'programming'],
+          size: '3.8 GB',
+          parameterSize: '7B',
+          isInstalled: installedModels.includes('codellama'),
+        },
+        {
+          name: 'mistral',
+          displayName: 'Mistral 7B',
+          description: 'Efficient and powerful for general tasks',
+          tags: ['general', 'efficient'],
+          size: '4.1 GB',
+          parameterSize: '7B',
+          isInstalled: installedModels.includes('mistral'),
+        },
+        {
+          name: 'phi3',
+          displayName: 'Phi-3',
+          description: "Microsoft's compact but capable model",
+          tags: ['general', 'compact'],
+          size: '2.3 GB',
+          parameterSize: '3.8B',
+          isInstalled: installedModels.includes('phi3'),
+        },
+      ];
+
+      setModelLibrary(library);
+    } catch (error) {
+      console.error('Error loading model library:', error);
+    } finally {
+      setLoadingLibrary(false);
+    }
+  }, [ollamaModels]);
+
+  const handleInstallFromLibrary = useCallback(
+    async (modelName: string) => {
+      setModelToPull(modelName);
+      await handlePullModel();
+    },
+    [handlePullModel]
+  );
+
+  // Update context usage when session changes
+  // TODO: Integrate with session state properly
+  useEffect(() => {
+    if (formData.provider === 'ollama') {
+      // Placeholder for context tracking
+      // Will be activated when integrated with message history
+      setContextUsage(null);
+    }
+  }, [formData.provider]);
 
   // Fetch Ollama models when provider is Ollama or URL changes
   useEffect(() => {
@@ -934,6 +1281,39 @@ function AISettingsPanel({
 
         {formData.provider === 'ollama' && (
           <>
+            {/* Server Presets */}
+            {formData.ollamaPresets && formData.ollamaPresets.length > 0 && (
+              <div>
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                >
+                  🖥️ Saved Server Presets
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {formData.ollamaPresets.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          ollamaUrl: preset.url,
+                          activeOllamaPreset: preset.id,
+                        });
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        formData.activeOllamaPreset === preset.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label
@@ -942,20 +1322,44 @@ function AISettingsPanel({
                 >
                   Ollama Server URL
                 </label>
-                <button
-                  onClick={testOllamaConnection}
-                  disabled={testingConnection}
-                  className="text-xs px-3 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-50 transition-colors font-medium"
-                >
-                  {testingConnection ? (
-                    <span className="flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      Testing...
-                    </span>
-                  ) : (
-                    '🔌 Test Connection'
-                  )}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const name = prompt('Enter a name for this server preset:');
+                      if (name) {
+                        const newPreset = {
+                          id: `preset_${Date.now()}`,
+                          name,
+                          url: formData.ollamaUrl || 'http://localhost:11434',
+                          createdAt: new Date().toISOString(),
+                        };
+                        setFormData({
+                          ...formData,
+                          ollamaPresets: [...(formData.ollamaPresets || []), newPreset],
+                          activeOllamaPreset: newPreset.id,
+                        });
+                      }
+                    }}
+                    className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
+                    title="Save current URL as preset"
+                  >
+                    💾 Save
+                  </button>
+                  <button
+                    onClick={testOllamaConnection}
+                    disabled={testingConnection}
+                    className="text-xs px-3 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-50 transition-colors font-medium"
+                  >
+                    {testingConnection ? (
+                      <span className="flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Testing...
+                      </span>
+                    ) : (
+                      '🔌 Test'
+                    )}
+                  </button>
+                </div>
               </div>
               <input
                 type="text"
@@ -984,8 +1388,37 @@ function AISettingsPanel({
                 className="text-xs mt-1"
                 style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
               >
-                Enter your custom Ollama server URL if not running on localhost:11434
+                Enter your custom Ollama server URL or save as preset for quick access
               </p>
+            </div>
+
+            {/* Streaming Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-lg border border-gray-300 dark:border-gray-600">
+              <div>
+                <label
+                  className="text-sm font-medium cursor-pointer"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                  htmlFor="streaming-toggle"
+                >
+                  🌊 Enable Streaming
+                </label>
+                <p
+                  className="text-xs mt-0.5"
+                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                >
+                  See AI responses in real-time as they're generated
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  id="streaming-toggle"
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={formData.enableStreaming !== false}
+                  onChange={e => setFormData({ ...formData, enableStreaming: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
             </div>
 
             {/* Model Pull Interface */}

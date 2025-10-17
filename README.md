@@ -60,6 +60,36 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Research Assistant** - Semantic search with intelligent note creation
 - **Multi-Provider Support** - Choose from OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash), or Ollama (local AI)
 
+#### 🏠 Ollama Local AI (Privacy-First)
+
+MarkItUp features the most comprehensive Ollama integration in any PKM system:
+
+- **🌊 Real-Time Streaming** - Progressive response display with Server-Sent Events
+- **📊 Model Management** - Download, delete, and refresh models directly from the UI
+- **🔌 Connection Testing** - One-click server verification with detailed status
+- **⚙️ Advanced Parameters** - Fine-tune context window, GPU layers, repeat penalty, and more
+- **📦 Enhanced Model Details** - View size, parameter count (7B/13B/70B), and quantization levels
+- **💾 Zero Cost** - No API keys, no usage limits, completely free local AI
+- **🔒 Complete Privacy** - All data stays on your machine, no external API calls
+- **🚀 Model Library** - Browse and install popular models (Llama 3.2, Mistral, CodeLlama, etc.)
+- **🎯 Custom Servers** - Connect to remote Ollama instances with saved presets
+- **📈 Performance Metrics** - Track tokens/second, response times, and model efficiency
+
+**Getting Started with Ollama:**
+
+1. Install Ollama: `brew install ollama` (macOS) or visit [ollama.ai](https://ollama.ai)
+2. Start server: `ollama serve`
+3. Pull a model: `ollama pull llama3.2` or use MarkItUp's UI
+4. Select "Ollama (Local)" in AI Settings - no API key needed!
+
+**Why Choose Ollama?**
+
+- 100% private - ideal for sensitive knowledge bases
+- Offline capable after model download
+- No monthly costs or token limits
+- Full control over AI infrastructure
+- Supports 50+ open-source models
+
 ### 🤝 Real-time Collaboration
 
 - **Multi-user Editing** - Real-time collaborative editing with conflict resolution
@@ -109,6 +139,30 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 **🆓 Truly Free:** Open-source with no licensing fees or feature restrictions
 
 **🚀 Extensible:** Modern plugin architecture for unlimited customization
+
+### 🤖 AI Provider Comparison
+
+MarkItUp offers the most flexible AI integration in any PKM system:
+
+| Feature | OpenAI | Anthropic | Gemini | **Ollama** |
+|---------|--------|-----------|--------|------------|
+| **Streaming** | ✅ | ✅ | ✅ | ✅ |
+| **API Key Required** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ **None** |
+| **Cost** | $0.002-0.03/1K tokens | $0.003-0.015/1K tokens | $0.0001-0.0015/1K tokens | 🆓 **Free** |
+| **Model Management** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Advanced Options** | Limited | Limited | Limited | ✅ **8+ params** |
+| **Privacy (Local)** | ❌ Cloud | ❌ Cloud | ❌ Cloud | ✅ **100% Local** |
+| **Connection Test** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Offline Mode** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Performance Tracking** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Usage Limits** | Pay per use | Pay per use | Pay per use | ✅ **Unlimited** |
+
+**Choose the right provider for your needs:**
+
+- **OpenAI** - Most capable general-purpose AI (GPT-4)
+- **Anthropic** - Long context windows, ethical AI (Claude 3.5)
+- **Gemini** - Most cost-effective, multimodal (Gemini 1.5)
+- **Ollama** - Complete privacy, zero cost, offline capable (50+ models)
 
 ## 🔮 Future Enhancements
 

@@ -79,6 +79,12 @@ export interface AISettings {
   ollamaUrl?: string; // Custom Ollama server URL (defaults to http://localhost:11434)
   ollamaPresets?: OllamaServerPreset[]; // Saved Ollama server configurations
   ollamaAdvancedOptions?: OllamaAdvancedOptions; // Advanced Ollama parameters
+  enableStreaming?: boolean; // Enable real-time streaming responses (Ollama only)
+  activeOllamaPreset?: string; // ID of currently active preset
+  ollamaPerformanceTracking?: boolean; // Track performance metrics per model
+  ollamaAutoDiscovery?: boolean; // Enable auto-discovery of Ollama servers
+  ollamaShowModelLibrary?: boolean; // Show model library browser
+  ollamaCheckUpdates?: boolean; // Automatically check for model updates
 }
 
 export interface ChatSession {
@@ -182,6 +188,9 @@ export interface OllamaServerPreset {
   url: string;
   isDefault?: boolean;
   createdAt: string;
+  description?: string; // Optional description
+  lastUsed?: string; // Last time this preset was used
+  isDiscovered?: boolean; // Whether this was auto-discovered on network
 }
 
 export interface OllamaAdvancedOptions {
@@ -193,6 +202,54 @@ export interface OllamaAdvancedOptions {
   top_k?: number; // Top-k sampling (default 40)
   top_p?: number; // Top-p sampling (default 0.9)
   seed?: number; // Random seed for reproducibility
+}
+
+export interface OllamaPerformanceMetrics {
+  modelId: string;
+  averageResponseTime: number; // ms
+  tokensPerSecond: number;
+  totalRequests: number;
+  successRate: number; // 0-100
+  lastUsed: string;
+  memoryUsage?: number; // MB
+}
+
+export interface OllamaModelLibraryEntry {
+  name: string;
+  displayName: string;
+  description: string;
+  tags: string[];
+  pullCount: number;
+  updatedAt: string;
+  size?: string; // e.g., "4.1GB"
+  parameterSize?: string; // e.g., "7B"
+  capabilities: string[];
+  isInstalled: boolean;
+}
+
+export interface OllamaDiscoveredServer {
+  url: string;
+  name?: string;
+  version?: string;
+  modelCount?: number;
+  responseTime: number; // ms
+  discoveredAt: string;
+}
+
+export interface OllamaModelUpdate {
+  modelName: string;
+  currentVersion: string;
+  latestVersion: string;
+  updateAvailable: boolean;
+  sizeChange?: number; // bytes
+  releaseNotes?: string;
+}
+
+export interface OllamaContextUsage {
+  used: number;
+  limit: number;
+  percentage: number;
+  warning: boolean; // true if approaching limit (>80%)
 }
 
 export interface OllamaModelDetails {

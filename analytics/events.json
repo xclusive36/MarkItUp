@@ -2067,5 +2067,14 @@
       "toTheme": "light"
     },
     "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760710993280_tkttxqw02",
+    "type": "mode_switched",
+    "timestamp": "2025-10-17T14:23:13.280Z",
+    "data": {
+      "view": "plugins"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
   }
 ]

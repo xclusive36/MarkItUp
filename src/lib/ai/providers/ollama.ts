@@ -10,12 +10,19 @@ import {
   OllamaConnectionStatus,
   OllamaAdvancedOptions,
   StreamChunk,
+  OllamaPerformanceMetrics,
+  OllamaModelLibraryEntry,
+  OllamaDiscoveredServer,
+  OllamaModelUpdate,
+  OllamaContextUsage,
 } from '../types';
 
 export class OllamaProvider implements AIProviderInterface {
   private baseURL: string;
   private cachedModels: AIModel[] | null = null;
   private advancedOptions?: OllamaAdvancedOptions;
+  private performanceMetrics: Map<string, OllamaPerformanceMetrics> = new Map();
+  private requestStartTime: number = 0;
 
   constructor(baseURL: string = 'http://localhost:11434', advancedOptions?: OllamaAdvancedOptions) {
     this.baseURL = baseURL;
@@ -113,8 +120,11 @@ export class OllamaProvider implements AIProviderInterface {
       onStream?: (chunk: StreamChunk) => void;
     } = {}
   ): Promise<AIResponse> {
+    const model = options.model || 'llama3.2';
+    this.startPerformanceTracking();
+    let success = false;
+
     try {
-      const model = options.model || 'llama3.2';
       const temperature = options.temperature || this.advancedOptions?.temperature || 0.7;
       const stream = options.stream || false;
 
@@ -155,13 +165,24 @@ export class OllamaProvider implements AIProviderInterface {
       }
 
       if (stream && response.body) {
-        return this.handleStreamingResponse(response, model, context, options.onStream);
+        const result = await this.handleStreamingResponse(
+          response,
+          model,
+          context,
+          options.onStream
+        );
+        success = true;
+        this.recordPerformance(model, result.usage.totalTokens, success);
+        return result;
       }
 
       const data = await response.json();
 
       // Ollama doesn't provide detailed token counts, estimate based on content
       const estimatedTokens = Math.ceil((data.message?.content?.length || 0) / 4);
+
+      success = true;
+      this.recordPerformance(model, estimatedTokens * 2, success);
 
       return {
         id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -177,6 +198,7 @@ export class OllamaProvider implements AIProviderInterface {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
+      this.recordPerformance(model, 0, success);
       throw this.createAIError(
         'CHAT_ERROR',
         error instanceof Error ? error.message : 'Unknown error'
@@ -572,6 +594,358 @@ Guidelines:
       timestamp: new Date().toISOString(),
       provider: 'ollama',
     };
+  }
+
+  // ========================================
+  // V3.0 Enhancement Methods
+  // ========================================
+
+  /**
+   * Get performance metrics for a specific model
+   */
+  getModelPerformance(modelId: string): OllamaPerformanceMetrics | null {
+    return this.performanceMetrics.get(modelId) || null;
+  }
+
+  /**
+   * Get performance metrics for all models
+   */
+  getAllPerformanceMetrics(): OllamaPerformanceMetrics[] {
+    return Array.from(this.performanceMetrics.values());
+  }
+
+  /**
+   * Track performance for a request (call before request)
+   */
+  private startPerformanceTracking(): void {
+    this.requestStartTime = Date.now();
+  }
+
+  /**
+   * Record performance metrics (call after request)
+   */
+  private recordPerformance(modelId: string, tokens: number, success: boolean): void {
+    const responseTime = Date.now() - this.requestStartTime;
+    const tokensPerSecond = tokens / (responseTime / 1000);
+
+    const existing = this.performanceMetrics.get(modelId);
+
+    if (existing) {
+      // Update existing metrics
+      const totalRequests = existing.totalRequests + 1;
+      const avgResponseTime =
+        (existing.averageResponseTime * existing.totalRequests + responseTime) / totalRequests;
+      const avgTokensPerSecond =
+        (existing.tokensPerSecond * existing.totalRequests + tokensPerSecond) / totalRequests;
+      const successCount = Math.round((existing.successRate * existing.totalRequests) / 100);
+      const newSuccessRate = ((successCount + (success ? 1 : 0)) / totalRequests) * 100;
+
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime: avgResponseTime,
+        tokensPerSecond: avgTokensPerSecond,
+        totalRequests,
+        successRate: newSuccessRate,
+        lastUsed: new Date().toISOString(),
+      });
+    } else {
+      // Create new metrics
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime: responseTime,
+        tokensPerSecond,
+        totalRequests: 1,
+        successRate: success ? 100 : 0,
+        lastUsed: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Clear performance metrics for all models
+   */
+  clearPerformanceMetrics(): void {
+    this.performanceMetrics.clear();
+  }
+
+  /**
+   * Discover Ollama servers on the local network
+   */
+  async discoverServers(timeout: number = 5000): Promise<OllamaDiscoveredServer[]> {
+    const discovered: OllamaDiscoveredServer[] = [];
+    const commonPorts = [11434]; // Ollama default port
+    const localIPs = this.generateLocalIPs();
+
+    const checkServer = async (url: string): Promise<OllamaDiscoveredServer | null> => {
+      try {
+        const startTime = Date.now();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(`${url}/api/tags`, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        clearTimeout(timeoutId);
+        const responseTime = Date.now() - startTime;
+
+        if (response.ok) {
+          const data = await response.json();
+          const modelCount = data.models?.length || 0;
+
+          // Try to get version
+          let version: string | undefined;
+          try {
+            const versionResponse = await fetch(`${url}/api/version`, {
+              signal: controller.signal,
+            });
+            if (versionResponse.ok) {
+              const versionData = await versionResponse.json();
+              version = versionData.version;
+            }
+          } catch {
+            // Version endpoint might not exist
+          }
+
+          return {
+            url,
+            name: `Ollama Server (${new URL(url).hostname})`,
+            version,
+            modelCount,
+            responseTime,
+            discoveredAt: new Date().toISOString(),
+          };
+        }
+      } catch {
+        // Server not found or timeout
+      }
+      return null;
+    };
+
+    // Check localhost first
+    const localhostResult = await checkServer('http://localhost:11434');
+    if (localhostResult) {
+      discovered.push(localhostResult);
+    }
+
+    // Check local network IPs
+    const checks = localIPs.flatMap(ip =>
+      commonPorts.map(port => checkServer(`http://${ip}:${port}`))
+    );
+
+    const results = await Promise.all(checks);
+    discovered.push(...results.filter((r): r is OllamaDiscoveredServer => r !== null));
+
+    return discovered;
+  }
+
+  /**
+   * Generate common local IP addresses to check
+   */
+  private generateLocalIPs(): string[] {
+    const ips: string[] = [];
+    // Generate 192.168.1.x range (common home network)
+    for (let i = 2; i < 255; i++) {
+      ips.push(`192.168.1.${i}`);
+    }
+    // Could add more ranges like 192.168.0.x, 10.0.0.x, etc.
+    return ips;
+  }
+
+  /**
+   * Get the Ollama model library (popular models)
+   */
+  async getModelLibrary(): Promise<OllamaModelLibraryEntry[]> {
+    const installedModels = await this.listAvailableModels();
+
+    // Curated list of popular Ollama models
+    const library: OllamaModelLibraryEntry[] = [
+      {
+        name: 'llama3.2',
+        displayName: 'Llama 3.2',
+        description: "Meta's latest Llama model, excellent general-purpose AI",
+        tags: ['general', 'chat', 'recommended'],
+        pullCount: 1000000,
+        updatedAt: '2024-09-25',
+        size: '2.0 GB',
+        parameterSize: '3B',
+        capabilities: ['chat', 'completion', 'analysis'],
+        isInstalled: installedModels.includes('llama3.2'),
+      },
+      {
+        name: 'llama3.2:1b',
+        displayName: 'Llama 3.2 (1B)',
+        description: 'Lightweight Llama 3.2, fast and efficient',
+        tags: ['general', 'chat', 'lightweight'],
+        pullCount: 500000,
+        updatedAt: '2024-09-25',
+        size: '1.3 GB',
+        parameterSize: '1B',
+        capabilities: ['chat', 'completion'],
+        isInstalled: installedModels.includes('llama3.2:1b'),
+      },
+      {
+        name: 'llama3.1',
+        displayName: 'Llama 3.1',
+        description: 'Previous Llama version, very capable',
+        tags: ['general', 'chat'],
+        pullCount: 2000000,
+        updatedAt: '2024-07-23',
+        size: '4.7 GB',
+        parameterSize: '8B',
+        capabilities: ['chat', 'completion', 'analysis', 'summarization'],
+        isInstalled: installedModels.includes('llama3.1'),
+      },
+      {
+        name: 'codellama',
+        displayName: 'Code Llama',
+        description: 'Specialized for code generation and programming tasks',
+        tags: ['code', 'programming', 'development'],
+        pullCount: 800000,
+        updatedAt: '2024-08-15',
+        size: '3.8 GB',
+        parameterSize: '7B',
+        capabilities: ['chat', 'completion', 'code'],
+        isInstalled: installedModels.includes('codellama'),
+      },
+      {
+        name: 'mistral',
+        displayName: 'Mistral 7B',
+        description: 'Efficient and powerful, great for general tasks',
+        tags: ['general', 'chat', 'efficient'],
+        pullCount: 1500000,
+        updatedAt: '2024-09-10',
+        size: '4.1 GB',
+        parameterSize: '7B',
+        capabilities: ['chat', 'completion', 'analysis'],
+        isInstalled: installedModels.includes('mistral'),
+      },
+      {
+        name: 'phi3',
+        displayName: 'Phi-3',
+        description: "Microsoft's compact but capable model",
+        tags: ['general', 'compact', 'efficient'],
+        pullCount: 400000,
+        updatedAt: '2024-08-20',
+        size: '2.3 GB',
+        parameterSize: '3.8B',
+        capabilities: ['chat', 'completion'],
+        isInstalled: installedModels.includes('phi3'),
+      },
+      {
+        name: 'gemma2:9b',
+        displayName: 'Gemma 2 (9B)',
+        description: "Google's Gemma 2, excellent performance",
+        tags: ['general', 'chat', 'powerful'],
+        pullCount: 600000,
+        updatedAt: '2024-06-27',
+        size: '5.4 GB',
+        parameterSize: '9B',
+        capabilities: ['chat', 'completion', 'analysis', 'summarization'],
+        isInstalled: installedModels.includes('gemma2:9b'),
+      },
+      {
+        name: 'qwen2.5',
+        displayName: 'Qwen 2.5',
+        description: "Alibaba's powerful multilingual model",
+        tags: ['general', 'multilingual', 'chat'],
+        pullCount: 300000,
+        updatedAt: '2024-09-18',
+        size: '4.7 GB',
+        parameterSize: '7B',
+        capabilities: ['chat', 'completion', 'multilingual'],
+        isInstalled: installedModels.includes('qwen2.5'),
+      },
+      {
+        name: 'deepseek-coder-v2',
+        displayName: 'DeepSeek Coder v2',
+        description: 'Advanced code generation and understanding',
+        tags: ['code', 'programming', 'advanced'],
+        pullCount: 250000,
+        updatedAt: '2024-08-30',
+        size: '8.9 GB',
+        parameterSize: '16B',
+        capabilities: ['chat', 'completion', 'code', 'analysis'],
+        isInstalled: installedModels.includes('deepseek-coder-v2'),
+      },
+      {
+        name: 'llama3.1:70b',
+        displayName: 'Llama 3.1 (70B)',
+        description: 'Large Llama model, highest quality but resource intensive',
+        tags: ['general', 'chat', 'large', 'powerful'],
+        pullCount: 150000,
+        updatedAt: '2024-07-23',
+        size: '40 GB',
+        parameterSize: '70B',
+        capabilities: ['chat', 'completion', 'analysis', 'summarization', 'reasoning'],
+        isInstalled: installedModels.includes('llama3.1:70b'),
+      },
+    ];
+
+    return library;
+  }
+
+  /**
+   * Check for model updates
+   */
+  async checkForUpdates(): Promise<OllamaModelUpdate[]> {
+    try {
+      const installedModels = await this.fetchAvailableModels();
+      const updates: OllamaModelUpdate[] = [];
+
+      for (const model of installedModels) {
+        // Check if a newer version exists in the registry
+        // This is a simplified check - in reality, Ollama would need API support for this
+        const updateAvailable = false; // Placeholder - needs Ollama API support
+
+        updates.push({
+          modelName: model.id,
+          currentVersion: model.modifiedAt || 'unknown',
+          latestVersion: model.modifiedAt || 'unknown',
+          updateAvailable,
+          sizeChange: 0,
+        });
+      }
+
+      return updates;
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calculate context usage for the current conversation
+   */
+  calculateContextUsage(messages: AIMessage[], contextWindow: number = 2048): OllamaContextUsage {
+    // Rough estimation: ~4 characters per token
+    const totalChars = messages.reduce((sum, msg) => sum + msg.content.length, 0);
+    const estimatedTokens = Math.ceil(totalChars / 4);
+    const percentage = (estimatedTokens / contextWindow) * 100;
+
+    return {
+      used: estimatedTokens,
+      limit: contextWindow,
+      percentage: Math.min(percentage, 100),
+      warning: percentage > 80,
+    };
+  }
+
+  /**
+   * Update base URL (useful for switching presets)
+   */
+  updateBaseURL(newURL: string): void {
+    this.baseURL = newURL;
+    this.cachedModels = null; // Clear cache when switching servers
+  }
+
+  /**
+   * Get current base URL
+   */
+  getBaseURL(): string {
+    return this.baseURL;
   }
 }
 

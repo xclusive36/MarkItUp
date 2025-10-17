@@ -13,7 +13,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 | **Graph View** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
 | **Real-time Collaboration** | ✅ | ❌ | ✅ | ✅ | ❌ | Varies |
 | **Plugin System** | ✅ | ✅ | ❌ | ❌ | ✅ | Varies |
-| **AI Integration** | ✅ | Via plugins | ✅ | ❌ | Via plugins | ❌ |
+| **AI Integration** | ✅ (4 providers) | Via plugins | ✅ (Cloud only) | ❌ | Via plugins | ❌ |
+| **Local AI (Ollama)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **LaTeX Math** | ✅ | ✅ | ✅ | ✅ | ✅ | Usually ❌ |
 | **Mobile Support** | ✅ (PWA) | ✅ (App) | ✅ (App) | ✅ (Web) | ✅ (App) | Varies |
 | **Offline Support** | ✅ | ✅ | Limited | ❌ | ✅ | Varies |
@@ -29,7 +30,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 - **Self-hosted**: Complete control over your data
 - **Real-time collaboration**: Built-in multi-user editing
 - **Open source**: Free forever, customizable
-- **AI-first design**: Integrated AI features from the start
+- **AI-first design**: Integrated AI features from the start (4 providers)
+- **Local AI with Ollama**: Privacy-first AI with zero cost and unlimited usage
 - **Modern tech stack**: Next.js 15, TypeScript, WebSocket
 - **No installation**: Works immediately in browser
 
@@ -47,7 +49,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 - Web-based access from multiple devices
 - Real-time collaboration with team members
 - Self-hosted solution for privacy
-- AI-powered features out of the box
+- AI-powered features out of the box (including local Ollama)
+- Zero-cost unlimited AI with complete privacy
 - Modern, responsive interface
 
 **Choose Obsidian if you want:**
@@ -65,7 +68,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 - **Wikilink-focused**: Designed for linking thoughts
 - **Real markdown**: True markdown editing
 - **No vendor lock-in**: Export your data anytime
-- **Privacy-first**: No data collection
+- **Privacy-first**: No data collection, plus local AI option
+- **Local AI**: Run AI entirely on your machine with Ollama (zero cost)
 - **Specialized PKM**: Built specifically for knowledge management
 
 #### Advantages of Notion
@@ -83,7 +87,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 - Self-hosted privacy control
 - Graph-based knowledge exploration
 - True markdown workflow
-- AI-powered insights
+- AI-powered insights (with local AI option)
+- Zero-cost unlimited AI capabilities
 
 **Choose Notion if you want:**
 - Team collaboration and databases
@@ -98,10 +103,11 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 - **Self-hosted**: Own your data infrastructure
 - **Better performance**: Modern web technologies
 - **Real-time collaboration**: Built-in multi-user support
-- **AI integration**: Smart content assistance
+- **AI integration**: Smart content assistance (4 providers)
+- **Local AI**: Run Ollama for privacy and zero cost
 - **Plugin system**: Extensible architecture
 - **Open source**: Community-driven development
-- **Cost**: Free vs $15/month
+- **Cost**: Free (with optional free local AI) vs $15/month
 
 #### Advantages of Roam Research
 - **Block-based**: Granular content linking
@@ -114,9 +120,10 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 
 #### Use Case Recommendations
 **Choose MarkItUp PKM if you want:**
-- Cost-effective solution
-- Self-hosted privacy
-- AI-powered features
+- Cost-effective solution (including free local AI)
+- Self-hosted privacy (data AND AI)
+- AI-powered features with multiple provider options
+- Local AI with Ollama (unlimited, private, free)
 - Modern interface
 - Real-time collaboration
 
@@ -132,7 +139,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 #### Advantages of MarkItUp PKM
 - **Web-based**: Browser accessibility
 - **Real-time collaboration**: Multi-user editing
-- **AI integration**: Built-in intelligent features
+- **AI integration**: Built-in intelligent features (4 providers)
+- **Local AI**: Privacy-first Ollama integration with zero cost
 - **Modern UI**: Contemporary design
 - **Easy deployment**: Docker/web hosting
 - **Plugin API**: Rich development interface
@@ -149,7 +157,8 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 **Choose MarkItUp PKM if you want:**
 - Web-based accessibility
 - Team collaboration
-- AI-powered insights
+- AI-powered insights (including local AI)
+- Complete AI privacy with Ollama
 - Easy setup and deployment
 - Modern user experience
 
@@ -354,9 +363,10 @@ Comprehensive comparison of MarkItUp PKM with other knowledge management tools.
 #### High Priority
 1. **Data ownership** and self-hosting
 2. **Real-time collaboration** with team members
-3. **AI-powered** knowledge assistance
-4. **Modern web interface** and user experience
-5. **Open source** and free forever
+3. **AI-powered** knowledge assistance (4 providers including free local AI)
+4. **Privacy-first AI** with Ollama (zero cost, unlimited usage, 100% local)
+5. **Modern web interface** and user experience
+6. **Open source** and free forever
 
 #### Medium Priority
 6. **Graph visualization** of knowledge
@@ -380,11 +390,12 @@ Ask yourself these questions:
 2. **Is collaboration essential?** → MarkItUp PKM or Notion
 3. **Do you prefer web or desktop?** → Web: MarkItUp PKM, Desktop: Obsidian
 4. **Is budget a constraint?** → MarkItUp PKM or Logseq (free)
-5. **Do you need AI features?** → MarkItUp PKM or Notion
-6. **Is privacy critical?** → Self-hosted options (MarkItUp PKM, Logseq)
-7. **Do you want mature ecosystem?** → Obsidian or Notion
+5. **Do you need AI features?** → MarkItUp PKM (4 providers) or Notion
+6. **Do you need privacy-first AI?** → MarkItUp PKM (Ollama local AI)
+7. **Is privacy critical?** → Self-hosted options (MarkItUp PKM, Logseq)
+8. **Do you want mature ecosystem?** → Obsidian or Notion
 
-Based on your answers, MarkItUp PKM is the best choice if you prioritize self-hosting, collaboration, AI features, web access, and cost-effectiveness.
+Based on your answers, MarkItUp PKM is the best choice if you prioritize self-hosting, collaboration, AI features (especially local/private AI with Ollama), web access, and cost-effectiveness.
 
 ---
 
