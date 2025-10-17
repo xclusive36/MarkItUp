@@ -1,16 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  AnalyticsMetrics, 
-  TimeSeriesData, 
+import {
+  AnalyticsMetrics,
+  TimeSeriesData,
   InsightType,
   analytics,
-  AnalyticsEvent
+  AnalyticsEvent,
 } from '@/lib/analytics';
 import { Note, Link, Tag } from '@/lib/types';
-import { 
-  TrendingUp, TrendingDown, Activity, BookOpen, Link as LinkIcon, 
-  Search, Clock, Target, Zap, Award, Lightbulb,
-  BarChart3
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  BookOpen,
+  Link as LinkIcon,
+  Search,
+  Clock,
+  Target,
+  Zap,
+  Award,
+  Lightbulb,
+  BarChart3,
 } from 'lucide-react';
 
 interface AnalyticsDashboardProps {
@@ -24,9 +33,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   notes,
   links,
   tags,
-  className = ''
+  className = '',
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'activity' | 'insights'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'activity' | 'insights'>(
+    'overview'
+  );
   const [timeRange, setTimeRange] = useState<7 | 30 | 90>(30);
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
@@ -36,10 +47,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   useEffect(() => {
     const calculatedMetrics = analytics.calculateMetrics(notes, links, tags);
     setMetrics(calculatedMetrics);
-    
+
     const storedEvents = analytics.getStoredEvents();
     setEvents(storedEvents);
-    
+
     const generatedInsights = analytics.generateInsights(calculatedMetrics, notes);
     setInsights(generatedInsights);
   }, [notes, links, tags]);
@@ -47,12 +58,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   // Generate chart data
   const timeSeriesData = useMemo(() => {
     if (!events.length) return { notes: [], words: [], sessions: [], searches: [] };
-    
+
     return {
       notes: analytics.generateTimeSeriesData(events, 'notes', timeRange),
       words: analytics.generateTimeSeriesData(events, 'words', timeRange),
       sessions: analytics.generateTimeSeriesData(events, 'sessions', timeRange),
-      searches: analytics.generateTimeSeriesData(events, 'searches', timeRange)
+      searches: analytics.generateTimeSeriesData(events, 'searches', timeRange),
     };
   }, [events, timeRange]);
 
@@ -82,17 +93,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
           {change !== undefined && (
-            <div className={`flex items-center mt-1 text-sm ${
-              change >= 0 ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {change >= 0 ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+            <div
+              className={`flex items-center mt-1 text-sm ${
+                change >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              {change >= 0 ? (
+                <TrendingUp className="w-4 h-4 mr-1" />
+              ) : (
+                <TrendingDown className="w-4 h-4 mr-1" />
+              )}
               {Math.abs(change)}%
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-full ${color}`}>
-          {icon}
-        </div>
+        <div className={`p-3 rounded-full ${color}`}>{icon}</div>
       </div>
     </div>
   );
@@ -103,19 +118,36 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     icon: React.ReactNode;
     active: boolean;
     onClick: () => void;
-  }> = ({ id, label, icon, active, onClick }) => (
-    <button
-      onClick={onClick}
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-        active
-          ? 'bg-blue-600 text-white'
-          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-      }`}
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
-  );
+  }> = ({ id, label, icon, active, onClick }) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    return (
+      <button
+        onClick={onClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors"
+        style={{
+          backgroundColor: active
+            ? 'var(--accent-primary)'
+            : isHovered
+              ? 'var(--bg-secondary)'
+              : 'transparent',
+          color: active ? '#ffffff' : isHovered ? 'var(--text-primary)' : 'var(--text-secondary)',
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: active
+            ? 'var(--accent-primary)'
+            : isHovered
+              ? 'var(--border-primary)'
+              : 'transparent',
+        }}
+      >
+        {icon}
+        <span className="hidden sm:inline">{label}</span>
+      </button>
+    );
+  };
 
   const formatDuration = (minutes: number): string => {
     if (minutes < 60) return `${minutes}m`;
@@ -131,7 +163,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     unit: string;
   }> = ({ data, title, color, unit }) => {
     const maxValue = Math.max(...data.map(d => d.value), 1);
-    
+
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
@@ -139,7 +171,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {data.slice(-7).map((item, index) => (
             <div key={item.date} className="flex items-center justify-between">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {new Date(item.date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </span>
               <div className="flex items-center space-x-2 flex-1 mx-3">
                 <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -149,7 +184,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   ></div>
                 </div>
                 <span className="text-sm font-medium text-gray-900 dark:text-white w-12 text-right">
-                  {item.value}{unit}
+                  {item.value}
+                  {unit}
                 </span>
               </div>
             </div>
@@ -165,13 +201,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-400">Insights into your knowledge management</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Insights into your knowledge management
+          </p>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <select
             value={timeRange}
-            onChange={(e) => setTimeRange(Number(e.target.value) as 7 | 30 | 90)}
+            onChange={e => setTimeRange(Number(e.target.value) as 7 | 30 | 90)}
             className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value={7}>Last 7 days</option>
@@ -182,7 +220,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+      <div
+        className="flex space-x-1 p-1 rounded-lg"
+        style={{
+          backgroundColor: 'var(--bg-tertiary)',
+        }}
+      >
         <TabButton
           id="overview"
           label="Overview"
@@ -295,15 +338,19 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Content Distribution */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Most Used Tags</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Most Used Tags
+              </h3>
               <div className="space-y-3">
                 {metrics.mostUsedTags.slice(0, 8).map((tag, index) => (
                   <div key={tag.tag} className="flex items-center justify-between">
                     <span className="text-sm text-gray-700 dark:text-gray-300">#{tag.tag}</span>
                     <div className="flex items-center space-x-2">
-                      <div 
+                      <div
                         className="h-2 bg-blue-600 rounded"
-                        style={{ width: `${(tag.count / Math.max(metrics.mostUsedTags[0]?.count || 1, 1)) * 100}px` }}
+                        style={{
+                          width: `${(tag.count / Math.max(metrics.mostUsedTags[0]?.count || 1, 1)) * 100}px`,
+                        }}
                       ></div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">
                         {tag.count}
@@ -315,7 +362,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Content Quality</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Content Quality
+              </h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Notes with Links</span>
@@ -324,12 +373,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${(metrics.notesWithLinks / Math.max(metrics.totalNotes, 1)) * 100}%` }}
+                    style={{
+                      width: `${(metrics.notesWithLinks / Math.max(metrics.totalNotes, 1)) * 100}%`,
+                    }}
                   ></div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Notes with Tags</span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -337,9 +388,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${(metrics.notesWithTags / Math.max(metrics.totalNotes, 1)) * 100}%` }}
+                    style={{
+                      width: `${(metrics.notesWithTags / Math.max(metrics.totalNotes, 1)) * 100}%`,
+                    }}
                   ></div>
                 </div>
 
@@ -349,9 +402,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     {Math.round(metrics.averageReadingTime)} min
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Content Complexity</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Content Complexity
+                  </span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {metrics.contentComplexity.toFixed(1)}/10
                   </span>
@@ -395,17 +450,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Activity Patterns */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Peak Writing Hours</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Peak Writing Hours
+              </h3>
               <div className="space-y-3">
                 {metrics.peakWritingHours.slice(0, 5).map((hour, index) => {
-                  const timeStr = hour === 0 ? '12:00 AM' : hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`;
+                  const timeStr =
+                    hour === 0 ? '12:00 AM' : hour <= 12 ? `${hour}:00 AM` : `${hour - 12}:00 PM`;
                   return (
                     <div key={hour} className="flex items-center justify-between">
                       <span className="text-sm text-gray-700 dark:text-gray-300">{timeStr}</span>
                       <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          index === 0 ? 'bg-green-500' : index === 1 ? 'bg-blue-500' : 'bg-gray-400'
-                        }`}></div>
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            index === 0
+                              ? 'bg-green-500'
+                              : index === 1
+                                ? 'bg-blue-500'
+                                : 'bg-gray-400'
+                          }`}
+                        ></div>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           Peak #{index + 1}
                         </span>
@@ -417,7 +481,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Search Behavior</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Search Behavior
+              </h3>
               <div className="space-y-3">
                 {metrics.popularSearchTerms.slice(0, 5).map((term, index) => (
                   <div key={term.term} className="flex items-center justify-between">
@@ -425,9 +491,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       "{term.term}"
                     </span>
                     <div className="flex items-center space-x-2">
-                      <div 
+                      <div
                         className="h-2 bg-purple-600 rounded"
-                        style={{ width: `${(term.count / Math.max(metrics.popularSearchTerms[0]?.count || 1, 1)) * 50}px` }}
+                        style={{
+                          width: `${(term.count / Math.max(metrics.popularSearchTerms[0]?.count || 1, 1)) * 50}px`,
+                        }}
                       ></div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">
                         {term.count}
@@ -441,23 +509,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
           {/* Simple Activity Heatmap */}
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Activity Heatmap</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Activity Heatmap
+            </h3>
             <div className="space-y-2">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, dayIndex) => (
                 <div key={day} className="flex items-center space-x-2">
                   <div className="w-12 text-xs text-gray-500 dark:text-gray-400">{day}</div>
                   <div className="flex space-x-1">
                     {Array.from({ length: 24 }, (_, hourIndex) => {
-                      const cellData = heatmapData.find(d => d.day === dayIndex && d.hour === hourIndex);
+                      const cellData = heatmapData.find(
+                        d => d.day === dayIndex && d.hour === hourIndex
+                      );
                       const intensity = cellData ? Math.min(cellData.value / 5, 1) : 0;
                       return (
                         <div
                           key={hourIndex}
                           className="w-3 h-3 rounded-sm border border-gray-200 dark:border-gray-600"
                           style={{
-                            backgroundColor: intensity > 0 
-                              ? `rgba(59, 130, 246, ${intensity})` 
-                              : 'transparent'
+                            backgroundColor:
+                              intensity > 0 ? `rgba(59, 130, 246, ${intensity})` : 'transparent',
                           }}
                           title={`${day} ${hourIndex}:00 - ${cellData?.value || 0} events`}
                         ></div>
@@ -474,7 +545,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   <div
                     key={i}
                     className="w-3 h-3 rounded-sm border border-gray-200 dark:border-gray-600"
-                    style={{ backgroundColor: intensity > 0 ? `rgba(59, 130, 246, ${intensity})` : 'transparent' }}
+                    style={{
+                      backgroundColor:
+                        intensity > 0 ? `rgba(59, 130, 246, ${intensity})` : 'transparent',
+                    }}
                   ></div>
                 ))}
               </div>
@@ -489,28 +563,38 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Writing Streaks */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Writing Streaks</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Writing Streaks
+              </h3>
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                     {metrics.writingStreaks.current}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Current Streak (days)</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Current Streak (days)
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {metrics.writingStreaks.longest}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Longest Streak (days)</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Longest Streak (days)
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Knowledge Network</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Knowledge Network
+              </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Connection Density</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Connection Density
+                  </span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
                     {((metrics.totalLinks / Math.max(metrics.totalNotes, 1)) * 100).toFixed(1)}%
                   </span>
@@ -543,15 +627,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   Keep writing and building your knowledge base to unlock personalized insights!
                 </p>
               ) : (
-                insights.map((insight) => (
+                insights.map(insight => (
                   <div
                     key={insight.id}
                     className={`p-4 rounded-lg border-l-4 ${
                       insight.type === 'positive'
                         ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
                         : insight.type === 'suggestion'
-                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
-                        : 'bg-gray-50 dark:bg-gray-700/50 border-gray-400'
+                          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
+                          : 'bg-gray-50 dark:bg-gray-700/50 border-gray-400'
                     }`}
                   >
                     <div className="flex items-start space-x-3">

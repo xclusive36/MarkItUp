@@ -36,22 +36,24 @@ const EditorModeToggle: React.FC<EditorModeToggleProps> = ({
         className="px-3 py-1 text-xs rounded-md transition-colors shadow-sm font-medium focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           minWidth: 70,
-          backgroundColor: viewMode === key ? 'var(--bg-secondary)' : 'transparent',
+          backgroundColor: viewMode === key ? 'var(--bg-secondary)' : 'var(--bg-tertiary)',
           color: viewMode === key ? 'var(--text-primary)' : 'var(--text-secondary)',
           borderWidth: '1px',
           borderStyle: 'solid',
-          borderColor: viewMode === key ? 'var(--accent-primary)' : 'transparent',
+          borderColor: viewMode === key ? 'var(--accent-primary)' : 'var(--border-secondary)',
         }}
         onMouseEnter={e => {
           if (viewMode !== key) {
-            e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
             e.currentTarget.style.color = 'var(--text-primary)';
+            e.currentTarget.style.borderColor = 'var(--accent-primary)';
           }
         }}
         onMouseLeave={e => {
           if (viewMode !== key) {
-            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
             e.currentTarget.style.color = 'var(--text-secondary)';
+            e.currentTarget.style.borderColor = 'var(--border-secondary)';
           }
         }}
       >

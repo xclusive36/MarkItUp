@@ -61,17 +61,24 @@ const ToolbarButton = ({
       disabled={disabled}
       className="p-2 rounded transition-colors disabled:opacity-50"
       style={{
-        color: 'var(--text-primary)',
+        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
         backgroundColor: isActive ? 'var(--accent-bg)' : 'transparent',
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: isActive ? 'var(--accent-primary)' : 'transparent',
       }}
       onMouseEnter={e => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+        if (!isActive && !disabled) {
+          e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+          e.currentTarget.style.color = 'var(--text-primary)';
+          e.currentTarget.style.borderColor = 'var(--border-primary)';
         }
       }}
       onMouseLeave={e => {
-        if (!isActive) {
+        if (!isActive && !disabled) {
           e.currentTarget.style.backgroundColor = 'transparent';
+          e.currentTarget.style.color = 'var(--text-secondary)';
+          e.currentTarget.style.borderColor = 'transparent';
         }
       }}
       title={title}

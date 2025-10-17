@@ -104,12 +104,19 @@ export function AnalyticsDashboard({
             style={{
               backgroundColor: 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'var(--border-secondary)',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.borderColor = 'var(--accent-primary)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.borderColor = 'var(--border-secondary)';
             }}
           >
             Close
@@ -290,14 +297,21 @@ export function AnalyticsDashboard({
                   onClick={onConnectOrphans}
                   className="px-4 py-2 rounded-lg font-medium transition-colors"
                   style={{
-                    backgroundColor: '#3b82f6',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--accent-primary)',
+                    color: 'var(--text-primary)',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--accent-primary)',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                    e.currentTarget.style.backgroundColor = 'var(--accent-primary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.borderColor = 'var(--accent-primary)';
                   }}
                 >
                   🏝️ Connect Orphan Notes
@@ -308,14 +322,21 @@ export function AnalyticsDashboard({
                   onClick={onSuggestMOCs}
                   className="px-4 py-2 rounded-lg font-medium transition-colors"
                   style={{
-                    backgroundColor: '#a855f7',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--accent-secondary)',
+                    color: 'var(--text-primary)',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--accent-secondary)',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.backgroundColor = '#9333ea';
+                    e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.borderColor = 'var(--accent-secondary)';
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.backgroundColor = '#a855f7';
+                    e.currentTarget.style.backgroundColor = 'var(--accent-secondary)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.borderColor = 'var(--accent-secondary)';
                   }}
                 >
                   📚 Suggest MOCs
