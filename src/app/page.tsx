@@ -25,6 +25,7 @@ import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal'
 import MOCSuggestionsModal from '@/components/MOCSuggestionsModal';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
+import { useToast } from '@/components/ToastProvider';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
@@ -35,6 +36,8 @@ import { analytics, AnalyticsEventType } from '@/lib/analytics';
 // ...existing code...
 import { AppHeader } from '@/components/AppHeader';
 import Sidebar from '@/components/Sidebar';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
+import { QuickActionsMenu } from '@/components/QuickActionsMenu';
 import { X } from 'lucide-react';
 
 // Styles
@@ -46,6 +49,7 @@ import './manual-theme.css';
 export default function Home() {
   const { theme } = useSimpleTheme();
   const { settings, updateSettings } = useCollaboration();
+  const toast = useToast();
 
   const NotesComponent = dynamic(() => import('@/components/NotesComponent'), { ssr: false });
   // Notes refresh for NotesComponent
@@ -102,6 +106,9 @@ export default function Home() {
   const [connectionSuggestionsData, setConnectionSuggestionsData] = useState<any[]>([]);
   const [showMOCSuggestions, setShowMOCSuggestions] = useState(false);
   const [mocSuggestionsData, setMOCSuggestionsData] = useState<any[]>([]);
+
+  // Keyboard Shortcuts Help state
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -530,16 +537,49 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   // Command Palette keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Alt+P or Ctrl+K to open command palette
-      if ((e.altKey && e.key === 'p') || (e.ctrlKey && e.key === 'k')) {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const metaKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Cmd/Ctrl+K to open command palette
+      if (metaKey && e.key === 'k') {
         e.preventDefault();
         setShowCommandPalette(true);
         analytics.trackEvent('mode_switched', { action: 'command_palette_opened' });
+        return;
       }
 
-      // Escape to close command palette
+      // Cmd/Ctrl+S to save
+      if (metaKey && e.key === 's') {
+        e.preventDefault();
+        saveNote();
+        toast.success('Note saved');
+        return;
+      }
+
+      // Cmd/Ctrl+I to toggle AI Chat
+      if (metaKey && e.key === 'i') {
+        e.preventDefault();
+        setShowAIChat(prev => !prev);
+        return;
+      }
+
+      // ? to show keyboard shortcuts
+      if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        setShowKeyboardHelp(true);
+        return;
+      }
+
+      // Escape to close modals
       if (e.key === 'Escape') {
         setShowCommandPalette(false);
+        setShowKeyboardHelp(false);
+        setShowAIChat(false);
+        setShowWritingAssistant(false);
+        setShowKnowledgeDiscovery(false);
+        setShowResearchAssistant(false);
+        setShowKnowledgeMap(false);
+        setShowBatchAnalyzer(false);
       }
     };
 
@@ -548,7 +588,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markdown, fileName, folder]);
 
   // Handle search
   type SearchOptions = {
@@ -729,7 +770,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     try {
       const note = notes.find(n => n.id === noteId);
       if (!note) {
-        alert('Note not found!');
+        toast.error('Note not found!');
         return;
       }
 
@@ -752,20 +793,21 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         }
 
         // Show success message
-        setSaveStatus('Note deleted successfully! 🗑️');
-        setTimeout(() => setSaveStatus(''), 3000);
+        toast.success('Note deleted successfully! 🗑️');
       } else {
         // Handle HTTP error responses
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        alert(`Failed to delete note: ${errorData.error || response.statusText}`);
+        toast.error(`Failed to delete note: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
       console.error('Error deleting note:', error);
       // Handle network errors (like server not running)
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        alert('Cannot connect to server. Please make sure the development server is running.');
+        toast.error(
+          'Cannot connect to server. Please make sure the development server is running.'
+        );
       } else {
-        alert('An unexpected error occurred while deleting the note.');
+        toast.error('An unexpected error occurred while deleting the note.');
       }
     }
   };
@@ -1268,6 +1310,27 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             }}
           />
         )}
+
+        {/* Keyboard Shortcuts Help */}
+        <KeyboardShortcutsHelp
+          isOpen={showKeyboardHelp}
+          onClose={() => setShowKeyboardHelp(false)}
+        />
+
+        {/* Quick Actions Menu (Mobile-friendly FAB) */}
+        <QuickActionsMenu
+          onNewNote={() => {
+            setFileName('');
+            setMarkdown('# ');
+            setFolder('');
+            setActiveNote(null);
+            setCurrentView('editor');
+          }}
+          onSearch={() => setShowCommandPalette(true)}
+          onGraphView={() => setCurrentView('graph')}
+          onAIChat={() => setShowAIChat(true)}
+          onKeyboardHelp={() => setShowKeyboardHelp(true)}
+        />
       </div>
     </>
   );

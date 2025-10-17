@@ -1,11 +1,12 @@
 'use client';
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
+import Toast, { ToastType } from '@/components/Toast';
 
-interface Toast {
+interface ToastItem {
   id: number;
   message: string;
-  type?: 'success' | 'error' | 'info';
+  type?: ToastType;
   actionLabel?: string;
   onAction?: () => void;
 }
@@ -13,10 +14,14 @@ interface Toast {
 interface ToastContextType {
   showToast: (
     message: string,
-    type?: Toast['type'],
+    type?: ToastType,
     actionLabel?: string,
     onAction?: () => void
   ) => void;
+  success: (message: string, actionLabel?: string, onAction?: () => void) => void;
+  error: (message: string, actionLabel?: string, onAction?: () => void) => void;
+  info: (message: string, actionLabel?: string, onAction?: () => void) => void;
+  warning: (message: string, actionLabel?: string, onAction?: () => void) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -28,52 +33,63 @@ export const useToast = () => {
 };
 
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const removeToast = useCallback((id: number) => {
+    setToasts(ts => ts.filter(t => t.id !== id));
+  }, []);
+
   const showToast = useCallback(
-    (message: string, type?: Toast['type'], actionLabel?: string, onAction?: () => void) => {
+    (message: string, type?: ToastType, actionLabel?: string, onAction?: () => void) => {
       const id = Date.now() + Math.random();
-      setToasts(ts => [...ts, { id, message, type, actionLabel, onAction }]);
-      setTimeout(() => {
-        setToasts(ts => ts.filter(t => t.id !== id));
-      }, 4000);
+      setToasts(ts => [...ts, { id, message, type: type || 'info', actionLabel, onAction }]);
     },
     []
   );
 
+  const success = useCallback(
+    (message: string, actionLabel?: string, onAction?: () => void) =>
+      showToast(message, 'success', actionLabel, onAction),
+    [showToast]
+  );
+
+  const error = useCallback(
+    (message: string, actionLabel?: string, onAction?: () => void) =>
+      showToast(message, 'error', actionLabel, onAction),
+    [showToast]
+  );
+
+  const info = useCallback(
+    (message: string, actionLabel?: string, onAction?: () => void) =>
+      showToast(message, 'info', actionLabel, onAction),
+    [showToast]
+  );
+
+  const warning = useCallback(
+    (message: string, actionLabel?: string, onAction?: () => void) =>
+      showToast(message, 'warning', actionLabel, onAction),
+    [showToast]
+  );
+
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, success, error, info, warning }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 items-end">
-        <AnimatePresence>
-          {toasts.map(toast => (
-            <motion.div
-              key={toast.id}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className={`px-4 py-2 rounded shadow-lg text-white text-sm font-medium flex items-center gap-3
-                ${toast.type === 'success' ? 'bg-green-600' : toast.type === 'error' ? 'bg-red-600' : 'bg-gray-800'}`}
-            >
-              <span>{toast.message}</span>
-              {toast.actionLabel && toast.onAction && (
-                <button
-                  className="ml-2 px-2 py-1 rounded text-xs font-semibold border border-white border-opacity-30 transition-colors"
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.85)',
-                    color: '#222',
-                  }}
-                  onClick={() => {
-                    toast.onAction?.();
-                    setToasts(ts => ts.filter(t => t.id !== toast.id));
-                  }}
-                >
-                  {toast.actionLabel}
-                </button>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+        <div className="pointer-events-auto">
+          <AnimatePresence>
+            {toasts.map(toast => (
+              <Toast
+                key={toast.id}
+                message={toast.message}
+                type={toast.type}
+                actionLabel={toast.actionLabel}
+                onAction={toast.onAction}
+                onClose={() => removeToast(toast.id)}
+                duration={5000}
+              />
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
     </ToastContext.Provider>
   );
