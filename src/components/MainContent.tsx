@@ -4,6 +4,9 @@ import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
 import { ThemeCreator } from './ThemeCreator';
 import ZenMode from './ZenMode';
+import SplitView from './SplitView';
+import SelectionActionBar from './SelectionActionBar';
+import MobileEditorToolbar from './MobileEditorToolbar';
 import React, { useState, useEffect, useRef } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
 import { getThemeCreatorPluginInstance } from '@/plugins/theme-creator';
@@ -40,6 +43,64 @@ const MainContent: React.FC<MainContentProps> = ({
   const [isEditorOptionsOpen, setIsEditorOptionsOpen] = useState(false);
   const [isZenMode, setIsZenMode] = useState(false);
   const editorOptionsRef = useRef<HTMLDivElement>(null);
+
+  // Selection state for SelectionActionBar
+  const [selectedText, setSelectedText] = useState('');
+  const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
+
+  // Handle text selection for action bar
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      const text = selection?.toString() || '';
+
+      if (text.trim().length > 0 && editorRef?.current) {
+        const range = selection?.getRangeAt(0);
+        const rect = range?.getBoundingClientRect();
+        setSelectedText(text);
+        setSelectionRect(rect || null);
+      } else {
+        setSelectedText('');
+        setSelectionRect(null);
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, [editorRef]);
+
+  // Handle mobile toolbar markdown insertion
+  const handleInsertMarkdown = (markdownSyntax: string, offset?: number) => {
+    if (!editorRef?.current) return;
+
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    const before = text.substring(0, start);
+    const selected = text.substring(start, end);
+    const after = text.substring(end);
+
+    let newText = before + markdownSyntax + after;
+    let newCursorPos = start + markdownSyntax.length + (offset || 0);
+
+    // If there's selected text, wrap it
+    if (selected) {
+      const [opening, closing] = markdownSyntax.includes('[[')
+        ? ['[[', ']]']
+        : markdownSyntax.split(selected);
+      newText = before + (opening || markdownSyntax) + selected + (closing || '') + after;
+      newCursorPos = end + (opening || markdownSyntax).length + (closing || '').length;
+    }
+
+    handleMarkdownChange(newText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
 
   // Show buttons on desktop (md and up)
   const desktopShowClass = 'hidden md:flex';
@@ -325,7 +386,7 @@ const MainContent: React.FC<MainContentProps> = ({
         </div>
 
         {viewMode === 'edit' && (
-          <div className="flex-grow flex flex-col h-full">
+          <div className="flex-grow flex flex-col h-full relative">
             {editorType === 'markdown' ? (
               <MarkdownEditor
                 ref={editorRef}
@@ -336,13 +397,48 @@ const MainContent: React.FC<MainContentProps> = ({
             ) : (
               <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
             )}
+
+            {/* Selection Action Bar */}
+            {selectedText && selectionRect && (
+              <SelectionActionBar
+                selectedText={selectedText}
+                selectionRect={selectionRect}
+                onCreateLink={() => {
+                  // Wrap selected text in wikilink
+                  const newMarkdown = markdown.replace(selectedText, `[[${selectedText}]]`);
+                  handleMarkdownChange(newMarkdown);
+                  setSelectedText('');
+                  setSelectionRect(null);
+                }}
+                onAIAssist={() => {
+                  // Trigger AI assist with selected text
+                  console.log('AI assist requested for:', selectedText);
+                  // Could dispatch an event or call a prop
+                }}
+                onAddTag={() => {
+                  // Add tag with selected text
+                  const tagName = selectedText.replace(/\s+/g, '-').toLowerCase();
+                  const newMarkdown = markdown.replace(selectedText, `${selectedText} #${tagName}`);
+                  handleMarkdownChange(newMarkdown);
+                  setSelectedText('');
+                  setSelectionRect(null);
+                }}
+                theme={theme as 'light' | 'dark'}
+              />
+            )}
+
+            {/* Mobile Editor Toolbar */}
+            <MobileEditorToolbar
+              onInsertMarkdown={handleInsertMarkdown}
+              theme={theme as 'light' | 'dark'}
+            />
           </div>
         )}
         {viewMode === 'preview' && <MarkdownPreview markdown={processedMarkdown} theme={theme} />}
         {viewMode === 'split' && (
-          <div className="flex flex-col lg:flex-row h-full flex-grow min-h-0">
-            <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col min-h-0">
-              {editorType === 'markdown' ? (
+          <SplitView
+            leftPanel={
+              editorType === 'markdown' ? (
                 <MarkdownEditor
                   ref={editorRef}
                   value={markdown}
@@ -351,12 +447,13 @@ const MainContent: React.FC<MainContentProps> = ({
                 />
               ) : (
                 <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
-              )}
-            </div>
-            <div className="h-1/2 lg:h-full w-full lg:w-1/2 flex flex-col min-h-0">
-              <MarkdownPreview markdown={processedMarkdown} theme={theme} />
-            </div>
-          </div>
+              )
+            }
+            rightPanel={<MarkdownPreview markdown={processedMarkdown} theme={theme} />}
+            enableSyncScroll={true}
+            theme={theme as 'light' | 'dark'}
+            storageKey="editor-split-view-size"
+          />
         )}
 
         {/* Theme Creator Modal */}

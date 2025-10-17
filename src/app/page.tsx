@@ -24,6 +24,11 @@ import { AnalyticsDashboard as KnowledgeGraphAnalytics } from '@/components/Know
 import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal';
 import MOCSuggestionsModal from '@/components/MOCSuggestionsModal';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import WritingStatsModal from '@/components/WritingStatsModal';
+import ToolbarArea from '@/components/ToolbarArea';
+import BottomNav from '@/components/BottomNav';
+import SelectionActionBar from '@/components/SelectionActionBar';
+import MobileEditorToolbar from '@/components/MobileEditorToolbar';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
@@ -112,6 +117,15 @@ export default function Home() {
 
   // Keyboard Shortcuts Help state
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+
+  // Writing Stats Modal state
+  const [showWritingStats, setShowWritingStats] = useState(false);
+
+  // Text selection state for SelectionActionBar
+  const [selectedText, setSelectedText] = useState('');
+  const [selectionPosition, setSelectionPosition] = useState<{ top: number; left: number } | null>(
+    null
+  );
 
   // Core PKM state
   const [notes, setNotes] = useState<Note[]>([]);
@@ -721,7 +735,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   );
 
   // Save note
-  const saveNote = async (forceOverwrite = false) => {
+  const saveNote = async (forceOverwrite: boolean | React.MouseEvent = false) => {
+    // If forceOverwrite is an event object, treat it as false
+    const shouldOverwrite = typeof forceOverwrite === 'boolean' ? forceOverwrite : false;
+
     if (!fileName.trim()) {
       setSaveStatus('Please enter a filename');
       setSaveError('Please enter a filename');
@@ -740,12 +757,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
         : `${fileName.trim().replace(/\/+$/, '')}.md`;
 
+      // Ensure markdown is a string to prevent circular reference errors
+      const cleanMarkdown = typeof markdown === 'string' ? markdown : String(markdown);
+
       const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: markdown,
-          overwrite: forceOverwrite,
+          content: cleanMarkdown,
+          overwrite: shouldOverwrite,
         }),
       });
 
@@ -753,6 +773,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setSaveStatus('Note saved successfully! 🎉');
         setLastSaved(new Date());
         setSaveError(null);
+
+        // Show success toast
+        if (shouldOverwrite) {
+          toast.success('File overwritten successfully! 🎉');
+        } else {
+          toast.success('Note saved successfully! 🎉');
+        }
 
         // Track note save
         const wordCount = markdown.split(/\s+/).filter(word => word.length > 0).length;
@@ -770,7 +797,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           hasWikilinks: hasWikilinks,
           tagCount: tagMatches.length,
           folder: folder || null,
-          isOverwrite: forceOverwrite,
+          isOverwrite: shouldOverwrite,
         });
 
         // Create or update note in PKM system
@@ -791,16 +818,20 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       } else if (response.status === 409) {
         const data = await response.json();
         if (data.requiresOverwrite) {
-          if (window.confirm(data.prompt || 'File exists. Overwrite?')) {
-            await saveNote(true);
-          } else {
-            setSaveStatus('File not overwritten.');
-            setSaveError('File not overwritten.');
-            setTimeout(() => {
-              setSaveStatus('');
-              setSaveError(null);
-            }, 3000);
-          }
+          // Show toast with action button to overwrite
+          toast.warning(
+            data.prompt || 'File already exists. Click Overwrite to replace it.',
+            'Overwrite',
+            () => {
+              saveNote(true);
+            }
+          );
+          setSaveStatus('File already exists');
+          setSaveError('File already exists');
+          setTimeout(() => {
+            setSaveStatus('');
+            setSaveError(null);
+          }, 3000);
         } else {
           setSaveStatus(data.error || 'Error saving file');
           setSaveError(data.error || 'Error saving file');
@@ -1025,6 +1056,19 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           </div>
         </header>
 
+        {/* Toolbar Area - shown when in editor view */}
+        {currentView === 'editor' && (
+          <ToolbarArea
+            onSave={saveNote}
+            onNewNote={createNewNote}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            isSaving={isSaving}
+            canSave={!!fileName.trim() && !!markdown.trim()}
+            theme={theme as 'light' | 'dark'}
+          />
+        )}
+
         <div
           className="main-container"
           style={{
@@ -1033,7 +1077,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             paddingLeft: '1rem',
             paddingRight: '1rem',
             paddingTop: '1rem',
-            paddingBottom: '2.5rem', // Extra padding for status bar
+            paddingBottom: '5rem', // Extra padding for status bar + bottom nav on mobile
           }}
           data-main-container
         >
@@ -1480,6 +1524,35 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentNoteName={fileName || activeNote?.name.replace('.md', '')}
           currentFolder={folder || activeNote?.folder}
           theme={theme}
+          onStatsClick={() => setShowWritingStats(true)}
+        />
+
+        {/* Mobile Bottom Navigation */}
+        <BottomNav
+          currentView={currentView}
+          onViewChange={view => setCurrentView(view)}
+          onNewNote={createNewNote}
+          onOpenMenu={() => setShowMobileSidebar(true)}
+          theme={theme as 'light' | 'dark'}
+        />
+
+        {/* Writing Stats Modal */}
+        <WritingStatsModal
+          isOpen={showWritingStats}
+          onClose={() => setShowWritingStats(false)}
+          stats={{
+            wordCount: markdown.split(/\s+/).filter(word => word.length > 0).length,
+            characterCount: markdown.length,
+            readingTime: Math.ceil(
+              markdown.split(/\s+/).filter(word => word.length > 0).length / 200
+            ),
+            linkCount: (markdown.match(/\[\[([^\]]+)\]\]/g) || []).length,
+            tagCount: (markdown.match(/#\w+/g) || []).length,
+            headingCount: (markdown.match(/^#{1,6}\s/gm) || []).length,
+            paragraphCount: markdown.split(/\n\n+/).filter(p => p.trim().length > 0).length,
+            sentenceCount: (markdown.match(/[.!?]+/g) || []).length,
+          }}
+          theme={theme as 'light' | 'dark'}
         />
       </div>
     </>

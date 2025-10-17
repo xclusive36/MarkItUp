@@ -7,6 +7,8 @@ import * as d3Force from 'd3-force';
 import { D3DragEvent } from 'd3';
 import { Graph, GraphNode, GraphEdge } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
+import EmptyState from './EmptyState';
+import { Network } from 'lucide-react';
 
 // Define a proper D3Node type that extends GraphNode and includes simulation properties
 interface D3Node extends GraphNode {
@@ -255,6 +257,20 @@ const GraphView: React.FC<GraphViewProps> = ({
       simulation.stop();
     };
   }, [graph, dimensions, theme, centerNode, onNodeClick, onNodeHover]);
+
+  // Show empty state if no nodes
+  if (!graph.nodes.length) {
+    return (
+      <div className={`relative w-full h-full ${className}`}>
+        <EmptyState
+          icon={Network}
+          title="No Knowledge Graph Yet"
+          description="Create notes and link them using [[Note Name]] syntax to build your knowledge graph. The graph will visualize connections between your notes."
+          theme={theme}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`relative w-full h-full ${className}`}>

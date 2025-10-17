@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
+import EmptyState from './EmptyState';
 // Helper to get icon by file type
 const getFileIcon = (name: string) => {
   if (name.endsWith('.md'))
@@ -442,12 +443,18 @@ const Sidebar: React.FC<SidebarProps> = ({
         {isNotesExpanded && (
           <div ref={notesListRef} className="space-y-2 max-h-48 lg:max-h-96 overflow-y-auto">
             {notes.length === 0 ? (
-              <p
-                className="text-xs lg:text-sm text-center py-4"
-                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-              >
-                No notes yet. Create your first note above!
-              </p>
+              <div className="py-4">
+                <EmptyState
+                  icon={FileText}
+                  title="No Notes Yet"
+                  description="Create your first note to start building your knowledge base!"
+                  action={{
+                    label: 'Create Note',
+                    onClick: createNewNote,
+                  }}
+                  theme={theme as 'light' | 'dark'}
+                />
+              </div>
             ) : (
               notes.slice(0, 20).map((note: Note) => (
                 <div

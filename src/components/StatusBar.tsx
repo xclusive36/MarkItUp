@@ -65,6 +65,9 @@ interface StatusBarProps {
 
   // Theme
   theme?: 'light' | 'dark';
+
+  // Callback for when stats are clicked
+  onStatsClick?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -84,6 +87,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   currentNoteName,
   currentFolder,
   theme = 'light',
+  onStatsClick,
 }) => {
   const pluginManager = usePluginManager();
   const [showDetailedStats, setShowDetailedStats] = useState(false);
@@ -213,11 +217,15 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
         {/* Center - Stats */}
         <div className="hidden md:flex items-center gap-4">
-          {/* Word count */}
-          <div className="flex items-center gap-1.5" title="Word count">
+          {/* Word count - clickable to show detailed stats */}
+          <button
+            onClick={onStatsClick}
+            className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+            title="Click for detailed statistics"
+          >
             <FileText className="w-3 h-3" />
             <span>{wordCount.toLocaleString()} words</span>
-          </div>
+          </button>
 
           {/* Reading time */}
           <div className="flex items-center gap-1.5" title="Estimated reading time">
