@@ -424,7 +424,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             notes.slice(0, 20).map((note: Note) => (
               <div
                 key={note.id}
-                className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border flex items-center ${draggedNoteId === note.id ? 'opacity-50' : ''}`}
+                className={`p-2 lg:p-3 rounded-lg cursor-pointer transition-colors border flex items-center ${draggedNoteId === note.id ? 'opacity-50' : ''} ${activeNote?.id === note.id ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 style={{
                   backgroundColor: activeNote?.id === note.id ? 'var(--accent-bg)' : 'transparent',
                   borderColor:
@@ -436,16 +436,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onDrop={e => handleDrop(e, note.id)}
                 onDragEnd={handleDragEnd}
                 onContextMenu={e => handleContextMenu(e, note)}
-                onMouseEnter={e => {
-                  if (activeNote?.id !== note.id) {
-                    e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (activeNote?.id !== note.id) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }
-                }}
                 onClick={() => {
                   handleNoteSelect(note.id);
                   if (typeof window !== 'undefined') {
@@ -472,7 +462,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     />
                   ) : (
                     <h4
-                      className="text-xs lg:text-sm font-medium truncate"
+                      className="text-xs lg:text-sm font-medium truncate text-gray-900 dark:text-gray-100"
                       style={{ color: 'var(--text-primary)' }}
                     >
                       {note.name.replace('.md', '')}
@@ -480,7 +470,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   )}
                   {note.folder && (
                     <p
-                      className="text-xs flex items-center gap-1"
+                      className="text-xs flex items-center gap-1 text-gray-600 dark:text-gray-400"
                       style={{ color: 'var(--text-secondary)' }}
                     >
                       <Folder className="w-3 h-3" />

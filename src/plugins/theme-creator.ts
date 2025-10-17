@@ -6,9 +6,9 @@ let pluginInstance: ThemeCreatorPlugin | null = null;
 export const themeCreatorPlugin: PluginManifest = {
   id: 'theme-creator',
   name: 'Theme Creator',
-  version: '1.0.0',
+  version: '2.0.0',
   description:
-    'Create and customize your own themes with visual editor, presets, and accessibility checking',
+    'Create and customize themes with live preview, undo/redo, and accessibility checking. NEW in v2.0: Real-time preview panel, full undo/redo system, smooth toast notifications, contrast analysis',
   author: 'MarkItUp Team',
   main: 'theme-creator.js',
 

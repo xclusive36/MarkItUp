@@ -100,11 +100,11 @@ export const PLUGIN_METADATA = {
   [tableOfContentsPlugin.id]: {
     category: 'Editor Tools',
     difficulty: 'beginner',
-    timeToSetup: '1 min',
-    rating: '4.5',
-    downloadCount: '720',
-    tags: ['toc', 'navigation', 'outline'],
-    featured: false,
+    timeToSetup: '2 min',
+    rating: '4.9',
+    downloadCount: '1.8k',
+    tags: ['toc', 'navigation', 'outline', 'structure', 'sidebar', 'live', 'analysis'],
+    featured: true,
     functional: true,
   },
   [smartAutoTaggerPlugin.id]: {

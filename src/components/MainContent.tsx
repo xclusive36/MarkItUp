@@ -143,7 +143,7 @@ const MainContent: React.FC<MainContentProps> = ({
               theme={theme}
             />
           ) : (
-            <WysiwygEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+            <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
           )}
         </div>
       )}
@@ -159,7 +159,7 @@ const MainContent: React.FC<MainContentProps> = ({
                 theme={theme}
               />
             ) : (
-              <WysiwygEditor value={markdown} onChange={handleMarkdownChange} theme={theme} />
+              <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
             )}
           </div>
           <div className="h-1/2 lg:h-full w-full lg:w-1/2 flex flex-col min-h-0">

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table-row';
@@ -40,19 +40,55 @@ import {
 interface WysiwygEditorProps {
   value: string;
   onChange: (value: string) => void;
-  theme: string;
 }
 
-const MenuBar = ({ editor, theme }: { editor: Editor | null; theme: string }) => {
+const ToolbarButton = ({
+  onClick,
+  isActive,
+  title,
+  children,
+  disabled,
+}: {
+  onClick: () => void;
+  isActive?: boolean;
+  title: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="p-2 rounded transition-colors disabled:opacity-50"
+      style={{
+        color: 'var(--text-primary)',
+        backgroundColor: isActive ? 'var(--accent-bg)' : 'transparent',
+      }}
+      onMouseEnter={e => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+        }
+      }}
+      onMouseLeave={e => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }
+      }}
+      title={title}
+    >
+      {children}
+    </button>
+  );
+};
+
+interface MenuBarProps {
+  editor: Editor | null;
+}
+
+const MenuBar: React.FC<MenuBarProps> = ({ editor }) => {
   if (!editor) {
     return null;
   }
-
-  const buttonClass = `p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${
-    theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-  }`;
-
-  const activeClass = 'bg-blue-100 dark:bg-blue-900';
 
   const addLink = () => {
     const url = window.prompt('Enter URL:');
@@ -76,152 +112,149 @@ const MenuBar = ({ editor, theme }: { editor: Editor | null; theme: string }) =>
     <div
       className="flex flex-wrap gap-1 p-2 border-b"
       style={{
-        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
+        borderColor: 'var(--border-primary)',
+        backgroundColor: 'var(--bg-tertiary)',
       }}
     >
       {/* Undo/Redo */}
-      <button
+      <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
-        className={buttonClass}
         title="Undo"
       >
         <Undo className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
-        className={buttonClass}
         title="Redo"
       >
         <Redo className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 mx-1" style={{ backgroundColor: 'var(--border-secondary)' }} />
 
       {/* Text Formatting */}
-      <button
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`${buttonClass} ${editor.isActive('bold') ? activeClass : ''}`}
+        isActive={editor.isActive('bold')}
         title="Bold"
       >
         <Bold className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`${buttonClass} ${editor.isActive('italic') ? activeClass : ''}`}
+        isActive={editor.isActive('italic')}
         title="Italic"
       >
         <Italic className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`${buttonClass} ${editor.isActive('strike') ? activeClass : ''}`}
+        isActive={editor.isActive('strike')}
         title="Strikethrough"
       >
         <Strikethrough className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleCode().run()}
-        className={`${buttonClass} ${editor.isActive('code') ? activeClass : ''}`}
+        isActive={editor.isActive('code')}
         title="Inline Code"
       >
         <Code className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 mx-1" style={{ backgroundColor: 'var(--border-secondary)' }} />
 
       {/* Headings */}
-      <button
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className={`${buttonClass} ${editor.isActive('heading', { level: 1 }) ? activeClass : ''}`}
+        isActive={editor.isActive('heading', { level: 1 })}
         title="Heading 1"
       >
         <Heading1 className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={`${buttonClass} ${editor.isActive('heading', { level: 2 }) ? activeClass : ''}`}
+        isActive={editor.isActive('heading', { level: 2 })}
         title="Heading 2"
       >
         <Heading2 className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={`${buttonClass} ${editor.isActive('heading', { level: 3 }) ? activeClass : ''}`}
+        isActive={editor.isActive('heading', { level: 3 })}
         title="Heading 3"
       >
         <Heading3 className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 mx-1" style={{ backgroundColor: 'var(--border-secondary)' }} />
 
       {/* Lists */}
-      <button
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`${buttonClass} ${editor.isActive('bulletList') ? activeClass : ''}`}
+        isActive={editor.isActive('bulletList')}
         title="Bullet List"
       >
         <List className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`${buttonClass} ${editor.isActive('orderedList') ? activeClass : ''}`}
+        isActive={editor.isActive('orderedList')}
         title="Numbered List"
       >
         <ListOrdered className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleTaskList().run()}
-        className={`${buttonClass} ${editor.isActive('taskList') ? activeClass : ''}`}
+        isActive={editor.isActive('taskList')}
         title="Task List"
       >
         <CheckSquare className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 mx-1" style={{ backgroundColor: 'var(--border-secondary)' }} />
 
       {/* Block Elements */}
-      <button
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={`${buttonClass} ${editor.isActive('blockquote') ? activeClass : ''}`}
+        isActive={editor.isActive('blockquote')}
         title="Blockquote"
       >
         <Quote className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        className={`${buttonClass} ${editor.isActive('codeBlock') ? activeClass : ''}`}
+        isActive={editor.isActive('codeBlock')}
         title="Code Block"
       >
         <Code2 className="w-4 h-4" />
-      </button>
-      <button
+      </ToolbarButton>
+      <ToolbarButton
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        className={buttonClass}
         title="Horizontal Rule"
       >
         <Minus className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
 
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1" />
+      <div className="w-px h-6 mx-1" style={{ backgroundColor: 'var(--border-secondary)' }} />
 
       {/* Links & Media */}
-      <button onClick={addLink} className={buttonClass} title="Add Link">
+      <ToolbarButton onClick={addLink} title="Add Link">
         <LinkIcon className="w-4 h-4" />
-      </button>
-      <button onClick={addImage} className={buttonClass} title="Add Image">
+      </ToolbarButton>
+      <ToolbarButton onClick={addImage} title="Add Image">
         <ImageIcon className="w-4 h-4" />
-      </button>
-      <button onClick={insertTable} className={buttonClass} title="Insert Table">
+      </ToolbarButton>
+      <ToolbarButton onClick={insertTable} title="Insert Table">
         <TableIcon className="w-4 h-4" />
-      </button>
+      </ToolbarButton>
     </div>
   );
 };
 
-const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange, theme }) => {
+const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange }) => {
   const editor = useEditor({
     immediatelyRender: false, // Fix SSR hydration mismatch
     extensions: [
@@ -284,16 +317,16 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ value, onChange, theme })
     <div
       className="h-full flex flex-col border rounded-lg overflow-hidden"
       style={{
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--border-primary)',
       }}
     >
-      <MenuBar editor={editor} theme={theme} />
+      <MenuBar editor={editor} />
       <div
         className="flex-grow overflow-y-auto"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          color: theme === 'dark' ? '#f9fafb' : '#111827',
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
         }}
       >
         <EditorContent editor={editor} />

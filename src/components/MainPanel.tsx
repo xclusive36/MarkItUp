@@ -86,7 +86,13 @@ const MainPanel: React.FC<MainPanelProps> = ({
   }
   if (currentView === 'graph') {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]">
+      <div
+        className="rounded-lg shadow-sm border h-[calc(100vh-280px)] lg:h-[calc(100vh-200px)]"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
+        }}
+      >
         <GraphView
           graph={graph}
           centerNode={activeNote?.id}

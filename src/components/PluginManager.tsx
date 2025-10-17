@@ -1,15 +1,14 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings, 
-  ToggleLeft, 
-  ToggleRight, 
-  Trash2, 
+import {
+  Settings,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  Info,
   ExternalLink,
   Package,
   Zap,
@@ -20,10 +19,8 @@ import {
   Save,
   Eye,
   EyeOff,
-  Key
 } from 'lucide-react';
-import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
-import { AIPluginMetadata, AIPluginManager, AIPlugin } from '@/lib/ai/plugin-manager-simple';
+import { AIPluginMetadata, AIPluginManager } from '@/lib/ai/plugin-manager-simple';
 import { analytics } from '@/lib/analytics';
 
 interface PluginManagerProps {
@@ -46,27 +43,27 @@ interface PluginStatus {
 const categoryIcons = {
   'ai-assistant': Brain,
   'content-generation': Wand2,
-  'analysis': BarChart3,
-  'visualization': BarChart3,
-  'automation': Zap,
-  'integration': ExternalLink,
-  'utility': Package
+  analysis: BarChart3,
+  visualization: BarChart3,
+  automation: Zap,
+  integration: ExternalLink,
+  utility: Package,
 };
 
-export default function PluginManager({ 
-  isOpen, 
-  onClose, 
+export default function PluginManager({
+  isOpen,
+  onClose,
   pluginManager,
-  onPluginChange 
+  onPluginChange,
 }: PluginManagerProps) {
-  const { theme } = useSimpleTheme();
-  
   // State
   const [plugins, setPlugins] = useState<PluginStatus[]>([]);
   const [selectedPlugin, setSelectedPlugin] = useState<PluginStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [pluginSettings, setPluginSettings] = useState<Record<string, any>>({});
+  const [pluginSettings, setPluginSettings] = useState<Record<string, string | boolean | number>>(
+    {}
+  );
   const [showApiKeys, setShowApiKeys] = useState(false);
 
   // Load plugins when opened
@@ -74,13 +71,14 @@ export default function PluginManager({
     if (isOpen) {
       loadPlugins();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const loadPlugins = async () => {
     setIsLoading(true);
     try {
       const installedPlugins = await pluginManager.getInstalledPlugins();
-      
+
       const pluginStatuses: PluginStatus[] = [];
 
       for (const plugin of installedPlugins) {
@@ -90,7 +88,7 @@ export default function PluginManager({
           enabled: pluginManager.isPluginEnabled(plugin.metadata.id),
           hasSettings: Object.keys(plugin.metadata.settings || {}).length > 0,
           status: pluginManager.isPluginEnabled(plugin.metadata.id) ? 'active' : 'disabled',
-          metadata: plugin.metadata
+          metadata: plugin.metadata,
         };
 
         // Check for errors
@@ -121,18 +119,20 @@ export default function PluginManager({
       } else {
         await pluginManager.disablePlugin(pluginId);
       }
-      
+
       // Update local state
-      setPlugins(prev => prev.map(plugin => 
-        plugin.id === pluginId 
-          ? { ...plugin, enabled, status: enabled ? 'active' : 'disabled' }
-          : plugin
-      ));
+      setPlugins(prev =>
+        prev.map(plugin =>
+          plugin.id === pluginId
+            ? { ...plugin, enabled, status: enabled ? 'active' : 'disabled' }
+            : plugin
+        )
+      );
 
       analytics.trackEvent('ai_analysis', {
         action: 'plugin_toggled',
         pluginId,
-        enabled
+        enabled,
       });
     } catch (error) {
       console.error('Failed to toggle plugin:', error);
@@ -154,15 +154,15 @@ export default function PluginManager({
         if (selectedPlugin?.id === pluginId) {
           setSelectedPlugin(null);
         }
-        
+
         // Notify parent about plugin change
         if (onPluginChange) {
           await onPluginChange();
         }
-        
+
         analytics.trackEvent('ai_analysis', {
           action: 'plugin_uninstalled',
-          pluginId
+          pluginId,
         });
       }
     } catch (error) {
@@ -179,10 +179,10 @@ export default function PluginManager({
     try {
       await pluginManager.updatePluginSettings(selectedPlugin.id, pluginSettings);
       setShowSettings(false);
-      
+
       analytics.trackEvent('ai_analysis', {
         action: 'plugin_settings_updated',
-        pluginId: selectedPlugin.id
+        pluginId: selectedPlugin.id,
       });
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -197,93 +197,101 @@ export default function PluginManager({
     const settings = selectedPlugin.metadata.settings || {};
 
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60"
-        onClick={(e) => e.target === e.currentTarget && setShowSettings(false)}>
-        
-        <div 
-          className="w-full max-w-2xl max-h-[80vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-auto"
+        onClick={e => e.target === e.currentTarget && setShowSettings(false)}
+      >
+        <div
+          className="w-full max-w-2xl max-h-[80vh] rounded-lg shadow-xl overflow-auto"
           style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff'
-          }}>
-          
-          <div 
-            className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700"
-            style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}>
-            
+            backgroundColor: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <div
+            className="flex items-center justify-between p-6 border-b"
+            style={{ borderColor: 'var(--border-primary)' }}
+          >
             <div className="flex items-center gap-3">
-              <Settings className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+              <Settings className="w-6 h-6" style={{ color: 'var(--text-secondary)' }} />
               <div>
-                <h2 
-                  className="text-xl font-semibold"
-                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
                   {selectedPlugin.name} Settings
                 </h2>
-                <p 
-                  className="text-sm"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   Configure plugin preferences and API keys
                 </p>
               </div>
             </div>
-            
+
             <button
               onClick={() => setShowSettings(false)}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           <div className="p-6 space-y-6">
             {Object.entries(settings).map(([key, setting]) => (
               <div key={key}>
-                <label 
+                <label
                   className="block text-sm font-medium mb-2"
-                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {setting.label || key}
                   {setting.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
-                
+
                 {setting.description && (
-                  <p 
-                    className="text-xs mb-2"
-                    style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+                  <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>
                     {setting.description}
                   </p>
                 )}
 
                 {setting.type === 'boolean' ? (
                   <button
-                    onClick={() => setPluginSettings(prev => ({
-                      ...prev,
-                      [key]: !prev[key]
-                    }))}
-                    className="flex items-center gap-2">
+                    onClick={() =>
+                      setPluginSettings(prev => ({
+                        ...prev,
+                        [key]: !prev[key],
+                      }))
+                    }
+                    className="flex items-center gap-2"
+                  >
                     {pluginSettings[key] ? (
                       <ToggleRight className="w-6 h-6 text-blue-500" />
                     ) : (
                       <ToggleLeft className="w-6 h-6 text-gray-400" />
                     )}
-                    <span 
-                      className="text-sm"
-                      style={{ color: theme === 'dark' ? '#d1d5db' : '#4b5563' }}>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                       {pluginSettings[key] ? 'Enabled' : 'Disabled'}
                     </span>
                   </button>
                 ) : setting.type === 'select' ? (
                   <select
                     value={pluginSettings[key] || setting.default || ''}
-                    onChange={(e) => setPluginSettings(prev => ({
-                      ...prev,
-                      [key]: e.target.value
-                    }))}
+                    onChange={e =>
+                      setPluginSettings(prev => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border rounded-lg text-sm"
                     style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                      color: theme === 'dark' ? '#f9fafb' : '#111827'
-                    }}>
-                    {setting.options?.map((option: any) => (
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-secondary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {setting.options?.map((option: { value: string; label: string }) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -293,23 +301,26 @@ export default function PluginManager({
                   <div className="relative">
                     <input
                       type={showApiKeys ? 'text' : 'password'}
-                      value={pluginSettings[key] || ''}
-                      onChange={(e) => setPluginSettings(prev => ({
-                        ...prev,
-                        [key]: e.target.value
-                      }))}
+                      value={String(pluginSettings[key] || '')}
+                      onChange={e =>
+                        setPluginSettings(prev => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
                       placeholder={setting.placeholder || `Enter ${setting.label || key}`}
                       className="w-full px-3 py-2 pr-10 border rounded-lg text-sm"
                       style={{
-                        backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                        borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                        color: theme === 'dark' ? '#f9fafb' : '#111827'
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderColor: 'var(--border-secondary)',
+                        color: 'var(--text-primary)',
                       }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowApiKeys(!showApiKeys)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    >
                       {showApiKeys ? (
                         <EyeOff className="w-4 h-4 text-gray-400" />
                       ) : (
@@ -320,33 +331,47 @@ export default function PluginManager({
                 ) : (
                   <input
                     type={setting.type || 'text'}
-                    value={pluginSettings[key] || ''}
-                    onChange={(e) => setPluginSettings(prev => ({
-                      ...prev,
-                      [key]: e.target.value
-                    }))}
+                    value={String(pluginSettings[key] || '')}
+                    onChange={e =>
+                      setPluginSettings(prev => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
                     placeholder={setting.placeholder || `Enter ${setting.label || key}`}
                     className="w-full px-3 py-2 border rounded-lg text-sm"
                     style={{
-                      backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-                      color: theme === 'dark' ? '#f9fafb' : '#111827'
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-secondary)',
+                      color: 'var(--text-primary)',
                     }}
                   />
                 )}
               </div>
             ))}
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div
+              className="flex items-center justify-end gap-3 pt-4 border-t"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
               <button
                 onClick={() => setShowSettings(false)}
-                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+                className="px-4 py-2 transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+              >
                 Cancel
               </button>
               <button
                 onClick={handleSaveSettings}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
                 {isLoading ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
@@ -365,42 +390,52 @@ export default function PluginManager({
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        onClick={(e) => e.target === e.currentTarget && onClose()}>
-        
-        <div 
-          className="w-full max-w-4xl h-full max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col"
+        onClick={e => e.target === e.currentTarget && onClose()}
+      >
+        <div
+          className="w-full max-w-4xl h-full max-h-[90vh] rounded-lg shadow-xl flex flex-col"
           style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff'
-          }}>
-          
+            backgroundColor: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
+          }}
+        >
           {/* Header */}
-          <div 
-            className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700"
-            style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}>
-            
+          <div
+            className="flex items-center justify-between p-6 border-b"
+            style={{ borderColor: 'var(--border-primary)' }}
+          >
             <div className="flex items-center gap-3">
               <Settings className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              <h2 
-                className="text-xl font-semibold text-gray-900 dark:text-white"
-                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
                 Plugin Manager
               </h2>
-              <span 
+              <span
                 className="text-sm px-3 py-1 rounded-full"
                 style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                  color: theme === 'dark' ? '#d1d5db' : '#6b7280'
-                }}>
+                  backgroundColor: 'var(--bg-tertiary)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
                 {plugins.length} plugins installed
               </span>
             </div>
-            
+
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              className="p-2 rounded-lg transition-colors"
+              style={{
+                color: 'var(--text-secondary)',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -410,22 +445,16 @@ export default function PluginManager({
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <RefreshCw className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-4" />
-                  <p style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
-                    Loading plugins...
-                  </p>
+                  <p style={{ color: 'var(--text-secondary)' }}>Loading plugins...</p>
                 </div>
               </div>
             ) : plugins.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 
-                  className="text-lg font-medium mb-2"
-                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>
+                <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                   No Plugins Installed
                 </h3>
-                <p 
-                  className="text-sm"
-                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+                <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   Install plugins from the Plugin Store to get started
                 </p>
               </div>
@@ -433,34 +462,42 @@ export default function PluginManager({
               <div className="space-y-4">
                 {plugins.map(plugin => {
                   const CategoryIcon = categoryIcons[plugin.metadata.category] || Package;
-                  
+
                   return (
                     <div
                       key={plugin.id}
-                      className="p-4 rounded-lg border hover:border-blue-200 dark:hover:border-blue-700 transition-colors"
+                      className="p-4 rounded-lg border transition-colors"
                       style={{
-                        backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                        borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb'
-                      }}>
-                      
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderColor: 'var(--border-secondary)',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'var(--border-secondary)';
+                      }}
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div 
+                          <div
                             className="p-2 rounded-lg"
                             style={{
-                              backgroundColor: theme === 'dark' ? '#4b5563' : '#ffffff'
-                            }}>
-                            <CategoryIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                              backgroundColor: 'var(--bg-primary)',
+                            }}
+                          >
+                            <CategoryIcon
+                              className="w-5 h-5"
+                              style={{ color: 'var(--text-secondary)' }}
+                            />
                           </div>
-                          
+
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 
-                                className="font-medium"
-                                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}>
+                              <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>
                                 {plugin.name}
                               </h3>
-                              
+
                               <div className="flex items-center gap-1">
                                 {plugin.status === 'active' && (
                                   <CheckCircle className="w-4 h-4 text-green-500" />
@@ -473,13 +510,11 @@ export default function PluginManager({
                                 )}
                               </div>
                             </div>
-                            
-                            <p 
-                              className="text-sm"
-                              style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+
+                            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                               {plugin.metadata.description}
                             </p>
-                            
+
                             {plugin.lastError && (
                               <p className="text-xs text-red-600 dark:text-red-400 mt-1">
                                 Error: {plugin.lastError}
@@ -496,30 +531,47 @@ export default function PluginManager({
                                 setPluginSettings({}); // Load from plugin manager
                                 setShowSettings(true);
                               }}
-                              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                              title="Plugin Settings">
-                              <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                              className="p-2 rounded-lg transition-colors"
+                              style={{ color: 'var(--text-secondary)' }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                              title="Plugin Settings"
+                            >
+                              <Settings className="w-4 h-4" />
                             </button>
                           )}
-                          
+
                           <button
                             onClick={() => handleTogglePlugin(plugin.id, !plugin.enabled)}
                             disabled={isLoading}
                             className="flex items-center gap-1"
-                            title={plugin.enabled ? 'Disable Plugin' : 'Enable Plugin'}>
+                            title={plugin.enabled ? 'Disable Plugin' : 'Enable Plugin'}
+                          >
                             {plugin.enabled ? (
                               <ToggleRight className="w-6 h-6 text-blue-500" />
                             ) : (
                               <ToggleLeft className="w-6 h-6 text-gray-400" />
                             )}
                           </button>
-                          
+
                           <button
                             onClick={() => handleUninstallPlugin(plugin.id)}
                             disabled={isLoading}
-                            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group"
-                            title="Uninstall Plugin">
-                            <Trash2 className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400" />
+                            className="p-2 rounded-lg transition-colors group"
+                            style={{ color: 'var(--text-secondary)' }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                            title="Uninstall Plugin"
+                          >
+                            <Trash2 className="w-4 h-4 group-hover:text-red-600 dark:group-hover:text-red-400" />
                           </button>
                         </div>
                       </div>

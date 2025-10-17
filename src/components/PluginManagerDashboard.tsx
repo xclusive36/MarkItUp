@@ -138,28 +138,33 @@ export function PluginManagerDashboard({ pluginManager }: PluginManagerDashboard
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="py-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Plugin Manager</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+        <div className="py-6 border-b" style={{ borderColor: 'var(--border-primary)' }}>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            Plugin Manager
+          </h1>
+          <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>
             Manage, monitor, and develop plugins for MarkItUp
           </p>
         </div>
 
         {/* Tab Navigation */}
         <div className="py-6">
-          <nav className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+          <nav
+            className="flex space-x-1 p-1 rounded-lg"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
+          >
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as DashboardTab)}
-                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
+                className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium text-sm transition-colors shadow-sm"
+                style={{
+                  backgroundColor: activeTab === tab.id ? 'var(--bg-secondary)' : 'transparent',
+                  color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-secondary)',
+                }}
                 title={tab.description}
               >
                 <span className="text-lg">{tab.icon}</span>
@@ -253,104 +258,85 @@ function OverviewTab({
 
       {/* Loading State */}
       {isLoading && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow text-center">
+        <div
+          className="p-6 rounded-lg shadow text-center"
+          style={{ backgroundColor: 'var(--bg-secondary)' }}
+        >
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading plugins...</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Loading plugins...</p>
         </div>
       )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <span className="text-2xl">🔌</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Available</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.totalPlugins}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <span className="text-2xl">✅</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.activePlugins}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <span className="text-2xl">🟢</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Healthy</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.healthyPlugins}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Issues</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.pluginsWithIssues}
-              </p>
+        {[
+          {
+            icon: '🔌',
+            label: 'Available',
+            value: stats.totalPlugins,
+            bg: 'rgba(59, 130, 246, 0.1)',
+          },
+          {
+            icon: '✅',
+            label: 'Active',
+            value: stats.activePlugins,
+            bg: 'rgba(16, 185, 129, 0.1)',
+          },
+          {
+            icon: '🟢',
+            label: 'Healthy',
+            value: stats.healthyPlugins,
+            bg: 'rgba(16, 185, 129, 0.1)',
+          },
+          {
+            icon: '⚠️',
+            label: 'Issues',
+            value: stats.pluginsWithIssues,
+            bg: 'rgba(239, 68, 68, 0.1)',
+          },
+          {
+            icon: '🔄',
+            label: 'Updates',
+            value: stats.availableUpdates,
+            bg: 'rgba(59, 130, 246, 0.1)',
+          },
+        ].map(({ icon, label, value, bg }) => (
+          <div
+            key={label}
+            className="p-4 rounded-lg shadow"
+            style={{ backgroundColor: 'var(--bg-secondary)' }}
+          >
+            <div className="flex items-center">
+              <div className="p-2 rounded-lg" style={{ backgroundColor: bg }}>
+                <span className="text-2xl">{icon}</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  {label}
+                </p>
+                <p className="text-2xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {value}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <span className="text-2xl">🔄</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Updates</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {stats.availableUpdates}
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Featured Plugins */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          🌟 Featured Plugins
-        </h3>
+      <div className="p-6 rounded-lg shadow" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <h3 className="text-lg font-semibold mb-4">🌟 Featured Plugins</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {FEATURED_PLUGINS.slice(0, 4).map(plugin => {
             const metadata = PLUGIN_METADATA[plugin.id as keyof typeof PLUGIN_METADATA];
             const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
 
             return (
-              <div
-                key={plugin.id}
-                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-              >
+              <div key={plugin.id} className="border  rounded-lg p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">{plugin.name}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">v{plugin.version}</p>
+                    <h4 className="font-medium ">{plugin.name}</h4>
+                    <p className="text-sm ">v{plugin.version}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     {isLoaded && (
@@ -361,11 +347,9 @@ function OverviewTab({
                     </span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  {plugin.description}
-                </p>
+                <p className="text-sm  mb-3">{plugin.description}</p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center space-x-2 text-xs ">
                     <span>⭐ {metadata?.rating || '4.5'}</span>
                     <span>� {metadata?.downloadCount || '0'}</span>
                   </div>
@@ -387,8 +371,8 @@ function OverviewTab({
       </div>
 
       {/* All Available Plugins */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="p-6 rounded-lg shadow" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <h3 className="text-lg font-semibold mb-4">
           📚 All Available Plugins ({AVAILABLE_PLUGINS.length})
         </h3>
         <div className="space-y-4">
@@ -396,7 +380,7 @@ function OverviewTab({
             <div key={category}>
               <h4 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                 {category}
-                <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700  px-2 py-1 rounded">
                   {plugins.length} plugins
                 </span>
               </h4>
@@ -406,16 +390,11 @@ function OverviewTab({
                   const isLoaded = loadedPlugins.some(p => p.manifest?.id === plugin.id);
 
                   return (
-                    <div
-                      key={plugin.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
-                    >
+                    <div key={plugin.id} className="border  rounded-lg p-3">
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h5 className="font-medium text-gray-900 dark:text-white text-sm">
-                            {plugin.name}
-                          </h5>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <h5 className="font-medium text-sm">{plugin.name}</h5>
+                          <p className="text-xs ">
                             v{plugin.version} by {plugin.author}
                           </p>
                         </div>
@@ -431,9 +410,7 @@ function OverviewTab({
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                        {plugin.description}
-                      </p>
+                      <p className="text-xs  mb-2">{plugin.description}</p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 text-xs text-gray-500">
                           <span>⭐ {metadata?.rating || '4.5'}</span>
@@ -510,15 +487,13 @@ function OverviewTab({
 
       {/* Plugin Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            🚀 Plugin Categories
-          </h3>
+        <div className="p-6 rounded-lg shadow" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+          <h3 className="text-lg font-semibold mb-3">🚀 Plugin Categories</h3>
           <div className="space-y-2">
             {Object.entries(PLUGIN_CATEGORIES).map(([category, plugins]) => (
               <div key={category} className="flex items-center justify-between p-2 rounded">
                 <span className="text-sm text-gray-700 dark:text-gray-300">{category}</span>
-                <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                <span className="text-xs bg-gray-100 dark:bg-gray-700  px-2 py-1 rounded">
                   {plugins.length} plugins
                 </span>
               </div>
@@ -526,11 +501,9 @@ function OverviewTab({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            🛡️ Security & Safety
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="p-6 rounded-lg shadow" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+          <h3 className="text-lg font-semibold mb-3">🛡️ Security & Safety</h3>
+          <ul className="space-y-2 text-sm ">
             <li>🔐 Granular permission control</li>
             <li>🔍 Plugin validation</li>
             <li>📊 Audit trails</li>
@@ -542,26 +515,22 @@ function OverviewTab({
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Recent Activity
-        </h3>
+      <div className="p-6 rounded-lg shadow" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
         <div className="space-y-3">
           <div className="flex items-center space-x-3 text-sm">
             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span className="text-gray-600 dark:text-gray-400">
-              Featured plugins loaded successfully
-            </span>
+            <span className="">Featured plugins loaded successfully</span>
             <span className="text-gray-400 text-xs">just now</span>
           </div>
           <div className="flex items-center space-x-3 text-sm">
             <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-            <span className="text-gray-600 dark:text-gray-400">Plugin manager initialized</span>
+            <span className="">Plugin manager initialized</span>
             <span className="text-gray-400 text-xs">1 minute ago</span>
           </div>
           <div className="flex items-center space-x-3 text-sm">
             <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            <span className="text-gray-600 dark:text-gray-400">Health monitoring started</span>
+            <span className="">Health monitoring started</span>
             <span className="text-gray-400 text-xs">2 minutes ago</span>
           </div>
         </div>

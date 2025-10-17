@@ -122,8 +122,9 @@ const applyThemeToDOM = (theme: Theme) => {
   // Force CSS recalculation
   html.style.colorScheme = theme;
 
-  // Force body background
-  document.body.style.backgroundColor = theme === 'dark' ? '#111827' : '#f9fafb';
+  // Use CSS variable for body background instead of hardcoding
+  // This allows custom themes to override
+  document.body.style.backgroundColor = 'var(--bg-primary)';
 };
 
 // Force all React components to re-render

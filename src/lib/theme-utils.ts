@@ -13,12 +13,21 @@ export function applyTheme(theme: CustomTheme): void {
   root.style.setProperty('--theme-bg-primary', theme.colors.bgPrimary);
   root.style.setProperty('--theme-bg-secondary', theme.colors.bgSecondary);
   root.style.setProperty('--theme-bg-tertiary', theme.colors.bgTertiary);
+  root.style.setProperty('--theme-bg-hover', theme.colors.bgTertiary); // Use tertiary for hover
   root.style.setProperty('--theme-text-primary', theme.colors.textPrimary);
   root.style.setProperty('--theme-text-secondary', theme.colors.textSecondary);
   root.style.setProperty('--theme-text-muted', theme.colors.textMuted);
   root.style.setProperty('--theme-accent-primary', theme.colors.accentPrimary);
   root.style.setProperty('--theme-accent-secondary', theme.colors.accentSecondary);
   root.style.setProperty('--theme-accent-hover', theme.colors.accentHover);
+
+  // Generate accent background (10% opacity of accent primary)
+  const accentBg = theme.colors.accentPrimary + '1A'; // Add alpha for ~10% opacity
+  root.style.setProperty('--theme-accent-bg', accentBg);
+
+  // Generate accent border (lighter version of accent primary)
+  root.style.setProperty('--theme-accent-border', theme.colors.accentPrimary);
+
   root.style.setProperty('--theme-border-primary', theme.colors.borderPrimary);
   root.style.setProperty('--theme-border-secondary', theme.colors.borderSecondary);
   root.style.setProperty('--theme-border-focus', theme.colors.borderFocus);

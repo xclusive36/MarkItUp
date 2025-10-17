@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 
 interface AnalyticsData {
   totalConnections: number;
@@ -29,9 +28,6 @@ export function AnalyticsDashboard({
   onConnectOrphans,
   onSuggestMOCs,
 }: AnalyticsDashboardProps) {
-  const { theme } = useSimpleTheme();
-  const isDark = theme === 'dark';
-
   if (!isOpen) return null;
 
   // Calculate health score
@@ -82,31 +78,39 @@ export function AnalyticsDashboard({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div
-        className={`
-          w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl
-          ${isDark ? 'bg-gray-800 text-gray-100' : 'bg-white text-gray-900'}
-        `}
+        className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
+        }}
       >
         {/* Header */}
         <div
-          className={`sticky top-0 z-10 flex items-center justify-between p-6 border-b ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+          className="sticky top-0 z-10 flex items-center justify-between p-6 border-b"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-primary)',
+          }}
         >
           <div>
             <h2 className="text-2xl font-bold">📊 Analytics Dashboard</h2>
-            <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
               Knowledge Graph Growth & Performance Metrics
             </p>
           </div>
           <button
             onClick={onClose}
-            className={`
-              px-4 py-2 rounded-lg font-medium transition-colors
-              ${
-                isDark
-                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-100'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-              }
-            `}
+            className="px-4 py-2 rounded-lg font-medium transition-colors"
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
           >
             Close
           </button>
@@ -115,14 +119,14 @@ export function AnalyticsDashboard({
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Health Score Section */}
-          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+          <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Graph Health Score</h3>
                 <div className={`text-5xl font-bold ${getHealthColor(healthScore)}`}>
                   {healthScore}%
                 </div>
-                <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
                   {getHealthStatus(healthScore)}
                 </p>
               </div>
@@ -134,24 +138,17 @@ export function AnalyticsDashboard({
 
           {/* Statistics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Connections"
-              value={analytics.totalConnections}
-              icon="🔗"
-              isDark={isDark}
-            />
-            <StatCard title="Total MOCs" value={analytics.totalMOCs} icon="📚" isDark={isDark} />
+            <StatCard title="Total Connections" value={analytics.totalConnections} icon="🔗" />
+            <StatCard title="Total MOCs" value={analytics.totalMOCs} icon="📚" />
             <StatCard
               title="Avg Connections/Day"
               value={analytics.avgConnectionsPerDay.toFixed(1)}
               icon="📈"
-              isDark={isDark}
             />
             <StatCard
               title="Growth Rate (7d)"
               value={`${analytics.graphGrowthRate >= 0 ? '+' : ''}${analytics.graphGrowthRate.toFixed(1)}%`}
               icon={analytics.graphGrowthRate >= 0 ? '📈' : '📉'}
-              isDark={isDark}
               valueColor={
                 analytics.graphGrowthRate >= 0
                   ? 'text-green-600 dark:text-green-400'
@@ -161,7 +158,7 @@ export function AnalyticsDashboard({
           </div>
 
           {/* Activity Timeline */}
-          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+          <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
             <h3 className="text-lg font-semibold mb-4">Activity Timeline (Last 7 Days)</h3>
             <div className="space-y-2">
               {activityData.map((day, index) => {
@@ -171,19 +168,20 @@ export function AnalyticsDashboard({
                 return (
                   <div key={index} className="space-y-1">
                     <div className="flex justify-between text-sm">
-                      <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                      <span style={{ color: 'var(--text-secondary)' }}>
                         {new Date(day.date).toLocaleDateString('en-US', {
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric',
                         })}
                       </span>
-                      <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                      <span style={{ color: 'var(--text-primary)' }}>
                         {day.connections} connections, {day.mocs} MOCs
                       </span>
                     </div>
                     <div
-                      className={`h-6 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
+                      className="h-6 rounded-full overflow-hidden"
+                      style={{ backgroundColor: 'var(--bg-primary)' }}
                     >
                       <div
                         className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
@@ -197,18 +195,21 @@ export function AnalyticsDashboard({
           </div>
 
           {/* Most Connected Notes */}
-          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+          <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
             <h3 className="text-lg font-semibold mb-4">🌟 Most Connected Notes</h3>
             {analytics.mostConnectedNotes.length > 0 ? (
               <div className="space-y-2">
                 {analytics.mostConnectedNotes.slice(0, 10).map((note, index) => (
                   <div
                     key={note.id}
-                    className={`
-                      flex items-center justify-between p-3 rounded-lg
-                      ${isDark ? 'bg-gray-700 hover:bg-gray-650' : 'bg-white hover:bg-gray-50'}
-                      transition-colors
-                    `}
+                    className="flex items-center justify-between p-3 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--bg-secondary)' }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <span
@@ -217,21 +218,28 @@ export function AnalyticsDashboard({
                         ${
                           index < 3
                             ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white'
-                            : isDark
-                              ? 'bg-gray-600 text-gray-300'
-                              : 'bg-gray-200 text-gray-700'
+                            : ''
                         }
                       `}
+                        style={
+                          index >= 3
+                            ? {
+                                backgroundColor: 'var(--bg-primary)',
+                                color: 'var(--text-secondary)',
+                              }
+                            : undefined
+                        }
                       >
                         {index + 1}
                       </span>
                       <span className="font-medium">{note.name}</span>
                     </div>
                     <span
-                      className={`
-                      px-3 py-1 rounded-full text-sm font-semibold
-                      ${isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'}
-                    `}
+                      className="px-3 py-1 rounded-full text-sm font-semibold"
+                      style={{
+                        backgroundColor: 'var(--accent-bg)',
+                        color: 'var(--accent-primary)',
+                      }}
                     >
                       {note.count} connections
                     </span>
@@ -239,7 +247,7 @@ export function AnalyticsDashboard({
                 ))}
               </div>
             ) : (
-              <p className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+              <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>
                 No connection data available yet
               </p>
             )}
@@ -247,24 +255,22 @@ export function AnalyticsDashboard({
 
           {/* MOC Effectiveness */}
           {analytics.mocEffectiveness.length > 0 && (
-            <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+            <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
               <h3 className="text-lg font-semibold mb-4">📚 MOC Effectiveness</h3>
               <div className="space-y-2">
                 {analytics.mocEffectiveness.slice(0, 5).map((moc, index) => (
                   <div
                     key={index}
-                    className={`
-                      p-3 rounded-lg
-                      ${isDark ? 'bg-gray-700' : 'bg-white'}
-                    `}
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: 'var(--bg-secondary)' }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium">{moc.name}</span>
                       <div className="flex gap-3 text-sm">
-                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
                           {moc.linkCount} links
                         </span>
-                        <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                        <span style={{ color: 'var(--text-secondary)' }}>
                           {moc.accessCount} accesses
                         </span>
                       </div>
@@ -276,20 +282,23 @@ export function AnalyticsDashboard({
           )}
 
           {/* Action Buttons */}
-          <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+          <div className="p-6 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
             <h3 className="text-lg font-semibold mb-4">💡 Recommendations</h3>
             <div className="flex flex-wrap gap-3">
               {onConnectOrphans && (
                 <button
                   onClick={onConnectOrphans}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium transition-colors
-                    ${
-                      isDark
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                    }
-                  `}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#3b82f6',
+                    color: '#ffffff',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                  }}
                 >
                   🏝️ Connect Orphan Notes
                 </button>
@@ -297,14 +306,17 @@ export function AnalyticsDashboard({
               {onSuggestMOCs && (
                 <button
                   onClick={onSuggestMOCs}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium transition-colors
-                    ${
-                      isDark
-                        ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                        : 'bg-purple-500 hover:bg-purple-600 text-white'
-                    }
-                  `}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#a855f7',
+                    color: '#ffffff',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = '#9333ea';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = '#a855f7';
+                  }}
                 >
                   📚 Suggest MOCs
                 </button>
@@ -321,15 +333,16 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon: string;
-  isDark: boolean;
   valueColor?: string;
 }
 
-function StatCard({ title, value, icon, isDark, valueColor }: StatCardProps) {
+function StatCard({ title, value, icon, valueColor }: StatCardProps) {
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-750' : 'bg-gray-50'}`}>
+    <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
       <div className="flex items-center justify-between mb-2">
-        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{title}</span>
+        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {title}
+        </span>
         <span className="text-2xl opacity-50">{icon}</span>
       </div>
       <div className={`text-2xl font-bold ${valueColor || ''}`}>{value}</div>

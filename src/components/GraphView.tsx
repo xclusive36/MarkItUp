@@ -39,7 +39,7 @@ const GraphView: React.FC<GraphViewProps> = ({
   centerNode,
   onNodeClick,
   onNodeHover,
-  className = ''
+  className = '',
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useSimpleTheme();
@@ -86,14 +86,22 @@ const GraphView: React.FC<GraphViewProps> = ({
     }));
 
     // Create force simulation
-        const simulation = d3Force.forceSimulation<D3Node>(nodes)
-      .force('link', d3Force.forceLink<D3Node, D3Edge>(edges)
-        .id((d: D3Node) => d.id)
-        .distance((d: D3Edge) => d.type === 'tag' ? 100 : 150)
-        .strength((d: D3Edge) => d.type === 'tag' ? 0.3 : 0.8))
+    const simulation = d3Force
+      .forceSimulation<D3Node>(nodes)
+      .force(
+        'link',
+        d3Force
+          .forceLink<D3Node, D3Edge>(edges)
+          .id((d: D3Node) => d.id)
+          .distance((d: D3Edge) => (d.type === 'tag' ? 100 : 150))
+          .strength((d: D3Edge) => (d.type === 'tag' ? 0.3 : 0.8))
+      )
       .force('charge', d3Force.forceManyBody<D3Node>().strength(-300))
       .force('center', d3Force.forceCenter<D3Node>(width / 2, height / 2))
-      .force('collision', d3Force.forceCollide<D3Node>().radius((d: D3Node) => (d.size || 5) + 5));
+      .force(
+        'collision',
+        d3Force.forceCollide<D3Node>().radius((d: D3Node) => (d.size || 5) + 5)
+      );
 
     simulationRef.current = simulation;
 
@@ -104,7 +112,7 @@ const GraphView: React.FC<GraphViewProps> = ({
       link: theme === 'dark' ? '#4b5563' : '#9ca3af',
       linkHighlight: theme === 'dark' ? '#60a5fa' : '#3b82f6',
       text: theme === 'dark' ? '#f9fafb' : '#111827',
-      background: theme === 'dark' ? '#1f2937' : '#ffffff'
+      background: theme === 'dark' ? '#1f2937' : '#ffffff',
     };
 
     // Create links
@@ -113,10 +121,10 @@ const GraphView: React.FC<GraphViewProps> = ({
       .data(edges)
       .join('line')
       .attr('class', 'graph-link')
-      .attr('stroke', d => d.type === 'tag' ? colors.linkHighlight : colors.link)
+      .attr('stroke', d => (d.type === 'tag' ? colors.linkHighlight : colors.link))
       .attr('stroke-width', d => d.weight)
-      .attr('stroke-opacity', d => d.type === 'tag' ? 0.6 : 0.8)
-      .attr('stroke-dasharray', d => d.type === 'tag' ? '5,5' : null);
+      .attr('stroke-opacity', d => (d.type === 'tag' ? 0.6 : 0.8))
+      .attr('stroke-dasharray', d => (d.type === 'tag' ? '5,5' : null));
 
     // Create nodes
     const node = nodesGroup
@@ -127,7 +135,8 @@ const GraphView: React.FC<GraphViewProps> = ({
       .style('cursor', 'pointer');
 
     // Node circles
-    node.append('circle')
+    node
+      .append('circle')
       .attr('r', d => Math.sqrt(d.size) * 2)
       .attr('fill', d => d.color || colors.node)
       .attr('stroke', colors.background)
@@ -135,19 +144,21 @@ const GraphView: React.FC<GraphViewProps> = ({
       .attr('opacity', 0.8);
 
     // Node labels
-    node.append('text')
+    node
+      .append('text')
       .text(d => d.name.replace('.md', ''))
       .attr('x', 0)
       .attr('y', d => Math.sqrt(d.size) * 2 + 15)
       .attr('text-anchor', 'middle')
       .attr('font-size', '12px')
-      .attr('fill', colors.text)
+      .attr('fill', 'var(--text-primary)')
       .attr('opacity', 0.8)
       .style('user-select', 'none')
       .style('pointer-events', 'none');
 
     // Drag behavior
-    const drag = d3.drag<any, D3Node>()
+    const drag = d3
+      .drag<any, D3Node>()
       .on('start', (event: any, d: D3Node) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
@@ -167,38 +178,38 @@ const GraphView: React.FC<GraphViewProps> = ({
     node.call(drag);
 
     // Event handlers
-    node.on('click', (event, d) => {
-      event.stopPropagation();
-      onNodeClick?.(d.id);
-    })
-    .on('mouseenter', (event, d) => {
-      onNodeHover?.(d.id);
-      
-      // Highlight connected nodes and links
-      const connectedNodeIds = new Set([d.id]);
-      edges.forEach(edge => {
-        if (edge.source.id === d.id || edge.target.id === d.id) {
-          connectedNodeIds.add(edge.source.id);
-          connectedNodeIds.add(edge.target.id);
-        }
+    node
+      .on('click', (event, d) => {
+        event.stopPropagation();
+        onNodeClick?.(d.id);
+      })
+      .on('mouseenter', (event, d) => {
+        onNodeHover?.(d.id);
+
+        // Highlight connected nodes and links
+        const connectedNodeIds = new Set([d.id]);
+        edges.forEach(edge => {
+          if (edge.source.id === d.id || edge.target.id === d.id) {
+            connectedNodeIds.add(edge.source.id);
+            connectedNodeIds.add(edge.target.id);
+          }
+        });
+
+        // Fade non-connected elements
+        node.attr('opacity', n => (connectedNodeIds.has(n.id) ? 1 : 0.3));
+        link.attr('opacity', l => (l.source.id === d.id || l.target.id === d.id ? 1 : 0.1));
+      })
+      .on('mouseleave', () => {
+        onNodeHover?.(null);
+
+        // Reset opacity
+        node.attr('opacity', 0.8);
+        link.attr('opacity', d => (d.type === 'tag' ? 0.6 : 0.8));
       });
 
-      // Fade non-connected elements
-      node.attr('opacity', n => connectedNodeIds.has(n.id) ? 1 : 0.3);
-      link.attr('opacity', l => 
-        l.source.id === d.id || l.target.id === d.id ? 1 : 0.1
-      );
-    })
-    .on('mouseleave', () => {
-      onNodeHover?.(null);
-      
-      // Reset opacity
-      node.attr('opacity', 0.8);
-      link.attr('opacity', d => d.type === 'tag' ? 0.6 : 0.8);
-    });
-
     // Zoom behavior
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on('zoom', (event: any) => {
         container.attr('transform', event.transform);
@@ -222,9 +233,10 @@ const GraphView: React.FC<GraphViewProps> = ({
       const targetNode = nodes.find(n => n.id === centerNode);
       if (targetNode) {
         // Highlight the center node
-        node.select('circle')
-          .attr('stroke', (d) => d.id === centerNode ? colors.nodeHighlight : colors.background)
-          .attr('stroke-width', (d) => d.id === centerNode ? 4 : 2);
+        node
+          .select('circle')
+          .attr('stroke', d => (d.id === centerNode ? colors.nodeHighlight : colors.background))
+          .attr('stroke-width', d => (d.id === centerNode ? 4 : 2));
 
         // Move center node to center after simulation stabilizes
         setTimeout(() => {
@@ -232,10 +244,8 @@ const GraphView: React.FC<GraphViewProps> = ({
             .translate(width / 2, height / 2)
             .scale(1.2)
             .translate(-targetNode.x!, -targetNode.y!);
-          
-          svg.transition()
-            .duration(750)
-            .call(zoom.transform, transform);
+
+          svg.transition().duration(750).call(zoom.transform, transform);
         }, 1000);
       }
     }
@@ -244,7 +254,6 @@ const GraphView: React.FC<GraphViewProps> = ({
     return () => {
       simulation.stop();
     };
-
   }, [graph, dimensions, theme, centerNode, onNodeClick, onNodeHover]);
 
   return (
@@ -254,12 +263,12 @@ const GraphView: React.FC<GraphViewProps> = ({
         width={dimensions.width}
         height={dimensions.height}
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
-          borderRadius: '8px'
+          backgroundColor: 'var(--bg-secondary)',
+          border: '1px solid var(--border-primary)',
+          borderRadius: '8px',
         }}
       />
-      
+
       {/* Controls overlay */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
         <button
@@ -268,11 +277,18 @@ const GraphView: React.FC<GraphViewProps> = ({
               simulationRef.current.alpha(1).restart();
             }
           }}
-          className="px-3 py-2 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          className="px-3 py-2 text-xs rounded-md shadow-sm transition-colors"
           style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-            color: theme === 'dark' ? '#f9fafb' : '#111827'
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--border-secondary)',
+            color: 'var(--text-primary)',
+            border: '1px solid',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
           }}
         >
           Reheat
@@ -280,19 +296,25 @@ const GraphView: React.FC<GraphViewProps> = ({
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 p-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs"
-           style={{
-             backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-             borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-             color: theme === 'dark' ? '#f9fafb' : '#111827'
-           }}>
+      <div
+        className="absolute bottom-4 left-4 p-3 rounded-md shadow-sm text-xs"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-secondary)',
+          color: 'var(--text-primary)',
+          border: '1px solid',
+        }}
+      >
         <div className="font-semibold mb-2">Legend</div>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-3 h-0.5 bg-gray-500"></div>
           <span>Link</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-blue-500 opacity-60" style={{ strokeDasharray: '2,2' }}></div>
+          <div
+            className="w-3 h-0.5 bg-blue-500 opacity-60"
+            style={{ strokeDasharray: '2,2' }}
+          ></div>
           <span>Tag connection</span>
         </div>
       </div>

@@ -1,76 +1,82 @@
 /* Manual theme system - fallback if Tailwind dark mode fails */
 
-/* Light theme (default) */
+/* Theme Creator override - MUST come first so it can be read by fallbacks below */
+:root,
+html.dark,
+html.light {
+  /* These variables map from Theme Creator to app-wide usage */
+  /* They use !important to override any conflicting rules */
+  --bg-primary: var(--theme-bg-primary) !important;
+  --bg-secondary: var(--theme-bg-secondary) !important;
+  --bg-tertiary: var(--theme-bg-tertiary) !important;
+  --bg-hover: var(--theme-bg-hover) !important;
+  --text-primary: var(--theme-text-primary) !important;
+  --text-secondary: var(--theme-text-secondary) !important;
+  --text-muted: var(--theme-text-muted) !important;
+  --border-primary: var(--theme-border-primary) !important;
+  --border-secondary: var(--theme-border-secondary) !important;
+  --accent-primary: var(--theme-accent-primary) !important;
+  --accent-secondary: var(--theme-accent-secondary) !important;
+  --accent-bg: var(--theme-accent-bg) !important;
+  --accent-border: var(--theme-accent-border) !important;
+  --link-color: var(--theme-link-color) !important;
+  --success-color: var(--theme-success-color) !important;
+  --warning-color: var(--theme-warning-color) !important;
+  --error-color: var(--theme-error-color) !important;
+  --syntax-keyword: var(--theme-syntax-keyword) !important;
+  --syntax-string: var(--theme-syntax-string) !important;
+  --syntax-comment: var(--theme-syntax-comment) !important;
+  --syntax-number: var(--theme-syntax-number) !important;
+  --syntax-function: var(--theme-syntax-function) !important;
+  --syntax-variable: var(--theme-syntax-variable) !important;
+}
+
+/* Light theme fallback (when no custom theme is applied) */
 :root {
-  --bg-primary: #f9fafb;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --border-primary: #e5e7eb;
-  --border-secondary: #d1d5db;
+  --theme-bg-primary: #f9fafb;
+  --theme-bg-secondary: #ffffff;
+  --theme-bg-tertiary: #f3f4f6;
+  --theme-bg-hover: #f3f4f6;
+  --theme-text-primary: #111827;
+  --theme-text-secondary: #6b7280;
+  --theme-text-muted: #9ca3af;
+  --theme-border-primary: #e5e7eb;
+  --theme-border-secondary: #d1d5db;
+  --theme-accent-primary: #3b82f6;
+  --theme-accent-secondary: #8b5cf6;
+  --theme-accent-bg: rgba(59, 130, 246, 0.1);
+  --theme-accent-border: #bfdbfe;
+  --theme-link-color: #3b82f6;
+  --theme-success-color: #10b981;
+  --theme-warning-color: #f59e0b;
+  --theme-error-color: #ef4444;
+  --theme-syntax-keyword: #0000ff;
+  --theme-syntax-string: #a31515;
+  --theme-syntax-comment: #008000;
+  --theme-syntax-number: #098658;
+  --theme-syntax-function: #795e26;
+  --theme-syntax-variable: #001080;
 }
 
-/* Dark theme */
+/* Dark theme fallback (when no custom theme is applied) */
 html.dark {
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --border-primary: #374151;
-  --border-secondary: #4b5563;
-}
-
-/* Theme Creator override - if custom theme variables are set, use them */
-:root {
-  /* Override with Theme Creator variables if they exist */
-  --bg-primary: var(--theme-bg-primary, #f9fafb);
-  --bg-secondary: var(--theme-bg-secondary, #ffffff);
-  --bg-tertiary: var(--theme-bg-tertiary, #f3f4f6);
-  --bg-hover: var(--theme-bg-hover, #f3f4f6);
-  --text-primary: var(--theme-text-primary, #111827);
-  --text-secondary: var(--theme-text-secondary, #6b7280);
-  --text-muted: var(--theme-text-muted, #9ca3af);
-  --border-primary: var(--theme-border-primary, #e5e7eb);
-  --border-secondary: var(--theme-border-secondary, #d1d5db);
-  --accent-primary: var(--theme-accent-primary, #3b82f6);
-  --accent-secondary: var(--theme-accent-secondary, #8b5cf6);
-  --accent-bg: var(--theme-accent-bg, rgba(59, 130, 246, 0.1));
-  --accent-border: var(--theme-accent-border, #bfdbfe);
-  --link-color: var(--theme-link-color, #3b82f6);
-  --success-color: var(--theme-success-color, #10b981);
-  --warning-color: var(--theme-warning-color, #f59e0b);
-  --error-color: var(--theme-error-color, #ef4444);
-
-  /* Syntax highlighting colors */
-  --syntax-keyword: var(--theme-syntax-keyword, #0000ff);
-  --syntax-string: var(--theme-syntax-string, #a31515);
-  --syntax-comment: var(--theme-syntax-comment, #008000);
-  --syntax-number: var(--theme-syntax-number, #098658);
-  --syntax-function: var(--theme-syntax-function, #795e26);
-  --syntax-variable: var(--theme-syntax-variable, #001080);
-}
-
-html.dark {
-  /* Override with Theme Creator variables if they exist */
-  --bg-primary: var(--theme-bg-primary, #111827);
-  --bg-secondary: var(--theme-bg-secondary, #1f2937);
-  --bg-tertiary: var(--theme-bg-tertiary, #374151);
-  --bg-hover: var(--theme-bg-hover, #374151);
-  --text-primary: var(--theme-text-primary, #f9fafb);
-  --text-secondary: var(--theme-text-secondary, #9ca3af);
-  --text-muted: var(--theme-text-muted, #6b7280);
-  --border-primary: var(--theme-border-primary, #374151);
-  --border-secondary: var(--theme-border-secondary, #4b5563);
-  --accent-primary: var(--theme-accent-primary, #3b82f6);
-  --accent-secondary: var(--theme-accent-secondary, #8b5cf6);
-  --accent-bg: var(--theme-accent-bg, rgba(59, 130, 246, 0.1));
-  --accent-border: var(--theme-accent-border, #1e40af);
-  --link-color: var(--theme-link-color, #60a5fa);
-  --success-color: var(--theme-success-color, #34d399);
-  --warning-color: var(--theme-warning-color, #fbbf24);
-  --error-color: var(--theme-error-color, #f87171);
+  --theme-bg-primary: #111827;
+  --theme-bg-secondary: #1f2937;
+  --theme-bg-tertiary: #374151;
+  --theme-bg-hover: #374151;
+  --theme-text-primary: #f9fafb;
+  --theme-text-secondary: #9ca3af;
+  --theme-text-muted: #6b7280;
+  --theme-border-primary: #374151;
+  --theme-border-secondary: #4b5563;
+  --theme-accent-primary: #3b82f6;
+  --theme-accent-secondary: #8b5cf6;
+  --theme-accent-bg: rgba(59, 130, 246, 0.1);
+  --theme-accent-border: #1e40af;
+  --theme-link-color: #60a5fa;
+  --theme-success-color: #34d399;
+  --theme-warning-color: #fbbf24;
+  --theme-error-color: #f87171;
 
   /* Syntax highlighting colors for dark mode */
   --syntax-keyword: var(--theme-syntax-keyword, #569cd6);
@@ -188,6 +194,34 @@ html.dark .text-gray-500 {
 
 html.dark .border-gray-200 {
   border-color: #374151 !important;
+}
+
+/* Force plugin manager pages to use theme variables */
+.bg-white,
+.dark .dark\:bg-gray-800,
+.dark .dark\:bg-gray-900 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-gray-50,
+.dark .dark\:bg-gray-900 {
+  background-color: var(--bg-primary) !important;
+}
+
+.text-gray-900,
+.dark .dark\:text-white {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.dark .dark\:text-gray-400,
+.text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.border-gray-200,
+.dark .dark\:border-gray-700 {
+  border-color: var(--border-primary) !important;
 }
 
 /* Apply theme variables */

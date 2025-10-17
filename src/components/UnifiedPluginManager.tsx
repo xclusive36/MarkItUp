@@ -400,15 +400,22 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
                 <button
                   key={mode.id}
                   onClick={() => setViewMode(mode.id as ViewMode)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
-                    viewMode === mode.id
-                      ? theme === 'dark'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-500 text-white'
-                      : theme === 'dark'
-                        ? 'bg-gray-700 hover:bg-gray-600'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                  }`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md transition-colors"
+                  style={{
+                    backgroundColor:
+                      viewMode === mode.id ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: viewMode === mode.id ? '#ffffff' : 'var(--text-primary)',
+                  }}
+                  onMouseEnter={e => {
+                    if (viewMode !== mode.id) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (viewMode !== mode.id) {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                    }
+                  }}
                 >
                   <mode.icon className="h-4 w-4" />
                   {mode.label}

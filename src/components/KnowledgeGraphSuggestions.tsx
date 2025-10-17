@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { X, Link2, BookOpen, CheckCircle, AlertCircle } from 'lucide-react';
-import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 
 interface Connection {
   source: string;
@@ -34,7 +33,6 @@ export function ConnectionSuggestions({
   onApplyAll,
   onDismiss,
 }: ConnectionSuggestionsProps) {
-  const { theme } = useSimpleTheme();
   const [applying, setApplying] = useState<Set<string>>(new Set());
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const [minConfidence, setMinConfidence] = useState(0.7);
@@ -80,22 +78,19 @@ export function ConnectionSuggestions({
       <div
         className="rounded-lg shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          color: theme === 'dark' ? '#f9fafb' : '#111827',
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6 border-b"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            borderColor: 'var(--border-primary)',
           }}
         >
           <div className="flex items-center gap-3">
-            <Link2
-              className="w-6 h-6"
-              style={{ color: theme === 'dark' ? '#60a5fa' : '#3b82f6' }}
-            />
+            <Link2 className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
             <div>
               <h2 className="text-2xl font-bold">Hidden Connections Discovered</h2>
               <p className="text-sm opacity-70 mt-1">
@@ -106,8 +101,14 @@ export function ConnectionSuggestions({
           </div>
           <button
             onClick={onDismiss}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <X className="w-6 h-6" />
           </button>
@@ -117,8 +118,8 @@ export function ConnectionSuggestions({
         <div
           className="p-4 border-b flex items-center justify-between gap-4"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-tertiary)',
           }}
         >
           <div className="flex items-center gap-3">
@@ -140,8 +141,16 @@ export function ConnectionSuggestions({
             disabled={applying.has('all') || filteredConnections.length === 0}
             className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
+              backgroundColor: '#3b82f6',
               color: '#ffffff',
+            }}
+            onMouseEnter={e => {
+              if (!applying.has('all') && filteredConnections.length > 0) {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
             }}
           >
             {applying.has('all') ? 'Applying...' : `Apply All (${filteredConnections.length})`}
@@ -167,14 +176,8 @@ export function ConnectionSuggestions({
                   key={key}
                   className="rounded-lg p-4 border"
                   style={{
-                    borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                    backgroundColor: isApplied
-                      ? theme === 'dark'
-                        ? '#064e3b'
-                        : '#d1fae5'
-                      : theme === 'dark'
-                        ? '#111827'
-                        : '#ffffff',
+                    borderColor: 'var(--border-primary)',
+                    backgroundColor: isApplied ? '#d1fae5' : 'var(--bg-tertiary)',
                   }}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -194,28 +197,16 @@ export function ConnectionSuggestions({
                           style={{
                             backgroundColor:
                               connection.similarity >= 0.8
-                                ? theme === 'dark'
-                                  ? '#065f46'
-                                  : '#d1fae5'
+                                ? '#d1fae5'
                                 : connection.similarity >= 0.7
-                                  ? theme === 'dark'
-                                    ? '#78350f'
-                                    : '#fef3c7'
-                                  : theme === 'dark'
-                                    ? '#7c2d12'
-                                    : '#fee2e2',
+                                  ? '#fef3c7'
+                                  : '#fee2e2',
                             color:
                               connection.similarity >= 0.8
-                                ? theme === 'dark'
-                                  ? '#d1fae5'
-                                  : '#065f46'
+                                ? '#065f46'
                                 : connection.similarity >= 0.7
-                                  ? theme === 'dark'
-                                    ? '#fef3c7'
-                                    : '#78350f'
-                                  : theme === 'dark'
-                                    ? '#fee2e2'
-                                    : '#7c2d12',
+                                  ? '#78350f'
+                                  : '#7c2d12',
                           }}
                         >
                           {(connection.similarity * 100).toFixed(0)}% confidence
@@ -230,14 +221,18 @@ export function ConnectionSuggestions({
                       disabled={isApplying || isApplied}
                       className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                       style={{
-                        backgroundColor: isApplied
-                          ? theme === 'dark'
-                            ? '#065f46'
-                            : '#10b981'
-                          : theme === 'dark'
-                            ? '#3b82f6'
-                            : '#2563eb',
+                        backgroundColor: isApplied ? '#10b981' : '#3b82f6',
                         color: '#ffffff',
+                      }}
+                      onMouseEnter={e => {
+                        if (!isApplying && !isApplied) {
+                          e.currentTarget.style.backgroundColor = '#2563eb';
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        if (!isApplied) {
+                          e.currentTarget.style.backgroundColor = '#3b82f6';
+                        }
                       }}
                     >
                       {isApplied ? (
@@ -262,8 +257,8 @@ export function ConnectionSuggestions({
         <div
           className="p-4 border-t text-sm opacity-70"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-tertiary)',
           }}
         >
           <p>
@@ -289,7 +284,6 @@ export function MOCSuggestions({
   onCreateAll,
   onDismiss,
 }: MOCSuggestionsProps) {
-  const { theme } = useSimpleTheme();
   const [creating, setCreating] = useState<Set<string>>(new Set());
   const [created, setCreated] = useState<Set<string>>(new Set());
 
@@ -324,16 +318,16 @@ export function MOCSuggestions({
 
   const priorityColors = {
     high: {
-      bg: theme === 'dark' ? '#7c2d12' : '#fee2e2',
-      text: theme === 'dark' ? '#fee2e2' : '#7c2d12',
+      bg: '#fee2e2',
+      text: '#7c2d12',
     },
     medium: {
-      bg: theme === 'dark' ? '#78350f' : '#fef3c7',
-      text: theme === 'dark' ? '#fef3c7' : '#78350f',
+      bg: '#fef3c7',
+      text: '#78350f',
     },
     low: {
-      bg: theme === 'dark' ? '#1e3a8a' : '#dbeafe',
-      text: theme === 'dark' ? '#dbeafe' : '#1e3a8a',
+      bg: '#dbeafe',
+      text: '#1e3a8a',
     },
   };
 
@@ -342,22 +336,19 @@ export function MOCSuggestions({
       <div
         className="rounded-lg shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          color: theme === 'dark' ? '#f9fafb' : '#111827',
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6 border-b"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            borderColor: 'var(--border-primary)',
           }}
         >
           <div className="flex items-center gap-3">
-            <BookOpen
-              className="w-6 h-6"
-              style={{ color: theme === 'dark' ? '#60a5fa' : '#3b82f6' }}
-            />
+            <BookOpen className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
             <div>
               <h2 className="text-2xl font-bold">Maps of Content Suggestions</h2>
               <p className="text-sm opacity-70 mt-1">
@@ -367,8 +358,14 @@ export function MOCSuggestions({
           </div>
           <button
             onClick={onDismiss}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <X className="w-6 h-6" />
           </button>
@@ -378,8 +375,8 @@ export function MOCSuggestions({
         <div
           className="p-4 border-b flex items-center justify-end gap-4"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-tertiary)',
           }}
         >
           <button
@@ -387,8 +384,16 @@ export function MOCSuggestions({
             disabled={creating.has('all') || suggestions.length === 0}
             className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
+              backgroundColor: '#3b82f6',
               color: '#ffffff',
+            }}
+            onMouseEnter={e => {
+              if (!creating.has('all') && suggestions.length > 0) {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+              }
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
             }}
           >
             {creating.has('all') ? 'Creating...' : `Create All MOCs (${suggestions.length})`}
@@ -407,14 +412,8 @@ export function MOCSuggestions({
                 key={suggestion.title}
                 className="rounded-lg p-4 border"
                 style={{
-                  borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-                  backgroundColor: isCreated
-                    ? theme === 'dark'
-                      ? '#064e3b'
-                      : '#d1fae5'
-                    : theme === 'dark'
-                      ? '#111827'
-                      : '#ffffff',
+                  borderColor: 'var(--border-primary)',
+                  backgroundColor: isCreated ? '#d1fae5' : 'var(--bg-tertiary)',
                 }}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -445,8 +444,8 @@ export function MOCSuggestions({
                             key={name}
                             className="px-2 py-1 rounded text-xs"
                             style={{
-                              backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                              color: theme === 'dark' ? '#d1d5db' : '#6b7280',
+                              backgroundColor: 'var(--bg-secondary)',
+                              color: 'var(--text-secondary)',
                             }}
                           >
                             {name}
@@ -466,14 +465,18 @@ export function MOCSuggestions({
                     disabled={isCreating || isCreated}
                     className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                     style={{
-                      backgroundColor: isCreated
-                        ? theme === 'dark'
-                          ? '#065f46'
-                          : '#10b981'
-                        : theme === 'dark'
-                          ? '#3b82f6'
-                          : '#2563eb',
+                      backgroundColor: isCreated ? '#10b981' : '#3b82f6',
                       color: '#ffffff',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isCreating && !isCreated) {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isCreated) {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                      }
                     }}
                   >
                     {isCreated ? (
@@ -497,8 +500,8 @@ export function MOCSuggestions({
         <div
           className="p-4 border-t text-sm opacity-70"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-tertiary)',
           }}
         >
           <p>
@@ -532,8 +535,6 @@ export function HealthReport({
   onConnectOrphans,
   onSuggestMOCs,
 }: HealthReportProps) {
-  const { theme } = useSimpleTheme();
-
   const getHealthColor = (score: number) => {
     if (score >= 90) return { bg: '#065f46', text: '#d1fae5' };
     if (score >= 70) return { bg: '#78350f', text: '#fef3c7' };
@@ -549,15 +550,15 @@ export function HealthReport({
       <div
         className="rounded-lg shadow-2xl max-w-3xl w-full max-h-[80vh] flex flex-col"
         style={{
-          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-          color: theme === 'dark' ? '#f9fafb' : '#111827',
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between p-6 border-b"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            borderColor: 'var(--border-primary)',
           }}
         >
           <div className="flex items-center gap-3">
@@ -571,8 +572,14 @@ export function HealthReport({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <X className="w-6 h-6" />
           </button>
@@ -599,8 +606,8 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg text-center"
               style={{
-                backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-                borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-primary)',
                 border: '1px solid',
               }}
             >
@@ -611,8 +618,8 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg text-center"
               style={{
-                backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-                borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-primary)',
                 border: '1px solid',
               }}
             >
@@ -623,8 +630,8 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg text-center"
               style={{
-                backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-                borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-primary)',
                 border: '1px solid',
               }}
             >
@@ -635,8 +642,8 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg text-center"
               style={{
-                backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-                borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+                backgroundColor: 'var(--bg-tertiary)',
+                borderColor: 'var(--border-primary)',
                 border: '1px solid',
               }}
             >
@@ -650,22 +657,8 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg border"
               style={{
-                borderColor:
-                  orphanPercent > 20
-                    ? theme === 'dark'
-                      ? '#7c2d12'
-                      : '#fee2e2'
-                    : theme === 'dark'
-                      ? '#374151'
-                      : '#e5e7eb',
-                backgroundColor:
-                  orphanPercent > 20
-                    ? theme === 'dark'
-                      ? '#7c2d12'
-                      : '#fee2e2'
-                    : theme === 'dark'
-                      ? '#111827'
-                      : '#f9fafb',
+                borderColor: orphanPercent > 20 ? '#fee2e2' : 'var(--border-primary)',
+                backgroundColor: orphanPercent > 20 ? '#fee2e2' : 'var(--bg-tertiary)',
               }}
             >
               <div className="flex items-center justify-between">
@@ -683,8 +676,14 @@ export function HealthReport({
                     onClick={onConnectOrphans}
                     className="px-4 py-2 rounded-lg font-medium transition-all"
                     style={{
-                      backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
+                      backgroundColor: '#3b82f6',
                       color: '#ffffff',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.backgroundColor = '#2563eb';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.backgroundColor = '#3b82f6';
                     }}
                   >
                     Connect Orphans
@@ -704,8 +703,8 @@ export function HealthReport({
                     key={hub.id}
                     className="p-3 rounded-lg flex items-center justify-between"
                     style={{
-                      backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-                      borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-primary)',
                       border: '1px solid',
                     }}
                   >
@@ -713,8 +712,8 @@ export function HealthReport({
                     <span
                       className="px-3 py-1 rounded-full text-sm font-medium"
                       style={{
-                        backgroundColor: theme === 'dark' ? '#065f46' : '#d1fae5',
-                        color: theme === 'dark' ? '#d1fae5' : '#065f46',
+                        backgroundColor: '#d1fae5',
+                        color: '#065f46',
                       }}
                     >
                       {hub.connections} connections
@@ -729,8 +728,8 @@ export function HealthReport({
           <div
             className="p-4 rounded-lg"
             style={{
-              backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
-              borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderColor: 'var(--border-primary)',
               border: '1px solid',
             }}
           >
@@ -751,8 +750,14 @@ export function HealthReport({
                       onClick={onSuggestMOCs}
                       className="ml-2 px-3 py-1 rounded text-xs font-medium whitespace-nowrap"
                       style={{
-                        backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
+                        backgroundColor: '#3b82f6',
                         color: '#ffffff',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = '#2563eb';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
                       }}
                     >
                       Suggest MOCs
@@ -780,8 +785,8 @@ export function HealthReport({
         <div
           className="p-4 border-t text-sm opacity-70"
           style={{
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-            backgroundColor: theme === 'dark' ? '#111827' : '#f9fafb',
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-tertiary)',
           }}
         >
           <p>
