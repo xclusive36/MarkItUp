@@ -10,6 +10,7 @@ interface ToolbarAreaProps {
   isSaving?: boolean;
   canSave?: boolean;
   theme?: 'light' | 'dark';
+  isLeftSidebarCollapsed?: boolean;
 }
 
 export default function ToolbarArea({
@@ -19,6 +20,7 @@ export default function ToolbarArea({
   isSaving = false,
   canSave = true,
   theme = 'light',
+  isLeftSidebarCollapsed = false,
 }: ToolbarAreaProps) {
   const viewModes = [
     { id: 'edit', label: 'Edit', icon: Edit, shortcut: 'Cmd+E' },
@@ -32,6 +34,7 @@ export default function ToolbarArea({
       style={{
         backgroundColor: 'var(--bg-secondary)',
         borderColor: 'var(--border-primary)',
+        paddingLeft: isLeftSidebarCollapsed ? '4rem' : '1rem', // Extra padding to avoid overlap with collapsed left sidebar
         paddingRight: '4rem', // Extra padding to avoid overlap with collapsed right panel
       }}
     >

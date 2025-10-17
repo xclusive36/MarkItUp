@@ -29,6 +29,8 @@ import ToolbarArea from '@/components/ToolbarArea';
 import BottomNav from '@/components/BottomNav';
 import SelectionActionBar from '@/components/SelectionActionBar';
 import MobileEditorToolbar from '@/components/MobileEditorToolbar';
+import ZenMode from '@/components/ZenMode';
+import NotificationQueue from '@/components/NotificationQueue';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
@@ -42,6 +44,7 @@ import { analytics, AnalyticsEventType } from '@/lib/analytics';
 // ...existing code...
 import { AppHeader } from '@/components/AppHeader';
 import Sidebar from '@/components/Sidebar';
+import CollapsibleSidebar from '@/components/CollapsibleSidebar';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { QuickActionsMenu } from '@/components/QuickActionsMenu';
 import { X } from 'lucide-react';
@@ -120,6 +123,9 @@ export default function Home() {
 
   // Writing Stats Modal state
   const [showWritingStats, setShowWritingStats] = useState(false);
+
+  // Zen Mode state
+  const [showZenMode, setShowZenMode] = useState(false);
 
   // Text selection state for SelectionActionBar
   const [selectedText, setSelectedText] = useState('');
@@ -245,6 +251,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Mobile sidebar state
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+  // Left sidebar collapse state
+  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
 
   // Right side panel state
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
@@ -589,6 +598,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         return;
       }
 
+      // Cmd/Ctrl+Shift+F to toggle Zen Mode
+      if (metaKey && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        setShowZenMode(prev => !prev);
+        analytics.trackEvent('mode_switched', { action: 'zen_mode_toggled' });
+        return;
+      }
+
       // ? to show keyboard shortcuts
       if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
         e.preventDefault();
@@ -606,6 +623,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setShowResearchAssistant(false);
         setShowKnowledgeMap(false);
         setShowBatchAnalyzer(false);
+        setShowZenMode(false);
       }
     };
 
@@ -627,6 +645,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     const handleOpenBatchAnalyzer = () => setShowBatchAnalyzer(true);
     const handleToggleRightPanel = () => setIsRightPanelOpen(prev => !prev);
     const handleToggleSidebar = () => setShowMobileSidebar(prev => !prev);
+    const handleToggleLeftSidebar = () => setIsLeftSidebarCollapsed(prev => !prev);
 
     window.addEventListener('openAIChat', handleOpenAIChat);
     window.addEventListener('openWritingAssistant', handleOpenWritingAssistant);
@@ -636,6 +655,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     window.addEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
     window.addEventListener('toggleRightPanel', handleToggleRightPanel);
     window.addEventListener('toggleSidebar', handleToggleSidebar);
+    window.addEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
 
     return () => {
       window.removeEventListener('openAIChat', handleOpenAIChat);
@@ -646,6 +666,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       window.removeEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
       window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
+      window.removeEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
     };
   }, []);
 
@@ -1065,6 +1086,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             isSaving={isSaving}
             canSave={!!fileName.trim() && !!markdown.trim()}
             theme={theme as 'light' | 'dark'}
+            isLeftSidebarCollapsed={isLeftSidebarCollapsed}
           />
         )}
 
@@ -1135,8 +1157,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               </div>
             )}
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-80 flex-shrink-0 order-2 lg:order-1">
-              <Sidebar
+            <div className="hidden lg:block order-2 lg:order-1">
+              <CollapsibleSidebar
                 fileName={fileName}
                 setFileName={setFileName}
                 folder={folder}
@@ -1151,6 +1173,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 activeNote={activeNote}
                 deleteNote={deleteNote}
                 theme={theme}
+                isCollapsed={isLeftSidebarCollapsed}
+                onToggleCollapse={() => setIsLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
               />
             </div>
             {/* Main Content Area */}
@@ -1158,6 +1182,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               className="flex-1 min-w-0 order-1 lg:order-2 transition-all duration-300"
               style={{
                 paddingRight: isRightPanelOpen ? (isRightPanelCollapsed ? '48px' : '0') : '0',
+                paddingLeft: isLeftSidebarCollapsed ? '48px' : '0',
               }}
             >
               {/* Breadcrumbs - show when in editor view with active note */}
@@ -1546,6 +1571,19 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           }}
           theme={theme as 'light' | 'dark'}
         />
+
+        {/* Zen Mode */}
+        {showZenMode && (
+          <ZenMode
+            markdown={markdown}
+            onMarkdownChange={handleMarkdownChange}
+            onClose={() => setShowZenMode(false)}
+            theme={theme}
+          />
+        )}
+
+        {/* Notification Queue */}
+        <NotificationQueue maxNotifications={5} />
       </div>
     </>
   );

@@ -30,20 +30,23 @@ export default function SelectionActionBar({
       return;
     }
 
-    // Calculate position above the selection
-    const top = selectionRect.top + window.scrollY - 48; // 48px is approximate bar height
-    const left = selectionRect.left + selectionRect.width / 2;
+    // Use requestAnimationFrame to wait for the bar to render and get its width
+    requestAnimationFrame(() => {
+      if (barRef.current) {
+        const barWidth = barRef.current.offsetWidth;
+        // Calculate position above the selection, centered horizontally
+        const top = selectionRect.top + window.scrollY - 48; // 48px is approximate bar height
+        const left = selectionRect.left + selectionRect.width / 2 - barWidth / 2;
 
-    setPosition({ top, left });
+        setPosition({ top, left });
+      } else {
+        // Fallback if ref not ready yet
+        const top = selectionRect.top + window.scrollY - 48;
+        const left = selectionRect.left + selectionRect.width / 2;
+        setPosition({ top, left });
+      }
+    });
   }, [selectionRect, selectedText]);
-
-  useEffect(() => {
-    // Center the bar horizontally
-    if (position && barRef.current) {
-      const barWidth = barRef.current.offsetWidth;
-      setPosition(prev => (prev ? { ...prev, left: prev.left - barWidth / 2 } : null));
-    }
-  }, [position]);
 
   const handleCopy = async () => {
     try {

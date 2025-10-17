@@ -245,23 +245,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           borderColor: 'var(--border-primary)',
         }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2
-            className="text-base lg:text-lg font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Note Details
-          </h2>
-          <button
-            onClick={createNewNote}
-            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-            disabled={currentView !== 'editor'}
-            style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            title="Create new note"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
+        <h2
+          className="text-base lg:text-lg font-semibold mb-4"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          Note Details
+        </h2>
         <div className="space-y-3">
           <div>
             <label
@@ -312,6 +301,16 @@ const Sidebar: React.FC<SidebarProps> = ({
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             Changes will be applied when you save the note (Cmd+S)
           </p>
+          <button
+            onClick={createNewNote}
+            className="w-full mt-3 py-2.5 px-4 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
+            disabled={currentView !== 'editor'}
+            style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            title="Create new note"
+          >
+            <Plus className="w-4 h-4" />
+            Create New Note
+          </button>
         </div>
       </div>
       {/* Quick Stats - moved from header for better UX */}
