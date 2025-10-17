@@ -1,7 +1,16 @@
-import { AIProvider, AIMessage, AIResponse, AIContext, AIError } from '../types';
+import {
+  AIProvider,
+  AIMessage,
+  AIResponse,
+  AIContext,
+  AIError,
+  AIModel,
+  AICapability,
+} from '../types';
 
 export class OllamaProvider implements AIProviderInterface {
   private baseURL: string;
+  private cachedModels: AIModel[] | null = null;
 
   constructor(baseURL: string = 'http://localhost:11434') {
     this.baseURL = baseURL;
@@ -13,57 +22,81 @@ export class OllamaProvider implements AIProviderInterface {
       name: 'Ollama (Local)',
       description: 'Local AI models via Ollama',
       apiKeyRequired: false,
-      supportedModels: [
-        {
-          id: 'llama3.2',
-          name: 'Llama 3.2',
-          description: "Meta's latest Llama model",
-          maxTokens: 8192,
-          costPer1kTokens: 0, // Local, no cost
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'],
-        },
-        {
-          id: 'llama3.1',
-          name: 'Llama 3.1',
-          description: "Meta's Llama 3.1 model",
-          maxTokens: 8192,
-          costPer1kTokens: 0,
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'],
-        },
-        {
-          id: 'mistral',
-          name: 'Mistral',
-          description: 'Mistral 7B model',
-          maxTokens: 8192,
-          costPer1kTokens: 0,
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'],
-        },
-        {
-          id: 'codellama',
-          name: 'Code Llama',
-          description: 'Specialized for code generation',
-          maxTokens: 16384,
-          costPer1kTokens: 0,
-          capabilities: ['chat', 'completion', 'analysis'],
-        },
-        {
-          id: 'gemma2',
-          name: 'Gemma 2',
-          description: "Google's Gemma 2 model",
-          maxTokens: 8192,
-          costPer1kTokens: 0,
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'],
-        },
-        {
-          id: 'phi3',
-          name: 'Phi-3',
-          description: "Microsoft's Phi-3 small language model",
-          maxTokens: 4096,
-          costPer1kTokens: 0,
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'],
-        },
-      ],
+      supportedModels: this.cachedModels || [],
     };
+  }
+
+  private async fetchAvailableModels(): Promise<AIModel[]> {
+    // Return cached models if available
+    if (this.cachedModels && this.cachedModels.length > 0) {
+      return this.cachedModels;
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/api/tags`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch Ollama models, using empty list');
+        this.cachedModels = [];
+        return [];
+      }
+
+      const data = await response.json();
+      const ollamaModels = data.models || [];
+
+      // Convert Ollama models to our AIModel format
+      this.cachedModels = ollamaModels.map(
+        (model: {
+          name: string;
+          size?: number;
+          details?: { parameter_size?: string };
+          modified_at?: string;
+        }) => ({
+          id: model.name,
+          name: this.formatModelName(model.name),
+          description: `Ollama model${model.size ? ` (${this.formatSize(model.size)})` : ''}`,
+          maxTokens: this.estimateMaxTokens(model.name),
+          costPer1kTokens: 0, // Local, no cost
+          capabilities: ['chat', 'completion', 'analysis', 'summarization'] as AICapability[],
+        })
+      );
+
+      return this.cachedModels || [];
+    } catch (error) {
+      console.warn('Error fetching Ollama models:', error);
+      this.cachedModels = [];
+      return [];
+    }
+  }
+
+  private formatModelName(name: string): string {
+    // Convert model name like "llama3.2:latest" to "Llama 3.2"
+    const baseName = name.split(':')[0];
+    return baseName
+      .split(/[-_]/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  private formatSize(bytes: number): string {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return `${gb.toFixed(1)} GB`;
+  }
+
+  private estimateMaxTokens(modelName: string): number {
+    // Estimate max tokens based on model name
+    const lowerName = modelName.toLowerCase();
+    if (lowerName.includes('codellama')) return 16384;
+    if (lowerName.includes('llama3')) return 8192;
+    if (lowerName.includes('mistral')) return 8192;
+    if (lowerName.includes('gemma')) return 8192;
+    if (lowerName.includes('phi')) return 4096;
+    return 4096; // Default
   }
 
   async chat(
@@ -206,23 +239,14 @@ Content:\n${content}`,
   }
 
   async listAvailableModels(): Promise<string[]> {
-    try {
-      const response = await fetch(`${this.baseURL}/api/tags`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+    const models = await this.fetchAvailableModels();
+    return models.map(model => model.id);
+  }
 
-      if (!response.ok) {
-        return [];
-      }
-
-      const data = await response.json();
-      return (data.models || []).map((model: { name: string }) => model.name);
-    } catch {
-      return [];
-    }
+  // Refresh cached models from Ollama server
+  async refreshModels(): Promise<AIModel[]> {
+    this.cachedModels = null; // Clear cache
+    return this.fetchAvailableModels();
   }
 
   private buildSystemMessage(context: AIContext): string {

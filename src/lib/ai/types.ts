@@ -72,6 +72,7 @@ export interface AISettings {
   enableUsageTracking: boolean;
   monthlyLimit: number;
   enableLocalFallback: boolean;
+  ollamaUrl?: string; // Custom Ollama server URL (defaults to http://localhost:11434)
 }
 
 export interface ChatSession {
@@ -120,7 +121,7 @@ export interface AIUsageStats {
 export interface AIError {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: string;
   model?: string;
   provider?: string;

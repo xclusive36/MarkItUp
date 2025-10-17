@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  MessageCircle,
   Send,
   Settings,
   Trash2,
@@ -593,8 +592,65 @@ function AISettingsPanel({
       enableUsageTracking: true,
       monthlyLimit: 10.0,
       enableLocalFallback: false,
+      ollamaUrl: 'http://localhost:11434',
     }
   );
+
+  const [ollamaModels, setOllamaModels] = useState<{ value: string; label: string }[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [modelError, setModelError] = useState<string | null>(null);
+
+  const fetchOllamaModels = useCallback(async () => {
+    setLoadingModels(true);
+    setModelError(null);
+
+    try {
+      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/tags`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to connect to Ollama server');
+      }
+
+      const data = await response.json();
+      const models = data.models || [];
+
+      if (models.length === 0) {
+        setModelError('No models found. Please pull a model first (e.g., ollama pull llama3.2)');
+        setOllamaModels([]);
+      } else {
+        setOllamaModels(
+          models.map((model: { name: string }) => ({
+            value: model.name,
+            label: model.name,
+          }))
+        );
+
+        // If current model is not in the list, set to the first available model
+        if (!models.find((m: { name: string }) => m.name === formData.model)) {
+          setFormData(prev => ({ ...prev, model: models[0].name }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching Ollama models:', error);
+      setModelError(error instanceof Error ? error.message : 'Failed to fetch models from Ollama');
+      setOllamaModels([]);
+    } finally {
+      setLoadingModels(false);
+    }
+  }, [formData.ollamaUrl, formData.model]);
+
+  // Fetch Ollama models when provider is Ollama or URL changes
+  useEffect(() => {
+    if (formData.provider === 'ollama') {
+      fetchOllamaModels();
+    }
+  }, [formData.provider, fetchOllamaModels]);
 
   // Model options based on selected provider
   const getModelOptions = () => {
@@ -619,14 +675,11 @@ function AISettingsPanel({
           { value: 'gemini-pro', label: 'Gemini Pro (Balanced)' },
         ];
       case 'ollama':
-        return [
-          { value: 'llama3.2', label: 'Llama 3.2 (Latest)' },
-          { value: 'llama3.1', label: 'Llama 3.1' },
-          { value: 'mistral', label: 'Mistral 7B' },
-          { value: 'codellama', label: 'Code Llama' },
-          { value: 'gemma2', label: 'Gemma 2' },
-          { value: 'phi3', label: 'Phi-3' },
-        ];
+        // Return dynamically fetched models if available, otherwise return empty
+        if (ollamaModels.length > 0) {
+          return ollamaModels;
+        }
+        return [];
       default:
         return [{ value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' }];
     }
@@ -638,7 +691,7 @@ function AISettingsPanel({
       openai: 'gpt-3.5-turbo',
       anthropic: 'claude-3-5-sonnet-20241022',
       gemini: 'gemini-1.5-flash',
-      ollama: 'llama3.2',
+      ollama: '', // Will be set when models are fetched
     };
 
     setFormData({
@@ -646,6 +699,10 @@ function AISettingsPanel({
       provider: newProvider,
       model: defaultModels[newProvider] || 'gpt-3.5-turbo',
       apiKey: newProvider === 'ollama' ? '' : formData.apiKey,
+      ollamaUrl:
+        newProvider === 'ollama'
+          ? formData.ollamaUrl || 'http://localhost:11434'
+          : formData.ollamaUrl,
     });
   };
 
@@ -744,36 +801,101 @@ function AISettingsPanel({
         )}
 
         {formData.provider === 'ollama' && (
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm" style={{ color: theme === 'dark' ? '#93c5fd' : '#1e40af' }}>
-              💡 Ollama runs locally on your machine. Make sure Ollama is installed and running at
-              http://localhost:11434
-            </p>
-          </div>
+          <>
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+              >
+                Ollama Server URL
+              </label>
+              <input
+                type="text"
+                value={formData.ollamaUrl || 'http://localhost:11434'}
+                onChange={e => setFormData({ ...formData, ollamaUrl: e.target.value })}
+                placeholder="http://localhost:11434"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                  color: theme === 'dark' ? '#f9fafb' : '#111827',
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                }}
+              />
+              <p
+                className="text-xs mt-1"
+                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+              >
+                Enter your custom Ollama server URL if not running on localhost:11434
+              </p>
+            </div>
+
+            {modelError && (
+              <div
+                className="p-3 rounded-lg border"
+                style={{
+                  backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2',
+                  borderColor: theme === 'dark' ? '#7f1d1d' : '#fecaca',
+                }}
+              >
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-red-700 dark:text-red-300">{modelError}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm" style={{ color: theme === 'dark' ? '#93c5fd' : '#1e40af' }}>
+                💡 Make sure Ollama is installed and running. If no models are found, run: ollama
+                pull llama3.2
+              </p>
+            </div>
+          </>
         )}
 
         <div>
-          <label
-            className="block text-sm font-medium mb-2"
-            style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-          >
-            Model
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label
+              className="block text-sm font-medium"
+              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+            >
+              Model
+            </label>
+            {formData.provider === 'ollama' && (
+              <button
+                onClick={fetchOllamaModels}
+                disabled={loadingModels}
+                className="text-xs px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 disabled:opacity-50 transition-colors"
+                title="Refresh models from Ollama"
+              >
+                {loadingModels ? <Loader2 className="w-3 h-3 animate-spin inline" /> : '↻ Refresh'}
+              </button>
+            )}
+          </div>
           <select
             value={formData.model}
             onChange={e => setFormData({ ...formData, model: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={
+              formData.provider === 'ollama' && (loadingModels || ollamaModels.length === 0)
+            }
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
               color: theme === 'dark' ? '#f9fafb' : '#111827',
               borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
             }}
           >
-            {getModelOptions().map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {loadingModels && formData.provider === 'ollama' ? (
+              <option>Loading models...</option>
+            ) : getModelOptions().length === 0 && formData.provider === 'ollama' ? (
+              <option>No models found</option>
+            ) : (
+              getModelOptions().map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))
+            )}
           </select>
         </div>
 
