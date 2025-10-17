@@ -6,8 +6,6 @@ interface EditorModeToggleProps {
   setViewMode: (v: 'edit' | 'preview' | 'split') => void;
   theme: string;
   onModeChange?: (mode: 'edit' | 'preview' | 'split') => void;
-  isRightPanelOpen?: boolean;
-  isRightPanelCollapsed?: boolean;
 }
 
 const modes: Array<{
@@ -25,23 +23,13 @@ const EditorModeToggle: React.FC<EditorModeToggleProps> = ({
   setViewMode,
   // theme, // No longer needed - using CSS variables
   onModeChange,
-  isRightPanelOpen = false,
-  isRightPanelCollapsed = false,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Determine which breakpoint to use based on right panel state
-  // When right panel is open and expanded (384px), we need more space
-  // to accommodate both left sidebar (320px at lg:) and right panel (384px)
-  // Total: ~704px + ~500px content = ~1204px minimum
-  // So use xl: breakpoint (1280px) when right panel is expanded
-  // Otherwise use md: breakpoint (768px)
-  const shouldUseLargerBreakpoint = isRightPanelOpen && !isRightPanelCollapsed;
-  const desktopShowClass = shouldUseLargerBreakpoint
-    ? 'hidden xl:inline-flex'
-    : 'hidden md:inline-flex';
-  const mobileShowClass = shouldUseLargerBreakpoint ? 'xl:hidden' : 'md:hidden';
+  // Show buttons on desktop (md and up)
+  const desktopShowClass = 'hidden md:inline-flex';
+  const mobileShowClass = 'md:hidden';
 
   // Close dropdown when clicking outside
   useEffect(() => {

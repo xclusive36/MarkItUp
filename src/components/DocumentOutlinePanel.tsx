@@ -19,7 +19,6 @@ interface DocumentOutlinePanelProps {
 export const DocumentOutlinePanel: React.FC<DocumentOutlinePanelProps> = ({
   markdown,
   onHeadingClick,
-  theme = 'light',
 }) => {
   // Extract headings from markdown
   const headings = useMemo(() => {
@@ -66,9 +65,16 @@ export const DocumentOutlinePanel: React.FC<DocumentOutlinePanelProps> = ({
           return (
             <button
               key={heading.id}
-              className="flex items-start gap-2 w-full text-left py-1.5 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+              className="flex items-start gap-2 w-full text-left py-1.5 px-2 rounded transition-all group"
               style={{
                 paddingLeft: `${8 + indent}px`,
+                backgroundColor: 'transparent',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
               onClick={() => onHeadingClick?.(heading.line)}
             >
@@ -97,8 +103,8 @@ export const DocumentOutlinePanel: React.FC<DocumentOutlinePanelProps> = ({
               <span
                 className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
                 style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                  color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  color: 'var(--text-secondary)',
                 }}
               >
                 H{heading.level}

@@ -4,11 +4,12 @@ import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
 import WritingStatsBar from './WritingStatsBar';
 import { ThemeCreator } from './ThemeCreator';
+import ZenMode from './ZenMode';
 import React, { useState, useEffect, useRef } from 'react';
 import { AnalyticsSystem } from '@/lib/analytics';
 import { getThemeCreatorPluginInstance } from '@/plugins/theme-creator';
 import { getPluginManager } from '@/lib/plugin-init';
-import { MoreVertical, FileText, Palette, Sparkles } from 'lucide-react';
+import { MoreVertical, FileText, Maximize2, Palette, Sparkles } from 'lucide-react';
 
 interface MainContentProps {
   markdown: string;
@@ -19,8 +20,6 @@ interface MainContentProps {
   theme: string;
   analytics: AnalyticsSystem;
   editorRef?: React.RefObject<HTMLTextAreaElement | null>;
-  isRightPanelOpen?: boolean;
-  isRightPanelCollapsed?: boolean;
   // Add more props as needed for your use case
 }
 // ...existing code...
@@ -35,24 +34,17 @@ const MainContent: React.FC<MainContentProps> = ({
   theme,
   analytics,
   editorRef,
-  isRightPanelOpen = false,
-  isRightPanelCollapsed = false,
 }) => {
   const [editorType, setEditorType] = useState<'markdown' | 'wysiwyg'>('markdown');
   const [isThemeCreatorOpen, setIsThemeCreatorOpen] = useState(false);
   const [isThemeCreatorPluginLoaded, setIsThemeCreatorPluginLoaded] = useState(false);
   const [isEditorOptionsOpen, setIsEditorOptionsOpen] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
   const editorOptionsRef = useRef<HTMLDivElement>(null);
 
-  // Determine which breakpoint to use based on right panel state
-  // When right panel is open and expanded (384px), we need more space
-  // to accommodate both left sidebar (320px at lg:) and right panel (384px)
-  // Total: ~704px + ~500px content = ~1204px minimum
-  // So use xl: breakpoint (1280px) when right panel is expanded
-  // Otherwise use md: breakpoint (768px)
-  const shouldUseLargerBreakpoint = isRightPanelOpen && !isRightPanelCollapsed;
-  const desktopShowClass = shouldUseLargerBreakpoint ? 'hidden xl:flex' : 'hidden md:flex';
-  const mobileShowClass = shouldUseLargerBreakpoint ? 'xl:hidden' : 'md:hidden';
+  // Show buttons on desktop (md and up)
+  const desktopShowClass = 'hidden md:flex';
+  const mobileShowClass = 'md:hidden';
 
   // Check if Theme Creator plugin is loaded
   useEffect(() => {
@@ -101,187 +93,243 @@ const MainContent: React.FC<MainContentProps> = ({
     }
   }, []);
 
-  return (
-    <div
-      className="rounded-lg shadow-sm border flex flex-col h-full min-h-screen"
-      style={{
-        backgroundColor: 'var(--bg-secondary)',
-        borderColor: 'var(--border-primary)',
-        minHeight: '100vh',
-      }}
-    >
-      {/* Editor Mode Toggle and WYSIWYG Toggle */}
-      <div className="flex justify-between items-center w-full px-4 pt-4 mb-4">
-        {/* Left side buttons */}
-        <div className="flex items-center gap-2">
-          {/* Desktop: Individual Buttons (visible on md and up) */}
-          {viewMode === 'edit' && (
-            <>
-              {/* WYSIWYG Toggle - Desktop */}
-              <button
-                onClick={() => {
-                  const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
-                  setEditorType(newType);
-                  analytics.trackEvent('mode_switched', { mode: newType });
-                }}
-                className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors`}
-                style={{
-                  backgroundColor: 'var(--bg-tertiary)',
-                  borderColor: 'var(--border-secondary)',
-                  color: 'var(--text-primary)',
-                }}
-              >
-                <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
-                <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
-              </button>
+  // Keyboard shortcut for Zen Mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const metaKey = isMac ? e.metaKey : e.ctrlKey;
 
-              {/* Theme Creator Button - Desktop - Only show if plugin is loaded */}
-              {isThemeCreatorPluginLoaded && (
+      // Cmd/Ctrl+Shift+F for Zen Mode
+      if (metaKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setIsZenMode(true);
+        analytics.trackEvent('mode_switched', { mode: 'zen', trigger: 'keyboard' });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [analytics]);
+
+  return (
+    <>
+      {/* Zen Mode Overlay */}
+      {isZenMode && (
+        <ZenMode
+          markdown={markdown}
+          onMarkdownChange={handleMarkdownChange}
+          onClose={() => setIsZenMode(false)}
+          theme={theme}
+        />
+      )}
+
+      <div
+        className="rounded-lg shadow-sm border flex flex-col h-full min-h-screen"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
+          minHeight: '100vh',
+        }}
+      >
+        {/* Editor Mode Toggle and WYSIWYG Toggle */}
+        <div className="flex justify-between items-center w-full px-4 pt-4 mb-4">
+          {/* Left side buttons */}
+          <div className="flex items-center gap-2">
+            {/* Desktop: Individual Buttons (visible on md and up) */}
+            {viewMode === 'edit' && (
+              <>
+                {/* WYSIWYG Toggle - Desktop */}
                 <button
-                  onClick={() => setIsThemeCreatorOpen(true)}
+                  onClick={() => {
+                    const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
+                    setEditorType(newType);
+                    analytics.trackEvent('mode_switched', { mode: newType });
+                  }}
+                  className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors`}
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    borderColor: 'var(--border-secondary)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <span>{editorType === 'markdown' ? '📝' : '🎨'}</span>
+                  <span>{editorType === 'markdown' ? 'Markdown' : 'WYSIWYG'}</span>
+                </button>
+
+                {/* Theme Creator Button - Desktop - Only show if plugin is loaded */}
+                {isThemeCreatorPluginLoaded && (
+                  <button
+                    onClick={() => setIsThemeCreatorOpen(true)}
+                    className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80`}
+                    style={{
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-secondary)',
+                      color: 'var(--text-primary)',
+                    }}
+                    title="Open Theme Creator (Ctrl+Shift+T)"
+                  >
+                    <span>🎨</span>
+                    <span>Themes</span>
+                  </button>
+                )}
+
+                {/* Zen Mode Button - Desktop */}
+                <button
+                  onClick={() => {
+                    setIsZenMode(true);
+                    analytics.trackEvent('mode_switched', { mode: 'zen' });
+                  }}
                   className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80`}
                   style={{
                     backgroundColor: 'var(--bg-tertiary)',
                     borderColor: 'var(--border-secondary)',
                     color: 'var(--text-primary)',
                   }}
-                  title="Open Theme Creator (Ctrl+Shift+T)"
+                  title="Zen Mode (Ctrl+Shift+F) - Distraction-free writing"
                 >
-                  <span>🎨</span>
-                  <span>Themes</span>
-                </button>
-              )}
-
-              {/* Mobile: Dropdown Menu (visible below md/lg) */}
-              <div className={`${mobileShowClass} relative`} ref={editorOptionsRef}>
-                <button
-                  onClick={() => setIsEditorOptionsOpen(!isEditorOptionsOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
-                  style={{
-                    backgroundColor: 'var(--bg-tertiary)',
-                    borderColor: 'var(--border-secondary)',
-                    color: 'var(--text-primary)',
-                  }}
-                  aria-label="Editor options menu"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span className="text-xs">Editor</span>
-                  <MoreVertical className="w-3 h-3 ml-1" />
+                  <Maximize2 className="w-4 h-4" />
+                  <span>Zen Mode</span>
                 </button>
 
-                {/* Dropdown Menu */}
-                {isEditorOptionsOpen && (
-                  <div
-                    className="absolute left-0 top-full mt-1 min-w-[160px] rounded-lg shadow-lg border z-50 py-1"
+                {/* Mobile: Dropdown Menu (visible below md/lg) */}
+                <div className={`${mobileShowClass} relative`} ref={editorOptionsRef}>
+                  <button
+                    onClick={() => setIsEditorOptionsOpen(!isEditorOptionsOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
                     style={{
-                      backgroundColor: 'var(--bg-secondary)',
-                      borderColor: 'var(--border-primary)',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-secondary)',
+                      color: 'var(--text-primary)',
                     }}
+                    aria-label="Editor options menu"
                   >
-                    {/* Markdown/WYSIWYG Toggle */}
-                    <button
-                      onClick={() => {
-                        const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
-                        setEditorType(newType);
-                        analytics.trackEvent('mode_switched', { mode: newType });
-                        setIsEditorOptionsOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                    <FileText className="w-4 h-4" />
+                    <span className="text-xs">Editor</span>
+                    <MoreVertical className="w-3 h-3 ml-1" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {isEditorOptionsOpen && (
+                    <div
+                      className="absolute left-0 top-full mt-1 min-w-[160px] rounded-lg shadow-lg border z-50 py-1"
                       style={{
-                        color: 'var(--text-primary)',
-                        backgroundColor: 'transparent',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderColor: 'var(--border-primary)',
                       }}
                     >
-                      {editorType === 'markdown' ? (
+                      {/* Markdown/WYSIWYG Toggle */}
+                      <button
+                        onClick={() => {
+                          const newType = editorType === 'markdown' ? 'wysiwyg' : 'markdown';
+                          setEditorType(newType);
+                          analytics.trackEvent('mode_switched', { mode: newType });
+                          setIsEditorOptionsOpen(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                        style={{
+                          color: 'var(--text-primary)',
+                          backgroundColor: 'transparent',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        {editorType === 'markdown' ? (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            <span>Switch to WYSIWYG</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4" />
+                            <span>Switch to Markdown</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Theme Creator Option - Only show if plugin is loaded */}
+                      {isThemeCreatorPluginLoaded && (
                         <>
-                          <Sparkles className="w-4 h-4" />
-                          <span>Switch to WYSIWYG</span>
-                        </>
-                      ) : (
-                        <>
-                          <FileText className="w-4 h-4" />
-                          <span>Switch to Markdown</span>
+                          <div
+                            className="h-px my-1"
+                            style={{ backgroundColor: 'var(--border-primary)' }}
+                          />
+                          <button
+                            onClick={() => {
+                              setIsThemeCreatorOpen(true);
+                              setIsEditorOptionsOpen(false);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                            style={{
+                              color: 'var(--text-primary)',
+                              backgroundColor: 'transparent',
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <Palette className="w-4 h-4" />
+                            <span>Open Themes</span>
+                          </button>
                         </>
                       )}
-                    </button>
 
-                    {/* Theme Creator Option - Only show if plugin is loaded */}
-                    {isThemeCreatorPluginLoaded && (
-                      <>
-                        <div
-                          className="h-px my-1"
-                          style={{ backgroundColor: 'var(--border-primary)' }}
-                        />
-                        <button
-                          onClick={() => {
-                            setIsThemeCreatorOpen(true);
-                            setIsEditorOptionsOpen(false);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
-                          style={{
-                            color: 'var(--text-primary)',
-                            backgroundColor: 'transparent',
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
-                        >
-                          <Palette className="w-4 h-4" />
-                          <span>Open Themes</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+                      {/* Zen Mode Option */}
+                      <div
+                        className="h-px my-1"
+                        style={{ backgroundColor: 'var(--border-primary)' }}
+                      />
+                      <button
+                        onClick={() => {
+                          setIsZenMode(true);
+                          setIsEditorOptionsOpen(false);
+                          analytics.trackEvent('mode_switched', { mode: 'zen' });
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors"
+                        style={{
+                          color: 'var(--text-primary)',
+                          backgroundColor: 'transparent',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                        <span>Zen Mode</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+          {viewMode !== 'edit' && <div />}
+
+          {/* View Mode Toggle (right side) */}
+          <EditorModeToggle
+            viewMode={viewMode}
+            setViewMode={mode => {
+              setViewMode(mode);
+              analytics.trackEvent('mode_switched', { mode });
+            }}
+            theme={theme}
+          />
         </div>
-        {viewMode !== 'edit' && <div />}
 
-        {/* View Mode Toggle (right side) */}
-        <EditorModeToggle
-          viewMode={viewMode}
-          setViewMode={mode => {
-            setViewMode(mode);
-            analytics.trackEvent('mode_switched', { mode });
-          }}
-          theme={theme}
-          isRightPanelOpen={isRightPanelOpen}
-          isRightPanelCollapsed={isRightPanelCollapsed}
-        />
-      </div>
+        {/* Writing Statistics Bar - shown in all modes */}
+        <WritingStatsBar markdown={markdown} theme={theme} />
 
-      {/* Writing Statistics Bar - shown in all modes */}
-      <WritingStatsBar markdown={markdown} theme={theme} />
-
-      {viewMode === 'edit' && (
-        <div className="flex-grow flex flex-col h-full">
-          {editorType === 'markdown' ? (
-            <MarkdownEditor
-              ref={editorRef}
-              value={markdown}
-              onChange={handleMarkdownChange}
-              theme={theme}
-            />
-          ) : (
-            <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
-          )}
-        </div>
-      )}
-      {viewMode === 'preview' && <MarkdownPreview markdown={processedMarkdown} theme={theme} />}
-      {viewMode === 'split' && (
-        <div className="flex flex-col lg:flex-row h-full flex-grow min-h-0">
-          <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col min-h-0">
+        {viewMode === 'edit' && (
+          <div className="flex-grow flex flex-col h-full">
             {editorType === 'markdown' ? (
               <MarkdownEditor
                 ref={editorRef}
@@ -293,24 +341,41 @@ const MainContent: React.FC<MainContentProps> = ({
               <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
             )}
           </div>
-          <div className="h-1/2 lg:h-full w-full lg:w-1/2 flex flex-col min-h-0">
-            <MarkdownPreview markdown={processedMarkdown} theme={theme} />
+        )}
+        {viewMode === 'preview' && <MarkdownPreview markdown={processedMarkdown} theme={theme} />}
+        {viewMode === 'split' && (
+          <div className="flex flex-col lg:flex-row h-full flex-grow min-h-0">
+            <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col min-h-0">
+              {editorType === 'markdown' ? (
+                <MarkdownEditor
+                  ref={editorRef}
+                  value={markdown}
+                  onChange={handleMarkdownChange}
+                  theme={theme}
+                />
+              ) : (
+                <WysiwygEditor value={markdown} onChange={handleMarkdownChange} />
+              )}
+            </div>
+            <div className="h-1/2 lg:h-full w-full lg:w-1/2 flex flex-col min-h-0">
+              <MarkdownPreview markdown={processedMarkdown} theme={theme} />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Theme Creator Modal */}
-      <ThemeCreator
-        isOpen={isThemeCreatorOpen}
-        onClose={() => {
-          setIsThemeCreatorOpen(false);
-          const pluginInstance = getThemeCreatorPluginInstance();
-          if (pluginInstance) {
-            pluginInstance.closeThemeCreator();
-          }
-        }}
-      />
-    </div>
+        {/* Theme Creator Modal */}
+        <ThemeCreator
+          isOpen={isThemeCreatorOpen}
+          onClose={() => {
+            setIsThemeCreatorOpen(false);
+            const pluginInstance = getThemeCreatorPluginInstance();
+            if (pluginInstance) {
+              pluginInstance.closeThemeCreator();
+            }
+          }}
+        />
+      </div>
+    </>
   );
 };
 

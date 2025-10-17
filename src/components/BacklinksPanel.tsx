@@ -20,7 +20,6 @@ export const BacklinksPanel: React.FC<BacklinksPanelProps> = ({
   currentNote,
   allNotes,
   onNoteClick,
-  theme = 'light',
 }) => {
   // Find all notes that link to the current note
   const backlinks = useMemo(() => {
@@ -100,8 +99,8 @@ export const BacklinksPanel: React.FC<BacklinksPanelProps> = ({
         <div
           className="text-xs font-medium px-2 py-1 rounded inline-block"
           style={{
-            backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-            color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+            backgroundColor: 'var(--bg-tertiary)',
+            color: 'var(--text-secondary)',
           }}
         >
           {backlinks.length} backlink{backlinks.length !== 1 ? 's' : ''}
@@ -112,9 +111,16 @@ export const BacklinksPanel: React.FC<BacklinksPanelProps> = ({
         {backlinks.map(backlink => (
           <div
             key={backlink.note.id}
-            className="rounded-lg border p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            className="rounded-lg border p-3 cursor-pointer transition-all"
             style={{
               borderColor: 'var(--border-secondary)',
+              backgroundColor: 'transparent',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
             onClick={() => onNoteClick?.(backlink.note.id)}
           >
@@ -154,7 +160,7 @@ export const BacklinksPanel: React.FC<BacklinksPanelProps> = ({
                   key={idx}
                   className="text-xs p-2 rounded font-mono"
                   style={{
-                    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
+                    backgroundColor: 'var(--bg-tertiary)',
                     color: 'var(--text-secondary)',
                     lineHeight: '1.5',
                   }}

@@ -10,10 +10,12 @@ import {
   Brain,
   PanelRightClose,
   PanelRightOpen,
+  GripVertical,
 } from 'lucide-react';
 import { Note } from '@/lib/types';
 import DocumentOutlinePanel from './DocumentOutlinePanel';
 import BacklinksPanel from './BacklinksPanel';
+import { useResizablePanel } from '@/hooks/useResizablePanel';
 
 type PanelTab = 'outline' | 'backlinks' | 'ai';
 
@@ -57,6 +59,14 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<PanelTab>('outline');
 
+  // Resizable panel hook
+  const { width, isResizing, handleMouseDown } = useResizablePanel({
+    minWidth: 280,
+    maxWidth: 600,
+    defaultWidth: 384,
+    storageKey: 'right-panel-width',
+  });
+
   if (!isOpen) {
     return (
       <button
@@ -83,28 +93,62 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   return (
     <div
       className={`fixed right-0 top-0 h-full border-l shadow-lg z-30 flex transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-12' : 'w-80 lg:w-96'
+        isCollapsed ? 'w-12' : ''
       }`}
       style={{
         backgroundColor: 'var(--bg-secondary)',
         borderColor: 'var(--border-primary)',
+        width: isCollapsed ? '48px' : `${width}px`,
+        transition: isResizing ? 'none' : 'all 0.3s ease-in-out',
       }}
     >
+      {/* Resize Handle - only show when expanded */}
+      {!isCollapsed && (
+        <div
+          className="absolute left-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500 hover:w-1.5 transition-all z-40 group"
+          onMouseDown={handleMouseDown}
+          style={{
+            backgroundColor: isResizing ? '#3b82f6' : 'transparent',
+          }}
+        >
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+            style={{
+              color: '#3b82f6',
+            }}
+          >
+            <GripVertical className="w-4 h-4" />
+          </div>
+        </div>
+      )}
       {/* Collapsed state - vertical tab bar */}
       {isCollapsed ? (
         <div className="flex flex-col items-center w-full py-4 gap-2">
           <button
             onClick={onToggleCollapse}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded transition-all"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--text-primary)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
             title="Expand panel"
           >
-            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+            <ChevronLeft className="w-5 h-5" />
           </button>
 
           <div className="h-px w-8 my-2" style={{ backgroundColor: 'var(--border-primary)' }} />
 
           {tabs.map(tab => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -112,19 +156,26 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
                   setActiveTab(tab.id);
                   onToggleCollapse();
                 }}
-                className={`p-2 rounded transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-100 dark:bg-blue-900/30'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                className="p-2 rounded transition-all"
+                style={{
+                  backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
+                  color: isActive ? 'var(--bg-primary)' : 'var(--text-primary)',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-primary)';
+                  }
+                }}
                 title={tab.label}
               >
-                <Icon
-                  className="w-5 h-5"
-                  style={{
-                    color: activeTab === tab.id ? 'var(--accent-color)' : 'var(--text-secondary)',
-                  }}
-                />
+                <Icon className="w-5 h-5" />
               </button>
             );
           })}
@@ -133,10 +184,22 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
 
           <button
             onClick={onToggleOpen}
-            className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded transition-all"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'var(--text-primary)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
             title="Close panel"
           >
-            <PanelRightClose className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+            <PanelRightClose className="w-5 h-5" />
           </button>
         </div>
       ) : (
@@ -150,17 +213,27 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
             <div className="flex items-center gap-2">
               {tabs.map(tab => {
                 const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
                     style={{
-                      color: activeTab === tab.id ? 'var(--accent-color)' : 'var(--text-secondary)',
+                      backgroundColor: isActive ? 'var(--accent-primary)' : 'transparent',
+                      color: isActive ? 'var(--bg-primary)' : 'var(--text-primary)',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isActive) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = 'var(--text-primary)';
+                      }
                     }}
                   >
                     <Icon className="w-4 h-4" />
@@ -173,17 +246,41 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
             <div className="flex items-center gap-1">
               <button
                 onClick={onToggleCollapse}
-                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded transition-all"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
                 title="Collapse panel"
               >
-                <ChevronRight className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                <ChevronRight className="w-4 h-4" />
               </button>
               <button
                 onClick={onToggleOpen}
-                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-1.5 rounded transition-all"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary)',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                  e.currentTarget.style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
                 title="Close panel"
               >
-                <X className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>

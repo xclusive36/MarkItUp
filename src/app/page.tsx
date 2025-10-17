@@ -23,6 +23,7 @@ import DailyNotesCalendarModal from '@/components/DailyNotesCalendarModal';
 import { AnalyticsDashboard as KnowledgeGraphAnalytics } from '@/components/KnowledgeGraphAnalytics';
 import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal';
 import MOCSuggestionsModal from '@/components/MOCSuggestionsModal';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
@@ -927,12 +928,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       >
         {/* Header */}
         <header
-          className="shadow-sm border-b header-container"
+          className="shadow-sm border-b header-container transition-all duration-300"
           style={{
             backgroundColor: 'var(--bg-secondary)',
             borderColor: 'var(--border-primary)',
             width: '100%',
             margin: 0,
+            paddingRight: isRightPanelOpen ? (isRightPanelCollapsed ? '48px' : '0') : '0',
           }}
         >
           <div
@@ -944,7 +946,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               paddingRight: '1rem',
             }}
           >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-3 lg:py-4 space-y-4 sm:space-y-0">
               <div className="flex flex-row items-center gap-3 lg:gap-4">
                 {/* Hamburger menu for mobile */}
                 <button
@@ -1006,9 +1008,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Mobile Sidebar Drawer */}
             {showMobileSidebar && (
-              <div className="fixed inset-0 z-40 flex" onClick={() => setShowMobileSidebar(false)}>
+              <div
+                className="fixed inset-0 z-40 flex backdrop-blur-custom bg-black bg-opacity-20"
+                onClick={() => setShowMobileSidebar(false)}
+              >
                 <div
-                  className="relative w-72 max-w-full h-full bg-white dark:bg-gray-900 shadow-xl p-4 overflow-y-auto z-50 animate-slide-in-left"
+                  className="relative w-72 max-w-full h-full shadow-xl p-4 overflow-y-auto z-50 animate-slide-in-left custom-scrollbar"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                  }}
                   onClick={e => e.stopPropagation()}
                 >
                   <Sidebar
@@ -1081,14 +1089,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             <div
               className="flex-1 min-w-0 order-1 lg:order-2 transition-all duration-300"
               style={{
-                marginRight:
-                  isRightPanelOpen && !isRightPanelCollapsed
-                    ? '24rem'
-                    : isRightPanelOpen
-                      ? '3rem'
-                      : '0',
+                paddingRight: isRightPanelOpen ? (isRightPanelCollapsed ? '48px' : '0') : '0',
               }}
             >
+              {/* Breadcrumbs - show when in editor view with active note */}
+              {currentView === 'editor' && activeNote && (
+                <Breadcrumbs
+                  folder={activeNote.folder || ''}
+                  fileName={activeNote.name}
+                  onNavigateHome={() => {
+                    setCurrentView('editor');
+                    setActiveNote(null);
+                    setMarkdown('');
+                    setFileName('');
+                    setFolder('');
+                  }}
+                  onNavigateToFolder={folderPath => {
+                    // Set current view to notes and filter by folder
+                    setCurrentView('notes');
+                    setFolder(folderPath);
+                  }}
+                  theme={theme}
+                />
+              )}
+
               {currentView === 'notes' ? (
                 <NotesComponent refreshNotes={notesComponentRefreshRef} />
               ) : (
@@ -1110,8 +1134,6 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   tags={tags}
                   folders={folders}
                   notes={notes}
-                  isRightPanelOpen={isRightPanelOpen}
-                  isRightPanelCollapsed={isRightPanelCollapsed}
                 />
               )}
             </div>
