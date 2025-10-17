@@ -6,14 +6,20 @@ import {
   AIError,
   AIModel,
   AICapability,
+  OllamaModelDetails,
+  OllamaConnectionStatus,
+  OllamaAdvancedOptions,
+  StreamChunk,
 } from '../types';
 
 export class OllamaProvider implements AIProviderInterface {
   private baseURL: string;
   private cachedModels: AIModel[] | null = null;
+  private advancedOptions?: OllamaAdvancedOptions;
 
-  constructor(baseURL: string = 'http://localhost:11434') {
+  constructor(baseURL: string = 'http://localhost:11434', advancedOptions?: OllamaAdvancedOptions) {
     this.baseURL = baseURL;
+    this.advancedOptions = advancedOptions;
   }
 
   getProviderInfo(): AIProvider {
@@ -49,22 +55,19 @@ export class OllamaProvider implements AIProviderInterface {
       const data = await response.json();
       const ollamaModels = data.models || [];
 
-      // Convert Ollama models to our AIModel format
-      this.cachedModels = ollamaModels.map(
-        (model: {
-          name: string;
-          size?: number;
-          details?: { parameter_size?: string };
-          modified_at?: string;
-        }) => ({
-          id: model.name,
-          name: this.formatModelName(model.name),
-          description: `Ollama model${model.size ? ` (${this.formatSize(model.size)})` : ''}`,
-          maxTokens: this.estimateMaxTokens(model.name),
-          costPer1kTokens: 0, // Local, no cost
-          capabilities: ['chat', 'completion', 'analysis', 'summarization'] as AICapability[],
-        })
-      );
+      // Convert Ollama models to our AIModel format with enhanced details
+      this.cachedModels = ollamaModels.map((model: OllamaModelDetails) => ({
+        id: model.name,
+        name: this.formatModelName(model.name),
+        description: `${model.details?.parameter_size || 'Unknown size'} - ${this.formatSize(model.size)}${model.details?.quantization_level ? ` (${model.details.quantization_level})` : ''}`,
+        maxTokens: this.estimateMaxTokens(model.name),
+        costPer1kTokens: 0, // Local, no cost
+        capabilities: ['chat', 'completion', 'analysis', 'summarization'] as AICapability[],
+        size: model.size,
+        parameterSize: model.details?.parameter_size,
+        quantization: model.details?.quantization_level,
+        modifiedAt: model.modified_at,
+      }));
 
       return this.cachedModels || [];
     } catch (error) {
@@ -106,11 +109,14 @@ export class OllamaProvider implements AIProviderInterface {
       model?: string;
       temperature?: number;
       maxTokens?: number;
+      stream?: boolean;
+      onStream?: (chunk: StreamChunk) => void;
     } = {}
   ): Promise<AIResponse> {
     try {
       const model = options.model || 'llama3.2';
-      const temperature = options.temperature || 0.7;
+      const temperature = options.temperature || this.advancedOptions?.temperature || 0.7;
+      const stream = options.stream || false;
 
       // Build system message with context
       const systemMessage = this.buildSystemMessage(context);
@@ -124,6 +130,13 @@ export class OllamaProvider implements AIProviderInterface {
         })),
       ];
 
+      // Merge advanced options
+      const ollamaOptions = {
+        temperature,
+        num_predict: options.maxTokens || 1000,
+        ...this.advancedOptions,
+      };
+
       const response = await fetch(`${this.baseURL}/api/chat`, {
         method: 'POST',
         headers: {
@@ -132,16 +145,17 @@ export class OllamaProvider implements AIProviderInterface {
         body: JSON.stringify({
           model,
           messages: ollamaMessages,
-          options: {
-            temperature,
-            num_predict: options.maxTokens || 1000,
-          },
-          stream: false,
+          options: ollamaOptions,
+          stream,
         }),
       });
 
       if (!response.ok) {
         throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+      }
+
+      if (stream && response.body) {
+        return this.handleStreamingResponse(response, model, context, options.onStream);
       }
 
       const data = await response.json();
@@ -168,6 +182,69 @@ export class OllamaProvider implements AIProviderInterface {
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
+  }
+
+  private async handleStreamingResponse(
+    response: Response,
+    model: string,
+    context: AIContext,
+    onStream?: (chunk: StreamChunk) => void
+  ): Promise<AIResponse> {
+    let fullContent = '';
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n').filter(line => line.trim());
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            if (data.message?.content) {
+              fullContent += data.message.content;
+
+              if (onStream) {
+                onStream({
+                  content: data.message.content,
+                  done: data.done || false,
+                  model,
+                });
+              }
+            }
+
+            if (data.done) {
+              break;
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+            console.warn('Failed to parse streaming chunk:', e);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    const estimatedTokens = Math.ceil(fullContent.length / 4);
+
+    return {
+      id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content: fullContent,
+      model,
+      usage: {
+        promptTokens: estimatedTokens,
+        completionTokens: estimatedTokens,
+        totalTokens: estimatedTokens * 2,
+        estimatedCost: 0,
+      },
+      context,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   async complete(
@@ -225,6 +302,11 @@ Content:\n${content}`,
   }
 
   async checkConnection(): Promise<boolean> {
+    const status = await this.getConnectionStatus();
+    return status.connected;
+  }
+
+  async getConnectionStatus(): Promise<OllamaConnectionStatus> {
     try {
       const response = await fetch(`${this.baseURL}/api/tags`, {
         method: 'GET',
@@ -232,9 +314,39 @@ Content:\n${content}`,
           'Content-Type': 'application/json',
         },
       });
-      return response.ok;
-    } catch {
-      return false;
+
+      if (!response.ok) {
+        return {
+          connected: false,
+          error: `Server responded with ${response.status}`,
+        };
+      }
+
+      const data = await response.json();
+      const modelCount = data.models?.length || 0;
+
+      // Try to get version info
+      let version: string | undefined;
+      try {
+        const versionResponse = await fetch(`${this.baseURL}/api/version`);
+        if (versionResponse.ok) {
+          const versionData = await versionResponse.json();
+          version = versionData.version;
+        }
+      } catch {
+        // Version endpoint might not exist in older Ollama versions
+      }
+
+      return {
+        connected: true,
+        version,
+        modelCount,
+      };
+    } catch (error) {
+      return {
+        connected: false,
+        error: error instanceof Error ? error.message : 'Connection failed',
+      };
     }
   }
 
@@ -247,6 +359,134 @@ Content:\n${content}`,
   async refreshModels(): Promise<AIModel[]> {
     this.cachedModels = null; // Clear cache
     return this.fetchAvailableModels();
+  }
+
+  // Pull/download a model from Ollama library
+  async pullModel(
+    modelName: string,
+    onProgress?: (progress: { status: string; completed?: number; total?: number }) => void
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/pull`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: modelName,
+          stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to pull model: ${response.status} ${response.statusText}`,
+        };
+      }
+
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+
+              if (onProgress && data.status) {
+                onProgress({
+                  status: data.status,
+                  completed: data.completed,
+                  total: data.total,
+                });
+              }
+
+              if (data.error) {
+                return {
+                  success: false,
+                  error: data.error,
+                };
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
+      // Refresh models after successful pull
+      await this.refreshModels();
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  // Delete a model from local Ollama
+  async deleteModel(modelName: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: modelName,
+        }),
+      });
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: `Failed to delete model: ${response.status} ${response.statusText}`,
+        };
+      }
+
+      // Refresh models after successful deletion
+      await this.refreshModels();
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  // Get detailed information about a specific model
+  async getModelInfo(modelName: string): Promise<OllamaModelDetails | null> {
+    try {
+      const response = await fetch(`${this.baseURL}/api/show`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: modelName,
+        }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching model info:', error);
+      return null;
+    }
   }
 
   private buildSystemMessage(context: AIContext): string {

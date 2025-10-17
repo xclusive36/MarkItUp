@@ -59,7 +59,10 @@ export class AIService {
     // Initialize Ollama provider (no API key required)
     if (this.settings.provider === 'ollama') {
       const ollamaUrl = this.settings.ollamaUrl || 'http://localhost:11434';
-      this.providers.set('ollama', new OllamaProvider(ollamaUrl));
+      this.providers.set(
+        'ollama',
+        new OllamaProvider(ollamaUrl, this.settings.ollamaAdvancedOptions)
+      );
     }
   }
 
@@ -457,6 +460,11 @@ export class AIService {
       monthlyLimit: 10.0, // $10 USD
       enableLocalFallback: false,
       ollamaUrl: 'http://localhost:11434', // Default Ollama URL
+      ollamaPresets: [],
+      ollamaAdvancedOptions: {
+        num_ctx: 2048,
+        repeat_penalty: 1.1,
+      },
     };
   }
 }

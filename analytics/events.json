@@ -1977,5 +1977,95 @@
       "ai": 0
     },
     "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708795720_uhwvun9vh",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:35.720Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708800002_ffvf1n6ya",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:40.002Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708801086_3zqg8eori",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:41.086Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708804586_0cxllf3b4",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:44.586Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708805243_5guvlgsci",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:45.243Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708815320_run4yus6g",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:55.320Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708816443_7edw5e6ld",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:56.443Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708817052_tebj05vyt",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:57.052Z",
+    "data": {
+      "fromTheme": "light",
+      "toTheme": "dark"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
+  },
+  {
+    "id": "event_1760708817435_8v8j0awot",
+    "type": "theme_changed",
+    "timestamp": "2025-10-17T13:46:57.435Z",
+    "data": {
+      "fromTheme": "dark",
+      "toTheme": "light"
+    },
+    "sessionId": "session_1760704513151_3be85cgeo"
   }
 ]

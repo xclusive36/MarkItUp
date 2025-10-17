@@ -16,6 +16,10 @@ export interface AIModel {
   maxTokens: number;
   costPer1kTokens: number;
   capabilities: AICapability[];
+  size?: number; // Model size in bytes (for Ollama)
+  parameterSize?: string; // e.g., "7B", "13B" (for Ollama)
+  quantization?: string; // e.g., "Q4_0", "Q8_0" (for Ollama)
+  modifiedAt?: string; // Last modified date (for Ollama)
 }
 
 export type AICapability = 'chat' | 'completion' | 'embedding' | 'analysis' | 'summarization';
@@ -73,6 +77,8 @@ export interface AISettings {
   monthlyLimit: number;
   enableLocalFallback: boolean;
   ollamaUrl?: string; // Custom Ollama server URL (defaults to http://localhost:11434)
+  ollamaPresets?: OllamaServerPreset[]; // Saved Ollama server configurations
+  ollamaAdvancedOptions?: OllamaAdvancedOptions; // Advanced Ollama parameters
 }
 
 export interface ChatSession {
@@ -167,4 +173,52 @@ export interface AnalysisResponse {
   success: boolean;
   data?: AIAnalysis;
   error?: AIError;
+}
+
+// Ollama-specific types
+export interface OllamaServerPreset {
+  id: string;
+  name: string;
+  url: string;
+  isDefault?: boolean;
+  createdAt: string;
+}
+
+export interface OllamaAdvancedOptions {
+  num_ctx?: number; // Context window size (default varies by model)
+  num_gpu?: number; // Number of GPU layers to offload
+  num_thread?: number; // Number of threads to use
+  repeat_penalty?: number; // Penalty for repetition (default 1.1)
+  temperature?: number; // Override default temperature
+  top_k?: number; // Top-k sampling (default 40)
+  top_p?: number; // Top-p sampling (default 0.9)
+  seed?: number; // Random seed for reproducibility
+}
+
+export interface OllamaModelDetails {
+  name: string;
+  size: number;
+  digest: string;
+  modified_at: string;
+  details?: {
+    format?: string;
+    family?: string;
+    families?: string[];
+    parameter_size?: string;
+    quantization_level?: string;
+  };
+}
+
+export interface OllamaConnectionStatus {
+  connected: boolean;
+  version?: string;
+  modelCount?: number;
+  error?: string;
+}
+
+export interface StreamChunk {
+  content: string;
+  done: boolean;
+  model?: string;
+  tokens?: number;
 }

@@ -593,12 +593,28 @@ function AISettingsPanel({
       monthlyLimit: 10.0,
       enableLocalFallback: false,
       ollamaUrl: 'http://localhost:11434',
+      ollamaAdvancedOptions: {
+        num_ctx: 2048,
+        repeat_penalty: 1.1,
+        num_gpu: 0,
+      },
     }
   );
 
-  const [ollamaModels, setOllamaModels] = useState<{ value: string; label: string }[]>([]);
+  const [ollamaModels, setOllamaModels] = useState<
+    { value: string; label: string; description?: string }[]
+  >([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    connected: boolean;
+    message: string;
+  } | null>(null);
+  const [pullingModel, setPullingModel] = useState(false);
+  const [pullProgress, setPullProgress] = useState<string>('');
+  const [modelToPull, setModelToPull] = useState('');
+  const [showAdvancedOllama, setShowAdvancedOllama] = useState(false);
 
   const fetchOllamaModels = useCallback(async () => {
     setLoadingModels(true);
@@ -625,10 +641,28 @@ function AISettingsPanel({
         setOllamaModels([]);
       } else {
         setOllamaModels(
-          models.map((model: { name: string }) => ({
-            value: model.name,
-            label: model.name,
-          }))
+          models.map(
+            (model: {
+              name: string;
+              size?: number;
+              details?: { parameter_size?: string; quantization_level?: string };
+            }) => {
+              const sizeGB = model.size ? (model.size / (1024 * 1024 * 1024)).toFixed(1) : null;
+              const paramSize = model.details?.parameter_size || '';
+              const quant = model.details?.quantization_level || '';
+
+              let description = '';
+              if (paramSize) description += paramSize;
+              if (sizeGB) description += ` - ${sizeGB}GB`;
+              if (quant) description += ` (${quant})`;
+
+              return {
+                value: model.name,
+                label: model.name,
+                description: description || undefined,
+              };
+            }
+          )
         );
 
         // If current model is not in the list, set to the first available model
@@ -644,6 +678,104 @@ function AISettingsPanel({
       setLoadingModels(false);
     }
   }, [formData.ollamaUrl, formData.model]);
+
+  // Test Ollama connection
+  const testOllamaConnection = useCallback(async () => {
+    setTestingConnection(true);
+    setConnectionStatus(null);
+
+    try {
+      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/tags`);
+
+      if (response.ok) {
+        const data = await response.json();
+        const modelCount = data.models?.length || 0;
+        setConnectionStatus({
+          connected: true,
+          message: `✓ Connected! Found ${modelCount} model${modelCount !== 1 ? 's' : ''}`,
+        });
+      } else {
+        setConnectionStatus({
+          connected: false,
+          message: `✗ Connection failed: ${response.status}`,
+        });
+      }
+    } catch (error) {
+      setConnectionStatus({
+        connected: false,
+        message: `✗ Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  }, [formData.ollamaUrl]);
+
+  // Pull a model from Ollama
+  const handlePullModel = useCallback(async () => {
+    if (!modelToPull.trim()) return;
+
+    setPullingModel(true);
+    setPullProgress('Starting download...');
+
+    try {
+      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/pull`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: modelToPull, stream: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to pull model: ${response.status}`);
+      }
+
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.trim());
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              if (data.status) {
+                if (data.total && data.completed) {
+                  const percent = ((data.completed / data.total) * 100).toFixed(0);
+                  setPullProgress(`${data.status}: ${percent}%`);
+                } else {
+                  setPullProgress(data.status);
+                }
+              }
+            } catch {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
+      setPullProgress('✓ Download complete!');
+      setModelToPull('');
+
+      // Refresh models after successful pull
+      setTimeout(() => {
+        fetchOllamaModels();
+        setPullingModel(false);
+        setPullProgress('');
+      }, 2000);
+    } catch (error) {
+      setPullProgress(`✗ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTimeout(() => {
+        setPullingModel(false);
+        setPullProgress('');
+      }, 3000);
+    }
+  }, [modelToPull, formData.ollamaUrl, fetchOllamaModels]);
 
   // Fetch Ollama models when provider is Ollama or URL changes
   useEffect(() => {
@@ -803,12 +935,28 @@ function AISettingsPanel({
         {formData.provider === 'ollama' && (
           <>
             <div>
-              <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-              >
-                Ollama Server URL
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  className="block text-sm font-medium"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                >
+                  Ollama Server URL
+                </label>
+                <button
+                  onClick={testOllamaConnection}
+                  disabled={testingConnection}
+                  className="text-xs px-3 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 disabled:opacity-50 transition-colors font-medium"
+                >
+                  {testingConnection ? (
+                    <span className="flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Testing...
+                    </span>
+                  ) : (
+                    '🔌 Test Connection'
+                  )}
+                </button>
+              </div>
               <input
                 type="text"
                 value={formData.ollamaUrl || 'http://localhost:11434'}
@@ -821,12 +969,172 @@ function AISettingsPanel({
                   borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
                 }}
               />
+              {connectionStatus && (
+                <p
+                  className={`text-xs mt-1 font-medium ${
+                    connectionStatus.connected
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
+                  {connectionStatus.message}
+                </p>
+              )}
               <p
                 className="text-xs mt-1"
                 style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
               >
                 Enter your custom Ollama server URL if not running on localhost:11434
               </p>
+            </div>
+
+            {/* Model Pull Interface */}
+            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  className="block text-sm font-medium"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                >
+                  📥 Download New Model
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={modelToPull}
+                  onChange={e => setModelToPull(e.target.value)}
+                  placeholder="e.g., llama3.2, mistral, codellama"
+                  disabled={pullingModel}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                  style={{
+                    backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                    borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  }}
+                />
+                <button
+                  onClick={handlePullModel}
+                  disabled={pullingModel || !modelToPull.trim()}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                >
+                  {pullingModel ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Pull'}
+                </button>
+              </div>
+              {pullProgress && (
+                <p
+                  className="text-xs mt-2 font-medium"
+                  style={{ color: theme === 'dark' ? '#93c5fd' : '#1e40af' }}
+                >
+                  {pullProgress}
+                </p>
+              )}
+            </div>
+
+            {/* Advanced Ollama Settings */}
+            <div>
+              <button
+                onClick={() => setShowAdvancedOllama(!showAdvancedOllama)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                >
+                  ⚙️ Advanced Ollama Options
+                </span>
+                <span style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+                  {showAdvancedOllama ? '▼' : '▶'}
+                </span>
+              </button>
+              {showAdvancedOllama && (
+                <div className="mt-2 space-y-3 pl-4 border-l-2 border-gray-300 dark:border-gray-600">
+                  <div>
+                    <label
+                      className="block text-xs font-medium mb-1"
+                      style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                    >
+                      Context Window (num_ctx): {formData.ollamaAdvancedOptions?.num_ctx || 2048}
+                    </label>
+                    <input
+                      type="range"
+                      min="512"
+                      max="32768"
+                      step="512"
+                      value={formData.ollamaAdvancedOptions?.num_ctx || 2048}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          ollamaAdvancedOptions: {
+                            ...formData.ollamaAdvancedOptions,
+                            num_ctx: parseInt(e.target.value),
+                          },
+                        })
+                      }
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-xs font-medium mb-1"
+                      style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                    >
+                      Repeat Penalty: {formData.ollamaAdvancedOptions?.repeat_penalty || 1.1}
+                    </label>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="2.0"
+                      step="0.1"
+                      value={formData.ollamaAdvancedOptions?.repeat_penalty || 1.1}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          ollamaAdvancedOptions: {
+                            ...formData.ollamaAdvancedOptions,
+                            repeat_penalty: parseFloat(e.target.value),
+                          },
+                        })
+                      }
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-xs font-medium mb-1"
+                      style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                    >
+                      GPU Layers (num_gpu): {formData.ollamaAdvancedOptions?.num_gpu || 0}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.ollamaAdvancedOptions?.num_gpu || 0}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          ollamaAdvancedOptions: {
+                            ...formData.ollamaAdvancedOptions,
+                            num_gpu: parseInt(e.target.value),
+                          },
+                        })
+                      }
+                      className="w-full px-2 py-1 border rounded text-sm"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                        color: theme === 'dark' ? '#f9fafb' : '#111827',
+                        borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                      }}
+                    />
+                    <p
+                      className="text-xs mt-1"
+                      style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                    >
+                      Set to 0 for auto-detection, or specify layers for GPU acceleration
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {modelError && (
@@ -846,8 +1154,8 @@ function AISettingsPanel({
 
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <p className="text-sm" style={{ color: theme === 'dark' ? '#93c5fd' : '#1e40af' }}>
-                💡 Make sure Ollama is installed and running. If no models are found, run: ollama
-                pull llama3.2
+                💡 Make sure Ollama is installed and running. Use the download feature above to pull
+                models directly from the UI!
               </p>
             </div>
           </>
@@ -893,6 +1201,7 @@ function AISettingsPanel({
               getModelOptions().map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
+                  {option.description ? ` - ${option.description}` : ''}
                 </option>
               ))
             )}
