@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   ChevronLeft,
@@ -11,14 +11,17 @@ import {
   PanelRightOpen,
   GripVertical,
   Info,
+  Sparkles,
 } from 'lucide-react';
 import { Note } from '@/lib/types';
 import DocumentOutlinePanel from './DocumentOutlinePanel';
 import BacklinksPanel from './BacklinksPanel';
 import MetadataPanel from './MetadataPanel';
+import RelatedNotes from './RelatedNotes';
+import VectorSearchTooltip from './VectorSearchTooltip';
 import { useResizablePanel } from '@/hooks/useResizablePanel';
 
-type PanelTab = 'outline' | 'backlinks' | 'metadata' | 'ai';
+type PanelTab = 'outline' | 'backlinks' | 'metadata' | 'related' | 'ai';
 
 interface RightSidePanelProps {
   // Panel state
@@ -59,6 +62,18 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   theme = 'light',
 }) => {
   const [activeTab, setActiveTab] = useState<PanelTab>('outline');
+  const [showRelatedTooltip, setShowRelatedTooltip] = useState(false);
+
+  // Show Related tooltip when tab becomes visible
+  useEffect(() => {
+    if (activeTab === 'related' && currentNote) {
+      const hasSeenTooltip = localStorage.getItem('vectorSearchTooltip_related_seen');
+      if (!hasSeenTooltip) {
+        const timer = setTimeout(() => setShowRelatedTooltip(true), 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [activeTab, currentNote]);
 
   // Resizable panel hook
   const { width, isResizing, handleMouseDown } = useResizablePanel({
@@ -88,6 +103,7 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   const tabs = [
     { id: 'outline' as PanelTab, label: 'Outline', icon: List },
     { id: 'backlinks' as PanelTab, label: 'Backlinks', icon: Link2 },
+    { id: 'related' as PanelTab, label: 'Related', icon: Sparkles },
     { id: 'metadata' as PanelTab, label: 'Metadata', icon: Info },
     ...(showAITools ? [{ id: 'ai' as PanelTab, label: 'AI Tools', icon: Brain }] : []),
   ];
@@ -289,6 +305,18 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
               />
             )}
 
+            {activeTab === 'related' && (
+              <div className="h-full overflow-y-auto p-4">
+                <RelatedNotes
+                  activeNote={currentNote}
+                  onNoteClick={noteId => onNoteClick?.(noteId)}
+                  maxResults={8}
+                  minSimilarity={0.3}
+                  className="h-full"
+                />
+              </div>
+            )}
+
             {activeTab === 'metadata' && (
               <MetadataPanel note={currentNote} allNotes={allNotes} theme={theme} />
             )}
@@ -312,6 +340,11 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* Discovery Tooltip for Related Notes */}
+      {showRelatedTooltip && (
+        <VectorSearchTooltip trigger="related" onDismiss={() => setShowRelatedTooltip(false)} />
       )}
     </div>
   );

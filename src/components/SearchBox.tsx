@@ -4,6 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, X, Hash, Folder, FileText, Clock, Sparkles, Brain } from 'lucide-react';
 import { SearchResult, SearchMatch } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
+import {
+  highlightText,
+  getHighlightColor,
+  formatMatchCount,
+  EnhancedSearchMatch,
+} from '@/lib/search/highlight';
+import VectorSearchTooltip from './VectorSearchTooltip';
 
 export type SearchMode = 'keyword' | 'semantic' | 'hybrid';
 
@@ -36,8 +43,18 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchMode, setSearchMode] = useState<SearchMode>(defaultMode);
+  const [showTooltip, setShowTooltip] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Show tooltip when semantic mode is available but not used
+  useEffect(() => {
+    const hasSeenTooltip = localStorage.getItem('vectorSearchTooltip_search_seen');
+    if (!hasSeenTooltip && searchMode === 'keyword' && query.trim()) {
+      const timer = setTimeout(() => setShowTooltip(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchMode, query]);
 
   // Debounced search
   useEffect(() => {
@@ -131,37 +148,14 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const highlightMatches = (text: string, matches: SearchMatch[]) => {
     if (matches.length === 0) return text;
 
-    const parts = [];
-    let lastIndex = 0;
+    // Convert to enhanced matches with type info
+    const enhancedMatches: EnhancedSearchMatch[] = matches.map(match => ({
+      ...match,
+      type: searchMode === 'semantic' || searchMode === 'hybrid' ? 'semantic' : 'keyword',
+    }));
 
-    matches.forEach((match, index) => {
-      // Add text before match
-      if (match.start > lastIndex) {
-        parts.push(<span key={`before-${index}`}>{text.slice(lastIndex, match.start)}</span>);
-      }
-
-      // Add highlighted match
-      parts.push(
-        <mark
-          key={`match-${index}`}
-          className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded"
-          style={{
-            backgroundColor: theme === 'dark' ? '#92400e' : '#fef3c7',
-          }}
-        >
-          {match.text}
-        </mark>
-      );
-
-      lastIndex = match.end;
-    });
-
-    // Add remaining text
-    if (lastIndex < text.length) {
-      parts.push(<span key="after">{text.slice(lastIndex)}</span>);
-    }
-
-    return parts;
+    // Use the enhanced highlighting utility
+    return highlightText(text, enhancedMatches, { theme });
   };
 
   const getSearchTypeIcon = (query: string) => {
@@ -320,35 +314,82 @@ const SearchBox: React.FC<SearchBoxProps> = ({
                   <span className="font-medium text-gray-900 dark:text-white truncate">
                     {result.noteName.replace('.md', '')}
                   </span>
+                  {/* Match type indicator */}
+                  {searchMode !== 'keyword' && (
+                    <span
+                      className="text-xs px-2 py-0.5 rounded-full font-medium"
+                      style={{
+                        backgroundColor:
+                          theme === 'dark'
+                            ? searchMode === 'semantic'
+                              ? '#7c3aed30'
+                              : '#10b98130'
+                            : searchMode === 'semantic'
+                              ? '#ddd6fe'
+                              : '#d1fae5',
+                        color:
+                          theme === 'dark'
+                            ? searchMode === 'semantic'
+                              ? '#c4b5fd'
+                              : '#6ee7b7'
+                            : searchMode === 'semantic'
+                              ? '#7c3aed'
+                              : '#059669',
+                      }}
+                    >
+                      {searchMode === 'semantic' ? '🧠 Semantic' : '✨ Hybrid'}
+                    </span>
+                  )}
                   <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
-                    Score: {result.score}
+                    {formatMatchCount(
+                      result.matches.length,
+                      searchMode === 'semantic' ? 'semantic' : 'keyword'
+                    )}
                   </span>
                 </div>
 
                 {/* Matches */}
                 {result.matches.length > 0 && (
                   <div className="space-y-1">
-                    {result.matches.slice(0, 2).map((match, matchIndex) => (
-                      <div
-                        key={matchIndex}
-                        className="text-sm text-gray-600 dark:text-gray-300 pl-6"
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-3 h-3 text-gray-400" />
-                          <span className="text-xs text-gray-400">Line {match.lineNumber}</span>
-                        </div>
+                    {result.matches.slice(0, 2).map((match, matchIndex) => {
+                      const matchType =
+                        searchMode === 'semantic' || searchMode === 'hybrid'
+                          ? 'semantic'
+                          : 'keyword';
+                      const colors = getHighlightColor(matchType, theme);
+
+                      return (
                         <div
-                          className="text-xs font-mono bg-gray-50 dark:bg-gray-800 
-                                      p-2 rounded border-l-2 border-blue-300 dark:border-blue-600"
-                          style={{
-                            backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                            borderColor: theme === 'dark' ? '#60a5fa' : '#93c5fd',
-                          }}
+                          key={matchIndex}
+                          className="text-sm text-gray-600 dark:text-gray-300 pl-6"
                         >
-                          {highlightMatches(match.context, [match])}
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            <span className="text-xs text-gray-400">Line {match.lineNumber}</span>
+                            {searchMode !== 'keyword' && (
+                              <span
+                                className="text-xs px-1.5 py-0.5 rounded"
+                                style={{
+                                  backgroundColor: colors.background,
+                                  color: colors.text,
+                                }}
+                              >
+                                {matchType}
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            className="text-xs font-mono p-2 rounded border-l-2"
+                            style={{
+                              backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
+                              borderColor: colors.border,
+                            }}
+                          >
+                            {highlightMatches(match.context, [match])}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {result.matches.length > 2 && (
                       <div className="text-xs text-gray-400 pl-6">
                         +{result.matches.length - 2} more matches
@@ -397,6 +438,11 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 
       {/* Click outside to close */}
       {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
+
+      {/* Discovery Tooltip */}
+      {showTooltip && (
+        <VectorSearchTooltip trigger="search" onDismiss={() => setShowTooltip(false)} />
+      )}
     </div>
   );
 };
