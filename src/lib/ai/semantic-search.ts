@@ -1,5 +1,6 @@
 import { Note, SearchResult, SearchMatch } from '../types';
 import { analytics } from '../analytics';
+import { BrowserVectorStore, EmbeddingService, SimilarNote } from '../vector';
 
 export interface SemanticSearchResult extends SearchResult {
   semanticScore: number;
@@ -15,10 +16,43 @@ export interface SearchInsights {
 
 export class SemanticSearchEngine {
   private searchCache: Map<string, SemanticSearchResult[]> = new Map();
+  private vectorStore: BrowserVectorStore | null = null;
+  private embeddingService: EmbeddingService | null = null;
+  private isVectorSearchEnabled = false;
+
+  /**
+   * Initialize vector search capabilities
+   * Call this to enable true semantic search with embeddings
+   */
+  async initializeVectorSearch(): Promise<void> {
+    try {
+      this.vectorStore = new BrowserVectorStore();
+      await this.vectorStore.initialize();
+
+      this.embeddingService = new EmbeddingService({ provider: 'local' });
+      await this.embeddingService.initialize();
+
+      this.isVectorSearchEnabled = true;
+      console.log('Vector search initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize vector search:', error);
+      this.isVectorSearchEnabled = false;
+      // Fall back to keyword-based semantic search
+    }
+  }
+
+  /**
+   * Check if vector search is available
+   */
+  isVectorSearchAvailable(): boolean {
+    return (
+      this.isVectorSearchEnabled && this.vectorStore !== null && this.embeddingService !== null
+    );
+  }
 
   async semanticSearch(
-    query: string, 
-    notes: Note[], 
+    query: string,
+    notes: Note[],
     options: {
       maxResults?: number;
       includeRelated?: boolean;
@@ -31,36 +65,37 @@ export class SemanticSearchEngine {
     suggestions: string[];
   }> {
     const cacheKey = `${query}-${JSON.stringify(options)}`;
-    
+
     // Check cache first
     if (this.searchCache.has(cacheKey)) {
       return {
         results: this.searchCache.get(cacheKey)!,
         insights: this.generateSearchInsights(query, notes),
-        suggestions: this.generateSearchSuggestions(query, notes)
+        suggestions: this.generateSearchSuggestions(query, notes),
       };
     }
 
-    // Expand query with synonyms and related terms
-    const expandedTerms = this.expandQuery(query);
-    
-    // Perform multi-layered search
-    const layeredResults = await Promise.all([
-      this.exactMatchSearch(query, notes),
-      this.expandedTermSearch(expandedTerms, notes),
-      this.contextualSearch(query, notes, options.contextualBias || [])
-    ]);
+    // Use vector search if available, otherwise fall back to keyword-based
+    let semanticResults: SemanticSearchResult[];
 
-    // Merge and rank results
-    const mergedResults = this.mergeSearchResults(layeredResults.flat());
-    
-    // Apply semantic scoring
-    const semanticResults = this.applySemanticScoring(
-      mergedResults, 
-      query,
-      expandedTerms,
-      options.maxResults || 20
-    );
+    if (this.isVectorSearchAvailable()) {
+      semanticResults = await this.vectorBasedSearch(query, notes, options.maxResults || 20);
+    } else {
+      // Fallback: keyword-based semantic search
+      const expandedTerms = this.expandQuery(query);
+      const layeredResults = await Promise.all([
+        this.exactMatchSearch(query, notes),
+        this.expandedTermSearch(expandedTerms, notes),
+        this.contextualSearch(query, notes, options.contextualBias || []),
+      ]);
+      const mergedResults = this.mergeSearchResults(layeredResults.flat());
+      semanticResults = this.applySemanticScoring(
+        mergedResults,
+        query,
+        expandedTerms,
+        options.maxResults || 20
+      );
+    }
 
     // Cache results
     this.searchCache.set(cacheKey, semanticResults);
@@ -75,30 +110,30 @@ export class SemanticSearchEngine {
       query,
       resultsCount: semanticResults.length,
       searchDepth: options.searchDepth || 'shallow',
-      hasResults: semanticResults.length > 0
+      hasResults: semanticResults.length > 0,
     });
 
     return {
       results: semanticResults,
       insights,
-      suggestions
+      suggestions,
     };
   }
 
   private expandQuery(query: string): string[] {
     const terms = [query];
     const queryLower = query.toLowerCase();
-    
+
     // Basic synonym expansion (can be enhanced with AI later)
     const synonymMap: Record<string, string[]> = {
-      'ai': ['artificial intelligence', 'machine learning', 'ml', 'algorithm'],
-      'programming': ['coding', 'development', 'software', 'code'],
-      'design': ['ui', 'ux', 'interface', 'visual', 'layout'],
-      'project': ['task', 'work', 'assignment', 'initiative'],
-      'learn': ['study', 'education', 'knowledge', 'understanding'],
-      'idea': ['concept', 'thought', 'notion', 'insight'],
-      'problem': ['issue', 'challenge', 'difficulty', 'trouble'],
-      'solution': ['answer', 'fix', 'resolution', 'approach']
+      ai: ['artificial intelligence', 'machine learning', 'ml', 'algorithm'],
+      programming: ['coding', 'development', 'software', 'code'],
+      design: ['ui', 'ux', 'interface', 'visual', 'layout'],
+      project: ['task', 'work', 'assignment', 'initiative'],
+      learn: ['study', 'education', 'knowledge', 'understanding'],
+      idea: ['concept', 'thought', 'notion', 'insight'],
+      problem: ['issue', 'challenge', 'difficulty', 'trouble'],
+      solution: ['answer', 'fix', 'resolution', 'approach'],
     };
 
     for (const [key, synonyms] of Object.entries(synonymMap)) {
@@ -110,14 +145,65 @@ export class SemanticSearchEngine {
     return terms;
   }
 
+  /**
+   * Vector-based semantic search using real embeddings
+   */
+  private async vectorBasedSearch(
+    query: string,
+    notes: Note[],
+    maxResults: number
+  ): Promise<SemanticSearchResult[]> {
+    if (!this.vectorStore || !this.embeddingService) {
+      throw new Error('Vector search not initialized');
+    }
+
+    try {
+      // Generate embedding for the query
+      const queryEmbedding = await this.embeddingService.embedQuery(query);
+
+      // Find similar notes using vector similarity
+      const similarNotes = await this.vectorStore.findSimilar(queryEmbedding, {
+        limit: maxResults * 2, // Get extra for filtering
+        threshold: 0.5, // 50% similarity minimum
+      });
+
+      // Convert to SemanticSearchResult format
+      const results: SemanticSearchResult[] = [];
+      const noteMap = new Map(notes.map(n => [n.id, n]));
+
+      for (const similar of similarNotes) {
+        const note = noteMap.get(similar.noteId);
+        if (!note) continue;
+
+        // Find matches in content for highlighting
+        const matches = this.findContentMatches(note.content, query);
+
+        results.push({
+          noteId: note.id,
+          noteName: note.name,
+          matches,
+          score: similar.similarity * 10, // Scale to 0-10 range
+          semanticScore: similar.similarity,
+          conceptualMatches: similar.metadata.tags,
+          contextualRelevance: similar.similarity,
+        });
+      }
+
+      return results.slice(0, maxResults);
+    } catch (error) {
+      console.error('Vector search failed:', error);
+      // Fall back to empty results rather than throwing
+      return [];
+    }
+  }
+
   private async exactMatchSearch(query: string, notes: Note[]): Promise<SearchResult[]> {
     const results: SearchResult[] = [];
     const queryLower = query.toLowerCase();
 
     for (const note of notes) {
       const matches: SearchMatch[] = [];
-      const contentLower = note.content.toLowerCase();
-      
+
       // Title matches (high priority)
       if (note.name.toLowerCase().includes(queryLower)) {
         const match: SearchMatch = {
@@ -125,7 +211,7 @@ export class SemanticSearchEngine {
           start: note.name.toLowerCase().indexOf(queryLower),
           end: note.name.toLowerCase().indexOf(queryLower) + query.length,
           lineNumber: 0,
-          context: note.name
+          context: note.name,
         };
         matches.push(match);
       }
@@ -142,7 +228,7 @@ export class SemanticSearchEngine {
             start: 0,
             end: tag.length,
             lineNumber: 0,
-            context: `#${tag}`
+            context: `#${tag}`,
           };
           matches.push(match);
         }
@@ -153,7 +239,7 @@ export class SemanticSearchEngine {
           noteId: note.id,
           noteName: note.name,
           matches,
-          score: this.calculateBasicScore(matches, query)
+          score: this.calculateBasicScore(matches, query),
         });
       }
     }
@@ -161,7 +247,10 @@ export class SemanticSearchEngine {
     return results;
   }
 
-  private async expandedTermSearch(expandedTerms: string[], notes: Note[]): Promise<SearchResult[]> {
+  private async expandedTermSearch(
+    expandedTerms: string[],
+    notes: Note[]
+  ): Promise<SearchResult[]> {
     const results: SearchResult[] = [];
 
     for (const note of notes) {
@@ -181,7 +270,7 @@ export class SemanticSearchEngine {
           noteId: note.id,
           noteName: note.name,
           matches,
-          score
+          score,
         });
       }
     }
@@ -190,8 +279,8 @@ export class SemanticSearchEngine {
   }
 
   private async contextualSearch(
-    query: string, 
-    notes: Note[], 
+    query: string,
+    notes: Note[],
     contextualBias: string[]
   ): Promise<SearchResult[]> {
     const results: SearchResult[] = [];
@@ -201,8 +290,10 @@ export class SemanticSearchEngine {
 
       // Boost score if note contains contextual bias terms
       for (const bias of contextualBias) {
-        if (note.content.toLowerCase().includes(bias.toLowerCase()) ||
-            note.tags.some(tag => tag.toLowerCase().includes(bias.toLowerCase()))) {
+        if (
+          note.content.toLowerCase().includes(bias.toLowerCase()) ||
+          note.tags.some(tag => tag.toLowerCase().includes(bias.toLowerCase()))
+        ) {
           contextScore += 0.3;
         }
       }
@@ -214,7 +305,7 @@ export class SemanticSearchEngine {
             noteId: note.id,
             noteName: note.name,
             matches: basicMatches,
-            score: this.calculateBasicScore(basicMatches, query) + contextScore
+            score: this.calculateBasicScore(basicMatches, query) + contextScore,
           });
         }
       }
@@ -228,7 +319,7 @@ export class SemanticSearchEngine {
     const queryLower = query.toLowerCase();
     const contentLower = content.toLowerCase();
     const lines = content.split('\n');
-    
+
     let index = contentLower.indexOf(queryLower);
     while (index !== -1) {
       // Find which line this match is on
@@ -246,24 +337,24 @@ export class SemanticSearchEngine {
       const start = Math.max(0, index - 50);
       const end = Math.min(content.length, index + query.length + 50);
       const context = content.substring(start, end);
-      
+
       matches.push({
         text: content.substring(index, index + query.length),
         start: index,
         end: index + query.length,
         lineNumber,
-        context: start > 0 ? '...' + context : context
+        context: start > 0 ? '...' + context : context,
       });
-      
+
       index = contentLower.indexOf(queryLower, index + 1);
     }
-    
+
     return matches;
   }
 
   private calculateBasicScore(matches: SearchMatch[], query: string): number {
     let score = 0;
-    
+
     for (const match of matches) {
       // Higher score for exact matches
       if (match.text.toLowerCase() === query.toLowerCase()) {
@@ -272,13 +363,13 @@ export class SemanticSearchEngine {
         score += 1.0;
       }
     }
-    
+
     return score;
   }
 
   private mergeSearchResults(results: SearchResult[]): SearchResult[] {
     const merged = new Map<string, SearchResult>();
-    
+
     for (const result of results) {
       if (merged.has(result.noteId)) {
         const existing = merged.get(result.noteId)!;
@@ -288,12 +379,12 @@ export class SemanticSearchEngine {
         merged.set(result.noteId, { ...result });
       }
     }
-    
+
     return Array.from(merged.values());
   }
 
   private applySemanticScoring(
-    results: SearchResult[], 
+    results: SearchResult[],
     originalQuery: string,
     expandedTerms: string[],
     maxResults: number
@@ -302,16 +393,14 @@ export class SemanticSearchEngine {
 
     for (const result of results) {
       const semanticScore = this.calculateSemanticScore(result, expandedTerms);
-      
+
       semanticResults.push({
         ...result,
         semanticScore,
         conceptualMatches: expandedTerms.filter(term =>
-          result.matches.some(match => 
-            match.text.toLowerCase().includes(term.toLowerCase())
-          )
+          result.matches.some(match => match.text.toLowerCase().includes(term.toLowerCase()))
         ),
-        contextualRelevance: semanticScore * result.score
+        contextualRelevance: semanticScore * result.score,
       });
     }
 
@@ -322,32 +411,35 @@ export class SemanticSearchEngine {
 
   private calculateSemanticScore(result: SearchResult, expandedTerms: string[]): number {
     let score = 0;
-    
-    const resultText = result.matches.map(m => m.text).join(' ').toLowerCase();
-    
+
+    const resultText = result.matches
+      .map(m => m.text)
+      .join(' ')
+      .toLowerCase();
+
     for (const term of expandedTerms) {
       if (resultText.includes(term.toLowerCase())) {
         score += 0.2;
       }
     }
-    
+
     return Math.min(score, 1.0);
   }
 
   private generateSearchInsights(query: string, notes: Note[]): SearchInsights {
     const expandedTerms = this.expandQuery(query);
     const searchSuggestions = this.generateSearchSuggestions(query, notes);
-    
+
     return {
       searchSuggestions,
       relatedTopics: expandedTerms,
-      conceptualKeywords: query.split(/\s+/)
+      conceptualKeywords: query.split(/\s+/),
     };
   }
 
   private generateSearchSuggestions(query: string, notes: Note[]): string[] {
     const availableTopics = new Set<string>();
-    
+
     // Extract topics from note titles and tags
     notes.forEach(note => {
       availableTopics.add(note.name);
@@ -356,9 +448,10 @@ export class SemanticSearchEngine {
 
     // Filter suggestions related to the query
     const suggestions = Array.from(availableTopics)
-      .filter(topic => 
-        topic.toLowerCase().includes(query.toLowerCase()) ||
-        query.toLowerCase().includes(topic.toLowerCase())
+      .filter(
+        topic =>
+          topic.toLowerCase().includes(query.toLowerCase()) ||
+          query.toLowerCase().includes(topic.toLowerCase())
       )
       .slice(0, 5);
 

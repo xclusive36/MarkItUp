@@ -676,6 +676,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     includeContent?: boolean;
     tags?: string[];
     folders?: string[];
+    mode?: 'keyword' | 'semantic' | 'hybrid';
   };
 
   const handleSearch = useCallback(
@@ -686,8 +687,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           query: query.length > 50 ? query.substring(0, 50) + '...' : query,
           queryLength: query.length,
           hasOptions: !!options,
+          searchMode: options?.mode || 'keyword',
           timestamp: new Date().toISOString(),
         });
+
+        // Use vector search API if mode is specified (semantic or hybrid)
+        const useVectorSearch = options?.mode && ['semantic', 'hybrid'].includes(options.mode);
+        const apiEndpoint = useVectorSearch ? '/api/vector/search' : '/api/search';
 
         const params = new URLSearchParams({
           q: query,
@@ -695,6 +701,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           includeContent: options?.includeContent?.toString() || 'true',
         });
 
+        if (options?.mode) {
+          params.set('mode', options.mode);
+        }
         if (options?.tags?.length) {
           params.set('tags', options.tags.join(','));
         }
@@ -702,7 +711,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           params.set('folders', options.folders.join(','));
         }
 
-        const response = await fetch(`/api/search?${params}`);
+        const response = await fetch(`${apiEndpoint}?${params}`);
         if (response.ok) {
           const data = await response.json();
 
@@ -710,6 +719,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           analytics.trackEvent('search_completed', {
             resultsCount: data.results?.length || 0,
             query: query.length > 50 ? query.substring(0, 50) + '...' : query,
+            searchMode: options?.mode || 'keyword',
           });
 
           return data.results || [];
@@ -718,6 +728,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         console.error('Search error:', error);
         analytics.trackEvent('search_error', {
           error: error instanceof Error ? error.message : 'Unknown error',
+          searchMode: options?.mode || 'keyword',
         });
       }
       return [];

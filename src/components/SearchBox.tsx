@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, Hash, Folder, FileText, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, X, Hash, Folder, FileText, Clock, Sparkles, Brain } from 'lucide-react';
 import { SearchResult, SearchMatch } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
+
+export type SearchMode = 'keyword' | 'semantic' | 'hybrid';
 
 interface SearchOptions {
   limit?: number;
   includeContent?: boolean;
   tags?: string[];
   folders?: string[];
+  mode?: SearchMode;
 }
 
 interface SearchBoxProps {
@@ -17,6 +20,7 @@ interface SearchBoxProps {
   onSelectNote: (noteId: string) => void;
   placeholder?: string;
   className?: string;
+  defaultMode?: SearchMode;
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({
@@ -24,12 +28,14 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   onSelectNote,
   placeholder = 'Search notes...',
   className = '',
+  defaultMode = 'keyword',
 }) => {
   const { theme } = useSimpleTheme();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [searchMode, setSearchMode] = useState<SearchMode>(defaultMode);
   const searchRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +44,10 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     const timeoutId = setTimeout(async () => {
       if (query.trim()) {
         try {
-          const searchResults = await onSearch(query, { limit: 20 });
+          const searchResults = await onSearch(query, {
+            limit: 20,
+            mode: searchMode,
+          });
           setResults(searchResults);
           setIsOpen(true);
           setSelectedIndex(0);
@@ -54,15 +63,18 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     }, 150);
 
     return () => clearTimeout(timeoutId);
-  }, [query, onSearch]);
+  }, [query, onSearch, searchMode]);
 
-  const handleSelectNote = (noteId: string) => {
-    onSelectNote(noteId);
-    setQuery('');
-    setResults([]);
-    setIsOpen(false);
-    searchRef.current?.blur();
-  };
+  const handleSelectNote = useCallback(
+    (noteId: string) => {
+      onSelectNote(noteId);
+      setQuery('');
+      setResults([]);
+      setIsOpen(false);
+      searchRef.current?.blur();
+    },
+    [onSelectNote]
+  );
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -158,8 +170,86 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     return <Search className="w-4 h-4 text-gray-500" />;
   };
 
+  const getModeIcon = (mode: SearchMode) => {
+    switch (mode) {
+      case 'keyword':
+        return <Search className="w-3 h-3" />;
+      case 'semantic':
+        return <Brain className="w-3 h-3" />;
+      case 'hybrid':
+        return <Sparkles className="w-3 h-3" />;
+    }
+  };
+
+  const getModeColor = (mode: SearchMode) => {
+    switch (mode) {
+      case 'keyword':
+        return 'blue';
+      case 'semantic':
+        return 'purple';
+      case 'hybrid':
+        return 'green';
+    }
+  };
+
   return (
     <div className={`relative ${className}`}>
+      {/* Search Mode Selector */}
+      <div className="flex gap-1 mb-2">
+        {(['keyword', 'semantic', 'hybrid'] as SearchMode[]).map(mode => {
+          const color = getModeColor(mode);
+          const isActive = searchMode === mode;
+          return (
+            <button
+              key={mode}
+              onClick={() => setSearchMode(mode)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium
+                         transition-all duration-200 ${
+                           isActive
+                             ? `bg-${color}-100 dark:bg-${color}-900/30 text-${color}-700 dark:text-${color}-300 
+                                border-${color}-300 dark:border-${color}-600`
+                             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                         }`}
+              style={{
+                backgroundColor: isActive
+                  ? theme === 'dark'
+                    ? color === 'blue'
+                      ? '#1e3a8a30'
+                      : color === 'purple'
+                        ? '#581c8730'
+                        : '#14532d30'
+                    : color === 'blue'
+                      ? '#dbeafe'
+                      : color === 'purple'
+                        ? '#f3e8ff'
+                        : '#dcfce7'
+                  : theme === 'dark'
+                    ? '#1f2937'
+                    : '#f3f4f6',
+                color: isActive
+                  ? theme === 'dark'
+                    ? color === 'blue'
+                      ? '#93c5fd'
+                      : color === 'purple'
+                        ? '#d8b4fe'
+                        : '#86efac'
+                    : color === 'blue'
+                      ? '#1d4ed8'
+                      : color === 'purple'
+                        ? '#7e22ce'
+                        : '#15803d'
+                  : theme === 'dark'
+                    ? '#9ca3af'
+                    : '#4b5563',
+              }}
+            >
+              {getModeIcon(mode)}
+              <span className="capitalize">{mode}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Search Input */}
       <div className="relative">
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
