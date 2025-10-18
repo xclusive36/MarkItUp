@@ -62,6 +62,7 @@ export interface AIResponse {
   };
   context: AIContext;
   timestamp: string;
+  functionCall?: OpenAIFunctionCall; // Optional function call from OpenAI
 }
 
 export interface AISettings {
@@ -278,4 +279,77 @@ export interface StreamChunk {
   done: boolean;
   model?: string;
   tokens?: number;
+}
+
+// OpenAI-specific types
+export interface OpenAIAdvancedOptions {
+  frequency_penalty?: number; // -2.0 to 2.0, penalize frequent tokens
+  presence_penalty?: number; // -2.0 to 2.0, penalize tokens that have appeared
+  top_p?: number; // 0 to 1, nucleus sampling
+  response_format?: { type: 'text' | 'json_object' }; // Force JSON output
+  seed?: number; // For deterministic outputs
+  logit_bias?: Record<string, number>; // Modify token likelihoods
+  user?: string; // Unique user identifier for abuse monitoring
+}
+
+export interface OpenAIPerformanceMetrics {
+  modelId: string;
+  averageResponseTime: number; // ms
+  tokensPerSecond: number;
+  totalRequests: number;
+  successRate: number; // 0-100
+  lastUsed: string;
+  averageCost: number; // Average cost per request
+}
+
+export interface OpenAIConnectionStatus {
+  connected: boolean;
+  apiKeyValid?: boolean;
+  organizationId?: string;
+  rateLimit?: {
+    requestsPerMinute: number;
+    tokensPerMinute: number;
+  };
+  error?: string;
+}
+
+export interface OpenAIFunction {
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: Record<
+      string,
+      {
+        type: string;
+        description?: string;
+        enum?: string[];
+      }
+    >;
+    required?: string[];
+  };
+}
+
+export interface OpenAIFunctionCall {
+  name: string;
+  arguments: string; // JSON string
+}
+
+export interface OpenAIToolCall {
+  id: string;
+  type: 'function';
+  function: OpenAIFunctionCall;
+}
+
+export interface OpenAIImageContent {
+  type: 'image_url';
+  image_url: {
+    url: string; // Can be base64 data URL or regular URL
+    detail?: 'low' | 'high' | 'auto';
+  };
+}
+
+export interface OpenAITextContent {
+  type: 'text';
+  text: string;
 }
