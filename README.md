@@ -63,15 +63,26 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 
 ## ✨ Key Features
 
-### 🧠 Personal Knowledge Management
+### 📚 Core Knowledge Management
 
-- **Wikilinks & Bidirectional Linking** - Connect notes with `[[Note Name]]` syntax
-- **Interactive Graph View** - Visualize your knowledge network
+- **Bidirectional Linking** - Connect notes with `[[wikilinks]]` and automatic backlinks
+- **Knowledge Graph** - Visual exploration with 3D force-directed layouts
 - **Advanced Search** - Full-text search with operators (`tag:`, `folder:`, exact phrases)
+- **Semantic Search** - AI-powered vector search finds related content by meaning, not just keywords:
+  - 🧠 **Browser-Based ML** - Client-side embeddings using Transformers.js (no server required!)
+  - 🔍 **Similarity Discovery** - Find related notes based on semantic similarity
+  - 📊 **Progress Tracking** - Real-time indexing with visual progress indicators
+  - 💾 **IndexedDB Storage** - Efficient persistent storage for embeddings
+  - ⚡ **Fast Search** - Sub-100ms queries for typical collections
+  - 🎯 **Mode Toggle** - Switch between keyword and semantic search instantly
+  - 🔒 **100% Private** - All processing happens locally in your browser
+  - ⚙️ **Configurable** - Batch size, auto-indexing, and more in settings
 - **Smart Tagging** - Organize with `#tags` and automatic indexing
 - **Real-time Analytics** - Track your knowledge growth
 
 ### 🤖 AI-Powered Intelligence
+
+**All AI features work with your choice of provider (OpenAI, Anthropic, Gemini, or Ollama):**
 
 - **Intelligent Link Suggester** - AI finds connection opportunities in your knowledge base:
   - 🔍 Context-aware wikilink suggestions with confidence scoring
@@ -85,7 +96,7 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Writing Assistant** - Advanced content analysis and improvement suggestions
 - **Knowledge Discovery** - AI-powered gap analysis and content recommendations
 - **Research Assistant** - Semantic search with intelligent note creation
-- **Multi-Provider Support** - Choose from OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash with 1M token context), or Ollama (local AI)
+- **Multi-Provider Support** - Choose once, use everywhere: OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash), or Ollama (local AI)
 
 #### 🏠 Ollama Local AI (Privacy-First)
 
@@ -93,7 +104,7 @@ MarkItUp features the most comprehensive Ollama integration in any PKM system:
 
 - **🌊 Real-Time Streaming** - Progressive response display with Server-Sent Events
 - **📊 Model Management** - Download, delete, and refresh models directly from the UI
-- **🔌 Connection Testing** - One-click server verification with detailed status
+- **🔌 Connection Testing** - One-click server verification with detailed status (no CORS errors!)
 - **⚙️ Advanced Parameters** - Fine-tune context window, GPU layers, repeat penalty, and more
 - **📦 Enhanced Model Details** - View size, parameter count (7B/13B/70B), and quantization levels
 - **💾 Zero Cost** - No API keys, no usage limits, completely free local AI
@@ -101,6 +112,7 @@ MarkItUp features the most comprehensive Ollama integration in any PKM system:
 - **🚀 Model Library** - Browse and install popular models (Llama 3.2, Mistral, CodeLlama, etc.)
 - **🎯 Custom Servers** - Connect to remote Ollama instances with saved presets
 - **📈 Performance Metrics** - Track tokens/second, response times, and model efficiency
+- **🛡️ Seamless Integration** - Built-in CORS proxy for error-free connections (no Ollama config needed!)
 
 **Getting Started with Ollama:**
 
