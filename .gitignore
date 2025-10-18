@@ -43,3 +43,6 @@ next-env.d.ts
 # Ignore everything in markdown/ except sample.md
 /markdown/*
 !/markdown/sample.md
+
+# analytics data
+/analytics/events.json
