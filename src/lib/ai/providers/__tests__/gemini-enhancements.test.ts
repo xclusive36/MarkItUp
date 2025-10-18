@@ -47,7 +47,7 @@ async function testBasicChat() {
     console.log('✅ Tokens used:', response.usage.totalTokens);
     console.log('✅ Cost:', `$${response.usage.estimatedCost.toFixed(6)}`);
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -93,7 +93,7 @@ async function testStreaming() {
     console.log('✅ Final content length:', response.content.length);
     console.log('✅ Streamed content matches:', streamedContent === response.content);
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -150,7 +150,7 @@ async function testPerformanceTracking() {
     provider.clearPerformanceMetrics();
     console.log('✅ Metrics cleared successfully');
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -184,7 +184,7 @@ async function testConnectionHealth() {
       console.log(`  Error: ${status.error}`);
     }
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -228,7 +228,7 @@ async function testAdvancedOptions() {
     console.log(`\n✅ Tokens: ${response.usage.totalTokens}`);
     console.log('✅ Advanced options applied successfully');
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -262,7 +262,7 @@ async function testContentAnalysis() {
     const summary = await provider.analyze(sampleContent, 'summary');
     console.log('\n✅ Summary only:', summary);
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', error instanceof Error ? error.message : String(error));
   }
 }
 
