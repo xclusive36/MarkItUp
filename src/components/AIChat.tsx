@@ -756,18 +756,27 @@ function AISettingsPanel({
 
     try {
       const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
-      const response = await fetch(`${ollamaUrl}/api/tags`, {
-        method: 'GET',
+
+      // Use proxy endpoint to avoid CORS issues
+      const response = await fetch('/api/ai/ollama-proxy', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          ollamaUrl,
+          endpoint: '/api/tags',
+          method: 'GET',
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to connect to Ollama server');
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to connect to Ollama server');
       }
 
-      const data = await response.json();
+      const data = result.data;
       const models = data.models || [];
 
       if (models.length === 0) {
@@ -820,19 +829,44 @@ function AISettingsPanel({
 
     try {
       const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
-      const response = await fetch(`${ollamaUrl}/api/tags`);
 
-      if (response.ok) {
-        const data = await response.json();
+      // Use proxy endpoint to avoid CORS issues
+      const response = await fetch('/api/ai/ollama-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ollamaUrl,
+          endpoint: '/api/tags',
+          method: 'GET',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const data = result.data;
         const modelCount = data.models?.length || 0;
 
         // Try to get version info for more details
         let versionInfo = '';
         try {
-          const versionResponse = await fetch(`${ollamaUrl}/api/version`);
-          if (versionResponse.ok) {
-            const versionData = await versionResponse.json();
-            versionInfo = versionData.version ? ` (v${versionData.version})` : '';
+          const versionResponse = await fetch('/api/ai/ollama-proxy', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ollamaUrl,
+              endpoint: '/api/version',
+              method: 'GET',
+            }),
+          });
+
+          const versionResult = await versionResponse.json();
+          if (versionResult.success && versionResult.data.version) {
+            versionInfo = ` (v${versionResult.data.version})`;
           }
         } catch {
           // Version endpoint might not exist
@@ -850,30 +884,14 @@ function AISettingsPanel({
       } else {
         setConnectionStatus({
           connected: false,
-          message: `✗ Connection failed (HTTP ${response.status}). Check if Ollama is running.`,
+          message: result.helpText ? `✗ ${result.error} → ${result.helpText}` : `✗ ${result.error}`,
         });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      let helpText = '';
-
-      // Provide specific troubleshooting hints
-      if (errorMessage.includes('ECONNREFUSED')) {
-        helpText = ' → Make sure Ollama is running: `ollama serve`';
-      } else if (errorMessage.includes('ENOTFOUND')) {
-        helpText = ' → Check the hostname/URL';
-      } else if (errorMessage.includes('ETIMEDOUT')) {
-        helpText = ' → Check network connection and firewall settings';
-      } else if (
-        errorMessage.includes('NetworkError') ||
-        errorMessage.includes('Failed to fetch')
-      ) {
-        helpText = ' → Cannot reach server. Is Ollama running?';
-      }
-
       setConnectionStatus({
         connected: false,
-        message: `✗ ${errorMessage}${helpText}`,
+        message: `✗ ${errorMessage}`,
       });
     } finally {
       setTestingConnection(false);
@@ -889,10 +907,17 @@ function AISettingsPanel({
 
     try {
       const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
-      const response = await fetch(`${ollamaUrl}/api/pull`, {
+
+      // Use proxy endpoint to avoid CORS issues
+      const response = await fetch('/api/ai/ollama-proxy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: modelToPull, stream: true }),
+        body: JSON.stringify({
+          ollamaUrl,
+          endpoint: '/api/pull',
+          method: 'POST',
+          data: { name: modelToPull, stream: true },
+        }),
       });
 
       if (!response.ok) {
