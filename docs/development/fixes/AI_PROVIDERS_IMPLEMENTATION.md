@@ -16,7 +16,7 @@ Successfully added support for **4 AI providers** to MarkItUp, giving users choi
 - **Pricing:** $0.001 - $0.03 per 1K tokens
 - **Use Case:** Production-ready, widely supported
 
-### 2. **Anthropic Claude** (NEW ✨)
+### 2. **Anthropic Claude** (ENHANCED ✨✨)
 - **Models:**
   - Claude 3.5 Sonnet - Best performance
   - Claude 3 Opus - Powerful for complex tasks
@@ -24,6 +24,12 @@ Successfully added support for **4 AI providers** to MarkItUp, giving users choi
   - Claude 3 Haiku - Fast & efficient
 - **Pricing:** $0.00025 - $0.015 per 1K tokens
 - **Use Case:** Advanced reasoning, longer context windows (200K tokens)
+- **NEW Features (v2.0):**
+  - ✅ Streaming support with real-time callbacks
+  - ✅ Tool/function calling for structured outputs
+  - ✅ Advanced parameters (top_k, top_p, stop sequences)
+  - ✅ Performance metrics tracking
+  - 📖 [See Full Changelog](../../changelogs/anthropic/ANTHROPIC_ENHANCEMENTS_V2.md)
 
 ### 3. **Google Gemini** (NEW ✨)
 - **Models:**
@@ -53,9 +59,13 @@ Successfully added support for **4 AI providers** to MarkItUp, giving users choi
 #### 1. `src/lib/ai/providers/anthropic.ts`
 - Full Claude API integration
 - Supports all Claude 3.x models
-- Streaming disabled (can be added later)
+- ✅ **Streaming enabled** with SSE (v2.0)
+- ✅ **Tool/function calling** support (v2.0)
+- ✅ **Advanced parameters** (top_k, top_p, stop sequences) (v2.0)
+- ✅ **Performance metrics** tracking (v2.0)
 - Context-aware system messages
 - Token usage tracking and cost estimation
+- Enhanced error handling
 
 #### 2. `src/lib/ai/providers/gemini.ts`
 - Google Generative AI integration

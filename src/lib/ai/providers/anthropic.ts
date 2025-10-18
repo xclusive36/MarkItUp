@@ -1,11 +1,81 @@
-import { AIProvider, AIMessage, AIResponse, AIContext, AIError, AIAnalysis } from '../types';
+import {
+  AIProvider,
+  AIMessage,
+  AIResponse,
+  AIContext,
+  AIError,
+  StreamChunk,
+  AnthropicAdvancedOptions,
+  AnthropicTool,
+  AnthropicToolUse,
+  AnthropicPerformanceMetrics,
+  AnthropicStreamEvent,
+} from '../types';
 
 export class AnthropicProvider implements AIProviderInterface {
   private apiKey: string;
   private baseURL: string = 'https://api.anthropic.com/v1';
+  private advancedOptions?: AnthropicAdvancedOptions;
+  private performanceMetrics: Map<string, AnthropicPerformanceMetrics> = new Map();
+  private requestStartTime: number = 0;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, advancedOptions?: AnthropicAdvancedOptions) {
     this.apiKey = apiKey;
+    this.advancedOptions = advancedOptions;
+  }
+
+  private startPerformanceTracking(): void {
+    this.requestStartTime = Date.now();
+  }
+
+  private recordPerformance(modelId: string, tokens: number, cost: number, success: boolean): void {
+    const responseTime = Date.now() - this.requestStartTime;
+    const existing = this.performanceMetrics.get(modelId);
+
+    if (existing) {
+      const totalRequests = existing.totalRequests + 1;
+      const successfulRequests = existing.successRate * existing.totalRequests + (success ? 1 : 0);
+
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime:
+          (existing.averageResponseTime * existing.totalRequests + responseTime) / totalRequests,
+        tokensPerSecond: tokens > 0 ? (tokens / responseTime) * 1000 : existing.tokensPerSecond,
+        totalRequests,
+        successRate: (successfulRequests / totalRequests) * 100,
+        lastUsed: new Date().toISOString(),
+        averageCost: (existing.averageCost * existing.totalRequests + cost) / totalRequests,
+      });
+    } else {
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime: responseTime,
+        tokensPerSecond: tokens > 0 ? (tokens / responseTime) * 1000 : 0,
+        totalRequests: 1,
+        successRate: success ? 100 : 0,
+        lastUsed: new Date().toISOString(),
+        averageCost: cost,
+      });
+    }
+  }
+
+  getPerformanceMetrics(
+    modelId?: string
+  ): AnthropicPerformanceMetrics | Map<string, AnthropicPerformanceMetrics> {
+    if (modelId) {
+      return (
+        this.performanceMetrics.get(modelId) || {
+          modelId,
+          averageResponseTime: 0,
+          tokensPerSecond: 0,
+          totalRequests: 0,
+          successRate: 0,
+          lastUsed: new Date().toISOString(),
+          averageCost: 0,
+        }
+      );
+    }
+    return this.performanceMetrics;
   }
 
   getProviderInfo(): AIProvider {
@@ -58,12 +128,25 @@ export class AnthropicProvider implements AIProviderInterface {
       model?: string;
       temperature?: number;
       maxTokens?: number;
+      stream?: boolean;
+      onStream?: (chunk: StreamChunk) => void;
+      tools?: AnthropicTool[];
+      tool_choice?: { type: 'auto' | 'any' | 'tool'; name?: string };
     } = {}
   ): Promise<AIResponse> {
+    const model = options.model || 'claude-3-5-sonnet-20241022';
+    this.startPerformanceTracking();
+    let success = false;
+
     try {
-      const model = options.model || 'claude-3-5-sonnet-20241022';
-      const temperature = options.temperature || 0.7;
+      const temperature =
+        options.temperature !== undefined
+          ? options.temperature
+          : this.advancedOptions?.top_p !== undefined
+            ? 0.7
+            : 0.7;
       const maxTokens = options.maxTokens || 1000;
+      const stream = options.stream || false;
 
       // Build system message with context
       const systemMessage = this.buildSystemMessage(context);
@@ -74,6 +157,38 @@ export class AnthropicProvider implements AIProviderInterface {
         content: msg.content,
       }));
 
+      // Build request body with advanced options
+      const requestBody: Record<string, unknown> = {
+        model,
+        max_tokens: maxTokens,
+        temperature,
+        system: systemMessage,
+        messages: anthropicMessages,
+        stream,
+      };
+
+      // Apply advanced options
+      if (this.advancedOptions?.top_k !== undefined) {
+        requestBody.top_k = this.advancedOptions.top_k;
+      }
+      if (this.advancedOptions?.top_p !== undefined) {
+        requestBody.top_p = this.advancedOptions.top_p;
+      }
+      if (this.advancedOptions?.stop_sequences) {
+        requestBody.stop_sequences = this.advancedOptions.stop_sequences;
+      }
+      if (this.advancedOptions?.metadata) {
+        requestBody.metadata = this.advancedOptions.metadata;
+      }
+
+      // Add tool support if provided
+      if (options.tools && options.tools.length > 0) {
+        requestBody.tools = options.tools;
+        if (options.tool_choice) {
+          requestBody.tool_choice = options.tool_choice;
+        }
+      }
+
       const response = await fetch(`${this.baseURL}/messages`, {
         method: 'POST',
         headers: {
@@ -81,13 +196,7 @@ export class AnthropicProvider implements AIProviderInterface {
           'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model,
-          max_tokens: maxTokens,
-          temperature,
-          system: systemMessage,
-          messages: anthropicMessages,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -95,6 +204,23 @@ export class AnthropicProvider implements AIProviderInterface {
         throw new Error(
           `Anthropic API error: ${response.status} ${errorData.error?.message || response.statusText}`
         );
+      }
+
+      if (stream && response.body) {
+        const result = await this.handleStreamingResponse(
+          response,
+          model,
+          context,
+          options.onStream
+        );
+        success = true;
+        this.recordPerformance(
+          model,
+          result.usage.totalTokens,
+          result.usage.estimatedCost,
+          success
+        );
+        return result;
       }
 
       const data = await response.json();
@@ -109,9 +235,26 @@ export class AnthropicProvider implements AIProviderInterface {
         : 0;
       const estimatedCost = inputCost + outputCost;
 
-      return {
-        id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        content: data.content[0]?.text || '',
+      // Extract content and tool uses
+      const content = data.content || [];
+      const textContent = content
+        .filter((block: { type: string }) => block.type === 'text')
+        .map((block: { text: string }) => block.text)
+        .join('\n');
+
+      const toolUses = content.filter((block: { type: string }) => block.type === 'tool_use');
+
+      success = true;
+      this.recordPerformance(
+        model,
+        (usage.input_tokens || 0) + (usage.output_tokens || 0),
+        estimatedCost,
+        success
+      );
+
+      const result: AIResponse = {
+        id: data.id || `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        content: textContent,
         model,
         usage: {
           promptTokens: usage.input_tokens || 0,
@@ -122,11 +265,114 @@ export class AnthropicProvider implements AIProviderInterface {
         context,
         timestamp: new Date().toISOString(),
       };
+
+      // Add tool use information if present
+      if (toolUses.length > 0) {
+        (result as AIResponse & { toolUses: AnthropicToolUse[] }).toolUses = toolUses;
+      }
+
+      return result;
     } catch (error) {
+      this.recordPerformance(model, 0, 0, success);
       throw this.createAIError(
         'CHAT_ERROR',
         error instanceof Error ? error.message : 'Unknown error'
       );
+    }
+  }
+
+  private async handleStreamingResponse(
+    response: Response,
+    model: string,
+    context: AIContext,
+    onStream?: (chunk: StreamChunk) => void
+  ): Promise<AIResponse> {
+    let fullContent = '';
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    let messageId = '';
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk
+          .split('\n')
+          .filter(line => line.trim().startsWith('data: '))
+          .map(line => line.replace('data: ', ''));
+
+        for (const line of lines) {
+          try {
+            const event: AnthropicStreamEvent = JSON.parse(line);
+
+            if (event.type === 'message_start') {
+              if (event.message) {
+                messageId = event.message.id;
+                totalInputTokens = event.message.usage.input_tokens;
+              }
+            } else if (event.type === 'content_block_delta') {
+              if (event.delta?.type === 'text_delta' && event.delta.text) {
+                const text = event.delta.text;
+                fullContent += text;
+
+                if (onStream) {
+                  onStream({
+                    content: text,
+                    done: false,
+                    model,
+                  });
+                }
+              }
+            } else if (event.type === 'message_delta') {
+              if (event.usage) {
+                totalOutputTokens = event.usage.output_tokens;
+              }
+            } else if (event.type === 'message_stop') {
+              if (onStream) {
+                onStream({
+                  content: '',
+                  done: true,
+                  model,
+                  tokens: totalInputTokens + totalOutputTokens,
+                });
+              }
+            }
+          } catch {
+            // Skip invalid JSON lines
+            continue;
+          }
+        }
+      }
+
+      const modelInfo = this.getProviderInfo().supportedModels.find(m => m.id === model);
+      const inputCost = modelInfo ? totalInputTokens * (modelInfo.costPer1kTokens / 1000) : 0;
+      const outputCost = modelInfo ? totalOutputTokens * (modelInfo.costPer1kTokens / 1000) : 0;
+      const estimatedCost = inputCost + outputCost;
+
+      return {
+        id: messageId || `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        content: fullContent,
+        model,
+        usage: {
+          promptTokens: totalInputTokens,
+          completionTokens: totalOutputTokens,
+          totalTokens: totalInputTokens + totalOutputTokens,
+          estimatedCost,
+        },
+        context,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      throw this.createAIError(
+        'STREAM_ERROR',
+        error instanceof Error ? error.message : 'Streaming failed'
+      );
+    } finally {
+      reader.releaseLock();
     }
   }
 
@@ -136,6 +382,8 @@ export class AnthropicProvider implements AIProviderInterface {
       model?: string;
       temperature?: number;
       maxTokens?: number;
+      stream?: boolean;
+      onStream?: (chunk: StreamChunk) => void;
     } = {}
   ): Promise<string> {
     const response = await this.chat(

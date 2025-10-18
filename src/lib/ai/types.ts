@@ -353,3 +353,108 @@ export interface OpenAITextContent {
   type: 'text';
   text: string;
 }
+
+// Anthropic-specific types
+export interface AnthropicAdvancedOptions {
+  top_k?: number; // Only sample from the top K options (0-500)
+  top_p?: number; // Use nucleus sampling (0-1)
+  stop_sequences?: string[]; // Custom stop sequences
+  metadata?: {
+    user_id?: string;
+  };
+}
+
+export interface AnthropicTool {
+  name: string;
+  description: string;
+  input_schema: {
+    type: 'object';
+    properties: Record<
+      string,
+      {
+        type: string;
+        description?: string;
+        enum?: string[];
+      }
+    >;
+    required?: string[];
+  };
+}
+
+export interface AnthropicToolUse {
+  id: string;
+  type: 'tool_use';
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface AnthropicToolResult {
+  type: 'tool_result';
+  tool_use_id: string;
+  content: string;
+  is_error?: boolean;
+}
+
+export interface AnthropicImageContent {
+  type: 'image';
+  source: {
+    type: 'base64' | 'url';
+    media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+    data: string; // base64 data or URL
+  };
+}
+
+export interface AnthropicTextContent {
+  type: 'text';
+  text: string;
+}
+
+export interface AnthropicContentBlock {
+  type: 'text' | 'tool_use';
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
+export interface AnthropicPerformanceMetrics {
+  modelId: string;
+  averageResponseTime: number; // ms
+  tokensPerSecond: number;
+  totalRequests: number;
+  successRate: number; // 0-100
+  lastUsed: string;
+  averageCost: number;
+}
+
+export interface AnthropicStreamEvent {
+  type:
+    | 'message_start'
+    | 'content_block_start'
+    | 'content_block_delta'
+    | 'content_block_stop'
+    | 'message_delta'
+    | 'message_stop';
+  message?: {
+    id: string;
+    type: 'message';
+    role: 'assistant';
+    content: AnthropicContentBlock[];
+    model: string;
+    stop_reason: string | null;
+    usage: {
+      input_tokens: number;
+      output_tokens: number;
+    };
+  };
+  index?: number;
+  delta?: {
+    type: 'text_delta' | 'input_json_delta';
+    text?: string;
+    partial_json?: string;
+  };
+  content_block?: AnthropicContentBlock;
+  usage?: {
+    output_tokens: number;
+  };
+}
