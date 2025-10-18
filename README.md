@@ -6,7 +6,18 @@
 
 ## 🆕 What's New
 
-### v3.4.0 - October 2025 🎉
+### v3.5.0 - October 2025 🎉
+- **🌐 Universal Multi-Provider AI Support** - All AI features now work with any provider:
+  - ✅ **Ollama Support Everywhere** - Writing Assistant, Research Assistant, Knowledge Discovery now work with local Ollama
+  - 🔑 **No API Key for Ollama** - Self-hosted AI works without configuration across all features
+  - 🔄 **Unified Provider Settings** - One configuration applies to all AI features (chat, analysis, suggestions)
+  - 🌍 **Provider Flexibility** - Switch between OpenAI, Anthropic, Gemini, or Ollama for any feature
+  - 🛡️ **CORS-Free Ollama** - New proxy endpoint eliminates CORS errors when connecting to Ollama
+  - 📡 **Seamless Testing** - Test Ollama connection, fetch models, and pull models without browser errors
+  - 💬 **Improved Error Messages** - Clear, provider-agnostic guidance with helpful setup instructions
+  - 🔒 **Privacy-First Option** - Use 100% local AI (Ollama) for all features including content analysis
+
+### v3.4.0 - October 2025
 - **🤖 Google Gemini Feature Parity** - Gemini provider enhanced to match OpenAI/Anthropic:
   - 🌊 **Streaming Support** - Real-time token streaming with Server-Sent Events (SSE)
   - 📊 **Performance Tracking** - Comprehensive metrics (response time, tokens/sec, success rate)
