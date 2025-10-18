@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AIAnalyzer } from '@/lib/ai/analyzers';
 import { Note, Tag } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
-import { AIService } from '@/lib/ai/ai-service';
+import { getAIService } from '@/lib/ai/ai-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +18,12 @@ export async function POST(request: NextRequest) {
     }
 
     // For content analysis, we don't need a notes array
-    if (content && (analysisType === 'content' || analysisType === 'writing_assistance' || analysisType === 'full')) {
+    if (
+      content &&
+      (analysisType === 'content' ||
+        analysisType === 'writing_assistance' ||
+        analysisType === 'full')
+    ) {
       // This is a single content analysis request
     } else if (!notes || !Array.isArray(notes)) {
       return NextResponse.json(
@@ -27,34 +32,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
+    // Get AI service (uses user's configured provider and settings)
+    const aiService = getAIService();
+    const settings = aiService.getSettings();
+
+    // Check if AI is configured (allow Ollama without API key)
+    if (!settings.apiKey && settings.provider !== 'ollama') {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your environment variables.',
-          requiresApiKey: true
+        {
+          success: false,
+          error: 'AI service not configured. Please configure your AI provider in settings.',
+          requiresApiKey: true,
         },
         { status: 400 }
       );
     }
 
-    // Create AIService with default settings
-    const defaultSettings = {
-      provider: 'openai',
-      model: 'gpt-4o-mini',
-      apiKey: process.env.OPENAI_API_KEY || '',
-      maxTokens: 1024,
-      temperature: 0.7,
-      enableContext: true,
-      maxContextNotes: 10,
-      contextSearchDepth: 2,
-      enableUsageTracking: true,
-      monthlyLimit: 10000,
-      enableLocalFallback: false
-    };
-    
-    const aiService = new AIService(defaultSettings);
     const analyzer = new AIAnalyzer(aiService);
     let result;
 
@@ -79,7 +72,7 @@ export async function POST(request: NextRequest) {
         result = await analyzer.generateWritingAssistance(content, {
           relatedNotes: notes || [],
           targetAudience: body.targetAudience,
-          purpose: body.purpose
+          purpose: body.purpose,
         });
         break;
 
@@ -95,12 +88,12 @@ export async function POST(request: NextRequest) {
         const writingAssistance = await analyzer.generateWritingAssistance(content, {
           relatedNotes: notes || [],
           targetAudience: body.targetAudience,
-          purpose: body.purpose
+          purpose: body.purpose,
         });
-        
+
         result = {
           analysis: contentAnalysis,
-          assistance: writingAssistance
+          assistance: writingAssistance,
         };
         break;
 
@@ -126,36 +119,28 @@ export async function POST(request: NextRequest) {
       analysisType,
       notesCount: notes.length,
       tagsCount: tags?.length || 0,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     return NextResponse.json({
       success: true,
-      analysis: result
+      analysis: result,
     });
-
   } catch (error) {
     console.error('Analysis error:', error);
-    
+
     analytics.trackEvent('ai_error', {
       error: 'analysis_failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
 
-    return NextResponse.json(
-      { success: false, error: 'Analysis failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Analysis failed' }, { status: 500 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
     success: true,
-    availableAnalysisTypes: [
-      'content',
-      'writing_assistance', 
-      'knowledge_gaps'
-    ]
+    availableAnalysisTypes: ['content', 'writing_assistance', 'knowledge_gaps'],
   });
 }
