@@ -34,6 +34,7 @@ import NotificationQueue from '@/components/NotificationQueue';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
+import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
@@ -61,6 +62,23 @@ export default function Home() {
   const { theme } = useSimpleTheme();
   const { settings, updateSettings } = useCollaboration();
   const toast = useToast();
+
+  // Auto-indexing hook (enabled based on user setting)
+  const autoIndexEnabled =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('vectorSearchAutoIndex') === 'true'
+      : false;
+
+  const { indexNote, removeNote: removeNoteFromIndex } = useAutoIndexing({
+    enabled: autoIndexEnabled,
+    debounceMs: 3000, // Wait 3 seconds after save before indexing
+    onIndexComplete: noteId => {
+      console.log(`[AutoIndex] Completed indexing: ${noteId}`);
+    },
+    onIndexError: (noteId, error) => {
+      console.error(`[AutoIndex] Failed to index ${noteId}:`, error);
+    },
+  });
 
   const NotesComponent = dynamic(() => import('@/components/NotesComponent'), { ssr: false });
   // Notes refresh for NotesComponent
@@ -846,6 +864,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         // Refresh data
         await refreshData();
 
+        // Trigger auto-indexing if enabled
+        if (autoIndexEnabled && indexNote) {
+          // Get the updated note for indexing
+          const updatedNote = await pkm.getNote(fileName + '.md');
+          if (updatedNote) {
+            indexNote(updatedNote);
+          }
+        }
+
         setTimeout(() => setSaveStatus(''), 3000);
       } else if (response.status === 409) {
         const data = await response.json();
@@ -916,6 +943,11 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       if (response.ok) {
         await pkm.deleteNote(noteId);
         await refreshData();
+
+        // Remove from vector index if auto-indexing is enabled
+        if (autoIndexEnabled && removeNoteFromIndex) {
+          await removeNoteFromIndex(noteId);
+        }
 
         // Clear active note if it was deleted
         if (activeNote?.id === noteId) {
