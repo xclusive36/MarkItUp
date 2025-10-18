@@ -17,16 +17,16 @@ export async function POST(request: NextRequest) {
     // Get AI service
     const aiService = getAIService();
 
-    // Check if AI is configured
+    // Check if AI is configured (allow Ollama without API key)
     const settings = aiService.getSettings();
-    if (!settings.apiKey) {
+    if (!settings.apiKey && settings.provider !== 'ollama') {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: { 
-            code: 'NOT_CONFIGURED', 
-            message: 'AI service not configured. Please add your API key in settings.' 
-          } 
+        {
+          success: false,
+          error: {
+            code: 'NOT_CONFIGURED',
+            message: 'AI service not configured. Please add your API key in settings.',
+          },
         },
         { status: 400 }
       );
@@ -36,16 +36,15 @@ export async function POST(request: NextRequest) {
     const response = await aiService.chat(body);
 
     return NextResponse.json(response);
-
   } catch (error) {
     console.error('AI Chat API error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: { 
-          code: 'INTERNAL_ERROR', 
-          message: 'Internal server error' 
-        } 
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       },
       { status: 500 }
     );
@@ -80,16 +79,15 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
     }
-
   } catch (error) {
     console.error('AI API GET error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: { 
-          code: 'INTERNAL_ERROR', 
-          message: 'Internal server error' 
-        } 
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       },
       { status: 500 }
     );
@@ -115,16 +113,15 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
     }
-
   } catch (error) {
     console.error('AI API PUT error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: { 
-          code: 'INTERNAL_ERROR', 
-          message: 'Internal server error' 
-        } 
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       },
       { status: 500 }
     );
@@ -154,16 +151,15 @@ export async function DELETE(request: NextRequest) {
         { status: 404 }
       );
     }
-
   } catch (error) {
     console.error('AI API DELETE error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: { 
-          code: 'INTERNAL_ERROR', 
-          message: 'Internal server error' 
-        } 
+      {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+        },
       },
       { status: 500 }
     );
