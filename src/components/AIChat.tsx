@@ -16,6 +16,7 @@ import {
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { AIMessage, ChatSession, AISettings } from '@/lib/ai/types';
 import { analytics } from '@/lib/analytics';
+import VectorSearchSettings from './VectorSearchSettings';
 
 interface AIChatProps {
   isOpen: boolean;
@@ -717,6 +718,7 @@ function AISettingsPanel({
   const [showPerformancePanel, setShowPerformancePanel] = useState(false);
   const [showModelLibrary, setShowModelLibrary] = useState(false);
   const [showAutoDiscovery, setShowAutoDiscovery] = useState(false);
+  const [showVectorSearchSettings, setShowVectorSearchSettings] = useState(false);
   const [discovering, setDiscovering] = useState(false);
   const [discoveredServers, setDiscoveredServers] = useState<
     Array<{
@@ -1695,6 +1697,30 @@ function AISettingsPanel({
             <span>Focused</span>
             <span>Creative</span>
           </div>
+        </div>
+
+        {/* Vector Search Settings Section */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <button
+            onClick={() => setShowVectorSearchSettings(!showVectorSearchSettings)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+          >
+            <span
+              className="text-sm font-medium"
+              style={{ color: theme === 'dark' ? '#d8b4fe' : '#7e22ce' }}
+            >
+              🧠 Vector Search Settings
+            </span>
+            <span style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
+              {showVectorSearchSettings ? '▼' : '▶'}
+            </span>
+          </button>
+
+          {showVectorSearchSettings && (
+            <div className="mt-4">
+              <VectorSearchSettings />
+            </div>
+          )}
         </div>
       </div>
 
