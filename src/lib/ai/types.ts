@@ -458,3 +458,56 @@ export interface AnthropicStreamEvent {
     output_tokens: number;
   };
 }
+
+// Gemini-specific types
+export interface GeminiAdvancedOptions {
+  top_k?: number; // Top-k sampling (1-40, default varies by model)
+  top_p?: number; // Top-p sampling (0-1, default 0.95)
+  candidate_count?: number; // Number of response candidates to generate (1-8)
+  stop_sequences?: string[]; // Custom stop sequences
+  safety_settings?: Array<{
+    category: string;
+    threshold: string;
+  }>;
+  max_output_tokens?: number; // Override maxTokens
+}
+
+export interface GeminiPerformanceMetrics {
+  modelId: string;
+  averageResponseTime: number; // ms
+  tokensPerSecond: number;
+  totalRequests: number;
+  successRate: number; // 0-100
+  lastUsed: string;
+  averageCost: number; // Average cost per request
+}
+
+export interface GeminiConnectionStatus {
+  connected: boolean;
+  apiKeyValid?: boolean;
+  availableModels?: string[];
+  error?: string;
+}
+
+export interface GeminiStreamEvent {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+      role?: string;
+    };
+    finishReason?: string;
+    index?: number;
+    safetyRatings?: Array<{
+      category: string;
+      probability: string;
+    }>;
+  }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+  modelVersion?: string;
+}

@@ -1,11 +1,26 @@
-import { AIProvider, AIMessage, AIResponse, AIContext, AIError } from '../types';
+import {
+  AIProvider,
+  AIMessage,
+  AIResponse,
+  AIContext,
+  AIError,
+  StreamChunk,
+  GeminiAdvancedOptions,
+  GeminiPerformanceMetrics,
+  GeminiConnectionStatus,
+  GeminiStreamEvent,
+} from '../types';
 
 export class GeminiProvider implements AIProviderInterface {
   private apiKey: string;
   private baseURL: string = 'https://generativelanguage.googleapis.com/v1beta';
+  private advancedOptions?: GeminiAdvancedOptions;
+  private performanceMetrics: Map<string, GeminiPerformanceMetrics> = new Map();
+  private requestStartTime: number = 0;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, advancedOptions?: GeminiAdvancedOptions) {
     this.apiKey = apiKey;
+    this.advancedOptions = advancedOptions;
   }
 
   getProviderInfo(): AIProvider {
@@ -50,12 +65,23 @@ export class GeminiProvider implements AIProviderInterface {
       model?: string;
       temperature?: number;
       maxTokens?: number;
+      stream?: boolean;
+      onStream?: (chunk: StreamChunk) => void;
     } = {}
   ): Promise<AIResponse> {
+    const model = options.model || 'gemini-1.5-flash';
+    this.startPerformanceTracking();
+    let success = false;
+
     try {
-      const model = options.model || 'gemini-1.5-flash';
-      const temperature = options.temperature || 0.7;
-      const maxTokens = options.maxTokens || 1000;
+      const temperature =
+        options.temperature !== undefined
+          ? options.temperature
+          : this.advancedOptions?.top_p !== undefined
+            ? 0.7
+            : 0.7;
+      const maxTokens = options.maxTokens || this.advancedOptions?.max_output_tokens || 1000;
+      const stream = options.stream || false;
 
       // Build system instruction with context
       const systemInstruction = this.buildSystemMessage(context);
@@ -66,33 +92,70 @@ export class GeminiProvider implements AIProviderInterface {
         parts: [{ text: msg.content }],
       }));
 
-      const response = await fetch(
-        `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            system_instruction: {
-              parts: [{ text: systemInstruction }],
-            },
-            contents,
-            generationConfig: {
-              temperature,
-              maxOutputTokens: maxTokens,
-              topP: 0.95,
-              topK: 40,
-            },
-          }),
-        }
-      );
+      // Build generation config with advanced options
+      const generationConfig: Record<string, unknown> = {
+        temperature,
+        maxOutputTokens: maxTokens,
+        topP: this.advancedOptions?.top_p ?? 0.95,
+        topK: this.advancedOptions?.top_k ?? 40,
+      };
+
+      if (this.advancedOptions?.candidate_count) {
+        generationConfig.candidateCount = this.advancedOptions.candidate_count;
+      }
+
+      if (this.advancedOptions?.stop_sequences) {
+        generationConfig.stopSequences = this.advancedOptions.stop_sequences;
+      }
+
+      // Build request body
+      const requestBody: Record<string, unknown> = {
+        system_instruction: {
+          parts: [{ text: systemInstruction }],
+        },
+        contents,
+        generationConfig,
+      };
+
+      // Add safety settings if provided
+      if (this.advancedOptions?.safety_settings) {
+        requestBody.safetySettings = this.advancedOptions.safety_settings;
+      }
+
+      const endpoint = stream
+        ? `${this.baseURL}/models/${model}:streamGenerateContent?key=${this.apiKey}&alt=sse`
+        : `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           `Gemini API error: ${response.status} ${errorData.error?.message || response.statusText}`
         );
+      }
+
+      if (stream && response.body) {
+        const result = await this.handleStreamingResponse(
+          response,
+          model,
+          context,
+          options.onStream
+        );
+        success = true;
+        this.recordPerformance(
+          model,
+          result.usage.totalTokens,
+          result.usage.estimatedCost,
+          success
+        );
+        return result;
       }
 
       const data = await response.json();
@@ -107,9 +170,16 @@ export class GeminiProvider implements AIProviderInterface {
       // Gemini provides token counts
       const usage = data.usageMetadata || {};
       const modelInfo = this.getProviderInfo().supportedModels.find(m => m.id === model);
-      const estimatedCost = modelInfo
-        ? (usage.totalTokenCount || 0) * (modelInfo.costPer1kTokens / 1000)
+      const inputCost = modelInfo
+        ? (usage.promptTokenCount || 0) * (modelInfo.costPer1kTokens / 1000)
         : 0;
+      const outputCost = modelInfo
+        ? (usage.candidatesTokenCount || 0) * (modelInfo.costPer1kTokens / 1000)
+        : 0;
+      const estimatedCost = inputCost + outputCost;
+
+      success = true;
+      this.recordPerformance(model, usage.totalTokenCount || 0, estimatedCost, success);
 
       return {
         id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -125,11 +195,102 @@ export class GeminiProvider implements AIProviderInterface {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
+      this.recordPerformance(model, 0, 0, success);
       throw this.createAIError(
         'CHAT_ERROR',
         error instanceof Error ? error.message : 'Unknown error'
       );
     }
+  }
+
+  private async handleStreamingResponse(
+    response: Response,
+    model: string,
+    context: AIContext,
+    onStream?: (chunk: StreamChunk) => void
+  ): Promise<AIResponse> {
+    let fullContent = '';
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk
+          .split('\n')
+          .filter(line => line.trim().startsWith('data: '))
+          .map(line => line.replace('data: ', '').trim());
+
+        for (const line of lines) {
+          if (!line || line === '[DONE]') continue;
+
+          try {
+            const event: GeminiStreamEvent = JSON.parse(line);
+
+            if (event.candidates && event.candidates.length > 0) {
+              const candidate = event.candidates[0];
+              const text = candidate.content?.parts?.[0]?.text || '';
+
+              if (text) {
+                fullContent += text;
+
+                if (onStream) {
+                  onStream({
+                    content: text,
+                    done: false,
+                    model,
+                  });
+                }
+              }
+
+              // Update token counts from usage metadata
+              if (event.usageMetadata) {
+                totalInputTokens = event.usageMetadata.promptTokenCount || 0;
+                totalOutputTokens = event.usageMetadata.candidatesTokenCount || 0;
+              }
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+            console.warn('Failed to parse Gemini streaming chunk:', e);
+          }
+        }
+      }
+
+      if (onStream) {
+        onStream({
+          content: '',
+          done: true,
+          model,
+          tokens: totalInputTokens + totalOutputTokens,
+        });
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    const modelInfo = this.getProviderInfo().supportedModels.find(m => m.id === model);
+    const inputCost = modelInfo ? totalInputTokens * (modelInfo.costPer1kTokens / 1000) : 0;
+    const outputCost = modelInfo ? totalOutputTokens * (modelInfo.costPer1kTokens / 1000) : 0;
+    const estimatedCost = inputCost + outputCost;
+
+    return {
+      id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content: fullContent,
+      model,
+      usage: {
+        promptTokens: totalInputTokens,
+        completionTokens: totalOutputTokens,
+        totalTokens: totalInputTokens + totalOutputTokens,
+        estimatedCost,
+      },
+      context,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   async complete(
@@ -138,6 +299,8 @@ export class GeminiProvider implements AIProviderInterface {
       model?: string;
       temperature?: number;
       maxTokens?: number;
+      stream?: boolean;
+      onStream?: (chunk: StreamChunk) => void;
     } = {}
   ): Promise<string> {
     const response = await this.chat(
@@ -184,6 +347,122 @@ Content:\n${content}`,
     }
 
     return result;
+  }
+
+  /**
+   * Check connection to Gemini API
+   */
+  async checkConnection(): Promise<boolean> {
+    const status = await this.getConnectionStatus();
+    return status.connected;
+  }
+
+  /**
+   * Get detailed connection status
+   */
+  async getConnectionStatus(): Promise<GeminiConnectionStatus> {
+    try {
+      // Try to list available models to verify API key and connection
+      const response = await fetch(`${this.baseURL}/models?key=${this.apiKey}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          connected: false,
+          apiKeyValid: response.status !== 401 && response.status !== 403,
+          error: errorData.error?.message || `HTTP ${response.status}`,
+        };
+      }
+
+      const data = await response.json();
+      const availableModels =
+        data.models?.map((model: { name: string }) => model.name.split('/').pop()) || [];
+
+      return {
+        connected: true,
+        apiKeyValid: true,
+        availableModels,
+      };
+    } catch (error) {
+      return {
+        connected: false,
+        error: error instanceof Error ? error.message : 'Connection failed',
+      };
+    }
+  }
+
+  /**
+   * Get performance metrics for a specific model
+   */
+  getModelPerformance(modelId: string): GeminiPerformanceMetrics | null {
+    return this.performanceMetrics.get(modelId) || null;
+  }
+
+  /**
+   * Get performance metrics for all models
+   */
+  getAllPerformanceMetrics(): GeminiPerformanceMetrics[] {
+    return Array.from(this.performanceMetrics.values());
+  }
+
+  /**
+   * Clear performance metrics
+   */
+  clearPerformanceMetrics(): void {
+    this.performanceMetrics.clear();
+  }
+
+  /**
+   * Start tracking request performance
+   */
+  private startPerformanceTracking(): void {
+    this.requestStartTime = Date.now();
+  }
+
+  /**
+   * Record performance metrics for a request
+   */
+  private recordPerformance(modelId: string, tokens: number, cost: number, success: boolean): void {
+    const responseTime = Date.now() - this.requestStartTime;
+    const tokensPerSecond = tokens > 0 ? (tokens / responseTime) * 1000 : 0;
+
+    const existing = this.performanceMetrics.get(modelId);
+
+    if (existing) {
+      const totalRequests = existing.totalRequests + 1;
+      const avgResponseTime =
+        (existing.averageResponseTime * existing.totalRequests + responseTime) / totalRequests;
+      const avgTokensPerSecond =
+        (existing.tokensPerSecond * existing.totalRequests + tokensPerSecond) / totalRequests;
+      const avgCost = (existing.averageCost * existing.totalRequests + cost) / totalRequests;
+      const successCount = Math.round((existing.successRate * existing.totalRequests) / 100);
+      const newSuccessRate = ((successCount + (success ? 1 : 0)) / totalRequests) * 100;
+
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime: avgResponseTime,
+        tokensPerSecond: avgTokensPerSecond,
+        totalRequests,
+        successRate: newSuccessRate,
+        lastUsed: new Date().toISOString(),
+        averageCost: avgCost,
+      });
+    } else {
+      this.performanceMetrics.set(modelId, {
+        modelId,
+        averageResponseTime: responseTime,
+        tokensPerSecond,
+        totalRequests: 1,
+        successRate: success ? 100 : 0,
+        lastUsed: new Date().toISOString(),
+        averageCost: cost,
+      });
+    }
   }
 
   private buildSystemMessage(context: AIContext): string {
