@@ -6,7 +6,17 @@
 
 ## 🆕 What's New
 
-### v3.3.0 - October 2025 🎉
+### v3.4.0 - October 2025 🎉
+- **🤖 Google Gemini Feature Parity** - Gemini provider enhanced to match OpenAI/Anthropic:
+  - 🌊 **Streaming Support** - Real-time token streaming with Server-Sent Events (SSE)
+  - 📊 **Performance Tracking** - Comprehensive metrics (response time, tokens/sec, success rate)
+  - 🔍 **Connection Health Checks** - API validation and available models discovery
+  - ⚙️ **Advanced Options** - Fine-tuned control (top_k, top_p, safety_settings, stop_sequences)
+  - 💰 **Enhanced Cost Tracking** - Separate input/output token cost calculation
+  - 📚 **Complete Documentation** - Full guides, quick start, and test suite
+  - 🎯 **Production Ready** - Fully backward compatible, zero breaking changes
+
+### v3.3.0 - October 2025
 - **🎨 Enhanced UI/UX** - Refined interface for better workflow:
   - 📐 **Right Panel Collapsed by Default** - More screen space for your content on startup
   - 🔄 **Consistent Chevron Icons** - Unified expand/collapse controls across both sidebars
@@ -64,7 +74,7 @@ Visit [http://localhost:3000](http://localhost:3000) and start building your kno
 - **Writing Assistant** - Advanced content analysis and improvement suggestions
 - **Knowledge Discovery** - AI-powered gap analysis and content recommendations
 - **Research Assistant** - Semantic search with intelligent note creation
-- **Multi-Provider Support** - Choose from OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash), or Ollama (local AI)
+- **Multi-Provider Support** - Choose from OpenAI (GPT-4, GPT-3.5), Anthropic (Claude 3.5), Google Gemini (1.5 Pro/Flash with 1M token context), or Ollama (local AI)
 
 #### 🏠 Ollama Local AI (Privacy-First)
 
@@ -154,20 +164,21 @@ MarkItUp offers the most flexible AI integration in any PKM system:
 |---------|--------|-----------|--------|------------|
 | **Streaming** | ✅ | ✅ | ✅ | ✅ |
 | **API Key Required** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ **None** |
-| **Cost** | $0.002-0.03/1K tokens | $0.003-0.015/1K tokens | $0.0001-0.0015/1K tokens | 🆓 **Free** |
+| **Cost** | $0.002-0.03/1K tokens | $0.003-0.015/1K tokens | $0.000075-0.00125/1K tokens | 🆓 **Free** |
+| **Context Window** | 128K tokens | 200K tokens | 🚀 **1M tokens** | Varies by model |
 | **Model Management** | ❌ | ❌ | ❌ | ✅ **Yes** |
-| **Advanced Options** | Limited | Limited | Limited | ✅ **8+ params** |
+| **Advanced Options** | ✅ | ✅ | ✅ | ✅ **8+ params** |
 | **Privacy (Local)** | ❌ Cloud | ❌ Cloud | ❌ Cloud | ✅ **100% Local** |
-| **Connection Test** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Connection Health** | ✅ | ❌ | ✅ | ✅ **Yes** |
 | **Offline Mode** | ❌ | ❌ | ❌ | ✅ **Yes** |
-| **Performance Tracking** | ❌ | ❌ | ❌ | ✅ **Yes** |
+| **Performance Tracking** | ✅ | ✅ | ✅ | ✅ **Yes** |
 | **Usage Limits** | Pay per use | Pay per use | Pay per use | ✅ **Unlimited** |
 
 **Choose the right provider for your needs:**
 
 - **OpenAI** - Most capable general-purpose AI (GPT-4)
 - **Anthropic** - Long context windows, ethical AI (Claude 3.5)
-- **Gemini** - Most cost-effective, multimodal (Gemini 1.5)
+- **Gemini** - Most cost-effective with massive 1M token context (Gemini 1.5 Pro/Flash)
 - **Ollama** - Complete privacy, zero cost, offline capable (50+ models)
 
 ## 🔮 Future Enhancements
