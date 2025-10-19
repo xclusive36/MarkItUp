@@ -5,6 +5,35 @@ All notable changes to MarkItUp will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1] - 2025-10-19
+
+### Changed
+
+- **Spaced Repetition Plugin v1.2.1** - Enhanced flashcard system with professional features
+  - Enhanced modal-based review interface with 3D card flip animations
+  - Interactive statistics dashboard with gradient cards and animated charts
+  - Cloze deletion support for fill-in-the-blank style cards
+  - Export/Import functionality (JSON, CSV formats)
+  - Session completion summaries with accuracy tracking
+  - Keyboard shortcuts for efficient review workflow
+
+### Fixed
+
+- **Ollama Integration in Spaced Repetition** - Fixed AI flashcard generation with Ollama
+  - Eliminated "AI service not configured" errors for Ollama provider
+  - Direct browser fetch for Ollama API bypassing availability checks
+  - Applied fixes to both `generateFromNote()` and `completeAnswers()` methods
+- **AI Response Parser** - Enhanced robustness with multiple parsing patterns
+  - Added 5 fallback regex patterns for flexible AI response handling
+  - Support for single-line, multi-line, numbered, Question/Answer, and markdown formats
+  - Extensive console logging for debugging AI-generated flashcards
+
+### Documentation
+
+- Added comprehensive Spaced Repetition v1.2.1 enhancement documentation
+- Added Ollama flashcard fix technical documentation
+- Updated plugin examples with cloze deletion patterns
+
 ## [3.5.0] - 2025-10-18
 
 ### Added

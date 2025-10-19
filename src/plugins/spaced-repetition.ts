@@ -366,8 +366,9 @@ class FlashcardParser {
 
     // Patterns to match:
     // 1. Explicit Q: A: format with #flashcard
-    // 2. Paragraph with #flashcard (auto-generate Q&A with AI)
-    // 3. Block with ^block-id and #flashcard
+    // 2. Cloze deletion format: "Text with {hidden} word" #flashcard/cloze
+    // 3. Paragraph with #flashcard (auto-generate Q&A with AI)
+    // 4. Block with ^block-id and #flashcard
 
     // Pattern 1: Q: ... A: ... #flashcard
     const qaPattern = /Q:\s*(.+?)\s*A:\s*(.+?)\s*#flashcard(?:\/(\S+))?/gs;
@@ -398,7 +399,52 @@ class FlashcardParser {
       });
     }
 
-    // Pattern 2: Paragraph with #flashcard (needs AI processing)
+    // Pattern 2: Cloze deletions - "Text with {hidden} word" #flashcard/cloze
+    const clozePattern = /(.+?{.+?}.+?)\s*#flashcard\/cloze(?:\/(\S+))?(?:\s*\^(\w+))?/gs;
+
+    while ((match = clozePattern.exec(content)) !== null) {
+      const [fullMatch, text, subtag, blockId] = match;
+      const start = match.index;
+      const end = start + fullMatch.length;
+
+      // Skip if already matched by Q: A: pattern
+      if (flashcards.some(fc => fc.position.start === start)) {
+        continue;
+      }
+
+      // Parse cloze deletions - can have multiple {deletions}
+      const clozeMatches = text.matchAll(/{([^}]+)}/g);
+      const deletions = Array.from(clozeMatches);
+
+      if (deletions.length > 0) {
+        // Create one card per deletion
+        deletions.forEach((deletion, index) => {
+          const deletedWord = deletion[1];
+          const questionText = text.replace(/{([^}]+)}/g, (match, word, offset) => {
+            // Only hide the current deletion
+            const currentIndex = Array.from(text.matchAll(/{([^}]+)}/g)).findIndex(
+              m => m.index === offset
+            );
+            return currentIndex === index ? '[...]' : word;
+          });
+
+          const context = this.extractContext(content, start);
+          const tags = ['flashcard', 'cloze'];
+          if (subtag) tags.push(subtag);
+
+          flashcards.push({
+            front: questionText.trim(),
+            back: deletedWord.trim(),
+            context,
+            blockId: blockId || `cloze-${index}`,
+            tags,
+            position: { start, end },
+          });
+        });
+      }
+    }
+
+    // Pattern 3: Paragraph with #flashcard (needs AI processing)
     const paragraphPattern = /^(.+?)#flashcard(?:\/(\S+))?(?:\s*\^(\w+))?$/gm;
 
     while ((match = paragraphPattern.exec(content)) !== null) {
@@ -406,7 +452,7 @@ class FlashcardParser {
       const start = match.index;
       const end = start + fullMatch.length;
 
-      // Skip if already matched by Q: A: pattern
+      // Skip if already matched by Q: A: or cloze pattern
       if (flashcards.some(fc => fc.position.start === start)) {
         continue;
       }
@@ -745,6 +791,114 @@ class FlashcardManager {
   }
 
   /**
+   * Export all flashcards to JSON
+   */
+  public async exportDeck(deckName?: string): Promise<string> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const cards = await this.db.getAll('cards');
+    const reviews = await this.db.getAll('reviews');
+
+    const exportData = {
+      version: '1.2.0',
+      deckName: deckName || `MarkItUp Deck ${new Date().toISOString().split('T')[0]}`,
+      exportDate: new Date().toISOString(),
+      cardCount: cards.length,
+      reviewCount: reviews.length,
+      cards,
+      reviews,
+    };
+
+    return JSON.stringify(exportData, null, 2);
+  }
+
+  /**
+   * Import flashcards from JSON
+   */
+  public async importDeck(jsonData: string): Promise<{ imported: number; skipped: number }> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      const data = JSON.parse(jsonData);
+
+      if (!data.cards || !Array.isArray(data.cards)) {
+        throw new Error('Invalid deck format: missing cards array');
+      }
+
+      let imported = 0;
+      let skipped = 0;
+
+      for (const card of data.cards) {
+        try {
+          // Check if card already exists
+          const existing = await this.db.get('cards', card.id);
+          if (existing) {
+            skipped++;
+            continue;
+          }
+
+          // Import card
+          await this.db.put('cards', card);
+          imported++;
+        } catch (error) {
+          console.error('Error importing card:', error);
+          skipped++;
+        }
+      }
+
+      // Optionally import reviews
+      if (data.reviews && Array.isArray(data.reviews)) {
+        for (const review of data.reviews) {
+          try {
+            await this.db.put('reviews', review);
+          } catch (error) {
+            console.error('Error importing review:', error);
+          }
+        }
+      }
+
+      return { imported, skipped };
+    } catch (error) {
+      throw new Error(
+        `Failed to import deck: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Export deck to CSV format
+   */
+  public async exportToCSV(): Promise<string> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const cards = await this.db.getAll('cards');
+
+    const headers = ['Front', 'Back', 'Tags', 'State', 'Difficulty', 'Reps', 'Lapses', 'Note'];
+    const rows = cards.map(card => [
+      this.escapeCsv(card.front),
+      this.escapeCsv(card.back),
+      card.tags.join(';'),
+      card.state,
+      card.difficulty.toFixed(2),
+      card.reps.toString(),
+      card.lapses.toString(),
+      card.noteName,
+    ]);
+
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  }
+
+  /**
+   * Escape CSV values
+   */
+  private escapeCsv(value: string): string {
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  }
+
+  /**
    * Delete all cards for a note
    */
   public async deleteCardsForNote(noteId: string): Promise<number> {
@@ -835,10 +989,25 @@ class SpacedRepetitionPlugin {
    * Open review panel
    */
   public async openReviewPanel(): Promise<void> {
-    // This will be implemented with React component
-    this.reviewPanelOpen = true;
-    this.api.ui.showNotification('Review panel opened', 'info');
-    // TODO: Actually open the review UI component
+    try {
+      // Dynamically import the enhanced UI component
+      const { EnhancedFlashcardReview } = await import('./spaced-repetition-enhanced-ui');
+      const React = await import('react');
+
+      // Create the review component
+      const reviewComponent = React.createElement(EnhancedFlashcardReview, {
+        onClose: () => {
+          this.reviewPanelOpen = false;
+        },
+        manager: this.manager,
+      });
+
+      this.reviewPanelOpen = true;
+      await this.api.ui.showModal('Flashcard Review', reviewComponent);
+    } catch (error) {
+      console.error('Error opening review panel:', error);
+      this.api.ui.showNotification('Error opening review panel', 'error');
+    }
   }
 
   /**
@@ -846,27 +1015,21 @@ class SpacedRepetitionPlugin {
    */
   public async showStatistics(): Promise<void> {
     try {
-      const stats = await this.manager.getStats();
+      // Dynamically import the enhanced stats component
+      const { EnhancedStatsDashboard } = await import('./spaced-repetition-enhanced-ui');
+      const React = await import('react');
 
-      const message = `
-📊 Flashcard Statistics
+      // Create the stats component
+      const statsComponent = React.createElement(EnhancedStatsDashboard, {
+        onClose: () => {
+          // Stats panel closed
+        },
+        manager: this.manager,
+      });
 
-📚 Total Cards: ${stats.total}
-🆕 New: ${stats.new}
-📖 Learning: ${stats.learning}
-✅ Review: ${stats.review}
-🔄 Relearning: ${stats.relearning}
-
-⏰ Due Today: ${stats.due_today}
-📈 Retention Rate: ${stats.retention_rate.toFixed(1)}%
-💪 Average Ease: ${stats.average_ease.toFixed(1)}/10
-🔥 Current Streak: ${stats.streak_days} days
-📝 Total Reviews: ${stats.total_reviews}
-      `.trim();
-
-      this.api.ui.showNotification(message, 'info');
+      await this.api.ui.showModal('Learning Statistics', statsComponent);
     } catch (error) {
-      console.error('Error getting statistics:', error);
+      console.error('Error showing statistics:', error);
       this.api.ui.showNotification('Error loading statistics', 'error');
     }
   }
@@ -993,9 +1156,9 @@ class SpacedRepetitionPlugin {
   /**
    * Get AI settings from localStorage (client-side)
    */
-  private getAISettings(): any {
+  private getAISettings(): { provider: string; apiKey: string; ollamaUrl: string; model: string } {
     if (typeof window === 'undefined') {
-      return { provider: 'none', apiKey: '', ollamaUrl: '' };
+      return { provider: 'none', apiKey: '', ollamaUrl: '', model: '' };
     }
     try {
       const saved = localStorage.getItem('markitup-ai-settings');
@@ -1003,7 +1166,7 @@ class SpacedRepetitionPlugin {
     } catch (error) {
       console.warn('[SpacedRepetition] Failed to load AI settings:', error);
     }
-    return { provider: 'none', apiKey: '', ollamaUrl: '' };
+    return { provider: 'none', apiKey: '', ollamaUrl: '', model: '' };
   }
 
   /**
@@ -1043,23 +1206,29 @@ Generate the flashcards now:`;
   private parseAIResponse(aiResponse: string): Array<{ question: string; answer: string }> {
     const cards: Array<{ question: string; answer: string }> = [];
 
-    // First try to match Q: and A: on the same line
-    const lines = aiResponse.split('\n');
-    for (const line of lines) {
-      const match = line.match(/Q:\s*(.+?)\s*A:\s*(.+?)(?:\s*#flashcard)?$/i);
-      if (match) {
-        cards.push({
-          question: match[1].trim(),
-          answer: match[2].trim(),
-        });
-      }
+    console.log('[SpacedRepetition] Parsing AI response, length:', aiResponse.length);
+    console.log('[SpacedRepetition] AI response preview:', aiResponse.slice(0, 500));
+
+    // Try multiple patterns to be more flexible
+
+    // Pattern 1: Q: and A: on the same line
+    const singleLinePattern = /Q:\s*(.+?)\s*A:\s*(.+?)(?:\s*#flashcard)?$/gim;
+    let match;
+    while ((match = singleLinePattern.exec(aiResponse)) !== null) {
+      cards.push({
+        question: match[1].trim(),
+        answer: match[2].trim(),
+      });
     }
 
-    // If no cards found, try multi-line format (Q: on one line, A: on next)
+    console.log('[SpacedRepetition] After single-line pattern:', cards.length, 'cards');
+
+    // Pattern 2: Multi-line format (Q: on one line, A: on next)
     if (cards.length === 0) {
+      const lines = aiResponse.split('\n');
       for (let i = 0; i < lines.length - 1; i++) {
         const qMatch = lines[i].match(/Q:\s*(.+?)(?:\s*#flashcard)?$/i);
-        const aMatch = lines[i + 1].match(/A:\s*(.+?)(?:\s*#flashcard)?$/i);
+        const aMatch = lines[i + 1]?.match(/A:\s*(.+?)(?:\s*#flashcard)?$/i);
 
         if (qMatch && aMatch) {
           cards.push({
@@ -1069,6 +1238,54 @@ Generate the flashcards now:`;
           i++; // Skip the next line since we already processed it
         }
       }
+      console.log('[SpacedRepetition] After multi-line pattern:', cards.length, 'cards');
+    }
+
+    // Pattern 3: Numbered list format (1. Q: ... A: ...)
+    if (cards.length === 0) {
+      const numberedPattern = /\d+\.\s*Q:\s*(.+?)\s*A:\s*(.+?)(?:\s*#flashcard)?$/gim;
+      while ((match = numberedPattern.exec(aiResponse)) !== null) {
+        cards.push({
+          question: match[1].trim(),
+          answer: match[2].trim(),
+        });
+      }
+      console.log('[SpacedRepetition] After numbered pattern:', cards.length, 'cards');
+    }
+
+    // Pattern 4: Question/Answer format without Q:/A: labels
+    if (cards.length === 0) {
+      const questionAnswerPattern = /Question:\s*(.+?)\s*Answer:\s*(.+?)(?:\n|$)/gis;
+      while ((match = questionAnswerPattern.exec(aiResponse)) !== null) {
+        cards.push({
+          question: match[1].trim(),
+          answer: match[2].trim(),
+        });
+      }
+      console.log('[SpacedRepetition] After Question/Answer pattern:', cards.length, 'cards');
+    }
+
+    // Pattern 5: Markdown format (- Q: ... / - A: ...)
+    if (cards.length === 0) {
+      const lines = aiResponse.split('\n');
+      for (let i = 0; i < lines.length - 1; i++) {
+        const qMatch = lines[i].match(/[-*]\s*Q:\s*(.+?)$/i);
+        const aMatch = lines[i + 1]?.match(/[-*]\s*A:\s*(.+?)$/i);
+
+        if (qMatch && aMatch) {
+          cards.push({
+            question: qMatch[1].trim(),
+            answer: aMatch[1].trim(),
+          });
+          i++;
+        }
+      }
+      console.log('[SpacedRepetition] After markdown pattern:', cards.length, 'cards');
+    }
+
+    console.log('[SpacedRepetition] Final parsed cards:', cards.length);
+    if (cards.length > 0) {
+      console.log('[SpacedRepetition] First card:', cards[0]);
     }
 
     return cards;
@@ -1128,9 +1345,21 @@ Generate the flashcards now:`;
    * Generate flashcards from entire note using AI
    */
   public async generateFromNote(): Promise<void> {
-    if (!this.api.ai || !this.api.ai.isAvailable()) {
+    // Get AI settings to check for Ollama
+    const aiSettings = this.getAISettings();
+
+    // Only check isAvailable for non-Ollama providers
+    if (aiSettings.provider !== 'ollama') {
+      if (!this.api.ai || !this.api.ai.isAvailable()) {
+        this.api.ui.showNotification(
+          'AI not configured. Please set up an AI provider in Settings.',
+          'warning'
+        );
+        return;
+      }
+    } else if (!aiSettings.ollamaUrl) {
       this.api.ui.showNotification(
-        'AI not configured. Please set up an AI provider in Settings.',
+        'Ollama URL not configured. Please set it in Settings.',
         'warning'
       );
       return;
@@ -1165,32 +1394,60 @@ Requirements:
 
 Generate the flashcards:`;
 
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          context: {
-            relatedNotes: [
-              {
-                id: note.id,
-                name: note.name,
-                relevantContent: note.content.slice(0, 1000),
-                relevanceScore: 1.0,
-              },
-            ],
-            conversationHistory: [],
-          },
-        }),
-      });
+      let aiResponse: string;
 
-      const result = await response.json();
+      // For Ollama, use direct browser fetch (bypass server-side API)
+      if (aiSettings.provider === 'ollama' && aiSettings.ollamaUrl) {
+        console.log('[SpacedRepetition] Using direct Ollama fetch:', aiSettings.ollamaUrl);
 
-      if (!result.success) {
-        throw new Error(result.error?.message || 'AI generation failed');
+        const ollamaUrl = aiSettings.ollamaUrl.replace(/\/$/, '');
+        const response = await fetch(`${ollamaUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: aiSettings.model || 'llama3.2:3b',
+            messages: [{ role: 'user', content: prompt }],
+            stream: false,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ollama API error: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        aiResponse = result.message?.content || '';
+      } else {
+        // For other providers, use server-side API
+        const response = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: prompt,
+            context: {
+              relatedNotes: [
+                {
+                  id: note.id,
+                  name: note.name,
+                  relevantContent: note.content.slice(0, 1000),
+                  relevanceScore: 1.0,
+                },
+              ],
+              conversationHistory: [],
+            },
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error?.message || 'AI generation failed');
+        }
+
+        aiResponse = result.data.content;
       }
 
-      const generatedCards = this.parseAIResponse(result.data.content);
+      const generatedCards = this.parseAIResponse(aiResponse);
 
       if (generatedCards.length === 0) {
         this.api.ui.showNotification('No flashcards generated from this note.', 'warning');
@@ -1224,9 +1481,21 @@ Generate the flashcards:`;
    * Complete missing answers for incomplete flashcards using AI
    */
   public async completeAnswers(): Promise<void> {
-    if (!this.api.ai || !this.api.ai.isAvailable()) {
+    // Get AI settings to check for Ollama
+    const aiSettings = this.getAISettings();
+
+    // Only check isAvailable for non-Ollama providers
+    if (aiSettings.provider !== 'ollama') {
+      if (!this.api.ai || !this.api.ai.isAvailable()) {
+        this.api.ui.showNotification(
+          'AI not configured. Please set up an AI provider in Settings.',
+          'warning'
+        );
+        return;
+      }
+    } else if (!aiSettings.ollamaUrl) {
       this.api.ui.showNotification(
-        'AI not configured. Please set up an AI provider in Settings.',
+        'Ollama URL not configured. Please set it in Settings.',
         'warning'
       );
       return;
@@ -1266,34 +1535,61 @@ ${note.content.slice(0, 500)}
 
 Provide only the answer, no extra text:`;
 
-        const response = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: prompt,
-            context: {
-              relatedNotes: [
-                {
-                  id: note.id,
-                  name: note.name,
-                  relevantContent: note.content.slice(0, 1000),
-                  relevanceScore: 1.0,
-                },
-              ],
-              conversationHistory: [],
-            },
-          }),
-        });
+        let answer: string;
 
-        const result = await response.json();
+        // For Ollama, use direct browser fetch
+        if (aiSettings.provider === 'ollama' && aiSettings.ollamaUrl) {
+          const ollamaUrl = aiSettings.ollamaUrl.replace(/\/$/, '');
+          const response = await fetch(`${ollamaUrl}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: aiSettings.model || 'llama3.2:3b',
+              messages: [{ role: 'user', content: prompt }],
+              stream: false,
+            }),
+          });
 
-        if (result.success) {
-          const answer = result.data.content.trim();
-          // Replace Q: ... #flashcard with Q: ... A: ... #flashcard
-          const oldText = match[0];
-          const newText = `Q: ${question} A: ${answer} #flashcard`;
-          updatedContent = updatedContent.replace(oldText, newText);
+          if (!response.ok) {
+            throw new Error(`Ollama API error: ${response.statusText}`);
+          }
+
+          const result = await response.json();
+          answer = result.message?.content?.trim() || '';
+        } else {
+          // For other providers, use server-side API
+          const response = await fetch('/api/ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: prompt,
+              context: {
+                relatedNotes: [
+                  {
+                    id: note.id,
+                    name: note.name,
+                    relevantContent: note.content.slice(0, 1000),
+                    relevanceScore: 1.0,
+                  },
+                ],
+                conversationHistory: [],
+              },
+            }),
+          });
+
+          const result = await response.json();
+
+          if (!result.success) {
+            throw new Error(result.error?.message || 'AI generation failed');
+          }
+
+          answer = result.data.content.trim();
         }
+
+        // Replace Q: ... #flashcard with Q: ... A: ... #flashcard
+        const oldText = match[0];
+        const newText = `Q: ${question} A: ${answer} #flashcard`;
+        updatedContent = updatedContent.replace(oldText, newText);
       }
 
       await this.api.notes.update(noteId, { content: updatedContent });
@@ -1311,6 +1607,99 @@ Provide only the answer, no extra text:`;
       );
     }
   }
+
+  /**
+   * Export flashcard deck to JSON
+   */
+  public async exportDeck(): Promise<void> {
+    try {
+      const deckName = prompt('Enter deck name (optional):');
+      const jsonData = await this.manager.exportDeck(deckName || undefined);
+
+      // Create download
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${deckName || 'markitup-flashcards'}-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.api.ui.showNotification('✅ Deck exported successfully!', 'success');
+    } catch (error) {
+      console.error('Error exporting deck:', error);
+      this.api.ui.showNotification('Error exporting deck', 'error');
+    }
+  }
+
+  /**
+   * Export flashcards to CSV
+   */
+  public async exportCSV(): Promise<void> {
+    try {
+      const csvData = await this.manager.exportToCSV();
+
+      // Create download
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `markitup-flashcards-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.api.ui.showNotification('✅ Flashcards exported to CSV!', 'success');
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      this.api.ui.showNotification('Error exporting CSV', 'error');
+    }
+  }
+
+  /**
+   * Import flashcard deck from JSON
+   */
+  public async importDeck(): Promise<void> {
+    try {
+      // Create file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+
+      input.onchange = async e => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async event => {
+          try {
+            const jsonData = event.target?.result as string;
+            const result = await this.manager.importDeck(jsonData);
+
+            this.api.ui.showNotification(
+              `✅ Imported ${result.imported} card(s)! (${result.skipped} skipped)`,
+              'success'
+            );
+          } catch (error) {
+            console.error('Error importing deck:', error);
+            this.api.ui.showNotification(
+              `Error: ${error instanceof Error ? error.message : 'Import failed'}`,
+              'error'
+            );
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      input.click();
+    } catch (error) {
+      console.error('Error importing deck:', error);
+      this.api.ui.showNotification('Error importing deck', 'error');
+    }
+  }
 }
 
 // ============================================================================
@@ -1322,29 +1711,37 @@ let pluginInstance: SpacedRepetitionPlugin | null = null;
 export const spacedRepetitionPlugin: PluginManifest = {
   id: 'spaced-repetition',
   name: 'Spaced Repetition (Flashcards)',
-  version: '1.1.0',
-  description: 'FSRS-based flashcard system with AI-powered generation for effective learning',
+  version: '1.2.1',
+  description:
+    'Professional flashcard system with FSRS algorithm, AI generation, cloze deletions, and export/import',
   author: 'MarkItUp Team',
   main: 'spaced-repetition.js',
-  documentation: `# Spaced Repetition Plugin
+  documentation: `# Spaced Repetition Plugin v1.2
 
 ## Overview
-Create and review flashcards using scientifically-proven spaced repetition. Powered by the FSRS algorithm with AI-assisted flashcard generation.
+Create and review flashcards using scientifically-proven spaced repetition. Powered by the FSRS algorithm with AI-assisted flashcard generation, cloze deletions, and professional UI.
+
+## 🆕 What's New in v1.2
+- **Enhanced Modal UI**: Professional review and statistics interfaces
+- **Cloze Deletions**: Fill-in-the-blank style cards (#flashcard/cloze)
+- **Export/Import**: Share decks in JSON or CSV format
+- **Visual Progress**: Real-time stats and animations
+- **Better Keyboard Control**: Complete keyboard-first workflow
 
 ## How to Create Flashcards
 
-### Manual Creation
-Add flashcards anywhere in your notes using this format:
+### 1. Basic Q&A Format
 \`\`\`
 Q: Your question here? A: Your answer here #flashcard
 \`\`\`
 
-Example:
+### 2. Cloze Deletion (NEW!)
 \`\`\`
-Q: What is the capital of France? A: Paris #flashcard
+The {capital} of France is {Paris} #flashcard/cloze
 \`\`\`
+Creates 2 cards: one hiding "capital", one hiding "Paris"
 
-### AI-Powered Generation
+### 3. AI-Powered Generation
 1. **From Selection** (⌘⇧G):
    - Select text in your note
    - Press Cmd+Shift+G or use Command Palette
@@ -1511,6 +1908,36 @@ Press **Cmd+Shift+S** to see:
       callback: async () => {
         if (pluginInstance) {
           await pluginInstance.showStatistics();
+        }
+      },
+    },
+    {
+      id: 'export-deck',
+      name: 'Export Flashcard Deck',
+      description: 'Export all flashcards to JSON file',
+      callback: async () => {
+        if (pluginInstance) {
+          await pluginInstance.exportDeck();
+        }
+      },
+    },
+    {
+      id: 'export-csv',
+      name: 'Export Flashcards to CSV',
+      description: 'Export flashcards in CSV format',
+      callback: async () => {
+        if (pluginInstance) {
+          await pluginInstance.exportCSV();
+        }
+      },
+    },
+    {
+      id: 'import-deck',
+      name: 'Import Flashcard Deck',
+      description: 'Import flashcards from JSON file',
+      callback: async () => {
+        if (pluginInstance) {
+          await pluginInstance.importDeck();
         }
       },
     },

@@ -6,6 +6,17 @@
 
 ## 🆕 What's New
 
+### v3.5.1 - October 2025 🎓
+- **📚 Spaced Repetition Plugin v1.2.1** - Professional flashcard system with major enhancements:
+  - 🎨 **Enhanced Modal Interface** - Beautiful full-screen review with 3D card flip animations
+  - 📊 **Interactive Dashboard** - Statistics with gradient cards and animated progress charts
+  - 🧩 **Cloze Deletions** - Fill-in-the-blank style cards with `{deletion}` syntax
+  - 💾 **Export/Import** - Save and share flashcard decks in JSON or CSV formats
+  - ⌨️ **Keyboard Shortcuts** - Efficient review workflow (Space, 1-4 for ratings)
+  - 🎯 **Session Summaries** - Track accuracy and progress after each review session
+  - 🤖 **Improved AI Generation** - Fixed Ollama integration with enhanced response parsing
+  - 🧠 **FSRS Algorithm** - Scientific spaced repetition scheduling for optimal retention
+
 ### v3.5.0 - October 2025 🎉
 - **🌐 Universal Multi-Provider AI Support** - All AI features now work with any provider:
   - ✅ **Ollama Support Everywhere** - Writing Assistant, Research Assistant, Knowledge Discovery now work with local Ollama
