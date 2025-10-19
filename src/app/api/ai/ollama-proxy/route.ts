@@ -18,7 +18,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate endpoint to prevent abuse
-    const allowedEndpoints = ['/api/tags', '/api/version', '/api/pull', '/api/show', '/api/delete'];
+    const allowedEndpoints = [
+      '/api/tags',
+      '/api/version',
+      '/api/pull',
+      '/api/show',
+      '/api/delete',
+      '/api/chat',
+    ];
     if (!allowedEndpoints.includes(endpoint)) {
       return NextResponse.json({ success: false, error: 'Endpoint not allowed' }, { status: 403 });
     }
@@ -35,8 +42,8 @@ export async function POST(request: NextRequest) {
       body: data ? JSON.stringify(data) : undefined,
     });
 
-    // For streaming responses (like pull), we need to handle it differently
-    if (endpoint === '/api/pull' && data?.stream) {
+    // For streaming responses (like pull or chat), we need to handle it differently
+    if ((endpoint === '/api/pull' || endpoint === '/api/chat') && data?.stream) {
       // Return the streaming response
       return new NextResponse(ollamaResponse.body, {
         status: ollamaResponse.status,

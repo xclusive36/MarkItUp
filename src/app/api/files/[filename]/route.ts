@@ -6,12 +6,13 @@ function isReserved(filename: string) {
   if (Array.isArray(filename)) filename = filename[0];
   return RESERVED.includes(filename);
 }
-export async function PUT(request: NextRequest, { params }: { params: any }) {
-  if (isReserved(params.filename)) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<any> }) {
+  const resolvedParams = await params;
+  if (isReserved(resolvedParams.filename)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
   try {
-    const { filename } = params;
+    const { filename } = resolvedParams;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
@@ -35,7 +36,15 @@ export async function PUT(request: NextRequest, { params }: { params: any }) {
     }
     // Ensure parent directory exists
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+    console.log('[API PUT] Writing file:', filePath);
+    console.log('[API PUT] Content length:', content.length);
+    console.log('[API PUT] Content preview (last 200 chars):', content.slice(-200));
+
     fs.writeFileSync(filePath, content, 'utf-8');
+
+    console.log('[API PUT] File written successfully');
+
     return NextResponse.json({ message: fileExists ? 'File overwritten' : 'File created' });
   } catch (error) {
     console.error('Error writing file:', error);
@@ -57,12 +66,13 @@ function safeJoinMarkdownDir(filename: string): string | null {
   return filePath;
 }
 
-export async function GET(request: NextRequest, { params }: { params: any }) {
-  if (isReserved(params.filename)) {
+export async function GET(request: NextRequest, { params }: { params: Promise<any> }) {
+  const resolvedParams = await params;
+  if (isReserved(resolvedParams.filename)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
   try {
-    const { filename } = params;
+    const { filename } = resolvedParams;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
@@ -91,12 +101,13 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: any }) {
-  if (isReserved(params.filename)) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<any> }) {
+  const resolvedParams = await params;
+  if (isReserved(resolvedParams.filename)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
   try {
-    const { filename } = params;
+    const { filename } = resolvedParams;
     const filePath = safeJoinMarkdownDir(filename);
     if (!filePath) {
       return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });

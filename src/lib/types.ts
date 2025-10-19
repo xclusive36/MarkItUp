@@ -98,6 +98,7 @@ export interface Plugin {
   permissions?: PluginPermission[];
   minVersion?: string; // Minimum MarkItUp version required
   maxVersion?: string; // Maximum MarkItUp version supported
+  documentation?: string; // Detailed usage instructions in markdown format
 }
 
 export interface PluginManifest extends Plugin {
@@ -214,7 +215,7 @@ export interface PluginAPI {
 
   // UI interactions
   ui: {
-    showNotification: (message: string, type?: 'info' | 'warning' | 'error') => void;
+    showNotification: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
     showModal: (title: string, content: React.ReactNode) => Promise<any>;
     addCommand: (command: Command) => void;
     addView: (view: PluginView) => void;

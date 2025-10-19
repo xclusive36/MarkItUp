@@ -23,6 +23,8 @@ interface UICallbacks {
   replaceSelection?: (text: string) => void;
   getCursorPosition?: () => number;
   setCursorPosition?: (position: number) => void;
+  // Notification/Toast methods
+  showNotification?: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
 export class PluginManager {
@@ -334,6 +336,14 @@ export class PluginManager {
 
             try {
               console.log('[PLUGIN-MANAGER] Making API call to:', fullPath);
+              console.log(
+                '[PLUGIN-MANAGER] Content length being sent:',
+                updatedNote.content.length
+              );
+              console.log(
+                '[PLUGIN-MANAGER] Content preview (last 300 chars):',
+                updatedNote.content.slice(-300)
+              );
               const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
                 method: 'PUT',
                 headers: {
@@ -395,15 +405,29 @@ export class PluginManager {
           return updatedNote;
         },
         delete: id => this.pkmSystem.deleteNote(id),
-        get: id => this.pkmSystem.getNote(id),
+        get: id => {
+          console.log('[PluginManager] notes.get called with id:', id);
+          const note = this.pkmSystem.getNote(id);
+          console.log('[PluginManager] notes.get returning:', note?.id, note?.name);
+          return note;
+        },
         getAll: () => this.pkmSystem.getAllNotes(),
         search: query => this.pkmSystem.search(query),
-        getActiveNoteId: () => this.pkmSystem.viewState.activeNoteId,
+        getActiveNoteId: () => {
+          const noteId = this.pkmSystem.viewState.activeNoteId;
+          console.log('[PluginManager] getActiveNoteId called:', noteId);
+          console.log('[PluginManager] viewState:', this.pkmSystem.viewState);
+          return noteId;
+        },
       },
       ui: {
         showNotification: (message, type = 'info') => {
-          // Implementation would depend on your UI framework
-          console.log(`[${type}] ${message}`);
+          // Use UI callback if available, otherwise fall back to console
+          if (this.uiCallbacks?.showNotification) {
+            this.uiCallbacks.showNotification(message, type);
+          } else {
+            console.log(`[${type}] ${message}`);
+          }
         },
         showModal: async (title, content) => {
           // Implementation for modal display
@@ -543,7 +567,71 @@ export class PluginManager {
           });
         },
       },
+      ai: {
+        analyzeContent: async (content: string, noteId?: string) => {
+          // Get AI settings from localStorage
+          const aiSettings = this.getAISettings();
+
+          // For now, return mock data as the actual AI analysis would need the provider
+          return {
+            summary: 'Content analysis placeholder',
+            keyTopics: [],
+            suggestedTags: [],
+            suggestedConnections: [],
+            sentiment: 'neutral' as const,
+            complexity: 0,
+            readabilityScore: 0,
+          };
+        },
+        isAvailable: () => {
+          // Check if any AI provider is configured
+          const aiSettings = this.getAISettings();
+
+          console.log('[PluginManager AI] Checking AI availability:', {
+            provider: aiSettings.provider,
+            hasApiKey: !!aiSettings.apiKey,
+            ollamaUrl: aiSettings.ollamaUrl,
+          });
+
+          // Check for API keys (OpenAI, Anthropic, Gemini)
+          if (aiSettings.apiKey && aiSettings.apiKey.trim() !== '') {
+            console.log('[PluginManager AI] Available via API key');
+            return true;
+          }
+
+          // Check for Ollama configuration
+          if (aiSettings.provider === 'ollama' && aiSettings.ollamaUrl) {
+            console.log('[PluginManager AI] Available via Ollama at:', aiSettings.ollamaUrl);
+            return true;
+          }
+
+          console.log('[PluginManager AI] NOT available - no valid configuration');
+          return false;
+        },
+        getProvider: () => {
+          const aiSettings = this.getAISettings();
+          return aiSettings.provider || 'none';
+        },
+      },
     };
+  }
+
+  private getAISettings(): any {
+    // Load AI settings from localStorage
+    if (typeof window === 'undefined') {
+      return { provider: 'none', apiKey: '', ollamaUrl: '' };
+    }
+
+    try {
+      const saved = localStorage.getItem('markitup-ai-settings');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.warn('Failed to load AI settings:', error);
+    }
+
+    return { provider: 'none', apiKey: '', ollamaUrl: '' };
   }
 
   private registerCommand(pluginId: string, command: Command): void {

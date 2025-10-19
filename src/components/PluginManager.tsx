@@ -19,6 +19,7 @@ import {
   Save,
   Eye,
   EyeOff,
+  HelpCircle,
 } from 'lucide-react';
 import { AIPluginMetadata, AIPluginManager } from '@/lib/ai/plugin-manager-simple';
 import { analytics } from '@/lib/analytics';
@@ -65,6 +66,8 @@ export default function PluginManager({
     {}
   );
   const [showApiKeys, setShowApiKeys] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
+  const [documentationPlugin, setDocumentationPlugin] = useState<PluginStatus | null>(null);
 
   // Load plugins when opened
   useEffect(() => {
@@ -524,6 +527,26 @@ export default function PluginManager({
                         </div>
 
                         <div className="flex items-center gap-3">
+                          {plugin.metadata.documentation && (
+                            <button
+                              onClick={() => {
+                                setDocumentationPlugin(plugin);
+                                setShowDocumentation(true);
+                              }}
+                              className="p-2 rounded-lg transition-colors"
+                              style={{ color: 'var(--text-secondary)' }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.backgroundColor = 'var(--bg-primary)';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                              title="How to Use"
+                            >
+                              <HelpCircle className="w-4 h-4" />
+                            </button>
+                          )}
+
                           {plugin.hasSettings && (
                             <button
                               onClick={() => {
@@ -586,6 +609,78 @@ export default function PluginManager({
 
       {/* Settings Modal */}
       {renderPluginSettings()}
+
+      {/* Documentation Modal */}
+      {showDocumentation && documentationPlugin && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
+          onClick={e => e.target === e.currentTarget && setShowDocumentation(false)}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[85vh] rounded-lg shadow-xl flex flex-col overflow-hidden"
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+            }}
+          >
+            {/* Header */}
+            <div
+              className="px-6 py-4 border-b flex items-center justify-between"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
+              <div>
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {documentationPlugin.name} - How to Use
+                </h2>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+                  {documentationPlugin.metadata.description}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDocumentation(false)}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Documentation Content */}
+            <div className="flex-1 overflow-auto p-6">
+              <div
+                className="prose dark:prose-invert max-w-none"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      documentationPlugin.metadata.documentation || 'No documentation available.',
+                  }}
+                  className="markdown-content"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              className="px-6 py-4 border-t flex justify-end"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
+              <button
+                onClick={() => setShowDocumentation(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

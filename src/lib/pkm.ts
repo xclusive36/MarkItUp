@@ -18,6 +18,8 @@ interface UICallbacks {
   replaceSelection?: (text: string) => void;
   getCursorPosition?: () => number;
   setCursorPosition?: (position: number) => void;
+  // Notification/Toast methods
+  showNotification?: (message: string, type?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
 export class PKMSystem {

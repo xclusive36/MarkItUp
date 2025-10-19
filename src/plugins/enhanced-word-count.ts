@@ -11,6 +11,38 @@ export const enhancedWordCountPlugin: PluginManifest = {
   description: 'Advanced word counting with reading time, character count, and writing analytics',
   author: 'MarkItUp Team',
   main: 'enhanced-word-count.js',
+  documentation: `# Detailed Writing Statistics Plugin
+
+## Overview
+Get real-time writing metrics displayed in the status bar as you type.
+
+## What It Shows
+
+The status bar displays three key metrics:
+- **Word Count**: Total words in the current note
+- **Character Count**: Total characters (with and without spaces)
+- **Reading Time**: Estimated time to read (based on reading speed)
+
+## How It Works
+
+The plugin automatically:
+1. Counts words as you type
+2. Updates the status bar in real-time
+3. Excludes markdown syntax from word counts
+4. Calculates reading time based on your configured reading speed
+
+## Settings
+
+- **Reading Speed (WPM)**: Set your average reading pace (default: 200 words per minute)
+- **Show Character Count**: Toggle character count display
+- **Show Reading Time**: Toggle reading time estimate
+
+## Tips
+
+- Use reading time estimates for blog posts and articles
+- Adjust reading speed to match your audience (slower for technical content)
+- Character count is useful for platforms with character limits
+- All calculations exclude markdown formatting for accuracy`,
 
   permissions: [
     {

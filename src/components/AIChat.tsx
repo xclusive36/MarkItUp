@@ -89,6 +89,20 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
 
   const loadSettings = async () => {
     try {
+      // First try to load from localStorage (since we save there)
+      const savedSettings = localStorage.getItem('markitup-ai-settings');
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          console.log('[AIChat] Loaded settings from localStorage:', parsed);
+          setSettings(parsed);
+          return;
+        } catch (parseError) {
+          console.error('[AIChat] Failed to parse localStorage settings:', parseError);
+        }
+      }
+
+      // Fall back to API if localStorage doesn't have settings
       const response = await fetch('/api/ai?action=settings');
       const data = await response.json();
       if (data.success) {
@@ -170,7 +184,134 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
     }
 
     try {
-      if (useStreaming) {
+      // For Ollama, use direct browser connection (server can't reach it)
+      if (settings?.provider === 'ollama') {
+        const ollamaUrl = (settings?.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+        const model = settings?.model || 'llama3.2';
+
+        // Build messages for Ollama
+        const ollamaMessages = [
+          {
+            role: 'system',
+            content:
+              'You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.',
+          },
+          // Include previous messages from current session
+          ...(currentSession?.messages || []).map(msg => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+          })),
+          {
+            role: 'user',
+            content: currentMessage,
+          },
+        ];
+
+        if (useStreaming) {
+          // Direct streaming to Ollama
+          setIsStreaming(true);
+          setStreamingMessage('');
+
+          const response = await fetch(`${ollamaUrl}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model,
+              messages: ollamaMessages,
+              stream: true,
+            }),
+          });
+
+          if (!response.ok || !response.body) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let fullContent = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim());
+
+            for (const line of lines) {
+              try {
+                const data = JSON.parse(line);
+
+                if (data.message?.content) {
+                  fullContent += data.message.content;
+                  setStreamingMessage(fullContent);
+                }
+
+                if (data.done) {
+                  // Finalize the message
+                  const assistantMessage: AIMessage = {
+                    id: `ai_${Date.now()}`,
+                    role: 'assistant',
+                    content: fullContent,
+                    timestamp: new Date().toISOString(),
+                    model,
+                  };
+
+                  setCurrentSession(prev => {
+                    if (!prev) return prev;
+                    return {
+                      ...prev,
+                      messages: [...prev.messages, assistantMessage],
+                      updatedAt: new Date().toISOString(),
+                    };
+                  });
+
+                  setStreamingMessage('');
+                  setIsStreaming(false);
+                  loadSessions();
+                }
+              } catch (e) {
+                console.warn('Failed to parse Ollama streaming chunk:', e);
+              }
+            }
+          }
+        } else {
+          // Non-streaming Ollama request
+          const response = await fetch(`${ollamaUrl}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model,
+              messages: ollamaMessages,
+              stream: false,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          const assistantMessage: AIMessage = {
+            id: `ai_${Date.now()}`,
+            role: 'assistant',
+            content: data.message?.content || '',
+            timestamp: new Date().toISOString(),
+            model,
+          };
+
+          setCurrentSession(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              messages: [...prev.messages, assistantMessage],
+              updatedAt: new Date().toISOString(),
+            };
+          });
+
+          loadSessions();
+        }
+      } else if (useStreaming) {
         // Streaming mode for Ollama
         setIsStreaming(true);
         setStreamingMessage('');
@@ -513,6 +654,8 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
           onSettingsChange={newSettings => {
             setSettings(newSettings);
             setShowSettings(false);
+            // Reload settings to ensure they're persisted
+            loadSettings();
           }}
           onClose={() => setShowSettings(false)}
           theme={theme}
@@ -750,33 +893,70 @@ function AISettingsPanel({
     warning: boolean;
   } | null>(null);
 
+  // Sync formData with settings when settings change
+  useEffect(() => {
+    if (settings) {
+      setFormData(settings);
+    }
+  }, [settings]);
+
   const fetchOllamaModels = useCallback(async () => {
     setLoadingModels(true);
     setModelError(null);
 
     try {
-      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      // Normalize URL: remove trailing slash
+      const ollamaUrl = (formData.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
 
-      // Use proxy endpoint to avoid CORS issues
-      const response = await fetch('/api/ai/ollama-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ollamaUrl,
-          endpoint: '/api/tags',
+      // Try direct connection first
+      let data: {
+        models?: Array<{
+          name: string;
+          size?: number;
+          details?: { parameter_size?: string; quantization_level?: string };
+        }>;
+      } | null = null;
+
+      try {
+        const directResponse = await fetch(`${ollamaUrl}/api/tags`, {
           method: 'GET',
-        }),
-      });
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      const result = await response.json();
+        if (directResponse.ok) {
+          data = await directResponse.json();
+        } else {
+          throw new Error('Direct connection failed, trying proxy...');
+        }
+      } catch {
+        // Fall back to proxy endpoint
+        const response = await fetch('/api/ai/ollama-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ollamaUrl,
+            endpoint: '/api/tags',
+            method: 'GET',
+          }),
+        });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to connect to Ollama server');
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to connect to Ollama server');
+        }
+
+        data = result.data;
       }
 
-      const data = result.data;
+      if (!data) {
+        throw new Error('No data received from Ollama server');
+      }
+
       const models = data.models || [];
 
       if (models.length === 0) {
@@ -828,45 +1008,96 @@ function AISettingsPanel({
     setConnectionStatus(null);
 
     try {
-      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      // Normalize URL: remove trailing slash
+      const ollamaUrl = (formData.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
 
-      // Use proxy endpoint to avoid CORS issues
-      const response = await fetch('/api/ai/ollama-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ollamaUrl,
-          endpoint: '/api/tags',
+      // Try direct connection first (works when browser can reach Ollama)
+      let result: {
+        success: boolean;
+        data?: { models?: unknown[]; version?: string };
+        error?: string;
+        helpText?: string;
+      };
+
+      try {
+        console.log('🔍 Testing direct connection to:', ollamaUrl);
+        const directResponse = await fetch(`${ollamaUrl}/api/tags`, {
           method: 'GET',
-        }),
-      });
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      const result = await response.json();
+        console.log('✅ Direct response status:', directResponse.status);
+        if (directResponse.ok) {
+          const data = await directResponse.json();
+          console.log('✅ Direct connection successful:', data);
+          result = { success: true, data };
+        } else {
+          console.warn('⚠️ Direct connection failed with status:', directResponse.status);
+          throw new Error('Direct connection failed, trying proxy...');
+        }
+      } catch (directError) {
+        // Fall back to proxy endpoint if direct connection fails (CORS or network issues)
+        console.log('⚠️ Direct connection failed, trying proxy...', directError);
+        const response = await fetch('/api/ai/ollama-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ollamaUrl,
+            endpoint: '/api/tags',
+            method: 'GET',
+          }),
+        });
 
-      if (result.success) {
+        result = await response.json();
+        console.log('📡 Proxy response:', result);
+      }
+
+      if (result.success && result.data) {
         const data = result.data;
         const modelCount = data.models?.length || 0;
 
         // Try to get version info for more details
         let versionInfo = '';
         try {
-          const versionResponse = await fetch('/api/ai/ollama-proxy', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              ollamaUrl,
-              endpoint: '/api/version',
-              method: 'GET',
-            }),
-          });
+          // Try direct connection for version
+          let versionData: { version?: string } | null = null;
 
-          const versionResult = await versionResponse.json();
-          if (versionResult.success && versionResult.data.version) {
-            versionInfo = ` (v${versionResult.data.version})`;
+          try {
+            const directVersionResponse = await fetch(`${ollamaUrl}/api/version`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            if (directVersionResponse.ok) {
+              versionData = await directVersionResponse.json();
+            }
+          } catch {
+            // Fall back to proxy
+            const versionResponse = await fetch('/api/ai/ollama-proxy', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                ollamaUrl,
+                endpoint: '/api/version',
+                method: 'GET',
+              }),
+            });
+
+            const versionResult = await versionResponse.json();
+            if (versionResult.success && versionResult.data) {
+              versionData = versionResult.data;
+            }
+          }
+
+          if (versionData && versionData.version) {
+            versionInfo = ` (v${versionData.version})`;
           }
         } catch {
           // Version endpoint might not exist
@@ -876,6 +1107,33 @@ function AISettingsPanel({
           connected: true,
           message: `✓ Connected${versionInfo}! Found ${modelCount} model${modelCount !== 1 ? 's' : ''}`,
         });
+
+        // Auto-save settings on successful connection
+        try {
+          // Normalize the Ollama URL before saving
+          const normalizedSettings = {
+            ...formData,
+            ollamaUrl:
+              formData.ollamaUrl && !formData.ollamaUrl.match(/^https?:\/\//)
+                ? `http://${formData.ollamaUrl}`
+                : formData.ollamaUrl,
+          };
+
+          // Save to server
+          await fetch('/api/ai?action=settings', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(normalizedSettings),
+          });
+
+          // ALSO save directly to localStorage (since server-side localStorage doesn't work)
+          localStorage.setItem('markitup-ai-settings', JSON.stringify(normalizedSettings));
+          console.log('[AIChat] Auto-saved Ollama settings to localStorage:', normalizedSettings);
+        } catch (error) {
+          console.error('[AIChat] Failed to auto-save settings:', error);
+        }
 
         // Auto-fetch models if connected
         if (modelCount > 0) {
@@ -906,19 +1164,35 @@ function AISettingsPanel({
     setPullProgress('Starting download...');
 
     try {
-      const ollamaUrl = formData.ollamaUrl || 'http://localhost:11434';
+      // Normalize URL: remove trailing slash
+      const ollamaUrl = (formData.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
 
-      // Use proxy endpoint to avoid CORS issues
-      const response = await fetch('/api/ai/ollama-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ollamaUrl,
-          endpoint: '/api/pull',
+      // Try direct connection first (works when browser can reach Ollama)
+      let response: Response;
+
+      try {
+        response = await fetch(`${ollamaUrl}/api/pull`, {
           method: 'POST',
-          data: { name: modelToPull, stream: true },
-        }),
-      });
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: modelToPull, stream: true }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Direct connection failed, trying proxy...');
+        }
+      } catch {
+        // Fall back to proxy endpoint
+        response = await fetch('/api/ai/ollama-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ollamaUrl,
+            endpoint: '/api/pull',
+            method: 'POST',
+            data: { name: modelToPull, stream: true },
+          }),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to pull model: ${response.status}`);
@@ -1214,6 +1488,7 @@ function AISettingsPanel({
 
   const handleSave = async () => {
     try {
+      // Save to server
       const response = await fetch('/api/ai?action=settings', {
         method: 'PUT',
         headers: {
@@ -1223,6 +1498,10 @@ function AISettingsPanel({
       });
 
       if (response.ok) {
+        // ALSO save directly to localStorage (since server-side localStorage doesn't work)
+        localStorage.setItem('markitup-ai-settings', JSON.stringify(formData));
+        console.log('[AIChat] Saved settings to localStorage:', formData);
+
         onSettingsChange(formData);
         analytics.trackEvent('ai_settings_changed', {
           provider: formData.provider,

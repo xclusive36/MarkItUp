@@ -25,7 +25,8 @@ export class OllamaProvider implements AIProviderInterface {
   private requestStartTime: number = 0;
 
   constructor(baseURL: string = 'http://localhost:11434', advancedOptions?: OllamaAdvancedOptions) {
-    this.baseURL = baseURL;
+    // Normalize URL: remove trailing slash
+    this.baseURL = baseURL.replace(/\/$/, '');
     this.advancedOptions = advancedOptions;
   }
 

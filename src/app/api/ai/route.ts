@@ -4,7 +4,7 @@ import { ChatRequest } from '@/lib/ai/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const body: ChatRequest = await request.json();
+    const body: ChatRequest & { stream?: boolean } = await request.json();
 
     // Validate request
     if (!body.message) {
@@ -32,7 +32,95 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Process chat request
+    // For Ollama, we need to proxy the request since the server can't reach it directly
+    if (settings.provider === 'ollama' && settings.ollamaUrl) {
+      try {
+        // Build the Ollama request
+        const ollamaMessages = [
+          {
+            role: 'system',
+            content:
+              'You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.',
+          },
+          {
+            role: 'user',
+            content: body.message,
+          },
+        ];
+
+        // Normalize Ollama URL (remove trailing slash)
+        const normalizedOllamaUrl = settings.ollamaUrl.replace(/\/$/, '');
+
+        // Make direct request to Ollama (server-side)
+        const ollamaResponse = await fetch(`${normalizedOllamaUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: settings.model || 'llama3.2',
+            messages: ollamaMessages,
+            stream: body.stream || false,
+          }),
+        });
+
+        if (body.stream && ollamaResponse.body) {
+          // Return streaming response
+          return new NextResponse(ollamaResponse.body, {
+            status: ollamaResponse.status,
+            headers: {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              Connection: 'keep-alive',
+            },
+          });
+        }
+
+        const result = await ollamaResponse.json();
+
+        if (!ollamaResponse.ok) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: 'OLLAMA_ERROR',
+                message: result.error || 'Failed to connect to Ollama',
+              },
+            },
+            { status: 500 }
+          );
+        }
+
+        // Format the response (wrapped in success format for plugin API)
+        return NextResponse.json({
+          success: true,
+          data: {
+            id: `ai_${Date.now()}`,
+            content: result.message?.content || '',
+            model: settings.model || 'llama3.2',
+            usage: {
+              promptTokens: 0,
+              completionTokens: 0,
+              totalTokens: 0,
+              estimatedCost: 0,
+            },
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error('Ollama proxy error:', error);
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'OLLAMA_ERROR',
+              message: error instanceof Error ? error.message : 'Failed to connect to Ollama',
+            },
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Process chat request for other providers
     const response = await aiService.chat(body);
 
     return NextResponse.json(response);

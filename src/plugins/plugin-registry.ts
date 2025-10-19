@@ -19,6 +19,7 @@ import { smartAutoTaggerPlugin } from './smart-auto-tagger';
 import { intelligentLinkSuggesterPlugin } from './intelligent-link-suggester';
 import { contentStructurerPlugin } from './content-outliner-expander';
 import { knowledgeGraphAutoMapperPlugin } from './knowledge-graph-auto-mapper';
+import { spacedRepetitionPlugin } from './spaced-repetition';
 
 /**
  * Available Plugins - Only includes fully functional plugins
@@ -32,6 +33,7 @@ export const AVAILABLE_PLUGINS: PluginManifest[] = [
   intelligentLinkSuggesterPlugin, // 🔗 AI-powered link suggestions
   contentStructurerPlugin, // 🎯 AI-powered content structure analysis & transformation (v3.0)
   knowledgeGraphAutoMapperPlugin, // 🗺️ AI-powered graph organization
+  spacedRepetitionPlugin, // 🎓 Spaced repetition flashcards with FSRS
 ];
 
 /**
@@ -41,6 +43,7 @@ export const PLUGIN_CATEGORIES = {
   '✨ Editor Tools': [tableOfContentsPlugin],
   '📊 Analytics': [enhancedWordCountPlugin],
   '📅 Daily Notes': [dailyNotesPlugin],
+  '🎓 Learning': [spacedRepetitionPlugin],
   '🤖 AI Tools': [
     smartAutoTaggerPlugin,
     intelligentLinkSuggesterPlugin,
@@ -144,6 +147,16 @@ export const PLUGIN_METADATA = {
     rating: '5.0',
     downloadCount: '0',
     tags: ['ai', 'knowledge-graph', 'organization', 'clustering', 'moc'],
+    featured: true,
+    functional: true,
+  },
+  [spacedRepetitionPlugin.id]: {
+    category: 'Learning',
+    difficulty: 'beginner',
+    timeToSetup: '2 min',
+    rating: '5.0',
+    downloadCount: '0',
+    tags: ['flashcards', 'srs', 'learning', 'memory', 'fsrs', 'study'],
     featured: true,
     functional: true,
   },

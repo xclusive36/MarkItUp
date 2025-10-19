@@ -11,6 +11,55 @@ export const themeCreatorPlugin: PluginManifest = {
     'Create and customize themes with live preview, undo/redo, and accessibility checking. NEW in v2.0: Real-time preview panel, full undo/redo system, smooth toast notifications, contrast analysis',
   author: 'MarkItUp Team',
   main: 'theme-creator.js',
+  documentation: `# Theme Creator Plugin
+
+## Overview
+Design custom color themes for MarkItUp with live preview and accessibility checking.
+
+## How to Use
+
+### Opening the Theme Creator
+- Press **Ctrl+Shift+T** (or **Cmd+Shift+T** on Mac)
+- Or use Command Palette → "Open Theme Creator"
+
+### Creating a Theme
+
+1. **Choose Base Colors**:
+   - Background colors (primary, secondary, tertiary)
+   - Text colors (primary, secondary, tertiary)
+   - Accent color for interactive elements
+   - Border colors
+
+2. **Live Preview**:
+   - See changes in real-time in the preview panel
+   - Test with sample content to ensure readability
+
+3. **Accessibility Check**:
+   - Built-in contrast checker (WCAG AAA compliant)
+   - Warnings for insufficient contrast ratios
+   - Ensures text is readable on backgrounds
+
+4. **Save & Apply**:
+   - Save theme with a custom name
+   - Auto-apply if enabled in settings
+   - Export to share with others
+
+### Undo/Redo
+- **Ctrl+Z / Cmd+Z**: Undo color changes
+- **Ctrl+Shift+Z / Cmd+Shift+Z**: Redo
+
+### Settings
+
+- **Auto Apply Themes**: Automatically activate themes when saved
+- **Show Contrast Warnings**: Display accessibility warnings
+
+## Tips
+
+- Start with a base theme (light or dark)
+- Maintain sufficient contrast (4.5:1 minimum for normal text)
+- Test with actual notes to verify readability
+- Use the preview panel to see changes before saving
+- Export themes to share with your team`,
 
   permissions: [
     {

@@ -367,7 +367,16 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setFileName(note.name.replace('.md', ''));
         setFolder(note.folder || '');
       },
-      setMarkdown: setMarkdown,
+      setMarkdown: (content: string) => {
+        console.log('[PAGE] setMarkdown called with content length:', content.length);
+        console.log('[PAGE] Content preview:', content.substring(0, 100));
+        setMarkdown(content);
+        // Force textarea to update by directly setting its value
+        if (editorRef.current) {
+          console.log('[PAGE] Forcing textarea value update');
+          editorRef.current.value = content;
+        }
+      },
       setFileName: setFileName,
       setFolder: setFolder,
       refreshNotes: async () => {
@@ -416,6 +425,27 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           textarea.setSelectionRange(position, position);
         }
       },
+      // Notification/Toast methods
+      showNotification: (
+        message: string,
+        type: 'info' | 'success' | 'warning' | 'error' = 'info'
+      ) => {
+        switch (type) {
+          case 'success':
+            toast.success(message);
+            break;
+          case 'error':
+            toast.error(message);
+            break;
+          case 'warning':
+            toast.warning(message);
+            break;
+          case 'info':
+          default:
+            toast.info(message);
+            break;
+        }
+      },
     });
 
     return pkmSystem;
@@ -445,9 +475,20 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           timestamp: new Date().toISOString(),
         });
 
-        // Initialize PKM system (this will load plugins)
-        console.log('🔧 Calling pkm.initialize()...');
-        await pkm.initialize();
+        // Load notes first
+        console.log('🔧 Loading notes from API...');
+        const notesResponse = await fetch('/api/files');
+        let loadedNotes: Note[] = [];
+        if (notesResponse.ok) {
+          loadedNotes = await notesResponse.json();
+          console.log('✅ Loaded', loadedNotes.length, 'notes from API');
+        } else {
+          console.error('❌ Failed to fetch notes:', notesResponse.status);
+        }
+
+        // Initialize PKM system with notes (this will load plugins)
+        console.log('🔧 Calling pkm.initialize() with', loadedNotes.length, 'notes...');
+        await pkm.initialize(loadedNotes);
         console.log('✅ pkm.initialize() completed');
 
         // Initialize AI service with PKM system (non-blocking)
