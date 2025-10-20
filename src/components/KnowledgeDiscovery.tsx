@@ -59,10 +59,131 @@ export default function KnowledgeDiscovery({
     }
   }, [isOpen, notes.length]);
 
+  const analyzeWithOllama = async (settings: any) => {
+    const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+    const model = settings.model || 'llama3.2';
+
+    // Create comprehensive knowledge base summary
+    const notesSummary = notes
+      .slice(0, 30)
+      .map(n => `- ${n.name}: ${n.content.substring(0, 200)}...`)
+      .join('\n');
+    const tagsSummary = tags.map(t => t.name).join(', ');
+
+    const prompt = `You are a JSON API. Return ONLY valid JSON, no markdown, no explanations, no text before or after.
+
+Analyze this knowledge base:
+
+Notes:
+${notesSummary}
+
+Tags: ${tagsSummary}
+
+Return this exact JSON structure (no markdown code blocks, no extra text):
+{
+  "missingTopics": ["topic1", "topic2"],
+  "underExploredAreas": [{"topic": "name", "currentNoteCount": 0, "suggestedExpansion": "text"}],
+  "orphanNotes": [{"noteId": "id", "title": "title", "suggestedConnections": ["topic1"]}],
+  "clusteringOpportunities": [{"theme": "theme", "relatedNotes": ["note1"], "suggestedStructure": "text"}]
+}
+
+JSON only:`;
+
+    const response = await fetch(`${ollamaUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API error (${response.status})`);
+    }
+
+    const data = await response.json();
+
+    // Extract JSON from response (handle markdown code blocks and prefixes)
+    const extractJSON = (text: string) => {
+      let cleaned = text.trim();
+
+      // Remove common prefixes
+      const prefixPatterns = [
+        /^Here\s+is\s+(?:a\s+|the\s+)?JSON(?:\s+response)?(?:\s+based\s+on[^:]*)?:\s*/i,
+        /^Here's\s+(?:a\s+|the\s+)?JSON(?:\s+response)?:\s*/i,
+        /^JSON\s*(?:Output|Response):\s*/i,
+        /^Json\s*(?:Output|Response):\s*/i,
+      ];
+
+      for (const pattern of prefixPatterns) {
+        if (pattern.test(cleaned)) {
+          cleaned = cleaned.replace(pattern, '').trim();
+          break;
+        }
+      }
+
+      // Remove markdown code blocks
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
+        cleaned = cleaned.replace(/\n?\s*```\s*$/, '');
+      }
+
+      // Try to find JSON object if response has extra text before/after
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[0];
+      }
+
+      return cleaned.trim();
+    };
+
+    try {
+      const jsonStr = extractJSON(data.response);
+      return JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.error('Failed to parse Ollama JSON response:', parseError);
+      console.error('Raw response:', data.response);
+      console.error('Extracted string:', extractJSON(data.response));
+      throw new Error(
+        'Ollama returned invalid JSON format. Try a different model or adjust the prompt.'
+      );
+    }
+  };
+
   const analyzeKnowledgeBase = async () => {
     setIsAnalyzing(true);
 
     try {
+      // Load AI settings from localStorage
+      let aiSettings = null;
+      try {
+        const saved = localStorage.getItem('markitup-ai-settings');
+        if (saved) {
+          aiSettings = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error('Failed to load AI settings:', e);
+      }
+
+      // If Ollama is configured, call it directly from the client
+      if (aiSettings?.provider === 'ollama') {
+        const analysis = await analyzeWithOllama(aiSettings);
+        setAnalysis(analysis);
+
+        analytics.trackEvent('ai_analysis', {
+          analysisType: 'knowledge_discovery',
+          notesAnalyzed: notes.length,
+          tagsAnalyzed: tags.length,
+          provider: 'ollama',
+        });
+
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Otherwise use the API route (for cloud providers)
       const response = await fetch('/api/ai/analyze-knowledge', {
         method: 'POST',
         headers: {
@@ -72,6 +193,7 @@ export default function KnowledgeDiscovery({
           notes: (notes || []).slice(0, 50), // Limit to prevent token overflow
           tags: (tags || []).slice(0, 20),
           analysisType: 'knowledge_gaps',
+          settings: aiSettings, // Pass settings to server
         }),
       });
 
@@ -99,7 +221,7 @@ export default function KnowledgeDiscovery({
                 topic: 'AI Integration Setup',
                 currentNoteCount: 0,
                 suggestedExpansion:
-                  'To use Knowledge Discovery features, configure your AI provider in settings. Click the Brain icon (🧠) in the header, then Settings. Choose from OpenAI, Anthropic, Gemini, or Ollama (local, no API key needed).',
+                  'To use Knowledge Discovery features, configure your AI provider in settings. Click the Brain icon (🧠) in the header, then Settings. Options: OpenAI (API key required), Anthropic (API key required), Gemini (API key required), or Ollama (local, NO API key needed - just install and run locally).',
               },
             ],
             orphanNotes: [],
@@ -108,7 +230,7 @@ export default function KnowledgeDiscovery({
                 theme: 'Setup Required',
                 relatedNotes: ['Configuration Guide'],
                 suggestedStructure:
-                  'Configure your preferred AI provider to enable AI-powered knowledge analysis, gap detection, and note suggestions.',
+                  'Configure your preferred AI provider to enable AI-powered knowledge analysis, gap detection, and note suggestions. Ollama is recommended for local use without API keys.',
               },
             ],
           });
@@ -121,10 +243,132 @@ export default function KnowledgeDiscovery({
     }
   };
 
-  const generateNoteSuggestion = async (topic: string) => {
-    setSelectedTopic(topic);
+  const generateNoteSuggestionWithOllama = async (settings: any, topic: string) => {
+    const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+    const model = settings.model || 'llama3.2';
+
+    const notesSummary = notes
+      .slice(0, 10)
+      .map(n => `- ${n.name}`)
+      .join('\n');
+    const tagsSummary = tags
+      .slice(0, 10)
+      .map(t => t.name)
+      .join(', ');
+
+    const prompt = `You are a JSON API. Return ONLY valid JSON, no markdown, no explanations.
+
+Generate a comprehensive note about "${topic}".
+
+Context - Existing notes:
+${notesSummary}
+
+Context - Existing tags: ${tagsSummary}
+
+Return this exact JSON structure (no markdown blocks, no extra text):
+{
+  "title": "Note title here",
+  "content": "# Title\\n\\nDetailed markdown content with multiple paragraphs and sections...",
+  "suggestedTags": ["tag1", "tag2"],
+  "suggestedConnections": ["related-note-1", "related-note-2"]
+}
+
+JSON only:`;
+
+    const response = await fetch(`${ollamaUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama API error (${response.status})`);
+    }
+
+    const data = await response.json();
+
+    // Extract JSON using the same helper
+    const extractJSON = (text: string) => {
+      let cleaned = text.trim();
+
+      const prefixPatterns = [
+        /^Here\s+is\s+(?:a\s+|the\s+)?JSON(?:\s+response)?(?:\s+based\s+on[^:]*)?:\s*/i,
+        /^Here's\s+(?:a\s+|the\s+)?JSON(?:\s+response)?:\s*/i,
+        /^JSON\s*(?:Output|Response):\s*/i,
+        /^Json\s*(?:Output|Response):\s*/i,
+      ];
+
+      for (const pattern of prefixPatterns) {
+        if (pattern.test(cleaned)) {
+          cleaned = cleaned.replace(pattern, '').trim();
+          break;
+        }
+      }
+
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
+        cleaned = cleaned.replace(/\n?\s*```\s*$/, '');
+      }
+
+      // Try to find JSON object if response has extra text before/after
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleaned = jsonMatch[0];
+      }
+
+      return cleaned.trim();
+    };
 
     try {
+      const jsonStr = extractJSON(data.response);
+      return JSON.parse(jsonStr);
+    } catch (parseError) {
+      console.error('Failed to parse Ollama note suggestion:', parseError);
+      console.error('Raw response:', data.response);
+      throw new Error(
+        'Ollama returned invalid JSON format for note suggestion. Try a different model.'
+      );
+    }
+  };
+
+  const generateNoteSuggestion = async (topic: string) => {
+    console.log('🔵 generateNoteSuggestion called with topic:', topic);
+    setSelectedTopic(topic);
+    setActiveTab('suggestions'); // Switch to suggestions tab to show the result
+
+    try {
+      // Load AI settings from localStorage
+      let aiSettings = null;
+      try {
+        const saved = localStorage.getItem('markitup-ai-settings');
+        if (saved) {
+          aiSettings = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error('Failed to load AI settings:', e);
+      }
+
+      // If Ollama is configured, call it directly from the client
+      if (aiSettings?.provider === 'ollama') {
+        console.log('🔵 Using Ollama for note suggestion');
+        const suggestion = await generateNoteSuggestionWithOllama(aiSettings, topic);
+        console.log('🔵 Generated suggestion:', suggestion);
+        setSuggestedNote(suggestion);
+
+        analytics.trackEvent('ai_analysis', {
+          action: 'generate_note_suggestion',
+          topic: topic,
+          provider: 'ollama',
+        });
+
+        return;
+      }
+
+      // Otherwise use the API route (for cloud providers)
       const requestBody = {
         topic,
         existingNotes: (notes || []).slice(0, 10),
@@ -136,9 +380,8 @@ export default function KnowledgeDiscovery({
           .slice(0, 5)
           .map(t => t?.name || '')
           .filter(Boolean),
+        settings: aiSettings, // Pass settings to server
       };
-
-      console.log('Generating note suggestion for:', topic, requestBody);
 
       const response = await fetch('/api/ai/suggest-note', {
         method: 'POST',
@@ -163,37 +406,51 @@ export default function KnowledgeDiscovery({
         console.error('Note suggestion failed:', errorData);
 
         if (errorData.requiresApiKey) {
-          // Set a helpful note suggestion showing API key requirement
+          // Set a helpful note suggestion showing AI provider configuration
           setSuggestedNote({
             title: `Getting Started: ${topic}`,
             content: `# ${topic}
 
-## Setup Required
+## AI Provider Configuration Required
 
-To generate AI-powered note suggestions, you need to configure your OpenAI API key.
+To generate AI-powered note suggestions, you need to configure an AI provider.
 
-### Steps to Enable AI Features:
+### Choose Your AI Provider:
 
-1. **Get an OpenAI API Key**
-   - Visit: https://platform.openai.com/api-keys
-   - Create a new secret key
+#### Option 1: Ollama (Recommended - Local & Free)
+**No API key required!** Runs entirely on your machine.
 
-2. **Add to Your Project**
-   - Create a file called \`.env.local\` in your project root
-   - Add: \`OPENAI_API_KEY=your_api_key_here\`
+1. **Install Ollama**
+   - Visit: https://ollama.ai
+   - Download and install for your OS
+   
+2. **Pull a Model**
+   - Open terminal and run: \`ollama pull llama3.2\`
+   - Or use: \`ollama pull mistral\`
 
-3. **Restart the Server**
-   - Stop the development server (Ctrl+C)
-   - Run \`npm run dev\` again
+3. **Configure in MarkItUp**
+   - Click the Brain icon (🧠) in the header
+   - Go to Settings
+   - Select "Ollama" as provider
+   - Enter model name (e.g., llama3.2)
 
-Once configured, you'll be able to generate intelligent note suggestions based on your existing knowledge base and identify gaps in your understanding.
+#### Option 2: Cloud AI Providers (Requires API Key)
+
+**OpenAI:**
+- Visit: https://platform.openai.com/api-keys
+- Create API key and add to settings
+
+**Anthropic, Gemini:**
+- Similar process via their respective platforms
+
+Once configured, you'll be able to generate intelligent note suggestions based on your existing knowledge base.
 
 ## Manual Note Creation
 
-While setting up AI features, you can still create notes manually by:
-- Using the "New Note" form in the sidebar
-- Linking notes with [[Note Name]] syntax  
-- Adding #tags to organize your content
+You can still create notes manually:
+- Use the "New Note" form in the sidebar
+- Link notes with [[Note Name]] syntax  
+- Add #tags to organize your content
 
 ---
 *This note was generated as a setup guide. Replace this content with your actual notes about ${topic}.*`,

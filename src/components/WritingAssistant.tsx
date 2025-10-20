@@ -23,6 +23,7 @@ interface WritingAssistantProps {
   content: string;
   noteId?: string;
   onContentChange?: (content: string) => void;
+  onSave?: (contentToSave?: string) => void | Promise<void>;
   onClose: () => void;
   isOpen: boolean;
 }
@@ -31,6 +32,7 @@ export default function WritingAssistant({
   content,
   noteId,
   onContentChange,
+  onSave,
   onClose,
   isOpen,
 }: WritingAssistantProps) {
@@ -56,13 +58,177 @@ export default function WritingAssistant({
     }
   }, [content, isOpen]);
 
+  const analyzeWithOllama = async (settings: any) => {
+    try {
+      const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+      const model = settings.model || 'llama3.2';
+
+      // Create prompts for analysis
+      const analysisPrompt = `Analyze this content and provide a JSON response with: summary, keyTopics (array), suggestedTags (array), sentiment (positive/negative/neutral), complexity (0-10), readabilityScore (0-100), and writingStyle (tone, formality, perspective).
+
+Content:
+${content}
+
+Respond with valid JSON only.`;
+
+      const assistancePrompt = `Analyze this content and provide writing suggestions in JSON format with: suggestions array (each with type, original text, suggestion, explanation, position), expandablePoints array (points that could be expanded), and strengthenArguments array.
+
+Content:
+${content}
+
+Respond with valid JSON only.`;
+
+      // Call Ollama directly from browser (works for network Ollama servers)
+      const analysisResponse = await fetch(`${ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt: analysisPrompt,
+          stream: false,
+        }),
+      });
+
+      if (!analysisResponse.ok) {
+        const errorText = await analysisResponse.text();
+        throw new Error(`Ollama API error (${analysisResponse.status}): ${errorText}`);
+      }
+
+      const analysisData = await analysisResponse.json();
+
+      // Call Ollama for writing assistance
+      const assistanceResponse = await fetch(`${ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt: assistancePrompt,
+          stream: false,
+        }),
+      });
+
+      if (!assistanceResponse.ok) {
+        const errorText = await assistanceResponse.text();
+        throw new Error(`Ollama API error (${assistanceResponse.status}): ${errorText}`);
+      }
+
+      const assistanceData = await assistanceResponse.json();
+
+      // Parse the responses - strip markdown code blocks if present
+      try {
+        // Helper function to extract JSON from markdown code blocks
+        const extractJSON = (text: string) => {
+          // Remove markdown code blocks if present
+          let cleaned = text.trim();
+
+          // Handle various prefixes that Ollama might add - be very flexible!
+          // Match anything like "Here is...", "Here's...", "JSON...", etc. before the actual JSON
+          const prefixPatterns = [
+            /^Here\s+is\s+(?:a\s+|the\s+)?JSON(?:\s+response)?(?:\s+based\s+on[^:]*)?:\s*/i,
+            /^Here's\s+(?:a\s+|the\s+)?JSON(?:\s+response)?:\s*/i,
+            /^JSON\s*(?:Output|Response):\s*/i,
+            /^Json\s*(?:Output|Response):\s*/i,
+          ];
+
+          for (const pattern of prefixPatterns) {
+            if (pattern.test(cleaned)) {
+              cleaned = cleaned.replace(pattern, '').trim();
+              break;
+            }
+          }
+
+          // Remove markdown code blocks (```json or just ```)
+          if (cleaned.startsWith('```')) {
+            // Remove opening ```json or ``` (with optional newline)
+            cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
+            // Remove closing ``` (with optional newline)
+            cleaned = cleaned.replace(/\n?\s*```\s*$/, '');
+          }
+
+          return cleaned.trim();
+        };
+
+        const analysisJSON = extractJSON(analysisData.response);
+        const assistanceJSON = extractJSON(assistanceData.response);
+
+        const analysis = JSON.parse(analysisJSON);
+        const assistance = JSON.parse(assistanceJSON);
+
+        setAnalysis(analysis);
+        setAssistance(assistance);
+
+        analytics.trackEvent('ai_analysis', {
+          noteId: noteId || 'unknown',
+          contentLength: content.length,
+          analysisType: 'writing_assistant',
+          provider: 'ollama',
+        });
+      } catch (parseError) {
+        throw new Error('AI returned invalid format. Please try again.');
+      }
+    } catch (error) {
+      console.error('Ollama analysis error:', error);
+
+      // Show helpful error message
+      setAnalysis({
+        summary: 'Connection Error',
+        keyTopics: [],
+        suggestedTags: [],
+        suggestedConnections: [],
+        sentiment: 'neutral',
+        complexity: 0,
+        readabilityScore: 0,
+        writingStyle: {
+          tone: 'N/A',
+          formality: 'mixed',
+          perspective: 'mixed',
+        },
+        improvements: [],
+      });
+
+      setAssistance({
+        suggestions: [
+          {
+            type: 'content',
+            original: '',
+            suggestion: 'Ollama Connection Failed',
+            explanation:
+              error instanceof Error
+                ? `Error: ${error.message}. Check: 1) Ollama is running at the configured URL, 2) The URL in settings is correct (currently using the configured address), 3) CORS is enabled on Ollama server.`
+                : 'Failed to connect to Ollama. Check settings and server availability.',
+            position: { start: 0, end: 0 },
+          },
+        ],
+        expandablePoints: [],
+        strengthenArguments: [],
+      });
+    }
+  };
+
   const analyzeContent = async () => {
     if (!content.trim()) return;
 
     setIsAnalyzing(true);
 
     try {
-      // Call analysis API
+      // Load AI settings from localStorage
+      let aiSettings = null;
+      try {
+        const saved = localStorage.getItem('markitup-ai-settings');
+        if (saved) {
+          aiSettings = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error('Failed to load AI settings:', e);
+      }
+
+      // For Ollama, call directly from client to avoid server-side localhost issues
+      if (aiSettings?.provider === 'ollama') {
+        await analyzeWithOllama(aiSettings);
+        return;
+      }
+
+      // For cloud providers, use the API route
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
@@ -72,6 +238,7 @@ export default function WritingAssistant({
           content,
           noteId,
           analysisType: 'full',
+          settings: aiSettings, // Pass settings to server
         }),
       });
 
@@ -115,7 +282,7 @@ export default function WritingAssistant({
                 original: '',
                 suggestion: 'Configure AI Provider',
                 explanation:
-                  'To use AI analysis features, configure your AI provider in settings. Click the Brain icon (🧠) in the header, then Settings. Choose from OpenAI, Anthropic, Gemini, or Ollama (local, no API key needed).',
+                  'To use AI Writing Assistant features, configure your AI provider in settings. Click the Brain icon (🧠) in the header, then Settings. Options: OpenAI (API key required), Anthropic (API key required), Gemini (API key required), or Ollama (local, NO API key needed - just install and run).',
                 position: { start: 0, end: 0 },
               },
             ],
@@ -131,13 +298,53 @@ export default function WritingAssistant({
     }
   };
 
-  const applySuggestion = (suggestionId: string, original: string, replacement: string) => {
-    if (!onContentChange) return;
+  const applySuggestion = async (suggestionId: string, original: string, replacement: string) => {
+    if (!onContentChange) {
+      console.error('[WritingAssistant] onContentChange callback is not available');
+      return;
+    }
 
-    const newContent = content.replace(original, replacement);
+    console.log('[WritingAssistant] Applying suggestion:', { original, replacement });
+    console.log('[WritingAssistant] Current content length:', content.length);
+
+    let newContent;
+
+    // Check if we have original text to replace
+    if (original && original.trim().length > 0) {
+      // Normal replacement mode (for cloud providers)
+      newContent = content.replace(original, replacement);
+
+      if (newContent === content) {
+        console.warn('[WritingAssistant] Content unchanged - original text not found in content');
+        console.log('[WritingAssistant] Looking for:', original);
+        console.log('[WritingAssistant] In content:', content.substring(0, 200) + '...');
+        // Fall back to appending if not found
+        newContent = content + '\n\n' + replacement;
+        console.log('[WritingAssistant] Falling back to append mode');
+      } else {
+        console.log('[WritingAssistant] Content replaced successfully');
+      }
+    } else {
+      // Ollama mode - no original text, so append the suggestion
+      console.log('[WritingAssistant] No original text provided, appending suggestion');
+      newContent = content + '\n\n' + replacement;
+    }
+
+    console.log('[WritingAssistant] New content length:', newContent.length);
+
+    // Update state first
     onContentChange(newContent);
-
     setAppliedSuggestions(prev => new Set([...prev, suggestionId]));
+
+    // Wait a tick for state to update, then save
+    if (onSave) {
+      console.log('[WritingAssistant] Waiting for state update before saving...');
+      // Use setTimeout to ensure state updates are flushed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('[WritingAssistant] Auto-saving note with new content...');
+      await onSave();
+      console.log('[WritingAssistant] Note saved');
+    }
 
     analytics.trackEvent('ai_analysis', {
       action: 'apply_suggestion',
@@ -145,12 +352,33 @@ export default function WritingAssistant({
     });
   };
 
-  const insertExpandedContent = (point: string, expansion: string) => {
-    if (!onContentChange) return;
+  const insertExpandedContent = async (point: string, expansion: string) => {
+    if (!onContentChange) {
+      console.error('[WritingAssistant] onContentChange callback is not available');
+      return;
+    }
 
+    console.log('[WritingAssistant] Inserting expanded content:', { point, expansion });
     const expandedText = `\n\n## ${point}\n\n${expansion}\n\n`;
     const newContent = content + expandedText;
+    console.log(
+      '[WritingAssistant] New content length:',
+      newContent.length,
+      'Old:',
+      content.length
+    );
+
+    // Update state first
     onContentChange(newContent);
+
+    // Wait a tick for state to update, then save
+    if (onSave) {
+      console.log('[WritingAssistant] Waiting for state update before saving...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('[WritingAssistant] Auto-saving note with expanded content...');
+      await onSave();
+      console.log('[WritingAssistant] Note saved');
+    }
 
     analytics.trackEvent('ai_analysis', {
       action: 'expand_content',
@@ -409,41 +637,87 @@ export default function WritingAssistant({
                       Expand These Ideas
                     </h3>
                     <div className="space-y-3">
-                      {assistance.expandablePoints.map((point, index) => (
-                        <div
-                          key={index}
-                          className="p-3 rounded-lg border"
-                          style={{
-                            backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                            borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb',
-                          }}
-                        >
-                          <p
-                            className="text-sm font-medium mb-2"
-                            style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                      {assistance.expandablePoints.map((point, index) => {
+                        // Handle different response formats - Ollama returns different structures each time
+                        // Try to extract meaningful text from whatever structure we get
+                        let pointText = '';
+                        let hasSuggestions = false;
+                        let suggestions: string[] = [];
+
+                        if (typeof point === 'string') {
+                          // Simple string format
+                          pointText = point;
+                        } else if (typeof point === 'object' && point !== null) {
+                          // Object format - try different common property names
+                          // Priority order: title > suggestion > point > text
+                          const obj = point as any;
+                          pointText = obj.title || obj.suggestion || obj.point || obj.text || '';
+
+                          // Look for explanation/description as suggestions
+                          const explanationText =
+                            obj.description || obj.explanation || obj.details || '';
+                          if (explanationText) {
+                            hasSuggestions = true;
+                            suggestions = [explanationText];
+                          }
+
+                          // Also check for explicit suggestions array
+                          if (
+                            obj.suggestions &&
+                            Array.isArray(obj.suggestions) &&
+                            obj.suggestions.length > 0
+                          ) {
+                            hasSuggestions = true;
+                            suggestions = obj.suggestions;
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg border"
+                            style={{
+                              backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
+                              borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb',
+                            }}
                           >
-                            {point.point}
-                          </p>
-                          <div className="space-y-2">
-                            {point.suggestions.map((suggestion, suggestionIndex) => (
-                              <div key={suggestionIndex} className="flex items-start gap-2 text-sm">
-                                <ArrowRight className="w-3 h-3 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                                <span style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}>
-                                  {suggestion}
-                                </span>
+                            <p
+                              className="text-sm font-medium mb-2"
+                              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                            >
+                              {pointText}
+                            </p>
+                            {hasSuggestions && (
+                              <div className="space-y-2">
+                                {suggestions.map((suggestion, suggestionIndex) => (
+                                  <div
+                                    key={suggestionIndex}
+                                    className="flex items-start gap-2 text-sm"
+                                  >
+                                    <ArrowRight className="w-3 h-3 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                    <span
+                                      style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
+                                    >
+                                      {suggestion}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
+                            <button
+                              onClick={() =>
+                                insertExpandedContent(
+                                  pointText,
+                                  hasSuggestions ? suggestions.join('\n\n') : pointText
+                                )
+                              }
+                              className="mt-2 px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition-colors"
+                            >
+                              Add to Note
+                            </button>
                           </div>
-                          <button
-                            onClick={() =>
-                              insertExpandedContent(point.point, point.suggestions.join('\n\n'))
-                            }
-                            className="mt-2 px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition-colors"
-                          >
-                            Add to Note
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -459,63 +733,106 @@ export default function WritingAssistant({
                       Strengthen Arguments
                     </h3>
                     <div className="space-y-3">
-                      {assistance.strengthenArguments.map((arg, index) => (
-                        <div
-                          key={index}
-                          className="p-3 rounded-lg border"
-                          style={{
-                            backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
-                            borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb',
-                          }}
-                        >
-                          <p
-                            className="text-sm font-medium mb-2"
-                            style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                      {assistance.strengthenArguments.map((arg, index) => {
+                        // Handle different response formats
+                        // String format: "Consider adding more evidence..."
+                        // Ollama object format: {id, text}
+                        // Cloud provider format: {argument, supportingEvidence, counterarguments}
+                        let argumentText = '';
+                        let supportingEvidence: string[] = [];
+                        let counterarguments: string[] = [];
+
+                        if (typeof arg === 'string') {
+                          // Simple string format
+                          argumentText = arg;
+                        } else if (typeof arg === 'object' && arg !== null) {
+                          // Object format
+                          if ('text' in arg && !('argument' in arg)) {
+                            // Ollama format: {id, text}
+                            argumentText = arg.text || '';
+                          } else if ('argument' in arg) {
+                            // Cloud provider format
+                            argumentText = arg.argument || '';
+                            // Ensure supportingEvidence is always an array
+                            const evidence = arg.supportingEvidence;
+                            if (Array.isArray(evidence)) {
+                              supportingEvidence = evidence;
+                            } else if (typeof evidence === 'string') {
+                              supportingEvidence = [evidence];
+                            } else if (evidence) {
+                              // If it's an object, try to extract text
+                              supportingEvidence = [String(evidence)];
+                            }
+                            // Ensure counterarguments is always an array
+                            const counter = arg.counterarguments;
+                            if (Array.isArray(counter)) {
+                              counterarguments = counter;
+                            } else if (typeof counter === 'string') {
+                              counterarguments = [counter];
+                            } else if (counter) {
+                              counterarguments = [String(counter)];
+                            }
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg border"
+                            style={{
+                              backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb',
+                              borderColor: theme === 'dark' ? '#4b5563' : '#e5e7eb',
+                            }}
                           >
-                            {arg.argument}
-                          </p>
+                            <p
+                              className="text-sm font-medium mb-2"
+                              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                            >
+                              {argumentText}
+                            </p>
 
-                          {arg.supportingEvidence.length > 0 && (
-                            <div className="mb-2">
-                              <p
-                                className="text-xs font-medium mb-1"
-                                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                              >
-                                Supporting Evidence:
-                              </p>
-                              {arg.supportingEvidence.map((evidence, evidenceIndex) => (
+                            {supportingEvidence.length > 0 && (
+                              <div className="mb-2">
                                 <p
-                                  key={evidenceIndex}
-                                  className="text-xs ml-2"
-                                  style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                                 >
-                                  • {evidence}
+                                  Supporting Evidence:
                                 </p>
-                              ))}
-                            </div>
-                          )}
+                                {supportingEvidence.map((evidence, evidenceIndex) => (
+                                  <p
+                                    key={evidenceIndex}
+                                    className="text-xs ml-2"
+                                    style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
+                                  >
+                                    • {evidence}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
 
-                          {arg.counterarguments.length > 0 && (
-                            <div>
-                              <p
-                                className="text-xs font-medium mb-1"
-                                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                              >
-                                Consider Addressing:
-                              </p>
-                              {arg.counterarguments.map((counter, counterIndex) => (
+                            {counterarguments.length > 0 && (
+                              <div>
                                 <p
-                                  key={counterIndex}
-                                  className="text-xs ml-2"
-                                  style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                                 >
-                                  • {counter}
+                                  Consider Addressing:
                                 </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                                {counterarguments.map((counter, counterIndex) => (
+                                  <p
+                                    key={counterIndex}
+                                    className="text-xs ml-2"
+                                    style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
+                                  >
+                                    • {counter}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -538,6 +855,14 @@ export default function WritingAssistant({
                       {assistance.suggestions.map((suggestion, index) => {
                         const suggestionId = `${index}-${suggestion.type}`;
                         const isApplied = appliedSuggestions.has(suggestionId);
+
+                        // Handle different property names from different providers
+                        const originalText =
+                          (suggestion as any).original || (suggestion as any).originalText || '';
+                        const suggestionText =
+                          (suggestion as any).suggestion ||
+                          (suggestion as any).replacementText ||
+                          '';
 
                         return (
                           <div
@@ -563,17 +888,19 @@ export default function WritingAssistant({
                               )}
                             </div>
 
-                            <div className="mb-2">
-                              <p
-                                className="text-xs font-medium mb-1"
-                                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                              >
-                                Original:
-                              </p>
-                              <p className="text-sm p-2 rounded bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300">
-                                {suggestion.original}
-                              </p>
-                            </div>
+                            {originalText && originalText.trim().length > 0 && (
+                              <div className="mb-2">
+                                <p
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                                >
+                                  Original:
+                                </p>
+                                <p className="text-sm p-2 rounded bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300">
+                                  {originalText}
+                                </p>
+                              </div>
+                            )}
 
                             <div className="mb-2">
                               <p
@@ -583,7 +910,7 @@ export default function WritingAssistant({
                                 Suggestion:
                               </p>
                               <p className="text-sm p-2 rounded bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300">
-                                {suggestion.suggestion}
+                                {suggestionText}
                               </p>
                             </div>
 
@@ -597,11 +924,7 @@ export default function WritingAssistant({
                             {!isApplied && (
                               <button
                                 onClick={() =>
-                                  applySuggestion(
-                                    suggestionId,
-                                    suggestion.original,
-                                    suggestion.suggestion
-                                  )
+                                  applySuggestion(suggestionId, originalText, suggestionText)
                                 }
                                 className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors"
                               >

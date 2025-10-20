@@ -139,7 +139,9 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
 
     // Check if AI is configured (allow Ollama without API key)
     if (!settings?.apiKey && settings?.provider !== 'ollama') {
-      setError('AI not configured. Please add your API key in settings.');
+      setError(
+        'AI provider not configured. Please configure in settings: OpenAI/Anthropic/Gemini (API key required) or Ollama (local, no API key needed).'
+      );
       setShowSettings(true);
       return;
     }
@@ -1555,11 +1557,28 @@ function AISettingsPanel({
               borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
             }}
           >
-            <option value="openai">OpenAI (GPT-3.5, GPT-4)</option>
-            <option value="anthropic">Anthropic (Claude)</option>
-            <option value="gemini">Google Gemini</option>
-            <option value="ollama">Ollama (Local)</option>
+            <option value="openai">OpenAI (GPT-3.5, GPT-4) - API Key Required</option>
+            <option value="anthropic">Anthropic (Claude) - API Key Required</option>
+            <option value="gemini">Google Gemini - API Key Required</option>
+            <option value="ollama">Ollama (Local) - No API Key Needed!</option>
           </select>
+          {formData.provider === 'ollama' && (
+            <p className="mt-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+              <span>✓</span>
+              <span>
+                Ollama runs locally on your machine - no API keys, no cloud fees, complete privacy!
+              </span>
+            </p>
+          )}
+          {formData.provider !== 'ollama' && (
+            <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <span>ℹ</span>
+              <span>
+                This provider requires an API key. Consider Ollama for local, free AI without API
+                keys.
+              </span>
+            </p>
+          )}
         </div>
 
         {formData.provider !== 'ollama' && (

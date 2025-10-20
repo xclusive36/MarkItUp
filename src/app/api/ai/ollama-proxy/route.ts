@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       '/api/show',
       '/api/delete',
       '/api/chat',
+      '/api/generate',
     ];
     if (!allowedEndpoints.includes(endpoint)) {
       return NextResponse.json({ success: false, error: 'Endpoint not allowed' }, { status: 403 });

@@ -54,16 +54,35 @@ export interface WritingAssistance {
     explanation: string;
     position: { start: number; end: number };
   }>;
-  expandablePoints: Array<{
-    point: string;
-    suggestions: string[];
-    relatedNotes: string[];
-  }>;
-  strengthenArguments: Array<{
-    argument: string;
-    supportingEvidence: string[];
-    counterarguments: string[];
-  }>;
+  expandablePoints: Array<
+    | string
+    | {
+        // Cloud provider format
+        point?: string;
+        suggestions?: string[];
+        relatedNotes?: string[];
+        // Ollama simple format
+        id?: number;
+        text?: string;
+        // Ollama suggestion format
+        type?: string;
+        suggestion?: string;
+        explanation?: string;
+        originalText?: string;
+        position?: string;
+      }
+  >;
+  strengthenArguments: Array<
+    | string
+    | {
+        argument?: string;
+        supportingEvidence?: string[];
+        counterarguments?: string[];
+        // Ollama simple format
+        id?: number;
+        text?: string;
+      }
+  >;
 }
 
 export class AIAnalyzer {
@@ -113,7 +132,7 @@ ${content}`;
       const provider = (this.aiService as any).getCurrentProvider();
       const response = await provider.complete(prompt, {
         model: 'gpt-4',
-        temperature: 0.3
+        temperature: 0.3,
       });
 
       // Parse JSON response
@@ -125,17 +144,22 @@ ${content}`;
     }
   }
 
-  async generateWritingAssistance(content: string, context?: {
-    relatedNotes: Note[];
-    targetAudience?: string;
-    purpose?: string;
-  }): Promise<WritingAssistance> {
-    const contextInfo = context ? `
+  async generateWritingAssistance(
+    content: string,
+    context?: {
+      relatedNotes: Note[];
+      targetAudience?: string;
+      purpose?: string;
+    }
+  ): Promise<WritingAssistance> {
+    const contextInfo = context
+      ? `
 Context:
 - Related notes: ${context.relatedNotes.map(n => n.name).join(', ')}
 - Target audience: ${context.targetAudience || 'General'}
 - Purpose: ${context.purpose || 'Informational'}
-` : '';
+`
+      : '';
 
     const prompt = `As a writing assistant, analyze this content and provide specific suggestions for improvement. Focus on clarity, structure, and engagement.
 
@@ -175,7 +199,7 @@ ${content}`;
       const provider = (this.aiService as any).getCurrentProvider();
       const response = await provider.complete(prompt, {
         model: 'gpt-4',
-        temperature: 0.4
+        temperature: 0.4,
       });
 
       return this.parseWritingAssistanceResponse(response);
@@ -186,8 +210,8 @@ ${content}`;
   }
 
   async analyzeKnowledgeGaps(
-    notes: Note[], 
-    links: Link[], 
+    notes: Note[],
+    links: Link[],
     tags: Tag[]
   ): Promise<KnowledgeGapAnalysis> {
     // Analyze note topics and connections
@@ -195,7 +219,7 @@ ${content}`;
       name: note.name,
       tags: note.tags,
       wordCount: note.wordCount,
-      hasConnections: links.some(link => link.source === note.id || link.target === note.id)
+      hasConnections: links.some(link => link.source === note.id || link.target === note.id),
     }));
 
     const prompt = `Analyze this knowledge base and identify gaps and opportunities for improvement.
@@ -209,7 +233,10 @@ Sample notes:
 ${JSON.stringify(notesSummary, null, 2)}
 
 Tag distribution:
-${tags.slice(0, 10).map(tag => `${tag.name}: ${tag.count} notes`).join('\n')}
+${tags
+  .slice(0, 10)
+  .map(tag => `${tag.name}: ${tag.count} notes`)
+  .join('\n')}
 
 Please provide a JSON response analyzing knowledge gaps:
 {
@@ -241,7 +268,7 @@ Please provide a JSON response analyzing knowledge gaps:
       const provider = (this.aiService as any).getCurrentProvider();
       const response = await provider.complete(prompt, {
         model: 'gpt-4',
-        temperature: 0.3
+        temperature: 0.3,
       });
 
       return this.parseKnowledgeGapResponse(response, notes);
@@ -251,7 +278,7 @@ Please provide a JSON response analyzing knowledge gaps:
         missingTopics: [],
         underExploredAreas: [],
         orphanNotes: [],
-        clusteringOpportunities: []
+        clusteringOpportunities: [],
       };
     }
   }
@@ -294,7 +321,7 @@ Provide response in JSON format:
       const provider = (this.aiService as any).getCurrentProvider();
       const response = await provider.complete(prompt, {
         model: 'gpt-4',
-        temperature: 0.6
+        temperature: 0.6,
       });
 
       return this.parseNoteSuggestionResponse(response);
@@ -304,7 +331,7 @@ Provide response in JSON format:
         title: `Notes on ${topic}`,
         content: `# ${topic}\n\n[Add your thoughts about ${topic} here]`,
         suggestedTags: [topic.toLowerCase()],
-        suggestedConnections: []
+        suggestedConnections: [],
       };
     }
   }
@@ -313,7 +340,7 @@ Provide response in JSON format:
     try {
       const cleaned = this.cleanJsonResponse(response);
       const parsed = JSON.parse(cleaned);
-      
+
       return {
         summary: parsed.summary || '',
         keyTopics: parsed.keyTopics || [],
@@ -325,9 +352,9 @@ Provide response in JSON format:
         writingStyle: parsed.writingStyle || {
           tone: 'neutral',
           formality: 'mixed',
-          perspective: 'mixed'
+          perspective: 'mixed',
         },
-        improvements: parsed.improvements || []
+        improvements: parsed.improvements || [],
       };
     } catch (error) {
       console.error('Failed to parse analysis response:', error);
@@ -339,11 +366,11 @@ Provide response in JSON format:
     try {
       const cleaned = this.cleanJsonResponse(response);
       const parsed = JSON.parse(cleaned);
-      
+
       return {
         suggestions: parsed.suggestions || [],
         expandablePoints: parsed.expandablePoints || [],
-        strengthenArguments: parsed.strengthenArguments || []
+        strengthenArguments: parsed.strengthenArguments || [],
       };
     } catch (error) {
       console.error('Failed to parse writing assistance response:', error);
@@ -355,26 +382,27 @@ Provide response in JSON format:
     try {
       const cleaned = this.cleanJsonResponse(response);
       const parsed = JSON.parse(cleaned);
-      
+
       // Map orphan notes to actual note IDs
       const orphanNotes = (parsed.orphanNotes || []).map((orphan: any) => {
-        const matchingNote = notes.find(note => 
-          note.name.toLowerCase().includes(orphan.noteName.toLowerCase()) ||
-          orphan.noteName.toLowerCase().includes(note.name.toLowerCase())
+        const matchingNote = notes.find(
+          note =>
+            note.name.toLowerCase().includes(orphan.noteName.toLowerCase()) ||
+            orphan.noteName.toLowerCase().includes(note.name.toLowerCase())
         );
-        
+
         return {
           noteId: matchingNote?.id || `unknown-${orphan.noteName}`,
           noteName: orphan.noteName,
-          suggestedConnections: orphan.suggestedConnections || []
+          suggestedConnections: orphan.suggestedConnections || [],
         };
       });
-      
+
       return {
         missingTopics: parsed.missingTopics || [],
         underExploredAreas: parsed.underExploredAreas || [],
         orphanNotes,
-        clusteringOpportunities: parsed.clusteringOpportunities || []
+        clusteringOpportunities: parsed.clusteringOpportunities || [],
       };
     } catch (error) {
       console.error('Failed to parse knowledge gap response:', error);
@@ -382,7 +410,7 @@ Provide response in JSON format:
         missingTopics: [],
         underExploredAreas: [],
         orphanNotes: [],
-        clusteringOpportunities: []
+        clusteringOpportunities: [],
       };
     }
   }
@@ -396,12 +424,12 @@ Provide response in JSON format:
     try {
       const cleaned = this.cleanJsonResponse(response);
       const parsed = JSON.parse(cleaned);
-      
+
       return {
         title: parsed.title || 'New Note',
         content: parsed.content || '# New Note\n\nAdd content here...',
         suggestedTags: parsed.suggestedTags || [],
-        suggestedConnections: parsed.suggestedConnections || []
+        suggestedConnections: parsed.suggestedConnections || [],
       };
     } catch (error) {
       console.error('Failed to parse note suggestion response:', error);
@@ -409,7 +437,7 @@ Provide response in JSON format:
         title: 'New Note',
         content: '# New Note\n\nAdd content here...',
         suggestedTags: [],
-        suggestedConnections: []
+        suggestedConnections: [],
       };
     }
   }
@@ -417,19 +445,19 @@ Provide response in JSON format:
   private cleanJsonResponse(response: string): string {
     // Remove markdown code blocks and clean up the response
     let cleaned = response.trim();
-    
+
     // Remove markdown code block markers
     cleaned = cleaned.replace(/```json\s*/gi, '');
     cleaned = cleaned.replace(/```\s*/g, '');
-    
+
     // Find the first { and last } to extract just the JSON
     const firstBrace = cleaned.indexOf('{');
     const lastBrace = cleaned.lastIndexOf('}');
-    
+
     if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
       cleaned = cleaned.substring(firstBrace, lastBrace + 1);
     }
-    
+
     return cleaned;
   }
 
@@ -445,9 +473,9 @@ Provide response in JSON format:
       writingStyle: {
         tone: 'neutral',
         formality: 'mixed',
-        perspective: 'mixed'
+        perspective: 'mixed',
       },
-      improvements: []
+      improvements: [],
     };
   }
 }

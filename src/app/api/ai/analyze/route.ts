@@ -7,7 +7,7 @@ import { getAIService } from '@/lib/ai/ai-service';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { notes, tags, analysisType, content, noteId } = body;
+    const { notes, tags, analysisType, content, noteId, settings: clientSettings } = body;
 
     // Check if we have either notes array OR content for analysis
     if (!notes && !content) {
@@ -32,8 +32,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get AI service (uses user's configured provider and settings)
+    // Get AI service - use client settings if provided, otherwise use server defaults
     const aiService = getAIService();
+    if (clientSettings) {
+      aiService.updateSettings(clientSettings);
+    }
     const settings = aiService.getSettings();
 
     // Check if AI is configured (allow Ollama without API key)
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Track analytics
     analytics.trackEvent('ai_analysis', {
       analysisType,
-      notesCount: notes.length,
+      notesCount: notes?.length || 0,
       tagsCount: tags?.length || 0,
       timestamp: new Date().toISOString(),
     });

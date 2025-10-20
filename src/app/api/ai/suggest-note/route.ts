@@ -7,14 +7,17 @@ import { analytics } from '@/lib/analytics';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { topic, existingNotes, relatedTags, userInterests } = body;
+    const { topic, existingNotes, relatedTags, userInterests, settings: clientSettings } = body;
 
     if (!topic) {
       return NextResponse.json({ success: false, error: 'Topic is required' }, { status: 400 });
     }
 
-    // Get AI service (uses user's configured provider and settings)
+    // Get AI service - use client settings if provided, otherwise use server defaults
     const aiService = getAIService();
+    if (clientSettings) {
+      aiService.updateSettings(clientSettings);
+    }
     const settings = aiService.getSettings();
 
     // Check if AI is configured (allow Ollama without API key)

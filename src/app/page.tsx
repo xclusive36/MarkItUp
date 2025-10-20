@@ -253,6 +253,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const [folder, setFolder] = useState('');
   const [saveStatus, setSaveStatus] = useState('');
 
+  // Ref to track the latest markdown content for immediate access in callbacks
+  const markdownRef = useRef(markdown);
+
+  // Update ref whenever markdown changes
+  useEffect(() => {
+    markdownRef.current = markdown;
+  }, [markdown]);
+
   // Graph state
   const [graph, setGraph] = useState<Graph>({ nodes: [], edges: [] });
   const [graphStats, setGraphStats] = useState({
@@ -848,8 +856,13 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
         : `${fileName.trim().replace(/\/+$/, '')}.md`;
 
+      // Use the ref to get the latest content (important for WritingAssistant auto-save)
+      const currentMarkdown = markdownRef.current;
+      console.log('[saveNote] Using markdown from ref, length:', currentMarkdown.length);
+
       // Ensure markdown is a string to prevent circular reference errors
-      const cleanMarkdown = typeof markdown === 'string' ? markdown : String(markdown);
+      const cleanMarkdown =
+        typeof currentMarkdown === 'string' ? currentMarkdown : String(currentMarkdown);
 
       const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
         method: 'PUT',
@@ -873,9 +886,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         }
 
         // Track note save
-        const wordCount = markdown.split(/\s+/).filter(word => word.length > 0).length;
-        const hasWikilinks = markdown.includes('[[');
-        const tagMatches = markdown.match(/#\w+/g) || [];
+        const wordCount = currentMarkdown.split(/\s+/).filter(word => word.length > 0).length;
+        const hasWikilinks = currentMarkdown.includes('[[');
+        const tagMatches = currentMarkdown.match(/#\w+/g) || [];
 
         analytics.trackEvent(activeNote ? 'note_updated' : 'note_created', {
           noteId:
@@ -884,7 +897,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               : 'new',
           fileName: fileName,
           wordCount: wordCount,
-          characterCount: markdown.length,
+          characterCount: currentMarkdown.length,
           hasWikilinks: hasWikilinks,
           tagCount: tagMatches.length,
           folder: folder || null,
@@ -894,12 +907,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         // Create or update note in PKM system
         if (activeNote) {
           await pkm.updateNote(activeNote.id, {
-            content: markdown,
+            content: currentMarkdown,
             name: fileName + '.md',
             folder: folder || undefined,
           });
         } else {
-          await pkm.createNote(fileName, markdown, folder || undefined);
+          await pkm.createNote(fileName, currentMarkdown, folder || undefined);
         }
 
         // Refresh data
@@ -1364,15 +1377,29 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           content={activeNote?.content || markdown}
           noteId={activeNote?.id}
           onContentChange={(newContent: string) => {
+            console.log('[PAGE] WritingAssistant onContentChange called');
+            console.log('[PAGE] New content length:', newContent.length);
+            console.log('[PAGE] Old markdown length:', markdown.length);
             if (activeNote) {
+              console.log('[PAGE] Updating active note:', activeNote.id);
               const updatedNote = { ...activeNote, content: newContent };
               setActiveNote(updatedNote);
               setMarkdown(newContent);
               const updatedNotes = notes.map(n => (n.id === activeNote.id ? updatedNote : n));
               setNotes(updatedNotes);
             } else {
+              console.log('[PAGE] No active note, updating markdown only');
               setMarkdown(newContent);
             }
+            console.log('[PAGE] State updates queued');
+          }}
+          onSave={async () => {
+            console.log('[PAGE] WritingAssistant onSave called');
+            console.log('[PAGE] Using markdownRef.current length:', markdownRef.current.length);
+            console.log('[PAGE] markdown state length:', markdown.length);
+            // The ref should have the latest value even if state hasn't updated yet
+            // Auto-save from WritingAssistant should force overwrite (file already exists)
+            await saveNote(true);
           }}
         />
 
@@ -1383,13 +1410,79 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           notes={notes}
           tags={tags}
           onCreateNote={async (title, content) => {
-            const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-            setFileName(newFileName);
-            setMarkdown(content);
-            // Create and save the note
-            const pkm = getPKMSystem();
-            await pkm.createNote(newFileName, content);
-            setShowKnowledgeDiscovery(false);
+            try {
+              toast.info('Creating note...');
+
+              // Save current note first if there's content
+              if (fileName && markdown.trim()) {
+                try {
+                  const fullPath = folder.trim()
+                    ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+                    : `${fileName.trim().replace(/\/+$/, '')}.md`;
+
+                  await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      content: markdown,
+                      overwrite: true, // Allow overwriting existing file
+                    }),
+                  });
+                  console.log('✅ Current note saved before creating new note');
+                } catch (error) {
+                  console.error('Failed to save current note:', error);
+                  toast.error('Failed to save current note');
+                }
+              }
+
+              // Create the new suggested note
+              const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+              const newFilePath = `${newFileName}.md`;
+
+              // Save the new note file to disk via API
+              const createResponse = await fetch(`/api/files/${encodeURIComponent(newFilePath)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  content: content,
+                  overwrite: false, // Don't overwrite if it already exists
+                }),
+              });
+
+              if (!createResponse.ok) {
+                throw new Error(`Failed to create note file: ${createResponse.statusText}`);
+              }
+              console.log('✅ New note file created:', newFilePath);
+
+              // Refresh ALL data (notes list, graph, tags, etc.)
+              console.log('🔄 Refreshing all PKM data...');
+              await refreshData();
+              console.log('✅ PKM data refreshed');
+
+              // Also refresh the NotesComponent sidebar
+              if (notesComponentRefreshRef.current) {
+                console.log('🔄 Refreshing notes sidebar...');
+                await notesComponentRefreshRef.current();
+                console.log('✅ Notes sidebar refreshed');
+              }
+
+              // Give the UI a moment to update
+              await new Promise(resolve => setTimeout(resolve, 100));
+
+              // Update PKM system
+              const pkm = getPKMSystem();
+              await pkm.createNote(newFileName, content);
+
+              // Switch to the new note
+              setFileName(newFileName);
+              setMarkdown(content);
+              setShowKnowledgeDiscovery(false);
+
+              toast.success(`Note "${title}" created successfully! 📝`);
+            } catch (error) {
+              console.error('Failed to create note:', error);
+              toast.error('Failed to create note');
+            }
           }}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
@@ -1403,13 +1496,79 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           onClose={() => setShowResearchAssistant(false)}
           notes={notes}
           onCreateNote={async (title, content) => {
-            const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-            setFileName(newFileName);
-            setMarkdown(content);
-            // Create and save the note
-            const pkm = getPKMSystem();
-            await pkm.createNote(newFileName, content);
-            setShowResearchAssistant(false);
+            try {
+              toast.info('Creating note...');
+
+              // Save current note first if there's content
+              if (fileName && markdown.trim()) {
+                try {
+                  const fullPath = folder.trim()
+                    ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+                    : `${fileName.trim().replace(/\/+$/, '')}.md`;
+
+                  await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      content: markdown,
+                      overwrite: true, // Allow overwriting existing file
+                    }),
+                  });
+                  console.log('✅ Current note saved before creating new note');
+                } catch (error) {
+                  console.error('Failed to save current note:', error);
+                  toast.error('Failed to save current note');
+                }
+              }
+
+              // Create the new suggested note
+              const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+              const newFilePath = `${newFileName}.md`;
+
+              // Save the new note file to disk via API
+              const createResponse = await fetch(`/api/files/${encodeURIComponent(newFilePath)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  content: content,
+                  overwrite: false, // Don't overwrite if it already exists
+                }),
+              });
+
+              if (!createResponse.ok) {
+                throw new Error(`Failed to create note file: ${createResponse.statusText}`);
+              }
+              console.log('✅ New note file created:', newFilePath);
+
+              // Refresh ALL data (notes list, graph, tags, etc.)
+              console.log('🔄 Refreshing all PKM data...');
+              await refreshData();
+              console.log('✅ PKM data refreshed');
+
+              // Also refresh the NotesComponent sidebar
+              if (notesComponentRefreshRef.current) {
+                console.log('🔄 Refreshing notes sidebar...');
+                await notesComponentRefreshRef.current();
+                console.log('✅ Notes sidebar refreshed');
+              }
+
+              // Give the UI a moment to update
+              await new Promise(resolve => setTimeout(resolve, 100));
+
+              // Update PKM system
+              const pkm = getPKMSystem();
+              await pkm.createNote(newFileName, content);
+
+              // Switch to the new note
+              setFileName(newFileName);
+              setMarkdown(content);
+              setShowResearchAssistant(false);
+
+              toast.success(`Note "${title}" created successfully! 📝`);
+            } catch (error) {
+              console.error('Failed to create note:', error);
+              toast.error('Failed to create note');
+            }
           }}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
