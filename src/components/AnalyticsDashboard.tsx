@@ -87,16 +87,25 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     icon: React.ReactNode;
     color: string;
   }> = ({ title, value, change, icon, color }) => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div
+      className="rounded-lg p-4 shadow-sm border"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--border-primary)',
+      }}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            {title}
+          </p>
+          <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            {value}
+          </p>
           {change !== undefined && (
             <div
-              className={`flex items-center mt-1 text-sm ${
-                change >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
+              className="flex items-center mt-1 text-sm"
+              style={{ color: change >= 0 ? 'var(--success)' : 'var(--error)' }}
             >
               {change >= 0 ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
@@ -107,7 +116,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-full ${color}`}>{icon}</div>
+        <div
+          className={`p-3 rounded-full ${color}`}
+          style={{
+            backgroundColor: 'var(--accent-primary)',
+            opacity: 0.1,
+          }}
+        >
+          <div style={{ color: 'var(--accent-primary)' }}>{icon}</div>
+        </div>
       </div>
     </div>
   );
@@ -165,25 +182,42 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     const maxValue = Math.max(...data.map(d => d.value), 1);
 
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
+      <div
+        className="rounded-lg p-6 shadow-sm border"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: 'var(--border-primary)',
+        }}
+      >
+        <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+          {title}
+        </h3>
         <div className="space-y-2">
-          {data.slice(-7).map((item, index) => (
+          {data.slice(-7).map(item => (
             <div key={item.date} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {new Date(item.date).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                 })}
               </span>
               <div className="flex items-center space-x-2 flex-1 mx-3">
-                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div
+                  className="flex-1 rounded-full h-2"
+                  style={{ backgroundColor: 'var(--bg-tertiary)' }}
+                >
                   <div
-                    className={`h-2 rounded-full ${color}`}
-                    style={{ width: `${(item.value / maxValue) * 100}%` }}
+                    className="h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(item.value / maxValue) * 100}%`,
+                      backgroundColor: 'var(--accent-primary)',
+                    }}
                   ></div>
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white w-12 text-right">
+                <span
+                  className="text-sm font-medium w-12 text-right"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {item.value}
                   {unit}
                 </span>
@@ -200,17 +234,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Insights into your knowledge management
-          </p>
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            Analytics Dashboard
+          </h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Insights into your knowledge management</p>
         </div>
 
         <div className="flex items-center space-x-2">
           <select
             value={timeRange}
             onChange={e => setTimeRange(Number(e.target.value) as 7 | 30 | 90)}
-            className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="px-3 py-2 text-sm border rounded-lg"
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              borderColor: 'var(--border-primary)',
+              color: 'var(--text-primary)',
+            }}
           >
             <option value={7}>Last 7 days</option>
             <option value={30}>Last 30 days</option>
@@ -342,17 +381,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 Most Used Tags
               </h3>
               <div className="space-y-3">
-                {metrics.mostUsedTags.slice(0, 8).map((tag, index) => (
+                {metrics.mostUsedTags.slice(0, 8).map(tag => (
                   <div key={tag.tag} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">#{tag.tag}</span>
+                    <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                      #{tag.tag}
+                    </span>
                     <div className="flex items-center space-x-2">
                       <div
-                        className="h-2 bg-blue-600 rounded"
+                        className="h-2 rounded"
                         style={{
                           width: `${(tag.count / Math.max(metrics.mostUsedTags[0]?.count || 1, 1)) * 100}px`,
+                          backgroundColor: 'var(--accent-primary)',
                         }}
                       ></div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">
+                      <span
+                        className="text-xs w-8 text-right"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         {tag.count}
                       </span>
                     </div>
@@ -485,19 +530,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 Search Behavior
               </h3>
               <div className="space-y-3">
-                {metrics.popularSearchTerms.slice(0, 5).map((term, index) => (
+                {metrics.popularSearchTerms.slice(0, 5).map(term => (
                   <div key={term.term} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-32">
+                    <span
+                      className="text-sm truncate max-w-32"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
                       "{term.term}"
                     </span>
                     <div className="flex items-center space-x-2">
                       <div
-                        className="h-2 bg-purple-600 rounded"
+                        className="h-2 rounded"
                         style={{
                           width: `${(term.count / Math.max(metrics.popularSearchTerms[0]?.count || 1, 1)) * 50}px`,
+                          backgroundColor: 'var(--accent-secondary)',
                         }}
                       ></div>
-                      <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right">
+                      <span
+                        className="text-xs w-8 text-right"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
                         {term.count}
                       </span>
                     </div>

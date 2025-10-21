@@ -40,9 +40,9 @@ export function AnalyticsDashboard({
 
   const healthScore = getHealthScore();
   const getHealthColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 dark:text-green-400';
-    if (score >= 60) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-orange-600 dark:text-orange-400';
+    if (score >= 80) return 'var(--success-color)';
+    if (score >= 60) return 'var(--warning-color)';
+    return '#f97316'; // orange
   };
 
   const getHealthStatus = (score: number) => {
@@ -130,7 +130,7 @@ export function AnalyticsDashboard({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Graph Health Score</h3>
-                <div className={`text-5xl font-bold ${getHealthColor(healthScore)}`}>
+                <div className="text-5xl font-bold" style={{ color: getHealthColor(healthScore) }}>
                   {healthScore}%
                 </div>
                 <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
@@ -157,9 +157,7 @@ export function AnalyticsDashboard({
               value={`${analytics.graphGrowthRate >= 0 ? '+' : ''}${analytics.graphGrowthRate.toFixed(1)}%`}
               icon={analytics.graphGrowthRate >= 0 ? '📈' : '📉'}
               valueColor={
-                analytics.graphGrowthRate >= 0
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-red-600 dark:text-red-400'
+                analytics.graphGrowthRate >= 0 ? 'var(--success-color)' : 'var(--error-color)'
               }
             />
           </div>
@@ -366,7 +364,9 @@ function StatCard({ title, value, icon, valueColor }: StatCardProps) {
         </span>
         <span className="text-2xl opacity-50">{icon}</span>
       </div>
-      <div className={`text-2xl font-bold ${valueColor || ''}`}>{value}</div>
+      <div className="text-2xl font-bold" style={{ color: valueColor || 'var(--text-primary)' }}>
+        {value}
+      </div>
     </div>
   );
 }

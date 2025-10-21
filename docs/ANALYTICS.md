@@ -1,6 +1,16 @@
-# Advanced Analytics System
+# Enhanced Analytics System
 
-The MarkItUp application now includes a comprehensive analytics system that tracks your knowledge management activities and provides valuable insights into your writing and learning patterns.
+The MarkItUp application now includes a **powerful, privacy-first analytics system** that tracks your knowledge management activities and provides valuable insights into your writing and learning patterns.
+
+## 🆕 What's New
+
+- **🎨 Theme-Aware Interface**: Analytics dashboard fully respects your theme settings
+- **📊 Enhanced Visualizations**: Interactive charts and progress bars with smooth animations
+- **💡 AI-Powered Insights**: Smarter, more actionable recommendations based on your patterns
+- **📈 Milestone Tracking**: Automatic recognition of achievements (100 notes, 7-day streaks, etc.)
+- **📥 Export Reports**: Download analytics as markdown for reviews and sharing
+- **🎯 Hub Note Detection**: Identifies your most connected "hub" notes
+- **⚡ Performance Optimized**: Faster calculations and smoother UI
 
 ## Features
 

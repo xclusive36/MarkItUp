@@ -3,7 +3,7 @@ import MainContent from './MainContent';
 import NotesPanel from './NotesPanel';
 import GraphView from './GraphView';
 import SearchBox from './SearchBox';
-import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { EnhancedAnalyticsDashboard } from './EnhancedAnalyticsDashboard';
 import UnifiedPluginManager from './UnifiedPluginManager';
 import { Hash, Folder } from 'lucide-react';
 import { Note, Graph, Tag, GraphEdge } from '@/lib/types';
@@ -167,7 +167,7 @@ const MainPanel: React.FC<MainPanelProps> = ({
   }
   if (currentView === 'analytics') {
     return (
-      <AnalyticsDashboard
+      <EnhancedAnalyticsDashboard
         notes={notes}
         links={graph.edges.map((edge: GraphEdge) => ({
           id: `${edge.source}-${edge.target}`,

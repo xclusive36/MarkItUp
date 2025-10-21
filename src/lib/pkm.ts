@@ -209,8 +209,8 @@ export class PKMSystem {
       description: 'Search across all notes',
       keybinding: 'Cmd+Shift+F',
       callback: () => {
-        // This would trigger search UI
-        console.log('Global search triggered');
+        // Trigger global search panel
+        window.dispatchEvent(new CustomEvent('openGlobalSearch'));
       },
     });
 

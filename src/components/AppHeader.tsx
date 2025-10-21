@@ -63,8 +63,9 @@ export function AppHeader({
       icon: <Search className="w-4 h-4" />,
       active: currentView === 'search',
       onClick: () => {
-        onViewChange('search');
-        onAnalyticsTrack('mode_switched', { view: 'search' });
+        // Open global search panel instead of changing view
+        window.dispatchEvent(new CustomEvent('openGlobalSearch'));
+        onAnalyticsTrack('global_search_opened', { trigger: 'header_button' });
       },
     },
     {

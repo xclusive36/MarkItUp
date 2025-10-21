@@ -467,6 +467,309 @@ export class AIService {
       },
     };
   }
+
+  // PKM-Specific AI Features
+  async findConnections(
+    noteId: string,
+    noteContent: string
+  ): Promise<{
+    success: boolean;
+    connections?: Array<{
+      noteId: string;
+      noteName: string;
+      reason: string;
+      confidence: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      if (!this.pkm?.getAllNotes) {
+        return { success: false, error: 'PKM system not available' };
+      }
+
+      const allNotes = this.pkm.getAllNotes();
+      const otherNotes = allNotes.filter(n => n.id !== noteId);
+
+      if (otherNotes.length === 0) {
+        return { success: true, connections: [] };
+      }
+
+      const provider = this.getCurrentProvider();
+
+      const prompt = `Analyze this note and find connections to other notes in the knowledge base.
+
+Current Note Content:
+${noteContent.slice(0, 2000)}
+
+Other Notes (ID | Title | Snippet):
+${otherNotes
+  .slice(0, 20)
+  .map(n => `${n.id} | ${n.name} | ${n.content.slice(0, 100)}...`)
+  .join('\n')}
+
+Return a JSON array of connections with this format:
+[
+  {
+    "noteId": "note-id",
+    "noteName": "Note Title",
+    "reason": "Brief explanation of connection",
+    "confidence": 0.85
+  }
+]
+
+Only include connections with confidence > 0.6. Limit to top 5 connections.`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.3,
+        maxTokens: 500,
+      });
+
+      // Parse JSON response
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return { success: false, error: 'Invalid response format' };
+      }
+
+      const connections = JSON.parse(jsonMatch[0]);
+      return { success: true, connections };
+    } catch (error) {
+      console.error('Failed to find connections:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async suggestLinks(
+    noteContent: string,
+    existingNotes: Note[]
+  ): Promise<{
+    success: boolean;
+    suggestions?: Array<{
+      text: string;
+      targetNote: string;
+      targetNoteId: string;
+      position: number;
+      confidence: number;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const provider = this.getCurrentProvider();
+
+      const prompt = `Analyze this note content and suggest wikilinks to existing notes.
+
+Current Note:
+${noteContent.slice(0, 1500)}
+
+Existing Notes:
+${existingNotes
+  .slice(0, 30)
+  .map(n => `- [[${n.name}]] (${n.id})`)
+  .join('\n')}
+
+Find phrases in the current note that should link to existing notes. Return JSON:
+[
+  {
+    "text": "exact phrase to link",
+    "targetNote": "Note Title",
+    "targetNoteId": "note-id",
+    "confidence": 0.9
+  }
+]
+
+Only suggest links with confidence > 0.7. Limit to 10 suggestions.`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.2,
+        maxTokens: 400,
+      });
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return { success: false, error: 'Invalid response format' };
+      }
+
+      const suggestions = JSON.parse(jsonMatch[0]) as Array<{
+        text: string;
+        targetNote: string;
+        targetNoteId: string;
+        confidence: number;
+      }>;
+
+      // Add position information
+      const suggestionsWithPosition = suggestions
+        .map(s => ({
+          ...s,
+          position: noteContent.indexOf(s.text),
+        }))
+        .filter(s => s.position !== -1);
+
+      return { success: true, suggestions: suggestionsWithPosition };
+    } catch (error) {
+      console.error('Failed to suggest links:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async identifyKnowledgeGaps(
+    noteContent: string,
+    relatedNotes: Note[]
+  ): Promise<{
+    success: boolean;
+    gaps?: Array<{
+      topic: string;
+      reason: string;
+      suggestedQuestions: string[];
+    }>;
+    error?: string;
+  }> {
+    try {
+      const provider = this.getCurrentProvider();
+
+      const prompt = `Analyze this note and related notes to identify knowledge gaps.
+
+Current Note:
+${noteContent.slice(0, 1500)}
+
+Related Notes:
+${relatedNotes
+  .slice(0, 10)
+  .map(n => `## ${n.name}\n${n.content.slice(0, 200)}...`)
+  .join('\n\n')}
+
+Identify missing information, unexplored topics, or questions that arise. Return JSON:
+[
+  {
+    "topic": "Missing Topic",
+    "reason": "Why this is a gap",
+    "suggestedQuestions": ["Question 1", "Question 2"]
+  }
+]
+
+Limit to top 5 most important gaps.`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.5,
+        maxTokens: 600,
+      });
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return { success: false, error: 'Invalid response format' };
+      }
+
+      const gaps = JSON.parse(jsonMatch[0]);
+      return { success: true, gaps };
+    } catch (error) {
+      console.error('Failed to identify gaps:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async generateTags(
+    noteContent: string,
+    existingTags: string[]
+  ): Promise<{
+    success: boolean;
+    tags?: Array<{
+      tag: string;
+      confidence: number;
+      reason: string;
+    }>;
+    error?: string;
+  }> {
+    try {
+      const provider = this.getCurrentProvider();
+
+      const prompt = `Analyze this note and suggest relevant tags.
+
+Note Content:
+${noteContent.slice(0, 1500)}
+
+Existing Tags in System:
+${existingTags.slice(0, 50).join(', ')}
+
+Suggest tags (prefer existing tags, but can suggest new ones). Return JSON:
+[
+  {
+    "tag": "tag-name",
+    "confidence": 0.85,
+    "reason": "Why this tag fits"
+  }
+]
+
+Limit to top 8 tags with confidence > 0.6.`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.3,
+        maxTokens: 300,
+      });
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        return { success: false, error: 'Invalid response format' };
+      }
+
+      const tags = JSON.parse(jsonMatch[0]);
+      return { success: true, tags };
+    } catch (error) {
+      console.error('Failed to generate tags:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  async expandSection(
+    sectionText: string,
+    context: string
+  ): Promise<{
+    success: boolean;
+    expanded?: string;
+    error?: string;
+  }> {
+    try {
+      const provider = this.getCurrentProvider();
+
+      const prompt = `Expand this section with more detail and examples.
+
+Section to Expand:
+${sectionText}
+
+Context from Note:
+${context.slice(0, 500)}
+
+Write an expanded version that:
+- Adds more detail and examples
+- Maintains the original tone
+- Stays focused on the topic
+- Is 2-3x longer than original
+
+Expanded Version:`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+
+      return { success: true, expanded: response.trim() };
+    } catch (error) {
+      console.error('Failed to expand section:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
 }
 
 // Singleton instance

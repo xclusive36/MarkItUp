@@ -19,6 +19,7 @@ import KnowledgeDiscovery from '@/components/KnowledgeDiscovery';
 import ResearchAssistant from '@/components/ResearchAssistant';
 import KnowledgeMap from '@/components/KnowledgeMap';
 import BatchAnalyzer from '@/components/BatchAnalyzer';
+import GlobalSearchPanel from '@/components/GlobalSearchPanel';
 import DailyNotesCalendarModal from '@/components/DailyNotesCalendarModal';
 import { AnalyticsDashboard as KnowledgeGraphAnalytics } from '@/components/KnowledgeGraphAnalytics';
 import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal';
@@ -38,7 +39,7 @@ import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
-import { Note, Graph, SearchResult } from '@/lib/types';
+import { Note, Graph, SearchResult, SearchMatch } from '@/lib/types';
 import { analytics, AnalyticsEventType } from '@/lib/analytics';
 
 // Component imports
@@ -118,6 +119,9 @@ export default function Home() {
 
   // Batch Analyzer state
   const [showBatchAnalyzer, setShowBatchAnalyzer] = useState(false);
+
+  // Global Search state
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // Command Palette state
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -478,10 +482,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         console.log('🔧 Setting isInitializing to true');
         setIsInitializing(true);
 
-        // Track session start
-        analytics.trackEvent('session_started', {
-          timestamp: new Date().toISOString(),
-        });
+        // Session tracking is now handled automatically by AnalyticsSystem
+        // No need to manually track session_started here
 
         // Load notes first
         console.log('🔧 Loading notes from API...');
@@ -680,6 +682,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         return;
       }
 
+      // Ctrl+Shift+F or Cmd+Shift+F to show global search
+      if (e.key === 'F' && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+        analytics.trackEvent('global_search_opened', { trigger: 'keyboard_shortcut' });
+        return;
+      }
+
       // Escape to close modals
       if (e.key === 'Escape') {
         setShowCommandPalette(false);
@@ -690,6 +700,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setShowResearchAssistant(false);
         setShowKnowledgeMap(false);
         setShowBatchAnalyzer(false);
+        setShowGlobalSearch(false);
         setShowZenMode(false);
       }
     };
@@ -710,6 +721,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     const handleOpenResearchAssistant = () => setShowResearchAssistant(true);
     const handleOpenKnowledgeMap = () => setShowKnowledgeMap(true);
     const handleOpenBatchAnalyzer = () => setShowBatchAnalyzer(true);
+    const handleOpenGlobalSearch = () => {
+      setShowGlobalSearch(true);
+      analytics.trackEvent('global_search_opened', { trigger: 'event' });
+    };
     const handleToggleRightPanel = () => setIsRightPanelOpen(prev => !prev);
     const handleToggleSidebar = () => setShowMobileSidebar(prev => !prev);
     const handleToggleLeftSidebar = () => setIsLeftSidebarCollapsed(prev => !prev);
@@ -720,6 +735,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     window.addEventListener('openResearchAssistant', handleOpenResearchAssistant);
     window.addEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
     window.addEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
+    window.addEventListener('openGlobalSearch', handleOpenGlobalSearch);
     window.addEventListener('toggleRightPanel', handleToggleRightPanel);
     window.addEventListener('toggleSidebar', handleToggleSidebar);
     window.addEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
@@ -731,6 +747,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       window.removeEventListener('openResearchAssistant', handleOpenResearchAssistant);
       window.removeEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
       window.removeEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
+      window.removeEventListener('openGlobalSearch', handleOpenGlobalSearch);
       window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
@@ -743,7 +760,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     includeContent?: boolean;
     tags?: string[];
     folders?: string[];
-    mode?: 'keyword' | 'semantic' | 'hybrid';
+    mode?: 'keyword' | 'semantic' | 'hybrid' | 'regex';
   };
 
   const handleSearch = useCallback(
@@ -757,6 +774,52 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           searchMode: options?.mode || 'keyword',
           timestamp: new Date().toISOString(),
         });
+
+        // Handle regex mode client-side
+        if (options?.mode === 'regex') {
+          try {
+            const regex = new RegExp(query, 'gi');
+            const results: SearchResult[] = [];
+
+            notes.forEach(note => {
+              const matches: SearchMatch[] = [];
+              const lines = note.content.split('\n');
+
+              lines.forEach((line, lineNumber) => {
+                const lineMatches = line.matchAll(regex);
+                for (const match of lineMatches) {
+                  matches.push({
+                    text: match[0],
+                    start: match.index || 0,
+                    end: (match.index || 0) + match[0].length,
+                    lineNumber: lineNumber + 1,
+                    context: line,
+                  });
+                }
+              });
+
+              if (matches.length > 0) {
+                results.push({
+                  noteId: note.id,
+                  noteName: note.name,
+                  matches,
+                  score: matches.length / 10, // Simple score based on match count
+                });
+              }
+            });
+
+            analytics.trackEvent('search_completed', {
+              resultsCount: results.length,
+              query: query.length > 50 ? query.substring(0, 50) + '...' : query,
+              searchMode: 'regex',
+            });
+
+            return results.sort((a, b) => b.score - a.score).slice(0, options?.limit || 50);
+          } catch (error) {
+            console.error('Regex error:', error);
+            return [];
+          }
+        }
 
         // Use vector search API if mode is specified (semantic or hybrid)
         const useVectorSearch = options?.mode && ['semantic', 'hybrid'].includes(options.mode);
@@ -800,7 +863,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       }
       return [];
     },
-    []
+    [notes]
   );
 
   // Handle note selection
@@ -1371,6 +1434,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           isOpen={showAIChat}
           onClose={() => setShowAIChat(false)}
           currentNoteId={activeNote?.id}
+          currentNoteContent={activeNote?.content}
+          currentNoteName={activeNote?.name}
         />
 
         {/* Writing Assistant Panel */}
@@ -1613,6 +1678,43 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             console.log('Bulk updates:', updates);
             setShowBatchAnalyzer(false);
           }}
+        />
+
+        {/* Global Search Panel */}
+        <GlobalSearchPanel
+          isOpen={showGlobalSearch}
+          onClose={() => setShowGlobalSearch(false)}
+          onSearch={handleSearch}
+          onSelectNote={noteId => {
+            handleNoteSelect(noteId);
+            setShowGlobalSearch(false);
+          }}
+          onUpdateNote={async (noteId, content) => {
+            const note = notes.find(n => n.id === noteId);
+            if (note) {
+              await pkm.updateNote(noteId, { content });
+              await refreshData();
+            }
+          }}
+          onBulkUpdateNotes={async updates => {
+            for (const update of updates) {
+              const note = notes.find(n => n.id === update.noteId);
+              if (note) {
+                await pkm.updateNote(update.noteId, {
+                  tags: update.tags,
+                  folder: update.folder,
+                });
+              }
+            }
+            await refreshData();
+          }}
+          onBulkDeleteNotes={async noteIds => {
+            for (const noteId of noteIds) {
+              await pkm.deleteNote(noteId);
+            }
+            await refreshData();
+          }}
+          notes={notes}
         />
 
         {/* Command Palette */}

@@ -696,21 +696,13 @@ class SmartSearchPlugin {
   constructor(private api: PluginAPI) {}
 
   async globalSearch(): Promise<void> {
-    const allNotes = this.api.notes.getAll();
-
-    this.api.ui.showNotification(
-      `Global search across ${allNotes.length} notes. Enter search query (supports fuzzy/semantic/AI-powered modes)`,
-      'info'
-    );
+    // Dispatch custom event to open the global search panel
+    window.dispatchEvent(new CustomEvent('openGlobalSearch'));
   }
 
   async advancedSearch(): Promise<void> {
-    const allNotes = this.api.notes.getAll();
-
-    this.api.ui.showNotification(
-      `Advanced search opened. ${allNotes.length} notes available. Use filters: date, tags, content type, word count`,
-      'info'
-    );
+    // Open global search with filters expanded
+    window.dispatchEvent(new CustomEvent('openGlobalSearch'));
   }
 
   async searchAndReplace(): Promise<void> {

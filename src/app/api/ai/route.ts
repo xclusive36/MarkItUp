@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIService } from '@/lib/ai/ai-service';
 import { ChatRequest } from '@/lib/ai/types';
+import { findNoteById } from '@/lib/file-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,21 +33,59 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build context from note if noteContext is provided
+    let contextMessage = '';
+    console.log('[AI API] Request body:', {
+      hasNoteContext: !!body.noteContext,
+      noteContext: body.noteContext,
+      includeContext: body.includeContext,
+      messagePreview: body.message.slice(0, 50),
+    });
+
+    if (body.noteContext && body.includeContext !== false) {
+      try {
+        console.log('[AI API] Attempting to find note:', body.noteContext);
+        const note = findNoteById(body.noteContext);
+        console.log('[AI API] Note found:', {
+          found: !!note,
+          name: note?.name,
+          contentLength: note?.content.length,
+        });
+
+        if (note) {
+          contextMessage = `\n\n[Current Note Context: "${note.name}"]\n${note.content.slice(0, 1500)}\n[End of Note Context]\n\n`;
+          console.log('[AI API] Context message prepared, length:', contextMessage.length);
+        } else {
+          console.warn('[AI API] Note not found for ID:', body.noteContext);
+        }
+      } catch (error) {
+        console.error('[AI API] Failed to load note context:', error);
+      }
+    }
+
     // For Ollama, we need to proxy the request since the server can't reach it directly
     if (settings.provider === 'ollama' && settings.ollamaUrl) {
       try {
-        // Build the Ollama request
+        // Build the Ollama request with context
+        const systemPrompt = `You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.${contextMessage ? ' The user has a note open, and its content is provided for context.' : ''}`;
+
         const ollamaMessages = [
           {
             role: 'system',
-            content:
-              'You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.',
+            content: systemPrompt,
           },
           {
             role: 'user',
-            content: body.message,
+            content: contextMessage + body.message,
           },
         ];
+
+        console.log('[AI API] Sending to Ollama:', {
+          systemPromptLength: systemPrompt.length,
+          userMessageLength: (contextMessage + body.message).length,
+          hasContext: contextMessage.length > 0,
+          messagePreview: (contextMessage + body.message).slice(0, 200),
+        });
 
         // Normalize Ollama URL (remove trailing slash)
         const normalizedOllamaUrl = settings.ollamaUrl.replace(/\/$/, '');
@@ -118,6 +157,11 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+    }
+
+    // For other providers, inject context into the message
+    if (contextMessage) {
+      body.message = contextMessage + body.message;
     }
 
     // Process chat request for other providers

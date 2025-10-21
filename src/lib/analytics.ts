@@ -20,6 +20,7 @@ export type AnalyticsEventType =
   | 'search_performed'
   | 'search_completed'
   | 'search_error'
+  | 'global_search_opened'
   | 'link_clicked'
   | 'wikilink_created'
   | 'tag_added'
@@ -110,19 +111,139 @@ export class AnalyticsSystem {
   private events: AnalyticsEvent[] = [];
   private sessionId: string;
   private sessionStartTime: number;
+  private lastActivityTime: number;
+  private sessionTimeoutId?: NodeJS.Timeout;
+  private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  private readonly MIN_SESSION_DURATION = 10 * 1000; // 10 seconds (ignore hot reloads)
 
   constructor() {
     this.sessionId = this.generateSessionId();
     this.sessionStartTime = Date.now();
-    this.trackEvent('session_started', {});
+    this.lastActivityTime = Date.now();
 
-    // Track session end on page unload
+    // Only start session tracking in browser (not during SSR)
     if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
-        this.trackEvent('session_ended', {
-          duration: Date.now() - this.sessionStartTime,
-        });
+      this.initializeSessionTracking();
+    }
+  }
+
+  private initializeSessionTracking(): void {
+    // Check for existing session
+    const existingSessionId = sessionStorage.getItem('markitup_session_id');
+    const existingSessionStart = sessionStorage.getItem('markitup_session_start');
+    const lastActivity = sessionStorage.getItem('markitup_last_activity');
+
+    const now = Date.now();
+
+    if (existingSessionId && existingSessionStart && lastActivity) {
+      const timeSinceLastActivity = now - parseInt(lastActivity);
+
+      // Resume existing session if within timeout
+      if (timeSinceLastActivity < this.SESSION_TIMEOUT) {
+        this.sessionId = existingSessionId;
+        this.sessionStartTime = parseInt(existingSessionStart);
+        console.debug('📊 Resumed existing analytics session:', this.sessionId);
+      } else {
+        // Previous session timed out, start new one
+        this.startNewSession();
+      }
+    } else {
+      // No existing session, start new one
+      this.startNewSession();
+    }
+
+    // Update activity timestamp
+    this.updateActivity();
+
+    // Track activity on user interactions
+    this.setupActivityTracking();
+
+    // Track session end on page unload (only for valid sessions)
+    window.addEventListener('beforeunload', () => {
+      this.endSession();
+    });
+
+    // Check for inactivity timeout
+    this.startInactivityTimer();
+  }
+
+  private startNewSession(): void {
+    this.sessionId = this.generateSessionId();
+    this.sessionStartTime = Date.now();
+    this.lastActivityTime = Date.now();
+
+    // Store in sessionStorage
+    sessionStorage.setItem('markitup_session_id', this.sessionId);
+    sessionStorage.setItem('markitup_session_start', this.sessionStartTime.toString());
+    sessionStorage.setItem('markitup_last_activity', this.lastActivityTime.toString());
+
+    this.trackEvent('session_started', {
+      timestamp: new Date().toISOString(),
+    });
+
+    console.debug('📊 Started new analytics session:', this.sessionId);
+  }
+
+  private updateActivity(): void {
+    this.lastActivityTime = Date.now();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('markitup_last_activity', this.lastActivityTime.toString());
+    }
+
+    // Reset inactivity timer
+    this.startInactivityTimer();
+  }
+
+  private setupActivityTracking(): void {
+    // Track various user activities to update last activity time
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+
+    const activityHandler = () => {
+      this.updateActivity();
+    };
+
+    events.forEach(event => {
+      window.addEventListener(event, activityHandler, { passive: true });
+    });
+  }
+
+  private startInactivityTimer(): void {
+    // Clear existing timer
+    if (this.sessionTimeoutId) {
+      clearTimeout(this.sessionTimeoutId);
+    }
+
+    // Set new timer
+    this.sessionTimeoutId = setTimeout(() => {
+      this.endSession(true);
+    }, this.SESSION_TIMEOUT);
+  }
+
+  private endSession(isTimeout: boolean = false): void {
+    const sessionDuration = Date.now() - this.sessionStartTime;
+
+    // Only end session if it lasted longer than minimum duration
+    // This prevents noise from dev hot reloads
+    if (sessionDuration >= this.MIN_SESSION_DURATION) {
+      this.trackEvent('session_ended', {
+        duration: sessionDuration,
+        reason: isTimeout ? 'timeout' : 'unload',
       });
+
+      console.debug(
+        '📊 Ended analytics session:',
+        this.sessionId,
+        `(${Math.round(sessionDuration / 1000)}s)`
+      );
+    } else {
+      console.debug('📊 Ignored short session (likely hot reload):', sessionDuration + 'ms');
+    }
+
+    // Clear session data on timeout, keep on unload for potential resume
+    if (isTimeout && typeof window !== 'undefined') {
+      sessionStorage.removeItem('markitup_session_id');
+      sessionStorage.removeItem('markitup_session_start');
+      sessionStorage.removeItem('markitup_last_activity');
     }
   }
 
@@ -131,7 +252,12 @@ export class AnalyticsSystem {
   }
 
   // Track analytics events
-  trackEvent(type: AnalyticsEventType, data: Record<string, any> = {}): void {
+  trackEvent(type: AnalyticsEventType, data: Record<string, unknown> = {}): void {
+    // Update activity on any event (except session_ended to avoid recursion)
+    if (type !== 'session_ended' && typeof window !== 'undefined') {
+      this.updateActivity();
+    }
+
     // Sanitize data to prevent circular references
     const sanitizedData = this.sanitizeData(data);
 
@@ -470,76 +596,187 @@ export class AnalyticsSystem {
     if (metrics.writingVelocity > 500) {
       insights.push({
         id: 'high_velocity',
-        title: 'Productive Writer! 🚀',
-        description: `You're writing ${Math.round(metrics.writingVelocity)} words per day on average. Keep up the great work!`,
+        title: '🚀 Excellent Writing Pace!',
+        description: `You're averaging ${Math.round(metrics.writingVelocity)} words per day. You're a writing machine!`,
         type: 'positive',
-        icon: '✍️',
+        icon: '🚀',
       });
-    } else if (metrics.writingVelocity < 100) {
+    } else if (metrics.writingVelocity < 100 && metrics.totalNotes > 5) {
       insights.push({
         id: 'low_velocity',
-        title: 'Write More Regularly',
-        description: 'Try setting a daily writing goal of 200-300 words to build momentum.',
+        title: 'Build Writing Momentum',
+        description:
+          'Try setting a daily writing goal of 200-300 words. Small consistent efforts lead to big results!',
         type: 'suggestion',
         icon: '📝',
       });
     }
 
+    // Writing streak insights
+    if (metrics.writingStreaks.current >= 7) {
+      insights.push({
+        id: 'great_streak',
+        title: `🔥 ${metrics.writingStreaks.current}-Day Streak!`,
+        description: `You've been writing consistently for ${metrics.writingStreaks.current} days. ${metrics.writingStreaks.current >= 30 ? "You're unstoppable!" : 'Keep going!'}`,
+        type: 'positive',
+        icon: '🔥',
+      });
+    } else if (metrics.writingStreaks.longest >= 7 && metrics.writingStreaks.current === 0) {
+      insights.push({
+        id: 'lost_streak',
+        title: 'Rebuild Your Streak',
+        description: `Your longest streak was ${metrics.writingStreaks.longest} days. Start a new one today!`,
+        type: 'suggestion',
+        icon: '💪',
+      });
+    }
+
     // Knowledge graph insights
-    if (metrics.orphanNotes > metrics.totalNotes * 0.3) {
+    const connectionDensity = (metrics.totalLinks / Math.max(metrics.totalNotes, 1)) * 100;
+    if (connectionDensity > 50) {
+      insights.push({
+        id: 'strong_network',
+        title: '🌟 Highly Connected Network',
+        description: `Your notes have a ${connectionDensity.toFixed(1)}% connection density. Your knowledge graph is thriving!`,
+        type: 'positive',
+        icon: '🌟',
+      });
+    } else if (metrics.orphanNotes > metrics.totalNotes * 0.3) {
       insights.push({
         id: 'many_orphans',
-        title: 'Connect Your Notes',
-        description: `${metrics.orphanNotes} notes aren't linked to anything. Try adding wikilinks to create connections.`,
+        title: 'Strengthen Your Network',
+        description: `${metrics.orphanNotes} notes (${((metrics.orphanNotes / Math.max(metrics.totalNotes, 1)) * 100).toFixed(0)}%) are orphaned. Link related notes using [[wikilinks]].`,
         type: 'suggestion',
         icon: '🔗',
+      });
+    }
+
+    // Hub notes recognition
+    if (metrics.hubNotes.length > 0 && metrics.totalNotes > 10) {
+      const topHub = notes.find(n => n.id === metrics.hubNotes[0]);
+      insights.push({
+        id: 'hub_recognition',
+        title: '📚 Knowledge Hubs Detected',
+        description: `"${topHub?.name || 'Your top note'}" is a central hub. Great starting point for exploration!`,
+        type: 'neutral',
+        icon: '�',
       });
     }
 
     // Peak hours insight
     if (metrics.peakWritingHours.length > 0) {
       const peak = metrics.peakWritingHours[0];
-      const timeStr = peak < 12 ? `${peak}:00 AM` : `${peak - 12}:00 PM`;
+      const timeStr =
+        peak < 12 ? `${peak === 0 ? 12 : peak}:00 AM` : `${peak === 12 ? 12 : peak - 12}:00 PM`;
       insights.push({
         id: 'peak_hours',
-        title: 'Peak Writing Time',
-        description: `You're most productive around ${timeStr}. Schedule important writing during this time.`,
+        title: '⏰ Optimal Writing Time',
+        description: `You're most productive around ${timeStr}. Schedule deep work during these golden hours!`,
         type: 'neutral',
         icon: '⏰',
       });
     }
 
-    // Content organization
-    if (metrics.averageTagsPerNote < 1) {
+    // Content organization insights
+    if (metrics.averageTagsPerNote < 1 && metrics.totalNotes > 5) {
       insights.push({
         id: 'use_tags',
-        title: 'Organize with Tags',
-        description: 'Adding tags to your notes will help you find and connect related content.',
+        title: 'Unlock Better Organization',
+        description:
+          'Adding tags helps you find related content. Try tagging by topic, project, or status.',
         type: 'suggestion',
         icon: '🏷️',
       });
+    } else if (metrics.tagsUsed > 20 && metrics.totalNotes > 30) {
+      insights.push({
+        id: 'good_organization',
+        title: '🎯 Well-Organized System',
+        description: `You're using ${metrics.tagsUsed} tags effectively. Your content is discoverable!`,
+        type: 'positive',
+        icon: '🎯',
+      });
     }
 
-    // Writing streak
-    if (metrics.writingStreaks.current >= 7) {
+    // Content quality insights
+    const linkPercentage = (metrics.notesWithLinks / Math.max(metrics.totalNotes, 1)) * 100;
+    if (linkPercentage > 70) {
       insights.push({
-        id: 'great_streak',
-        title: `${metrics.writingStreaks.current}-Day Writing Streak! 🔥`,
-        description: `You've been writing consistently for ${metrics.writingStreaks.current} days. Amazing dedication!`,
+        id: 'high_linking',
+        title: '⭐ Excellent Linking Practice',
+        description: `${linkPercentage.toFixed(0)}% of your notes have links. You're building a web of knowledge!`,
         type: 'positive',
-        icon: '🔥',
+        icon: '⭐',
+      });
+    } else if (linkPercentage < 30 && metrics.totalNotes > 10) {
+      insights.push({
+        id: 'increase_linking',
+        title: 'Add More Connections',
+        description: `Only ${linkPercentage.toFixed(0)}% of notes have links. Link related ideas!`,
+        type: 'suggestion',
+        icon: '🔗',
+      });
+    }
+
+    // Milestone insights
+    if (metrics.totalNotes >= 100 && metrics.totalNotes < 105) {
+      insights.push({
+        id: 'milestone_100',
+        title: '🎉 100 Notes Milestone!',
+        description: `You've created ${metrics.totalNotes} notes! Your knowledge base is growing strong.`,
+        type: 'positive',
+        icon: '🎉',
+      });
+    } else if (metrics.totalNotes >= 500 && metrics.totalNotes < 505) {
+      insights.push({
+        id: 'milestone_500',
+        title: '🏆 500 Notes Achievement!',
+        description: `${metrics.totalNotes} notes! Impressive knowledge repository.`,
+        type: 'positive',
+        icon: '🏆',
+      });
+    }
+
+    if (metrics.totalWords >= 50000 && metrics.totalWords < 51000) {
+      insights.push({
+        id: 'word_milestone',
+        title: '📖 50K Words Written!',
+        description: `${metrics.totalWords.toLocaleString()} words - that's novel-length content!`,
+        type: 'positive',
+        icon: '📖',
+      });
+    }
+
+    // Activity insights
+    if (metrics.sessionsCount > 100) {
+      insights.push({
+        id: 'active_user',
+        title: '💎 Power User Status',
+        description: `${metrics.sessionsCount} sessions. You're committed to your knowledge journey!`,
+        type: 'positive',
+        icon: '�',
       });
     }
 
     // Long-form content
-    const longNotes = notes.filter(note => note.wordCount > 1000).length;
-    if (longNotes / metrics.totalNotes > 0.3) {
+    const longNotes = notes.filter(note => note.wordCount && note.wordCount > 1000).length;
+    if (longNotes / Math.max(metrics.totalNotes, 1) > 0.3) {
       insights.push({
         id: 'long_form',
-        title: 'Deep Thinker',
-        description: `${Math.round((longNotes / metrics.totalNotes) * 100)}% of your notes are detailed (1000+ words). You create comprehensive content!`,
+        title: '📝 Comprehensive Content',
+        description: `${Math.round((longNotes / Math.max(metrics.totalNotes, 1)) * 100)}% of notes are detailed (1000+ words). Deep thinker!`,
         type: 'positive',
-        icon: '📚',
+        icon: '📝',
+      });
+    }
+
+    // No insights yet
+    if (insights.length === 0 && metrics.totalNotes < 5) {
+      insights.push({
+        id: 'getting_started',
+        title: '🌱 Just Getting Started',
+        description: 'Create more notes and connect them to unlock personalized insights!',
+        type: 'neutral',
+        icon: '🌱',
       });
     }
 
@@ -731,6 +968,175 @@ export class AnalyticsSystem {
     }, 0);
 
     return totalComplexity / notes.length;
+  }
+
+  // Export analytics data
+  exportAsMarkdown(metrics: AnalyticsMetrics, insights: InsightType[]): string {
+    const now = new Date().toISOString().split('T')[0];
+    let markdown = `# Analytics Report - ${now}\n\n`;
+
+    // Overview section
+    markdown += `## 📊 Overview\n\n`;
+    markdown += `- **Total Notes:** ${metrics.totalNotes}\n`;
+    markdown += `- **Total Words:** ${metrics.totalWords.toLocaleString()}\n`;
+    markdown += `- **Total Links:** ${metrics.totalLinks}\n`;
+    markdown += `- **Average Note Length:** ${Math.round(metrics.averageNoteLength)} words\n`;
+    markdown += `- **Writing Velocity:** ${Math.round(metrics.writingVelocity)} words/day\n\n`;
+
+    // Writing Streaks
+    markdown += `## 🔥 Writing Streaks\n\n`;
+    markdown += `- **Current Streak:** ${metrics.writingStreaks.current} days\n`;
+    markdown += `- **Longest Streak:** ${metrics.writingStreaks.longest} days\n\n`;
+
+    // Activity Metrics
+    markdown += `## ⚡ Activity\n\n`;
+    markdown += `- **Sessions:** ${metrics.sessionsCount}\n`;
+    markdown += `- **Average Session:** ${Math.round(metrics.averageSessionDuration / 60000)} minutes\n`;
+    markdown += `- **Daily Active Time:** ${Math.round(metrics.dailyActiveTime)} minutes\n`;
+    markdown += `- **Weekly Active Time:** ${Math.round(metrics.weeklyActiveTime)} minutes\n\n`;
+
+    // Knowledge Graph
+    markdown += `## 🌐 Knowledge Graph\n\n`;
+    markdown += `- **Internal Links:** ${metrics.internalLinks}\n`;
+    markdown += `- **External Links:** ${metrics.externalLinks}\n`;
+    markdown += `- **Orphan Notes:** ${metrics.orphanNotes}\n`;
+    markdown += `- **Average Connections:** ${metrics.avgConnections}\n`;
+    if (metrics.hubNotes.length > 0) {
+      markdown += `- **Top Hub Notes:** ${metrics.hubNotes.slice(0, 3).join(', ')}\n`;
+    }
+    markdown += `\n`;
+
+    // Organization
+    markdown += `## 🏷️ Organization\n\n`;
+    markdown += `- **Tags Used:** ${metrics.tagsUsed}\n`;
+    markdown += `- **Average Tags per Note:** ${metrics.averageTagsPerNote.toFixed(1)}\n`;
+    markdown += `- **Notes with Tags:** ${metrics.notesWithTags} (${Math.round((metrics.notesWithTags / Math.max(metrics.totalNotes, 1)) * 100)}%)\n`;
+    markdown += `- **Notes with Links:** ${metrics.notesWithLinks} (${Math.round((metrics.notesWithLinks / Math.max(metrics.totalNotes, 1)) * 100)}%)\n\n`;
+
+    // Most Used Tags
+    if (metrics.mostUsedTags.length > 0) {
+      markdown += `### Most Used Tags\n\n`;
+      metrics.mostUsedTags.slice(0, 10).forEach(({ tag, count }) => {
+        markdown += `- **${tag}:** ${count} notes\n`;
+      });
+      markdown += `\n`;
+    }
+
+    // Search Activity
+    if (metrics.searchesPerformed > 0) {
+      markdown += `## 🔍 Search Activity\n\n`;
+      markdown += `- **Total Searches:** ${metrics.searchesPerformed}\n`;
+      if (metrics.popularSearchTerms.length > 0) {
+        markdown += `\n### Popular Search Terms\n\n`;
+        metrics.popularSearchTerms.slice(0, 5).forEach(({ term, count }) => {
+          markdown += `- **"${term}":** ${count} searches\n`;
+        });
+      }
+      markdown += `\n`;
+    }
+
+    // Productivity Insights
+    if (metrics.peakWritingHours.length > 0) {
+      markdown += `## ⏰ Peak Productivity Hours\n\n`;
+      const formatHour = (hour: number) => {
+        if (hour === 0) return '12:00 AM';
+        if (hour < 12) return `${hour}:00 AM`;
+        if (hour === 12) return '12:00 PM';
+        return `${hour - 12}:00 PM`;
+      };
+      metrics.peakWritingHours.forEach(hour => {
+        markdown += `- ${formatHour(hour)}\n`;
+      });
+      markdown += `\n`;
+    }
+
+    // Insights
+    if (insights.length > 0) {
+      markdown += `## 💡 Insights\n\n`;
+      insights.forEach(insight => {
+        markdown += `### ${insight.icon} ${insight.title}\n\n`;
+        markdown += `${insight.description}\n\n`;
+      });
+    }
+
+    markdown += `---\n\n`;
+    markdown += `*Generated by MarkItUp Analytics on ${new Date().toLocaleString()}*\n`;
+
+    return markdown;
+  }
+
+  exportAsCSV(events: AnalyticsEvent[]): string {
+    let csv = 'Event ID,Type,Timestamp,Session ID,Data\n';
+
+    events.forEach(event => {
+      const dataStr = JSON.stringify(event.data).replace(/"/g, '""');
+      csv += `"${event.id}","${event.type}","${event.timestamp}","${event.sessionId}","${dataStr}"\n`;
+    });
+
+    return csv;
+  }
+
+  exportAsJSON(
+    metrics: AnalyticsMetrics,
+    events: AnalyticsEvent[],
+    insights: InsightType[]
+  ): string {
+    return JSON.stringify(
+      {
+        exportDate: new Date().toISOString(),
+        metrics,
+        insights,
+        events,
+      },
+      null,
+      2
+    );
+  }
+
+  // Clear all analytics data
+  clearAllData(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      // Clear localStorage events
+      localStorage.removeItem('markitup_analytics');
+
+      // Clear session data
+      sessionStorage.removeItem('markitup_session_id');
+      sessionStorage.removeItem('markitup_session_start');
+      sessionStorage.removeItem('markitup_last_activity');
+
+      // Reset in-memory events
+      this.events = [];
+
+      // Start a new session
+      this.startNewSession();
+
+      console.log('📊 Analytics data cleared successfully');
+    } catch (error) {
+      console.error('Failed to clear analytics data:', error);
+      throw error;
+    }
+  }
+
+  // Get data size for display
+  getDataSize(): { events: number; sizeMB: number } {
+    if (typeof window === 'undefined') return { events: 0, sizeMB: 0 };
+
+    try {
+      const data = localStorage.getItem('markitup_analytics') || '[]';
+      const events = JSON.parse(data);
+      const sizeBytes = new Blob([data]).size;
+      const sizeMB = sizeBytes / (1024 * 1024);
+
+      return {
+        events: events.length,
+        sizeMB: parseFloat(sizeMB.toFixed(3)),
+      };
+    } catch (error) {
+      console.error('Failed to get data size:', error);
+      return { events: 0, sizeMB: 0 };
+    }
   }
 }
 

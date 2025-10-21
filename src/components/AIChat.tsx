@@ -22,10 +22,19 @@ interface AIChatProps {
   isOpen: boolean;
   onClose: () => void;
   currentNoteId?: string;
+  currentNoteContent?: string;
+  currentNoteName?: string;
   className?: string;
 }
 
-export default function AIChat({ isOpen, onClose, currentNoteId, className = '' }: AIChatProps) {
+export default function AIChat({
+  isOpen,
+  onClose,
+  currentNoteId,
+  currentNoteContent,
+  currentNoteName,
+  className = '',
+}: AIChatProps) {
   const { theme } = useSimpleTheme();
 
   // Chat state
@@ -45,6 +54,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -134,7 +144,313 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
     });
   };
 
+  const handleQuickCommand = async (command: string) => {
+    const cmd = command.toLowerCase().split(' ')[0];
+    const args = command.slice(cmd.length).trim();
+
+    setMessage('');
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    // Add command to chat
+    const userMessage: AIMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: command,
+      timestamp: new Date().toISOString(),
+    };
+
+    if (currentSession) {
+      setCurrentSession({
+        ...currentSession,
+        messages: [...currentSession.messages, userMessage],
+      });
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let responseContent = '';
+
+      switch (cmd) {
+        case '/connections':
+        case '/connect':
+          if (!currentNoteId) {
+            responseContent = '⚠️ No note is currently open. Open a note to find connections.';
+          } else {
+            responseContent = '🔍 Analyzing your knowledge graph to find connections...\n\n';
+            // Call the AI service to find connections
+            const response = await fetch('/api/ai/connections', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ noteId: currentNoteId }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.connections?.length > 0) {
+              responseContent += '**Found Connections:**\n\n';
+              data.connections.forEach(
+                (conn: { noteName: string; reason: string; confidence: number }) => {
+                  responseContent += `• **[[${conn.noteName}]]** (${Math.round(conn.confidence * 100)}% match)\n  ${conn.reason}\n\n`;
+                }
+              );
+            } else {
+              responseContent +=
+                'No strong connections found. Try linking related concepts manually.';
+            }
+          }
+          break;
+
+        case '/gaps':
+        case '/missing':
+          if (!currentNoteId) {
+            responseContent =
+              '⚠️ No note is currently open. Open a note to identify knowledge gaps.';
+          } else {
+            responseContent = '🧩 Identifying knowledge gaps...\n\n';
+            const response = await fetch('/api/ai/gaps', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ noteId: currentNoteId }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.gaps?.length > 0) {
+              responseContent += '**Knowledge Gaps Identified:**\n\n';
+              data.gaps.forEach(
+                (
+                  gap: { topic: string; reason: string; suggestedQuestions: string[] },
+                  idx: number
+                ) => {
+                  responseContent += `${idx + 1}. **${gap.topic}**\n   ${gap.reason}\n`;
+                  if (gap.suggestedQuestions?.length > 0) {
+                    responseContent += '   *Questions to explore:*\n';
+                    gap.suggestedQuestions.forEach((q: string) => {
+                      responseContent += `   - ${q}\n`;
+                    });
+                  }
+                  responseContent += '\n';
+                }
+              );
+            } else {
+              responseContent += 'No significant knowledge gaps detected.';
+            }
+          }
+          break;
+
+        case '/tag':
+        case '/tags':
+          if (!currentNoteId) {
+            responseContent = '⚠️ No note is currently open. Open a note to suggest tags.';
+          } else {
+            responseContent = '🏷️ Analyzing content for tag suggestions...\n\n';
+            const response = await fetch('/api/ai/tags', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ noteId: currentNoteId }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.tags?.length > 0) {
+              responseContent += '**Suggested Tags:**\n\n';
+              data.tags.forEach((tag: { tag: string; confidence: number; reason: string }) => {
+                responseContent += `• #${tag.tag} (${Math.round(tag.confidence * 100)}%)\n  ${tag.reason}\n\n`;
+              });
+              responseContent += '\n💡 *Copy and paste the tags you want to add to your note.*';
+            } else {
+              responseContent += 'Could not generate tag suggestions.';
+            }
+          }
+          break;
+
+        case '/link':
+        case '/links':
+          if (!currentNoteId) {
+            responseContent = '⚠️ No note is currently open. Open a note to suggest links.';
+          } else {
+            responseContent = '🔗 Finding linkable concepts...\n\n';
+            const response = await fetch('/api/ai/links', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ noteId: currentNoteId }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.suggestions?.length > 0) {
+              responseContent += '**Suggested Wikilinks:**\n\n';
+              data.suggestions.forEach(
+                (link: { text: string; targetNote: string; confidence: number }) => {
+                  responseContent += `• Replace "${link.text}" with [[${link.targetNote}]] (${Math.round(link.confidence * 100)}%)\n\n`;
+                }
+              );
+              responseContent += '\n💡 *Manually add these [[wikilinks]] to your note.*';
+            } else {
+              responseContent += 'No link suggestions found.';
+            }
+          }
+          break;
+
+        case '/expand':
+          if (!args) {
+            responseContent =
+              '⚠️ Usage: `/expand <text to expand>`\n\nExample: `/expand Machine learning is a subset of AI`';
+          } else {
+            responseContent = '✨ Expanding your content...\n\n';
+            const response = await fetch('/api/ai/expand', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                text: args,
+                noteId: currentNoteId,
+              }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.expanded) {
+              responseContent += '**Expanded Version:**\n\n';
+              responseContent += data.expanded;
+              responseContent += '\n\n💡 *Copy this expanded text to your note.*';
+            } else {
+              responseContent += 'Failed to expand content.';
+            }
+          }
+          break;
+
+        case '/summarize':
+        case '/summary':
+          if (!currentNoteId) {
+            responseContent = '⚠️ No note is currently open. Open a note to summarize it.';
+          } else {
+            responseContent = '📝 Creating summary...\n\n';
+            const response = await fetch('/api/ai/summarize', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ noteId: currentNoteId }),
+            });
+            const data = await response.json();
+
+            if (data.success && data.summary) {
+              responseContent += '**Summary:**\n\n';
+              responseContent += data.summary;
+            } else {
+              responseContent += 'Failed to generate summary.';
+            }
+          }
+          break;
+
+        case '/help':
+        case '/?':
+          responseContent = `**🤖 AI Assistant Quick Commands**
+
+• \`/connections\` - Find related notes based on content
+• \`/gaps\` - Identify knowledge gaps in current note
+• \`/tag\` - Suggest relevant tags for current note
+• \`/link\` - Suggest wikilinks to other notes
+• \`/expand <text>\` - Expand a section with more detail
+• \`/summarize\` - Summarize current note
+• \`/help\` - Show this help message
+
+**💡 Tips:**
+- These commands work best with the current note open
+- Commands use AI to analyze your knowledge base
+- Results are context-aware based on your notes
+
+**Regular Chat:**
+Just type naturally without "/" to have a conversation!`;
+          break;
+
+        default:
+          responseContent = `❓ Unknown command: ${cmd}\n\nType \`/help\` to see available commands.`;
+      }
+
+      // Add AI response
+      const aiMessage: AIMessage = {
+        id: `ai_${Date.now()}`,
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date().toISOString(),
+      };
+
+      setCurrentSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, aiMessage],
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      analytics.trackEvent('ai_chat', {
+        action: 'quick_command',
+        command: cmd,
+      });
+    } catch (error) {
+      console.error('Quick command error:', error);
+      setError(error instanceof Error ? error.message : 'Command failed');
+
+      // Add error message
+      const errorMessage: AIMessage = {
+        id: `ai_${Date.now()}`,
+        role: 'assistant',
+        content: `❌ Error executing command: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        timestamp: new Date().toISOString(),
+      };
+
+      setCurrentSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, errorMessage],
+        };
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+    setIsLoading(false);
+
+    // Save the partial message if we have one
+    if (streamingMessage && currentSession) {
+      const assistantMessage: AIMessage = {
+        id: `ai_${Date.now()}`,
+        role: 'assistant',
+        content: streamingMessage + '\n\n[Generation stopped by user]',
+        timestamp: new Date().toISOString(),
+        model: settings?.model || 'unknown',
+      };
+
+      setCurrentSession(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      setStreamingMessage('');
+      loadSessions();
+    }
+  };
+
   const sendMessage = async () => {
+    console.log('[AIChat] sendMessage called', {
+      hasMessage: !!message.trim(),
+      isLoading,
+      provider: settings?.provider,
+      hasSettings: !!settings,
+      currentNoteId,
+    });
+
     if (!message.trim() || isLoading) return;
 
     // Check if AI is configured (allow Ollama without API key)
@@ -143,6 +459,14 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
         'AI provider not configured. Please configure in settings: OpenAI/Anthropic/Gemini (API key required) or Ollama (local, no API key needed).'
       );
       setShowSettings(true);
+      return;
+    }
+
+    const trimmedMessage = message.trim();
+
+    // Check for quick commands
+    if (trimmedMessage.startsWith('/')) {
+      await handleQuickCommand(trimmedMessage);
       return;
     }
 
@@ -188,15 +512,26 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
     try {
       // For Ollama, use direct browser connection (server can't reach it)
       if (settings?.provider === 'ollama') {
+        console.log('[AIChat] Using Ollama provider');
         const ollamaUrl = (settings?.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
         const model = settings?.model || 'llama3.2';
+
+        // Build context from current note if available
+        let noteContextMessage = '';
+        if (currentNoteId && currentNoteContent) {
+          noteContextMessage = `\n\n[Current Note Context: "${currentNoteName || currentNoteId}"]\n${currentNoteContent.slice(0, 1500)}\n[End of Note Context]\n\n`;
+          console.log('[AIChat] Added note context to message, length:', noteContextMessage.length);
+        }
 
         // Build messages for Ollama
         const ollamaMessages = [
           {
             role: 'system',
             content:
-              'You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.',
+              'You are a helpful AI assistant integrated into MarkItUp, a personal knowledge management system.' +
+              (noteContextMessage
+                ? ' The user has a note open, and its content is provided for context.'
+                : ''),
           },
           // Include previous messages from current session
           ...(currentSession?.messages || []).map(msg => ({
@@ -205,7 +540,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
           })),
           {
             role: 'user',
-            content: currentMessage,
+            content: noteContextMessage + currentMessage,
           },
         ];
 
@@ -213,6 +548,9 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
           // Direct streaming to Ollama
           setIsStreaming(true);
           setStreamingMessage('');
+
+          // Create abort controller for this request
+          abortControllerRef.current = new AbortController();
 
           const response = await fetch(`${ollamaUrl}/api/chat`, {
             method: 'POST',
@@ -222,6 +560,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
               messages: ollamaMessages,
               stream: true,
             }),
+            signal: abortControllerRef.current.signal,
           });
 
           if (!response.ok || !response.body) {
@@ -439,11 +778,19 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+
+      // Don't show error if user aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Request aborted by user');
+        return;
+      }
+
       setError(error instanceof Error ? error.message : 'Failed to connect to AI service');
       setIsStreaming(false);
       setStreamingMessage('');
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -498,52 +845,65 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+        className="flex flex-col border-b border-gray-200 dark:border-gray-700"
         style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
       >
-        <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h2
-            className="font-semibold text-gray-900 dark:text-white"
-            style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-          >
-            AI Assistant
-          </h2>
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+            <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h2
+              className="font-semibold text-gray-900 dark:text-white"
+              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+            >
+              AI Assistant
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowSessions(!showSessions)}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Chat History"
+            >
+              <History className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+
+            <button
+              onClick={createNewSession}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="New Chat"
+            >
+              <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setShowSessions(!showSessions)}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Chat History"
+        {/* Note context indicator */}
+        {currentNoteId && (
+          <div
+            className="px-4 pb-3 flex items-center gap-2 text-xs"
+            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
           >
-            <History className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-
-          <button
-            onClick={createNewSession}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="New Chat"
-          >
-            <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Settings"
-          >
-            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Close"
-          >
-            <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
+            <LinkIcon className="w-3 h-3" />
+            <span>Context: Note {currentNoteId.replace('.md', '')}</span>
+          </div>
+        )}
       </div>
 
       {/* Sessions sidebar */}
@@ -676,8 +1036,31 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
               AI Assistant Ready
             </h3>
             <p className="text-sm mb-4" style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
-              Ask me anything about your notes or get help with writing
+              {currentNoteId
+                ? 'I have access to your current note. Ask questions or use commands!'
+                : 'Open a note to enable context-aware assistance'}
             </p>
+            <div
+              className="text-xs space-y-1 mb-4"
+              style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            >
+              <p>
+                <strong>Quick Commands:</strong>
+              </p>
+              <p>
+                • Type{' '}
+                <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/help</code> to
+                see all commands
+              </p>
+              <p>
+                • Try <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/tag</code>
+                ,{' '}
+                <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                  /connections
+                </code>
+                , or <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/gaps</code>
+              </p>
+            </div>
             {currentNoteId && (
               <div
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
@@ -687,7 +1070,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
                 }}
               >
                 <LinkIcon className="w-4 h-4" />
-                <span>Context: Current note</span>
+                <span>📝 Note context active</span>
               </div>
             )}
           </div>
@@ -751,7 +1134,7 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
             onChange={handleTextareaChange}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything..."
-            disabled={isLoading}
+            disabled={isLoading || isStreaming}
             className="flex-1 resize-none rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             style={{
               backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
@@ -763,11 +1146,14 @@ export default function AIChat({ isOpen, onClose, currentNoteId, className = '' 
             rows={1}
           />
           <button
-            onClick={sendMessage}
-            disabled={!message.trim() || isLoading}
+            onClick={isStreaming ? stopGeneration : sendMessage}
+            disabled={(!message.trim() && !isStreaming) || (isLoading && !isStreaming)}
             className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title={isStreaming ? 'Stop generation' : 'Send message'}
           >
-            {isLoading ? (
+            {isStreaming ? (
+              <X className="w-4 h-4" />
+            ) : isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Send className="w-4 h-4" />

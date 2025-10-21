@@ -28,7 +28,15 @@ Welcome to the MarkItUp documentation! This index provides quick access to all d
 | [Plugin System](PLUGIN_SYSTEM.md) | Using existing plugins |
 | [Plugin Development](PLUGIN_DEVELOPMENT.md) | Creating custom plugins |
 
-## 🐳 Deployment
+## � Search & Discovery
+
+| Document | Description |
+|----------|-------------|
+| [Global Search Quick Reference](GLOBAL_SEARCH_QUICK_REFERENCE.md) | Quick guide to using global search |
+| [Vector Search Quick Start](VECTOR_SEARCH_QUICK_START.md) | Getting started with semantic search |
+| [Vector Search Phase 2 Summary](VECTOR_SEARCH_PHASE2_SUMMARY.md) | Vector search implementation details |
+
+## �🐳 Deployment
 
 | Document | Description |
 |----------|-------------|
@@ -89,6 +97,13 @@ Organized by feature/plugin in `changelogs/`:
 
 - Tagging system improvements
 
+### Global Search
+
+Located in `changelogs/general/`:
+
+- [Global Search Enhancement](changelogs/general/GLOBAL_SEARCH_ENHANCEMENT.md) - Complete implementation details
+- [Global Search Implementation Summary](changelogs/general/GLOBAL_SEARCH_IMPLEMENTATION_SUMMARY.md) - Quick overview
+
 ## 🔧 Development Documentation
 
 Located in `development/`:
@@ -126,4 +141,4 @@ Located in `planning/`:
 
 ---
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 21, 2025

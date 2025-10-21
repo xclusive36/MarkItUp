@@ -141,16 +141,16 @@ export function ConnectionSuggestions({
             disabled={applying.has('all') || filteredConnections.length === 0}
             className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: 'var(--accent-primary)',
               color: '#ffffff',
             }}
             onMouseEnter={e => {
               if (!applying.has('all') && filteredConnections.length > 0) {
-                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.opacity = '0.9';
               }
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.opacity = '1';
             }}
           >
             {applying.has('all') ? 'Applying...' : `Apply All (${filteredConnections.length})`}
@@ -177,7 +177,7 @@ export function ConnectionSuggestions({
                   className="rounded-lg p-4 border"
                   style={{
                     borderColor: 'var(--border-primary)',
-                    backgroundColor: isApplied ? '#d1fae5' : 'var(--bg-tertiary)',
+                    backgroundColor: isApplied ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)',
                   }}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -197,16 +197,16 @@ export function ConnectionSuggestions({
                           style={{
                             backgroundColor:
                               connection.similarity >= 0.8
-                                ? '#d1fae5'
+                                ? 'rgba(16, 185, 129, 0.15)'
                                 : connection.similarity >= 0.7
-                                  ? '#fef3c7'
-                                  : '#fee2e2',
+                                  ? 'rgba(234, 179, 8, 0.15)'
+                                  : 'rgba(239, 68, 68, 0.15)',
                             color:
                               connection.similarity >= 0.8
-                                ? '#065f46'
+                                ? '#10b981'
                                 : connection.similarity >= 0.7
-                                  ? '#78350f'
-                                  : '#7c2d12',
+                                  ? '#eab308'
+                                  : '#ef4444',
                           }}
                         >
                           {(connection.similarity * 100).toFixed(0)}% confidence
@@ -221,18 +221,18 @@ export function ConnectionSuggestions({
                       disabled={isApplying || isApplied}
                       className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                       style={{
-                        backgroundColor: isApplied ? '#10b981' : '#3b82f6',
+                        backgroundColor: isApplied
+                          ? 'var(--success-color)'
+                          : 'var(--accent-primary)',
                         color: '#ffffff',
                       }}
                       onMouseEnter={e => {
                         if (!isApplying && !isApplied) {
-                          e.currentTarget.style.backgroundColor = '#2563eb';
+                          e.currentTarget.style.opacity = '0.9';
                         }
                       }}
                       onMouseLeave={e => {
-                        if (!isApplied) {
-                          e.currentTarget.style.backgroundColor = '#3b82f6';
-                        }
+                        e.currentTarget.style.opacity = '1';
                       }}
                     >
                       {isApplied ? (
@@ -318,16 +318,16 @@ export function MOCSuggestions({
 
   const priorityColors = {
     high: {
-      bg: '#fee2e2',
-      text: '#7c2d12',
+      bg: 'rgba(239, 68, 68, 0.15)',
+      text: '#ef4444',
     },
     medium: {
-      bg: '#fef3c7',
-      text: '#78350f',
+      bg: 'rgba(234, 179, 8, 0.15)',
+      text: '#eab308',
     },
     low: {
-      bg: '#dbeafe',
-      text: '#1e3a8a',
+      bg: 'rgba(59, 130, 246, 0.15)',
+      text: '#3b82f6',
     },
   };
 
@@ -384,16 +384,16 @@ export function MOCSuggestions({
             disabled={creating.has('all') || suggestions.length === 0}
             className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              backgroundColor: '#3b82f6',
+              backgroundColor: 'var(--accent-primary)',
               color: '#ffffff',
             }}
             onMouseEnter={e => {
               if (!creating.has('all') && suggestions.length > 0) {
-                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.opacity = '0.9';
               }
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.opacity = '1';
             }}
           >
             {creating.has('all') ? 'Creating...' : `Create All MOCs (${suggestions.length})`}
@@ -413,7 +413,7 @@ export function MOCSuggestions({
                 className="rounded-lg p-4 border"
                 style={{
                   borderColor: 'var(--border-primary)',
-                  backgroundColor: isCreated ? '#d1fae5' : 'var(--bg-tertiary)',
+                  backgroundColor: isCreated ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-tertiary)',
                 }}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -465,18 +465,16 @@ export function MOCSuggestions({
                     disabled={isCreating || isCreated}
                     className="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
                     style={{
-                      backgroundColor: isCreated ? '#10b981' : '#3b82f6',
+                      backgroundColor: isCreated ? 'var(--success-color)' : 'var(--accent-primary)',
                       color: '#ffffff',
                     }}
                     onMouseEnter={e => {
                       if (!isCreating && !isCreated) {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.opacity = '0.9';
                       }
                     }}
                     onMouseLeave={e => {
-                      if (!isCreated) {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
-                      }
+                      e.currentTarget.style.opacity = '1';
                     }}
                   >
                     {isCreated ? (
@@ -536,10 +534,10 @@ export function HealthReport({
   onSuggestMOCs,
 }: HealthReportProps) {
   const getHealthColor = (score: number) => {
-    if (score >= 90) return { bg: '#065f46', text: '#d1fae5' };
-    if (score >= 70) return { bg: '#78350f', text: '#fef3c7' };
-    if (score >= 50) return { bg: '#7c2d12', text: '#fee2e2' };
-    return { bg: '#7f1d1d', text: '#fee2e2' };
+    if (score >= 90) return { bg: 'var(--success-color)', text: '#ffffff' };
+    if (score >= 70) return { bg: 'var(--warning-color)', text: '#000000' };
+    if (score >= 50) return { bg: 'rgba(239, 68, 68, 0.8)', text: '#ffffff' };
+    return { bg: 'var(--error-color)', text: '#ffffff' };
   };
 
   const healthColor = getHealthColor(report.healthScore);
@@ -657,14 +655,18 @@ export function HealthReport({
             <div
               className="p-4 rounded-lg border"
               style={{
-                borderColor: orphanPercent > 20 ? '#fee2e2' : 'var(--border-primary)',
-                backgroundColor: orphanPercent > 20 ? '#fee2e2' : 'var(--bg-tertiary)',
+                borderColor:
+                  orphanPercent > 20 ? 'rgba(239, 68, 68, 0.3)' : 'var(--border-primary)',
+                backgroundColor:
+                  orphanPercent > 20 ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-tertiary)',
               }}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    {orphanPercent > 20 ? <AlertCircle className="w-5 h-5" /> : null}
+                    {orphanPercent > 20 ? (
+                      <AlertCircle className="w-5 h-5" style={{ color: 'var(--error-color)' }} />
+                    ) : null}
                     <h3 className="font-bold">Orphan Notes: {report.orphanCount}</h3>
                   </div>
                   <p className="text-sm opacity-80">
@@ -676,14 +678,14 @@ export function HealthReport({
                     onClick={onConnectOrphans}
                     className="px-4 py-2 rounded-lg font-medium transition-all"
                     style={{
-                      backgroundColor: '#3b82f6',
+                      backgroundColor: 'var(--accent-primary)',
                       color: '#ffffff',
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.backgroundColor = '#2563eb';
+                      e.currentTarget.style.opacity = '0.9';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.backgroundColor = '#3b82f6';
+                      e.currentTarget.style.opacity = '1';
                     }}
                   >
                     Connect Orphans
@@ -712,8 +714,8 @@ export function HealthReport({
                     <span
                       className="px-3 py-1 rounded-full text-sm font-medium"
                       style={{
-                        backgroundColor: '#d1fae5',
-                        color: '#065f46',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        color: 'var(--success-color)',
                       }}
                     >
                       {hub.connections} connections
@@ -750,14 +752,14 @@ export function HealthReport({
                       onClick={onSuggestMOCs}
                       className="ml-2 px-3 py-1 rounded text-xs font-medium whitespace-nowrap"
                       style={{
-                        backgroundColor: '#3b82f6',
+                        backgroundColor: 'var(--accent-primary)',
                         color: '#ffffff',
                       }}
                       onMouseEnter={e => {
-                        e.currentTarget.style.backgroundColor = '#2563eb';
+                        e.currentTarget.style.opacity = '0.9';
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                        e.currentTarget.style.opacity = '1';
                       }}
                     >
                       Suggest MOCs
