@@ -18,7 +18,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@hello-pangea/dnd": "^18.0.1",
-    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/typography": "^0.5.19",
     "@tiptap/extension-code-block-lowlight": "^3.6.6",
     "@tiptap/extension-image": "^3.6.6",
     "@tiptap/extension-link": "^3.6.6",
