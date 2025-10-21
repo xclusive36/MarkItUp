@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import * as d3 from 'd3';
-import { select } from 'd3-selection';
 import * as d3Force from 'd3-force';
-import { D3DragEvent } from 'd3';
 import { Graph, GraphNode, GraphEdge } from '@/lib/types';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import EmptyState from './EmptyState';
@@ -46,15 +44,33 @@ const GraphView: React.FC<GraphViewProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useSimpleTheme();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [isInitialized, setIsInitialized] = useState(false);
   const simulationRef = useRef<ReturnType<typeof d3Force.forceSimulation<D3Node>> | null>(null);
 
-  // Handle resize
+  // Stabilize graph reference - only update when actual node/edge content changes
+  // This prevents D3 from re-animating on every render
+  const nodeIds = graph?.nodes?.map(n => n.id).join(',') || '';
+  const edgeIds = graph?.edges?.map(e => `${e.source}-${e.target}`).join(',') || '';
+
+  const stableGraph = useMemo(() => {
+    if (!graph) return null;
+    return {
+      nodes: graph.nodes,
+      edges: graph.edges,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeIds, edgeIds]);
+
+  // Handle resize and initial dimensions
   useEffect(() => {
     const handleResize = () => {
       if (svgRef.current) {
         const rect = svgRef.current.parentElement?.getBoundingClientRect();
         if (rect) {
           setDimensions({ width: rect.width, height: rect.height });
+          if (!isInitialized) {
+            setIsInitialized(true);
+          }
         }
       }
     };
@@ -62,11 +78,12 @@ const GraphView: React.FC<GraphViewProps> = ({
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isInitialized]);
 
   // Main graph rendering effect
   useEffect(() => {
-    if (!svgRef.current || !graph.nodes.length) return;
+    // Don't render until we have actual dimensions from the container
+    if (!svgRef.current || !stableGraph?.nodes.length || !isInitialized) return;
 
     const svg = d3.select(svgRef.current);
     const { width, height } = dimensions;
@@ -80,8 +97,8 @@ const GraphView: React.FC<GraphViewProps> = ({
     const nodesGroup = container.append('g').attr('class', 'nodes');
 
     // Prepare data
-    const nodes: D3Node[] = graph.nodes.map(node => ({ ...node }));
-    const edges: D3Edge[] = graph.edges.map(edge => ({
+    const nodes: D3Node[] = stableGraph.nodes.map(node => ({ ...node }));
+    const edges: D3Edge[] = stableGraph.edges.map(edge => ({
       ...edge,
       source: nodes.find(n => n.id === edge.source)!,
       target: nodes.find(n => n.id === edge.target)!,
@@ -256,10 +273,10 @@ const GraphView: React.FC<GraphViewProps> = ({
     return () => {
       simulation.stop();
     };
-  }, [graph, dimensions, theme, centerNode, onNodeClick, onNodeHover]);
+  }, [stableGraph, dimensions, theme, centerNode, onNodeClick, onNodeHover, isInitialized]);
 
   // Show empty state if no nodes
-  if (!graph.nodes.length) {
+  if (!stableGraph?.nodes.length) {
     return (
       <div className={`relative w-full h-full ${className}`}>
         <EmptyState

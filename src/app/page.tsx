@@ -1047,16 +1047,19 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   };
 
   // Graph node click handler
-  const handleGraphNodeClick = (nodeId: string) => {
-    analytics.trackEvent('link_clicked', {
-      linkType: 'graph_node',
-      targetNoteId: nodeId,
-      source: 'graph_view',
-    });
+  const handleGraphNodeClick = useCallback(
+    (nodeId: string) => {
+      analytics.trackEvent('link_clicked', {
+        linkType: 'graph_node',
+        targetNoteId: nodeId,
+        source: 'graph_view',
+      });
 
-    handleNoteSelect(nodeId);
-    setCurrentView('editor');
-  };
+      handleNoteSelect(nodeId);
+      setCurrentView('editor');
+    },
+    [handleNoteSelect]
+  );
 
   // Render wikilinks in markdown
   const processedMarkdown = pkm.renderContent(markdown);

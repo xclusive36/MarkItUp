@@ -64,6 +64,53 @@ export interface Graph {
   edges: GraphEdge[];
 }
 
+export interface GraphCluster {
+  id: string;
+  label: string;
+  nodes: string[];
+  density: number;
+  size: number;
+}
+
+export interface CoverageGap {
+  type: 'isolated-tag' | 'isolated-folder' | 'weak-cluster';
+  identifier: string;
+  suggestions: string[];
+}
+
+export interface TemporalAnalysis {
+  notesByDate: Record<string, number>;
+  linksByDate: Record<string, number>;
+  totalDays: number;
+  avgNotesPerDay: number;
+  avgLinksPerDay: number;
+}
+
+export interface BridgeNote {
+  noteId: string;
+  noteName: string;
+  connectsClusters: string[];
+  bridgeStrength: number;
+}
+
+export interface GraphHealthMetrics {
+  healthScore: number;
+  connectivity: number;
+  avgConnections: number;
+  clusterCount: number;
+  gapCount: number;
+  orphanCount: number;
+}
+
+export interface GraphFilters {
+  dateRange?: [Date, Date];
+  folders?: string[];
+  tags?: string[];
+  minConnections?: number;
+  maxNodes?: number;
+  searchQuery?: string;
+}
+
 export interface Command {
   id: string;
   name: string;
