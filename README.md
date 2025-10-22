@@ -6,6 +6,16 @@
 
 ## 🆕 What's New
 
+### v3.6.0 - October 2025 🛑
+- **🛑 AI Chat Stop Button** - Take control of streaming responses:
+  - ⏹️ **Stop Generation** - Halt streaming output mid-generation with dedicated stop button
+  - 💾 **Save Partial Content** - Automatically saves partial responses with user-stopped indicator
+  - 🔄 **Dynamic UI** - Button transforms between Send, Loading, and Stop states
+  - ⌨️ **Keyboard Support** - ESC key to cancel during streaming
+  - 🚫 **Smart Error Handling** - Gracefully handles aborted requests without false errors
+  - 🔒 **Context Preserved** - Note context injection now working perfectly with Ollama
+  - 📡 **AbortController Pattern** - Standard Fetch API cancellation for reliable control
+
 ### v3.5.1 - October 2025 🎓
 - **📚 Spaced Repetition Plugin v1.2.1** - Professional flashcard system with major enhancements:
   - 🎨 **Enhanced Modal Interface** - Beautiful full-screen review with 3D card flip animations
