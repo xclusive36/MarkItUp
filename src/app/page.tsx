@@ -597,6 +597,32 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     }
   }, []);
 
+  // Reload the currently active note from the server
+  const reloadCurrentNote = useCallback(async () => {
+    if (!activeNote?.id) return;
+
+    try {
+      console.log('[Page] Reloading current note:', activeNote.id);
+      // Ensure the filename has .md extension for the API call
+      const filename = activeNote.id.endsWith('.md') ? activeNote.id : `${activeNote.id}.md`;
+      const response = await fetch(`/api/files/${encodeURIComponent(filename)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const updatedNote = {
+          ...activeNote,
+          content: data.content,
+        };
+        setActiveNote(updatedNote);
+        setMarkdown(data.content);
+        console.log('[Page] Current note reloaded successfully');
+      } else {
+        console.error('[Page] Failed to reload note:', response.status);
+      }
+    } catch (error) {
+      console.error('[Page] Error reloading current note:', error);
+    }
+  }, [activeNote]);
+
   // Load initial data after component is mounted
   useEffect(() => {
     if (isMounted) {
@@ -1454,6 +1480,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentNoteContent={activeNote?.content}
           currentNoteName={activeNote?.name}
           onRefreshData={refreshData}
+          onReloadCurrentNote={reloadCurrentNote}
         />
 
         {/* Writing Assistant Panel */}

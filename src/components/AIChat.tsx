@@ -26,6 +26,7 @@ interface AIChatProps {
   currentNoteName?: string;
   className?: string;
   onRefreshData?: () => Promise<void>;
+  onReloadCurrentNote?: () => Promise<void>;
 }
 
 export default function AIChat({
@@ -36,6 +37,7 @@ export default function AIChat({
   currentNoteName,
   className = '',
   onRefreshData,
+  onReloadCurrentNote,
 }: AIChatProps) {
   const { theme } = useSimpleTheme();
 
@@ -219,6 +221,39 @@ export default function AIChat({
           console.log('[AIChat] Calling onRefreshData to refresh notes');
           await onRefreshData();
           console.log('[AIChat] Notes refreshed successfully');
+        }
+
+        // Check if any modified file is the currently open note, and reload it
+        if (onReloadCurrentNote && currentNoteId && data.results) {
+          const modifiedFiles = data.results.filter(
+            (r: { success: boolean; operation: { type: string; path: string } }) =>
+              r.success && (r.operation.type === 'modify' || r.operation.type === 'create')
+          );
+
+          const currentNoteModified = modifiedFiles.some((r: { operation: { path: string } }) => {
+            const path = r.operation.path;
+            const pathWithoutExt = path.replace('.md', '');
+            const currentWithoutExt = currentNoteId.replace('.md', '');
+
+            // Check if the modified file matches the current note
+            // Compare with and without .md extension, with and without folder paths
+            return (
+              path === currentNoteId ||
+              path === currentNoteId + '.md' ||
+              pathWithoutExt === currentNoteId ||
+              pathWithoutExt === currentWithoutExt ||
+              path.endsWith(`/${currentNoteId}`) ||
+              path.endsWith(`/${currentNoteId}.md`) ||
+              currentNoteId.endsWith(`/${path}`) ||
+              currentNoteId.endsWith(`/${pathWithoutExt}`)
+            );
+          });
+
+          if (currentNoteModified) {
+            console.log('[AIChat] Current note was modified, reloading editor content');
+            await onReloadCurrentNote();
+            console.log('[AIChat] Current note reloaded successfully');
+          }
         }
       } else {
         setError(data.message || 'Failed to execute file operations');
@@ -584,306 +619,460 @@ Just type naturally without "/" to have a conversation!`;
     // For Ollama (client-side), detect file operations before proceeding
     if (settings?.provider === 'ollama') {
       try {
-        // Check if message contains file operation keywords
-        const fileOpKeywords = [
-          'create file',
-          'write to',
-          'save to',
-          'create a file',
-          'write a file',
-          'make a file',
-          'new file',
-          'create folder',
-          'make folder',
-          'delete file',
-          'modify file',
-          'update file',
-        ];
-        const hasFileOpIntent = fileOpKeywords.some(keyword =>
-          trimmedMessage.toLowerCase().includes(keyword)
+        console.log('[AIChat] Analyzing message with Ollama for potential file operations...');
+
+        // Show loading state
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch all notes for context
+        const notesResponse = await fetch('/api/files');
+        const allNotes = notesResponse.ok ? await notesResponse.json() : [];
+        const notesList = allNotes
+          .map(
+            (n: { name: string; folder?: string }) =>
+              `- ${n.name.replace('.md', '')} (${n.folder || 'root'})`
+          )
+          .join('\n');
+
+        // Build a map of note names to their content for context
+        const notesContentMap: Record<string, string> = {};
+
+        // Fetch content for files that might be relevant (basic caching)
+        // We'll fetch content for all notes to provide full context
+        for (const note of allNotes) {
+          try {
+            const fullPath = note.folder ? `${note.folder}/${note.name}` : note.name;
+            const contentResponse = await fetch(`/api/files/${encodeURIComponent(fullPath)}`);
+            if (contentResponse.ok) {
+              const data = await contentResponse.json();
+              notesContentMap[note.name] = data.content || '';
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch content for ${note.name}:`, error);
+          }
+        }
+
+        // Call Ollama DIRECTLY from browser to detect file operations
+        const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+        const model = settings.model || 'llama3.2';
+
+        // Build detailed notes context including content
+        let notesContext = 'Existing Notes (files that ALREADY EXIST):\n' + notesList;
+
+        // Add content preview for files mentioned in the user's message
+        // Use word boundary matching to avoid false positives (e.g., "test" matching "test-refresh")
+        const mentionedFiles = allNotes.filter((n: { name: string }) => {
+          const baseName = n.name.replace('.md', '');
+          const lowerMessage = trimmedMessage.toLowerCase();
+          const lowerBaseName = baseName.toLowerCase();
+
+          // Check if the file name appears as a complete word/phrase
+          // Match: exact name, name with .md extension, or name with word boundaries
+          const patterns = [
+            new RegExp(`\\b${lowerBaseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'),
+            new RegExp(`\\b${lowerBaseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.md\\b`, 'i'),
+          ];
+
+          return patterns.some(pattern => pattern.test(lowerMessage));
+        });
+
+        if (mentionedFiles.length > 0) {
+          notesContext +=
+            '\n\n=== EXISTING FILE CONTENT (these files EXIST, use "modify" type) ===\n';
+          mentionedFiles.forEach((note: { name: string }) => {
+            const content = notesContentMap[note.name];
+            if (content) {
+              notesContext += `\nFile: ${note.name} (THIS FILE EXISTS - USE MODIFY TYPE)\nCurrent Content:\n${content}\n---END OF ${note.name}---\n`;
+            }
+          });
+        }
+
+        console.log('[AIChat] Notes context for Ollama:', notesContext);
+        console.log(
+          '[AIChat] Mentioned files:',
+          mentionedFiles.map((f: { name: string }) => f.name)
         );
 
-        if (hasFileOpIntent) {
-          console.log('[AIChat] File operation keywords detected, analyzing with Ollama...');
-
-          // Show loading state
-          setIsLoading(true);
-          setError(null);
-
-          // Fetch all notes for context
-          const notesResponse = await fetch('/api/files');
-          const allNotes = notesResponse.ok ? await notesResponse.json() : [];
-          const notesList = allNotes
-            .map(
-              (n: { name: string; folder?: string }) =>
-                `- ${n.name.replace('.md', '')} (${n.folder || 'root'})`
-            )
-            .join('\n');
-
-          // Call Ollama DIRECTLY from browser to detect file operations
-          const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
-          const model = settings.model || 'llama3.2';
-
-          const prompt = `You are a file operation assistant. Analyze the user's request and determine if they want to perform file operations (create, modify, delete files or create folders).
+        const prompt = `You are a file operation assistant. Analyze the user's request and determine if they want to perform file operations (create, modify, delete files or create folders).
 
 User Request: "${trimmedMessage}"
 
-Existing Notes:
-${notesList}
+${notesContext}
 
-If the user wants to perform file operations, respond with a JSON object in this exact format:
+CRITICAL DETECTION RULES:
+1. ONLY operate on files that are EXPLICITLY MENTIONED by name in the user's request
+2. Do NOT make assumptions or try to be helpful by suggesting additional files
+3. If the user mentions a file/note by name → FILE OPERATION
+4. If the user's request is AMBIGUOUS or UNCLEAR → ASK FOR CLARIFICATION
+5. If the user does NOT mention any specific file and is just chatting → RESPOND WITH hasOperations: false
+
+When to Ask for Clarification:
+- User says "update my notes" but doesn't specify which note
+- User mentions multiple possible files but intent is unclear
+- User's request could apply to several files
+- Not sure if user wants to create a new file or modify an existing one
+- User references a file that doesn't exist (might be a typo or new file)
+
+Operation Type Selection (MOST IMPORTANT):
+- ⚠️ IF the file appears in "EXISTING FILE CONTENT" section above → MUST USE "modify" type
+- ⚠️ IF the file is listed in "Existing Notes" → MUST USE "modify" type  
+- ⚠️ ONLY use "create" if the file is NOT in the existing notes list
+- For delete operations → use "delete" type
+
+Path Format:
+- ALWAYS include .md extension (e.g., "test-refresh.md", not "test-refresh")
+- Use exact filename from the existing notes list for modify operations
+- For new files, ensure filename ends with .md
+
+Response Format - If FILE OPERATION detected:
 {
   "hasOperations": true,
   "operations": [
     {
       "type": "create" | "modify" | "delete" | "create-folder",
-      "path": "relative/path/from/markdown/folder",
-      "content": "file content here (only for create/modify)",
-      "reason": "explanation of why this operation is needed"
+      "path": "filename.md",
+      "content": "complete file content (include existing + new content for modify)",
+      "reason": "explanation of operation"
     }
   ],
-  "summary": "Overall explanation of what will be done"
+  "summary": "What will be done"
 }
 
-If this is NOT a file operation request, respond with:
+Response Format - If CLARIFICATION NEEDED:
+{
+  "hasOperations": false,
+  "needsClarification": true,
+  "question": "Specific question to ask the user for clarification"
+}
+
+Response Format - If NOT a file operation (pure question/chat):
 {
   "hasOperations": false
 }
 
-Guidelines:
-- For create operations, ensure .md extension
-- For modify operations, file must exist in the notes list
-- Include helpful, descriptive content when creating notes
-- Provide clear reasons for each operation
-- Keep paths relative to the markdown folder
-- CRITICAL: Return ONLY valid JSON. No explanations, no markdown formatting, no extra text.
-- CRITICAL: Use double quotes for all strings, not single quotes.
+IMPORTANT FOR MODIFY OPERATIONS:
+- ⚠️ Check if file content was provided in the "EXISTING FILE CONTENT" section above
+- ALWAYS include the COMPLETE existing content from that section
+- Add new content at the end or in the appropriate section
+- Preserve ALL existing structure, headings, and information
+- The content field should contain: [existing content] + [new content]
 
-Example valid response:
+Examples:
+
+Example 1 - Modify existing file (when existing content is provided above):
+User: "Please add more random information to the test-refresh markdown note to test adding data"
+Notes contain: "test-refresh (root)" with content shown above
+Response:
+{
+  "hasOperations": true,
+  "operations": [
+    {
+      "type": "modify",
+      "path": "test-refresh.md",
+      "content": "[COPY ALL EXISTING CONTENT FROM ABOVE]\\n\\n## Additional Information\\n\\nRandom test data added on ${new Date().toISOString()}\\n\\n- Random fact: ${Math.random().toString(36).substring(7)}\\n- Random number: ${Math.floor(Math.random() * 1000)}\\n- Random emoji: 🎲",
+      "reason": "User requested to add more random information to existing test-refresh.md"
+    }
+  ],
+  "summary": "Adding random information to test-refresh.md"
+}
+
+Example 2 - Create new file:
+User: "create a shopping list with milk and eggs"
+Notes list does NOT contain "shopping"
+Response:
 {
   "hasOperations": true,
   "operations": [
     {
       "type": "create",
       "path": "shopping-list.md",
-      "content": "# Shopping List\\n\\n- Milk\\n- Eggs\\n- Bread",
-      "reason": "User requested a shopping list file"
+      "content": "# Shopping List\\n\\n- Milk\\n- Eggs",
+      "reason": "User requested new shopping list file"
     }
   ],
-  "summary": "Creating shopping-list.md with grocery items"
+  "summary": "Creating shopping-list.md"
 }
 
-Respond ONLY with valid JSON, no additional text.`;
+Example 3 - Need clarification:
+User: "update my todo list"
+Existing notes contain: "todo.md", "todo-work.md", "todo-personal.md"
+Response:
+{
+  "hasOperations": false,
+  "needsClarification": true,
+  "question": "I found multiple todo files: todo.md, todo-work.md, and todo-personal.md. Which one would you like to update?"
+}
 
-          const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model,
-              messages: [
-                {
-                  role: 'system',
-                  content:
-                    'You are a JSON-only API. You must respond ONLY with valid JSON. No markdown, no explanations, no extra text. Just pure JSON. ALWAYS close all braces and brackets.',
-                },
-                {
-                  role: 'user',
-                  content: prompt,
-                },
-              ],
-              stream: false,
-              options: {
-                temperature: 0.1, // Lower temperature for more consistent JSON
-                num_predict: 2000, // Increased token limit
-                stop: ['\n}'], // Don't stop at closing brace
+Example 4 - Pure chat (NO file operation):
+User: "what is the weather today?"
+Response:
+{
+  "hasOperations": false
+}
+
+CRITICAL: Return ONLY valid JSON, no markdown, no explanations, no extra text.
+CRITICAL: Use double quotes for all strings.`;
+
+        const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a JSON-only API. You must respond ONLY with valid JSON. No markdown, no explanations, no extra text. Just pure JSON. ALWAYS close all braces and brackets.',
               },
-            }),
-          });
-
-          if (ollamaResponse.ok) {
-            const ollamaData = await ollamaResponse.json();
-            const responseContent = ollamaData.message?.content || '';
-
-            // Parse the AI response
-            // First, clean markdown formatting
-            let cleanedResponse = responseContent
-              .trim()
-              .replace(/```json\n?/g, '')
-              .replace(/```\n?/g, '')
-              .trim();
-
-            // Ollama returns literal newlines in JSON string values, not escaped \n
-            // We need to escape them BEFORE attempting to parse
-            // Walk through the string character by character, tracking if we're inside quotes
-            let inString = false;
-            let escape = false;
-            let fixedResponse = '';
-
-            for (let i = 0; i < cleanedResponse.length; i++) {
-              const char = cleanedResponse[i];
-              const prevChar = i > 0 ? cleanedResponse[i - 1] : '';
-
-              if (char === '"' && !escape) {
-                inString = !inString;
-                fixedResponse += char;
-              } else if (inString && char === '\n' && prevChar !== '\\') {
-                // Replace literal newline with escaped newline
-                fixedResponse += '\\n';
-              } else if (inString && char === '\r' && prevChar !== '\\') {
-                // Replace literal carriage return with escaped version
-                fixedResponse += '\\r';
-              } else if (inString && char === '\t' && prevChar !== '\\') {
-                // Replace literal tab with escaped version
-                fixedResponse += '\\t';
-              } else {
-                fixedResponse += char;
-              }
-
-              // Track escape character
-              escape = char === '\\' && !escape;
-            }
-
-            cleanedResponse = fixedResponse;
-
-            console.log('[AIChat] After character-level fix, length:', cleanedResponse.length);
-            console.log('[AIChat] Fixed response:', cleanedResponse);
-
-            // Check if JSON is complete (has closing brace)
-            const trimmed = cleanedResponse.trim();
-            if (!trimmed.endsWith('}')) {
-              console.warn('[AIChat] Incomplete JSON detected, attempting to close it');
-              // Count opening and closing braces
-              const openBraces = (trimmed.match(/{/g) || []).length;
-              const closeBraces = (trimmed.match(/}/g) || []).length;
-              const missingBraces = openBraces - closeBraces;
-
-              if (missingBraces > 0) {
-                cleanedResponse = trimmed + '}'.repeat(missingBraces);
-                console.log('[AIChat] Added', missingBraces, 'closing brace(s)');
-              }
-            }
-
-            let parsed;
-            try {
-              // Try parsing with JSON5 or relaxed parsing if needed
-              // First remove any trailing commas or other JSON issues
-              const sanitized = cleanedResponse
-                .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
-                .replace(/\r\n/g, '\n') // Normalize line endings
-                .replace(/\r/g, '\n'); // Normalize line endings
-
-              console.log('[AIChat] After sanitization, length:', sanitized.length);
-              console.log(
-                '[AIChat] About to parse. Length:',
-                sanitized.length,
-                'Char at 296:',
-                sanitized.charCodeAt(296)
-              );
-              parsed = JSON.parse(sanitized);
-              console.log('[AIChat] Successfully parsed file operations JSON');
-            } catch (parseError: any) {
-              console.error('[AIChat] Failed to parse Ollama response as JSON');
-              console.error('[AIChat] Response:', cleanedResponse);
-              console.error('[AIChat] Parse error:', parseError);
-
-              // Show the problematic area
-              if (parseError.message && parseError.message.includes('position')) {
-                const match = parseError.message.match(/position (\d+)/);
-                if (match) {
-                  const pos = parseInt(match[1]);
-                  const start = Math.max(0, pos - 20);
-                  const end = Math.min(cleanedResponse.length, pos + 20);
-                  console.error('[AIChat] Context around error:', {
-                    before: cleanedResponse.substring(start, pos),
-                    at: cleanedResponse[pos],
-                    atCharCode: cleanedResponse.charCodeAt(pos),
-                    after: cleanedResponse.substring(pos + 1, end),
-                  });
-                }
-              }
-
-              // If JSON parsing fails, assume no file operations and continue with normal chat
-              setIsLoading(false);
-              parsed = { hasOperations: false };
-            }
-
-            if (parsed.hasOperations && parsed.operations?.length > 0) {
-              const fileOperations = {
-                operations: parsed.operations.map(
-                  (op: { type: string; path: string; content?: string; reason: string }) => ({
-                    ...op,
-                    timestamp: new Date().toISOString(),
-                  })
-                ),
-                summary: parsed.summary || 'File operations requested',
-                requiresApproval: true,
-              };
-
-              console.log('[AIChat] File operations detected:', fileOperations);
-
-              // Set pending operations and show approval modal
-              setPendingFileOperations(fileOperations);
-              setShowFileApproval(true);
-
-              // Add user message to chat
-              const userMessage: AIMessage = {
-                id: `user_${Date.now()}`,
+              {
                 role: 'user',
-                content: trimmedMessage,
-                timestamp: new Date().toISOString(),
-              };
+                content: prompt,
+              },
+            ],
+            stream: false,
+            options: {
+              temperature: 0.1, // Lower temperature for more consistent JSON
+              num_predict: 2000, // Increased token limit
+              stop: ['\n}'], // Don't stop at closing brace
+            },
+          }),
+        });
 
-              if (currentSession) {
-                setCurrentSession({
-                  ...currentSession,
-                  messages: [...currentSession.messages, userMessage],
-                });
-              } else {
-                const newSession: ChatSession = {
-                  id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                  title:
-                    trimmedMessage.length > 50
-                      ? trimmedMessage.substring(0, 47) + '...'
-                      : trimmedMessage,
-                  messages: [userMessage],
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                  totalTokens: 0,
-                  totalCost: 0,
-                  noteContext: currentNoteId,
-                };
-                setCurrentSession(newSession);
-              }
+        if (ollamaResponse.ok) {
+          const ollamaData = await ollamaResponse.json();
+          const responseContent = ollamaData.message?.content || '';
 
-              // Add notification message
-              const notificationMessage: AIMessage = {
-                id: `notification_${Date.now()}`,
-                role: 'assistant',
-                content: `📁 **File Operations Detected**\n\n${fileOperations.summary}\n\n_Please review and approve the operations above._`,
-                timestamp: new Date().toISOString(),
-              };
+          // Parse the AI response
+          // First, clean markdown formatting
+          let cleanedResponse = responseContent
+            .trim()
+            .replace(/```json\n?/g, '')
+            .replace(/```\n?/g, '')
+            .trim();
 
-              setCurrentSession(prev => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  messages: [...prev.messages, notificationMessage],
-                  updatedAt: new Date().toISOString(),
-                };
-              });
+          // Ollama returns literal newlines in JSON string values, not escaped \n
+          // We need to escape them BEFORE attempting to parse
+          // Walk through the string character by character, tracking if we're inside quotes
+          let inString = false;
+          let escape = false;
+          let fixedResponse = '';
 
-              setMessage('');
-              if (textareaRef.current) {
-                textareaRef.current.style.height = 'auto';
-              }
-              setIsLoading(false);
-              return; // Stop here, wait for approval
+          for (let i = 0; i < cleanedResponse.length; i++) {
+            const char = cleanedResponse[i];
+            const prevChar = i > 0 ? cleanedResponse[i - 1] : '';
+
+            if (char === '"' && !escape) {
+              inString = !inString;
+              fixedResponse += char;
+            } else if (inString && char === '\n' && prevChar !== '\\') {
+              // Replace literal newline with escaped newline
+              fixedResponse += '\\n';
+            } else if (inString && char === '\r' && prevChar !== '\\') {
+              // Replace literal carriage return with escaped version
+              fixedResponse += '\\r';
+            } else if (inString && char === '\t' && prevChar !== '\\') {
+              // Replace literal tab with escaped version
+              fixedResponse += '\\t';
+            } else {
+              fixedResponse += char;
+            }
+
+            // Track escape character
+            escape = char === '\\' && !escape;
+          }
+
+          cleanedResponse = fixedResponse;
+
+          console.log('[AIChat] After character-level fix, length:', cleanedResponse.length);
+          console.log('[AIChat] Fixed response:', cleanedResponse);
+
+          // Check if JSON is complete (has closing brace)
+          const trimmed = cleanedResponse.trim();
+          if (!trimmed.endsWith('}')) {
+            console.warn('[AIChat] Incomplete JSON detected, attempting to close it');
+            // Count opening and closing braces
+            const openBraces = (trimmed.match(/{/g) || []).length;
+            const closeBraces = (trimmed.match(/}/g) || []).length;
+            const missingBraces = openBraces - closeBraces;
+
+            if (missingBraces > 0) {
+              cleanedResponse = trimmed + '}'.repeat(missingBraces);
+              console.log('[AIChat] Added', missingBraces, 'closing brace(s)');
             }
           }
 
-          // No file operations detected, clear loading and continue
-          setIsLoading(false);
+          let parsed;
+          try {
+            // Try parsing with JSON5 or relaxed parsing if needed
+            // First remove any trailing commas or other JSON issues
+            const sanitized = cleanedResponse
+              .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+              .replace(/\r\n/g, '\n') // Normalize line endings
+              .replace(/\r/g, '\n'); // Normalize line endings
+
+            console.log('[AIChat] After sanitization, length:', sanitized.length);
+            console.log(
+              '[AIChat] About to parse. Length:',
+              sanitized.length,
+              'Char at 296:',
+              sanitized.charCodeAt(296)
+            );
+            parsed = JSON.parse(sanitized);
+            console.log('[AIChat] Successfully parsed file operations JSON');
+          } catch (parseError: any) {
+            console.error('[AIChat] Failed to parse Ollama response as JSON');
+            console.error('[AIChat] Response:', cleanedResponse);
+            console.error('[AIChat] Parse error:', parseError);
+
+            // Show the problematic area
+            if (parseError.message && parseError.message.includes('position')) {
+              const match = parseError.message.match(/position (\d+)/);
+              if (match) {
+                const pos = parseInt(match[1]);
+                const start = Math.max(0, pos - 20);
+                const end = Math.min(cleanedResponse.length, pos + 20);
+                console.error('[AIChat] Context around error:', {
+                  before: cleanedResponse.substring(start, pos),
+                  at: cleanedResponse[pos],
+                  atCharCode: cleanedResponse.charCodeAt(pos),
+                  after: cleanedResponse.substring(pos + 1, end),
+                });
+              }
+            }
+
+            // If JSON parsing fails, assume no file operations and continue with normal chat
+            setIsLoading(false);
+            parsed = { hasOperations: false };
+          }
+
+          // Check if AI needs clarification
+          if (parsed.needsClarification && parsed.question) {
+            console.log('[AIChat] AI needs clarification:', parsed.question);
+
+            // Add user message
+            const userMessage: AIMessage = {
+              id: `user_${Date.now()}`,
+              role: 'user',
+              content: trimmedMessage,
+              timestamp: new Date().toISOString(),
+            };
+
+            // Add clarification question from AI
+            const clarificationMessage: AIMessage = {
+              id: `clarification_${Date.now()}`,
+              role: 'assistant',
+              content: `❓ **Need More Information**\n\n${parsed.question}`,
+              timestamp: new Date().toISOString(),
+            };
+
+            if (currentSession) {
+              setCurrentSession({
+                ...currentSession,
+                messages: [...currentSession.messages, userMessage, clarificationMessage],
+                updatedAt: new Date().toISOString(),
+              });
+            } else {
+              const newSession: ChatSession = {
+                id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                title:
+                  trimmedMessage.length > 50
+                    ? trimmedMessage.substring(0, 47) + '...'
+                    : trimmedMessage,
+                messages: [userMessage, clarificationMessage],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                totalTokens: 0,
+                totalCost: 0,
+                noteContext: currentNoteId,
+              };
+              setCurrentSession(newSession);
+            }
+
+            setMessage('');
+            if (textareaRef.current) {
+              textareaRef.current.style.height = 'auto';
+            }
+            setIsLoading(false);
+            return; // Wait for user's response to clarification
+          }
+
+          if (parsed.hasOperations && parsed.operations?.length > 0) {
+            const fileOperations = {
+              operations: parsed.operations.map(
+                (op: { type: string; path: string; content?: string; reason: string }) => ({
+                  ...op,
+                  timestamp: new Date().toISOString(),
+                })
+              ),
+              summary: parsed.summary || 'File operations requested',
+              requiresApproval: true,
+            };
+
+            console.log('[AIChat] File operations detected:', fileOperations);
+
+            // Set pending operations and show approval modal
+            setPendingFileOperations(fileOperations);
+            setShowFileApproval(true);
+
+            // Add user message to chat
+            const userMessage: AIMessage = {
+              id: `user_${Date.now()}`,
+              role: 'user',
+              content: trimmedMessage,
+              timestamp: new Date().toISOString(),
+            };
+
+            if (currentSession) {
+              setCurrentSession({
+                ...currentSession,
+                messages: [...currentSession.messages, userMessage],
+              });
+            } else {
+              const newSession: ChatSession = {
+                id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                title:
+                  trimmedMessage.length > 50
+                    ? trimmedMessage.substring(0, 47) + '...'
+                    : trimmedMessage,
+                messages: [userMessage],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                totalTokens: 0,
+                totalCost: 0,
+                noteContext: currentNoteId,
+              };
+              setCurrentSession(newSession);
+            }
+
+            // Add notification message
+            const notificationMessage: AIMessage = {
+              id: `notification_${Date.now()}`,
+              role: 'assistant',
+              content: `📁 **File Operations Detected**\n\n${fileOperations.summary}\n\n_Please review and approve the operations above._`,
+              timestamp: new Date().toISOString(),
+            };
+
+            setCurrentSession(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                messages: [...prev.messages, notificationMessage],
+                updatedAt: new Date().toISOString(),
+              };
+            });
+
+            setMessage('');
+            if (textareaRef.current) {
+              textareaRef.current.style.height = 'auto';
+            }
+            setIsLoading(false);
+            return; // Stop here, wait for approval
+          }
         }
+
+        // No file operations detected, clear loading and continue
+        setIsLoading(false);
       } catch (error) {
         console.error('[AIChat] Error detecting file operations:', error);
         setIsLoading(false);
