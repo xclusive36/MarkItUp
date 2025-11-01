@@ -115,6 +115,7 @@ export class AnalyticsSystem {
   private sessionTimeoutId?: NodeJS.Timeout;
   private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   private readonly MIN_SESSION_DURATION = 10 * 1000; // 10 seconds (ignore hot reloads)
+  private isUnloading = false; // Track page unload state
 
   constructor() {
     this.sessionId = this.generateSessionId();
@@ -158,8 +159,9 @@ export class AnalyticsSystem {
     // Track activity on user interactions
     this.setupActivityTracking();
 
-    // Track session end on page unload (only for valid sessions)
+    // Track unload state
     window.addEventListener('beforeunload', () => {
+      this.isUnloading = true;
       this.endSession();
     });
 
@@ -348,17 +350,32 @@ export class AnalyticsSystem {
 
   // Send event to server
   private async sendEventToServer(event: AnalyticsEvent): Promise<void> {
+    // Don't send events during page unload to avoid incomplete requests
+    if (this.isUnloading) {
+      console.debug('Skipping analytics event during page unload');
+      return;
+    }
+
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       await fetch('/api/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(event),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
     } catch (error) {
       // Silently fail - analytics shouldn't break the app
-      console.debug('Failed to send analytics event:', error);
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('Failed to send analytics event:', error);
+      }
     }
   }
 

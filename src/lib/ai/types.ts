@@ -63,6 +63,7 @@ export interface AIResponse {
   context: AIContext;
   timestamp: string;
   functionCall?: OpenAIFunctionCall; // Optional function call from OpenAI
+  contextNoteCount?: number; // Number of notes included in context (current + related)
 }
 
 export interface AISettings {
@@ -510,4 +511,40 @@ export interface GeminiStreamEvent {
     totalTokenCount?: number;
   };
   modelVersion?: string;
+}
+
+// File Operation Types
+export type FileOperationType = 'create' | 'modify' | 'delete' | 'create-folder';
+
+export interface FileOperation {
+  type: FileOperationType;
+  path: string; // Relative path from /markdown directory
+  content?: string; // For create and modify operations
+  reason: string; // AI explanation of why this operation is needed
+  timestamp: string;
+}
+
+export interface FileOperationRequest {
+  operations: FileOperation[];
+  summary: string; // Overall explanation of what's being done
+  requiresApproval: boolean; // Always true for now
+}
+
+export interface FileOperationApproval {
+  approved: boolean;
+  operationIds: number[]; // Indices of approved operations
+  userNote?: string; // Optional user comment
+}
+
+export interface FileOperationResult {
+  success: boolean;
+  operation: FileOperation;
+  error?: string;
+  path?: string; // Confirmed path of created/modified file
+}
+
+export interface FileOperationResponse {
+  success: boolean;
+  results: FileOperationResult[];
+  message: string;
 }

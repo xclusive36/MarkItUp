@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAIService } from '@/lib/ai/ai-service';
 import { ChatRequest } from '@/lib/ai/types';
-import { findNoteById } from '@/lib/file-helpers';
+import { findNoteById, findRelatedNotes, getAllNotes } from '@/lib/file-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,6 +17,20 @@ export async function POST(request: NextRequest) {
 
     // Get AI service
     const aiService = getAIService();
+
+    // Check for file operation requests first
+    const allNotes = getAllNotes();
+    const fileOperations = await aiService.detectFileOperations(body.message, allNotes);
+
+    if (fileOperations && fileOperations.operations.length > 0) {
+      console.log('[AI API] File operations detected:', fileOperations);
+      return NextResponse.json({
+        success: true,
+        requiresApproval: true,
+        fileOperations,
+        message: 'File operations detected. Please review and approve.',
+      });
+    }
 
     // Check if AI is configured (allow Ollama without API key)
     const settings = aiService.getSettings();
@@ -35,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Build context from note if noteContext is provided
     let contextMessage = '';
+    let contextNoteCount = 0;
     console.log('[AI API] Request body:', {
       hasNoteContext: !!body.noteContext,
       noteContext: body.noteContext,
@@ -53,8 +68,29 @@ export async function POST(request: NextRequest) {
         });
 
         if (note) {
-          contextMessage = `\n\n[Current Note Context: "${note.name}"]\n${note.content.slice(0, 1500)}\n[End of Note Context]\n\n`;
-          console.log('[AI API] Context message prepared, length:', contextMessage.length);
+          // Add current note as primary context
+          contextMessage = `\n\n[Current Note: "${note.name}"]\n${note.content.slice(0, 1500)}${note.content.length > 1500 ? '\n... (truncated)' : ''}\n`;
+          contextNoteCount++;
+
+          // Find and add related notes for enhanced context
+          const relatedNotes = findRelatedNotes(body.noteContext, 4); // Get top 4 related notes
+          console.log('[AI API] Found related notes:', relatedNotes.length);
+
+          if (relatedNotes.length > 0) {
+            contextMessage += '\n[Related Notes for Additional Context]\n';
+            relatedNotes.forEach((relatedNote, index) => {
+              // Include snippet of related notes (shorter than main note)
+              const snippet = relatedNote.content.slice(0, 500);
+              contextMessage += `\n${index + 1}. [[${relatedNote.name}]] (${relatedNote.reason})\n${snippet}${relatedNote.content.length > 500 ? '\n... (truncated)' : ''}\n`;
+              contextNoteCount++;
+            });
+          }
+
+          contextMessage += '\n[End of Context]\n\n';
+          console.log('[AI API] Enhanced context prepared:', {
+            totalNotes: contextNoteCount,
+            contextLength: contextMessage.length,
+          });
         } else {
           console.warn('[AI API] Note not found for ID:', body.noteContext);
         }
@@ -142,6 +178,7 @@ export async function POST(request: NextRequest) {
               estimatedCost: 0,
             },
             timestamp: new Date().toISOString(),
+            contextNoteCount,
           },
         });
       } catch (error) {
@@ -166,6 +203,11 @@ export async function POST(request: NextRequest) {
 
     // Process chat request for other providers
     const response = await aiService.chat(body);
+
+    // Add context note count to response
+    if (response.success && response.data) {
+      response.data.contextNoteCount = contextNoteCount;
+    }
 
     return NextResponse.json(response);
   } catch (error) {

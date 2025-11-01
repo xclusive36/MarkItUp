@@ -64,9 +64,21 @@ export async function POST(request: NextRequest) {
   try {
     await ensureAnalyticsDir();
 
+    // Check if request has a body
+    const contentLength = request.headers.get('content-length');
+    if (!contentLength || contentLength === '0') {
+      console.warn('Analytics POST received empty body');
+      return NextResponse.json({ error: 'Empty request body' }, { status: 400 });
+    }
+
     let eventData;
     try {
-      eventData = await request.json();
+      const text = await request.text();
+      if (!text || text.trim() === '') {
+        console.warn('Analytics POST received empty text body');
+        return NextResponse.json({ error: 'Empty request body' }, { status: 400 });
+      }
+      eventData = JSON.parse(text);
     } catch (parseError) {
       console.error('Failed to parse analytics POST body:', parseError);
       return NextResponse.json(

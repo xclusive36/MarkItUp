@@ -729,6 +729,21 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     const handleToggleSidebar = () => setShowMobileSidebar(prev => !prev);
     const handleToggleLeftSidebar = () => setIsLeftSidebarCollapsed(prev => !prev);
 
+    const handleRefreshNotes = async () => {
+      // Refresh notes from API without reloading the page
+      console.log('[Page] handleRefreshNotes called');
+      try {
+        const notesResponse = await fetch('/api/files');
+        if (notesResponse.ok) {
+          const notesData = await notesResponse.json();
+          console.log('[Page] Notes refreshed, count:', notesData.length);
+          setNotes(notesData);
+        }
+      } catch (error) {
+        console.error('Failed to refresh notes:', error);
+      }
+    };
+
     window.addEventListener('openAIChat', handleOpenAIChat);
     window.addEventListener('openWritingAssistant', handleOpenWritingAssistant);
     window.addEventListener('openKnowledgeDiscovery', handleOpenKnowledgeDiscovery);
@@ -739,6 +754,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     window.addEventListener('toggleRightPanel', handleToggleRightPanel);
     window.addEventListener('toggleSidebar', handleToggleSidebar);
     window.addEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
+    window.addEventListener('refreshNotes', handleRefreshNotes);
 
     return () => {
       window.removeEventListener('openAIChat', handleOpenAIChat);
@@ -751,6 +767,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
+      window.removeEventListener('refreshNotes', handleRefreshNotes);
     };
   }, []);
 
@@ -1436,6 +1453,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentNoteId={activeNote?.id}
           currentNoteContent={activeNote?.content}
           currentNoteName={activeNote?.name}
+          onRefreshData={refreshData}
         />
 
         {/* Writing Assistant Panel */}

@@ -8,6 +8,8 @@ import {
   AIError,
   ChatRequest,
   ChatResponse,
+  FileOperationRequest,
+  FileOperation,
 } from './types';
 import { OpenAIProvider } from './providers/openai';
 import { AnthropicProvider } from './providers/anthropic';
@@ -768,6 +770,106 @@ Expanded Version:`;
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
+    }
+  }
+
+  /**
+   * Detect if a user message contains a file operation request
+   * and generate structured file operations
+   */
+  async detectFileOperations(
+    message: string,
+    allNotes: Note[]
+  ): Promise<FileOperationRequest | null> {
+    try {
+      // Keywords that indicate file operations
+      const createKeywords = ['create', 'make', 'new', 'add', 'write'];
+      const modifyKeywords = ['modify', 'update', 'change', 'edit', 'rewrite', 'fix'];
+      const deleteKeywords = ['delete', 'remove', 'erase'];
+      const folderKeywords = ['folder', 'directory', 'organize'];
+
+      const lowerMessage = message.toLowerCase();
+
+      // Check if message contains file operation keywords
+      const hasCreate = createKeywords.some(kw => lowerMessage.includes(kw));
+      const hasModify = modifyKeywords.some(kw => lowerMessage.includes(kw));
+      const hasDelete = deleteKeywords.some(kw => lowerMessage.includes(kw));
+      const hasFolder = folderKeywords.some(kw => lowerMessage.includes(kw));
+      const hasFileRef = lowerMessage.includes('file') || lowerMessage.includes('note');
+
+      if (!hasFileRef && !hasFolder) {
+        return null; // Not a file operation request
+      }
+
+      // Use AI to parse the intent and generate operations
+      const provider = this.getCurrentProvider();
+
+      const notesList = allNotes
+        .map(n => `- ${n.name.replace('.md', '')} (${n.folder || 'root'})`)
+        .join('\n');
+
+      const prompt = `You are a file operation assistant. Analyze the user's request and determine if they want to perform file operations (create, modify, delete files or create folders).
+
+User Request: "${message}"
+
+Existing Notes:
+${notesList}
+
+If the user wants to perform file operations, respond with a JSON object in this exact format:
+{
+  "hasOperations": true,
+  "operations": [
+    {
+      "type": "create" | "modify" | "delete" | "create-folder",
+      "path": "relative/path/from/markdown/folder",
+      "content": "file content here (only for create/modify)",
+      "reason": "explanation of why this operation is needed"
+    }
+  ],
+  "summary": "Overall explanation of what will be done"
+}
+
+If this is NOT a file operation request, respond with:
+{
+  "hasOperations": false
+}
+
+Guidelines:
+- For create operations, ensure .md extension
+- For modify operations, file must exist in the notes list
+- Include helpful, descriptive content when creating notes
+- Provide clear reasons for each operation
+- Keep paths relative to the markdown folder
+
+Respond ONLY with valid JSON, no additional text.`;
+
+      const response = await provider.complete(prompt, {
+        temperature: 0.3,
+        maxTokens: 1000,
+      });
+
+      // Parse the AI response
+      const cleanedResponse = response
+        .trim()
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '');
+      const parsed = JSON.parse(cleanedResponse);
+
+      if (!parsed.hasOperations) {
+        return null;
+      }
+
+      return {
+        operations: parsed.operations.map((op: FileOperation) => ({
+          ...op,
+          timestamp: new Date().toISOString(),
+        })),
+        summary: parsed.summary || 'File operations requested',
+        requiresApproval: true,
+      };
+    } catch (error) {
+      console.error('Failed to detect file operations:', error);
+      return null;
     }
   }
 }

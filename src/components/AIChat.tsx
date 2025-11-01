@@ -14,7 +14,7 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
-import { AIMessage, ChatSession, AISettings } from '@/lib/ai/types';
+import { AIMessage, ChatSession, AISettings, FileOperationRequest } from '@/lib/ai/types';
 import { analytics } from '@/lib/analytics';
 import VectorSearchSettings from './VectorSearchSettings';
 
@@ -25,6 +25,7 @@ interface AIChatProps {
   currentNoteContent?: string;
   currentNoteName?: string;
   className?: string;
+  onRefreshData?: () => Promise<void>;
 }
 
 export default function AIChat({
@@ -34,6 +35,7 @@ export default function AIChat({
   currentNoteContent,
   currentNoteName,
   className = '',
+  onRefreshData,
 }: AIChatProps) {
   const { theme } = useSimpleTheme();
 
@@ -50,6 +52,13 @@ export default function AIChat({
   const [showSettings, setShowSettings] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
   const [settings, setSettings] = useState<AISettings | null>(null);
+  const [contextNoteCount, setContextNoteCount] = useState<number>(0);
+
+  // File operations state
+  const [pendingFileOperations, setPendingFileOperations] = useState<FileOperationRequest | null>(
+    null
+  );
+  const [showFileApproval, setShowFileApproval] = useState(false);
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -142,6 +151,108 @@ export default function AIChat({
       action: 'new_session',
       noteContext: !!currentNoteId,
     });
+  };
+
+  const handleApproveFileOperations = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!pendingFileOperations) return;
+
+    // Log to localStorage so we can see it after potential page reload
+    const timestamp = new Date().toISOString();
+    localStorage.setItem(
+      'lastFileOperation',
+      JSON.stringify({
+        timestamp,
+        action: 'approve_start',
+        operations: pendingFileOperations.operations.length,
+      })
+    );
+
+    setIsLoading(true);
+    setShowFileApproval(false);
+
+    try {
+      const response = await fetch('/api/ai/file-operations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operations: pendingFileOperations.operations,
+          approved: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Add success message to chat
+        const successMessage: AIMessage = {
+          id: `success_${Date.now()}`,
+          role: 'assistant',
+          content: `✅ **File Operations Completed**\n\n${data.message}\n\n**Results:**\n${data.results
+            .map(
+              (r: {
+                success: boolean;
+                operation: { type: string; path: string };
+                error?: string;
+              }) =>
+                `- ${r.success ? '✅' : '❌'} ${r.operation.type}: ${r.operation.path}${r.error ? ` (${r.error})` : ''}`
+            )
+            .join('\n')}`,
+          timestamp: new Date().toISOString(),
+        };
+
+        setCurrentSession(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            messages: [...prev.messages, successMessage],
+            updatedAt: new Date().toISOString(),
+          };
+        });
+
+        // Trigger notes refresh in the sidebar using the same approach as Save button
+        if (onRefreshData) {
+          console.log('[AIChat] Calling onRefreshData to refresh notes');
+          await onRefreshData();
+          console.log('[AIChat] Notes refreshed successfully');
+        }
+      } else {
+        setError(data.message || 'Failed to execute file operations');
+      }
+
+      setPendingFileOperations(null);
+    } catch (error) {
+      console.error('File operations error:', error);
+      setError('Failed to execute file operations');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRejectFileOperations = () => {
+    const rejectionMessage: AIMessage = {
+      id: `rejection_${Date.now()}`,
+      role: 'assistant',
+      content:
+        '❌ **File Operations Cancelled**\n\nThe requested file operations were not approved.',
+      timestamp: new Date().toISOString(),
+    };
+
+    setCurrentSession(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        messages: [...prev.messages, rejectionMessage],
+        updatedAt: new Date().toISOString(),
+      };
+    });
+
+    setPendingFileOperations(null);
+    setShowFileApproval(false);
   };
 
   const handleQuickCommand = async (command: string) => {
@@ -470,6 +581,316 @@ Just type naturally without "/" to have a conversation!`;
       return;
     }
 
+    // For Ollama (client-side), detect file operations before proceeding
+    if (settings?.provider === 'ollama') {
+      try {
+        // Check if message contains file operation keywords
+        const fileOpKeywords = [
+          'create file',
+          'write to',
+          'save to',
+          'create a file',
+          'write a file',
+          'make a file',
+          'new file',
+          'create folder',
+          'make folder',
+          'delete file',
+          'modify file',
+          'update file',
+        ];
+        const hasFileOpIntent = fileOpKeywords.some(keyword =>
+          trimmedMessage.toLowerCase().includes(keyword)
+        );
+
+        if (hasFileOpIntent) {
+          console.log('[AIChat] File operation keywords detected, analyzing with Ollama...');
+
+          // Show loading state
+          setIsLoading(true);
+          setError(null);
+
+          // Fetch all notes for context
+          const notesResponse = await fetch('/api/files');
+          const allNotes = notesResponse.ok ? await notesResponse.json() : [];
+          const notesList = allNotes
+            .map(
+              (n: { name: string; folder?: string }) =>
+                `- ${n.name.replace('.md', '')} (${n.folder || 'root'})`
+            )
+            .join('\n');
+
+          // Call Ollama DIRECTLY from browser to detect file operations
+          const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
+          const model = settings.model || 'llama3.2';
+
+          const prompt = `You are a file operation assistant. Analyze the user's request and determine if they want to perform file operations (create, modify, delete files or create folders).
+
+User Request: "${trimmedMessage}"
+
+Existing Notes:
+${notesList}
+
+If the user wants to perform file operations, respond with a JSON object in this exact format:
+{
+  "hasOperations": true,
+  "operations": [
+    {
+      "type": "create" | "modify" | "delete" | "create-folder",
+      "path": "relative/path/from/markdown/folder",
+      "content": "file content here (only for create/modify)",
+      "reason": "explanation of why this operation is needed"
+    }
+  ],
+  "summary": "Overall explanation of what will be done"
+}
+
+If this is NOT a file operation request, respond with:
+{
+  "hasOperations": false
+}
+
+Guidelines:
+- For create operations, ensure .md extension
+- For modify operations, file must exist in the notes list
+- Include helpful, descriptive content when creating notes
+- Provide clear reasons for each operation
+- Keep paths relative to the markdown folder
+- CRITICAL: Return ONLY valid JSON. No explanations, no markdown formatting, no extra text.
+- CRITICAL: Use double quotes for all strings, not single quotes.
+
+Example valid response:
+{
+  "hasOperations": true,
+  "operations": [
+    {
+      "type": "create",
+      "path": "shopping-list.md",
+      "content": "# Shopping List\\n\\n- Milk\\n- Eggs\\n- Bread",
+      "reason": "User requested a shopping list file"
+    }
+  ],
+  "summary": "Creating shopping-list.md with grocery items"
+}
+
+Respond ONLY with valid JSON, no additional text.`;
+
+          const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model,
+              messages: [
+                {
+                  role: 'system',
+                  content:
+                    'You are a JSON-only API. You must respond ONLY with valid JSON. No markdown, no explanations, no extra text. Just pure JSON. ALWAYS close all braces and brackets.',
+                },
+                {
+                  role: 'user',
+                  content: prompt,
+                },
+              ],
+              stream: false,
+              options: {
+                temperature: 0.1, // Lower temperature for more consistent JSON
+                num_predict: 2000, // Increased token limit
+                stop: ['\n}'], // Don't stop at closing brace
+              },
+            }),
+          });
+
+          if (ollamaResponse.ok) {
+            const ollamaData = await ollamaResponse.json();
+            const responseContent = ollamaData.message?.content || '';
+
+            // Parse the AI response
+            // First, clean markdown formatting
+            let cleanedResponse = responseContent
+              .trim()
+              .replace(/```json\n?/g, '')
+              .replace(/```\n?/g, '')
+              .trim();
+
+            // Ollama returns literal newlines in JSON string values, not escaped \n
+            // We need to escape them BEFORE attempting to parse
+            // Walk through the string character by character, tracking if we're inside quotes
+            let inString = false;
+            let escape = false;
+            let fixedResponse = '';
+
+            for (let i = 0; i < cleanedResponse.length; i++) {
+              const char = cleanedResponse[i];
+              const prevChar = i > 0 ? cleanedResponse[i - 1] : '';
+
+              if (char === '"' && !escape) {
+                inString = !inString;
+                fixedResponse += char;
+              } else if (inString && char === '\n' && prevChar !== '\\') {
+                // Replace literal newline with escaped newline
+                fixedResponse += '\\n';
+              } else if (inString && char === '\r' && prevChar !== '\\') {
+                // Replace literal carriage return with escaped version
+                fixedResponse += '\\r';
+              } else if (inString && char === '\t' && prevChar !== '\\') {
+                // Replace literal tab with escaped version
+                fixedResponse += '\\t';
+              } else {
+                fixedResponse += char;
+              }
+
+              // Track escape character
+              escape = char === '\\' && !escape;
+            }
+
+            cleanedResponse = fixedResponse;
+
+            console.log('[AIChat] After character-level fix, length:', cleanedResponse.length);
+            console.log('[AIChat] Fixed response:', cleanedResponse);
+
+            // Check if JSON is complete (has closing brace)
+            const trimmed = cleanedResponse.trim();
+            if (!trimmed.endsWith('}')) {
+              console.warn('[AIChat] Incomplete JSON detected, attempting to close it');
+              // Count opening and closing braces
+              const openBraces = (trimmed.match(/{/g) || []).length;
+              const closeBraces = (trimmed.match(/}/g) || []).length;
+              const missingBraces = openBraces - closeBraces;
+
+              if (missingBraces > 0) {
+                cleanedResponse = trimmed + '}'.repeat(missingBraces);
+                console.log('[AIChat] Added', missingBraces, 'closing brace(s)');
+              }
+            }
+
+            let parsed;
+            try {
+              // Try parsing with JSON5 or relaxed parsing if needed
+              // First remove any trailing commas or other JSON issues
+              const sanitized = cleanedResponse
+                .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+                .replace(/\r\n/g, '\n') // Normalize line endings
+                .replace(/\r/g, '\n'); // Normalize line endings
+
+              console.log('[AIChat] After sanitization, length:', sanitized.length);
+              console.log(
+                '[AIChat] About to parse. Length:',
+                sanitized.length,
+                'Char at 296:',
+                sanitized.charCodeAt(296)
+              );
+              parsed = JSON.parse(sanitized);
+              console.log('[AIChat] Successfully parsed file operations JSON');
+            } catch (parseError: any) {
+              console.error('[AIChat] Failed to parse Ollama response as JSON');
+              console.error('[AIChat] Response:', cleanedResponse);
+              console.error('[AIChat] Parse error:', parseError);
+
+              // Show the problematic area
+              if (parseError.message && parseError.message.includes('position')) {
+                const match = parseError.message.match(/position (\d+)/);
+                if (match) {
+                  const pos = parseInt(match[1]);
+                  const start = Math.max(0, pos - 20);
+                  const end = Math.min(cleanedResponse.length, pos + 20);
+                  console.error('[AIChat] Context around error:', {
+                    before: cleanedResponse.substring(start, pos),
+                    at: cleanedResponse[pos],
+                    atCharCode: cleanedResponse.charCodeAt(pos),
+                    after: cleanedResponse.substring(pos + 1, end),
+                  });
+                }
+              }
+
+              // If JSON parsing fails, assume no file operations and continue with normal chat
+              setIsLoading(false);
+              parsed = { hasOperations: false };
+            }
+
+            if (parsed.hasOperations && parsed.operations?.length > 0) {
+              const fileOperations = {
+                operations: parsed.operations.map(
+                  (op: { type: string; path: string; content?: string; reason: string }) => ({
+                    ...op,
+                    timestamp: new Date().toISOString(),
+                  })
+                ),
+                summary: parsed.summary || 'File operations requested',
+                requiresApproval: true,
+              };
+
+              console.log('[AIChat] File operations detected:', fileOperations);
+
+              // Set pending operations and show approval modal
+              setPendingFileOperations(fileOperations);
+              setShowFileApproval(true);
+
+              // Add user message to chat
+              const userMessage: AIMessage = {
+                id: `user_${Date.now()}`,
+                role: 'user',
+                content: trimmedMessage,
+                timestamp: new Date().toISOString(),
+              };
+
+              if (currentSession) {
+                setCurrentSession({
+                  ...currentSession,
+                  messages: [...currentSession.messages, userMessage],
+                });
+              } else {
+                const newSession: ChatSession = {
+                  id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  title:
+                    trimmedMessage.length > 50
+                      ? trimmedMessage.substring(0, 47) + '...'
+                      : trimmedMessage,
+                  messages: [userMessage],
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                  totalTokens: 0,
+                  totalCost: 0,
+                  noteContext: currentNoteId,
+                };
+                setCurrentSession(newSession);
+              }
+
+              // Add notification message
+              const notificationMessage: AIMessage = {
+                id: `notification_${Date.now()}`,
+                role: 'assistant',
+                content: `📁 **File Operations Detected**\n\n${fileOperations.summary}\n\n_Please review and approve the operations above._`,
+                timestamp: new Date().toISOString(),
+              };
+
+              setCurrentSession(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  messages: [...prev.messages, notificationMessage],
+                  updatedAt: new Date().toISOString(),
+                };
+              });
+
+              setMessage('');
+              if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto';
+              }
+              setIsLoading(false);
+              return; // Stop here, wait for approval
+            }
+          }
+
+          // No file operations detected, clear loading and continue
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('[AIChat] Error detecting file operations:', error);
+        setIsLoading(false);
+        // Continue with normal flow if detection fails
+      }
+    }
+
     const useStreaming = settings?.provider === 'ollama' && settings?.enableStreaming !== false;
 
     setIsLoading(true);
@@ -750,6 +1171,37 @@ Just type naturally without "/" to have a conversation!`;
         const data = await response.json();
 
         if (data.success) {
+          // Check if file operations were detected
+          if (data.requiresApproval && data.fileOperations) {
+            setPendingFileOperations(data.fileOperations);
+            setShowFileApproval(true);
+
+            // Add a message to chat indicating operations are pending approval
+            const notificationMessage: AIMessage = {
+              id: `notification_${Date.now()}`,
+              role: 'assistant',
+              content: `📁 **File Operations Detected**\n\n${data.fileOperations.summary}\n\n_Please review and approve the operations above._`,
+              timestamp: new Date().toISOString(),
+            };
+
+            setCurrentSession(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                messages: [...prev.messages, notificationMessage],
+                updatedAt: new Date().toISOString(),
+              };
+            });
+
+            setIsLoading(false);
+            return;
+          }
+
+          // Update context note count if provided
+          if (data.data.contextNoteCount !== undefined) {
+            setContextNoteCount(data.data.contextNoteCount);
+          }
+
           // Add assistant response to current session
           const assistantMessage: AIMessage = {
             id: data.data.id,
@@ -836,332 +1288,507 @@ Just type naturally without "/" to have a conversation!`;
   if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-y-0 right-0 w-96 flex flex-col bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 ${className}`}
-      style={{
-        backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-        borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-      }}
-    >
-      {/* Header */}
-      <div
-        className="flex flex-col border-b border-gray-200 dark:border-gray-700"
-        style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
-      >
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h2
-              className="font-semibold text-gray-900 dark:text-white"
-              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-            >
-              AI Assistant
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowSessions(!showSessions)}
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="Chat History"
-            >
-              <History className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
-
-            <button
-              onClick={createNewSession}
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="New Chat"
-            >
-              <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
-
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="Settings"
-            >
-              <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
-
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title="Close"
-            >
-              <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            </button>
-          </div>
-        </div>
-
-        {/* Note context indicator */}
-        {currentNoteId && (
+    <>
+      {/* File Operations Approval Modal */}
+      {showFileApproval && pendingFileOperations && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
           <div
-            className="px-4 pb-3 flex items-center gap-2 text-xs"
-            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+            }}
           >
-            <LinkIcon className="w-3 h-3" />
-            <span>Context: Note {currentNoteId.replace('.md', '')}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Sessions sidebar */}
-      {showSessions && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform -translate-x-full z-10"
-          style={{
-            backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
-            borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
-          }}
-        >
-          <div
-            className="p-4 border-b border-gray-200 dark:border-gray-700"
-            style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
-          >
-            <div className="flex items-center justify-between">
+            <div
+              className="p-6 border-b border-gray-200 dark:border-gray-700"
+              style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
+            >
               <h3
-                className="font-medium text-gray-900 dark:text-white"
+                className="text-lg font-semibold flex items-center gap-2"
                 style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
               >
-                Chat History
+                <AlertCircle className="w-5 h-5 text-yellow-500" />
+                Approve File Operations
               </h3>
+              <p
+                className="text-sm mt-2"
+                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+              >
+                {pendingFileOperations.summary}
+              </p>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[50vh]">
+              <div className="space-y-4">
+                {pendingFileOperations.operations.map((op, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                    style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span
+                            className="px-2 py-1 rounded text-xs font-medium"
+                            style={{
+                              backgroundColor:
+                                op.type === 'create'
+                                  ? theme === 'dark'
+                                    ? '#065f46'
+                                    : '#d1fae5'
+                                  : op.type === 'modify'
+                                    ? theme === 'dark'
+                                      ? '#1e40af'
+                                      : '#dbeafe'
+                                    : op.type === 'delete'
+                                      ? theme === 'dark'
+                                        ? '#991b1b'
+                                        : '#fee2e2'
+                                      : theme === 'dark'
+                                        ? '#92400e'
+                                        : '#fef3c7',
+                              color:
+                                op.type === 'create'
+                                  ? theme === 'dark'
+                                    ? '#d1fae5'
+                                    : '#065f46'
+                                  : op.type === 'modify'
+                                    ? theme === 'dark'
+                                      ? '#dbeafe'
+                                      : '#1e40af'
+                                    : op.type === 'delete'
+                                      ? theme === 'dark'
+                                        ? '#fee2e2'
+                                        : '#991b1b'
+                                      : theme === 'dark'
+                                        ? '#fef3c7'
+                                        : '#92400e',
+                            }}
+                          >
+                            {op.type.toUpperCase()}
+                          </span>
+                          <code
+                            className="text-sm"
+                            style={{ color: theme === 'dark' ? '#d1d5db' : '#374151' }}
+                          >
+                            {op.path}
+                          </code>
+                        </div>
+                        <p
+                          className="text-sm mb-2"
+                          style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                        >
+                          {op.reason}
+                        </p>
+                        {op.content && (
+                          <details className="mt-2">
+                            <summary
+                              className="text-sm cursor-pointer"
+                              style={{ color: theme === 'dark' ? '#60a5fa' : '#2563eb' }}
+                            >
+                              Preview content
+                            </summary>
+                            <pre
+                              className="mt-2 p-3 rounded text-xs overflow-x-auto"
+                              style={{
+                                backgroundColor: theme === 'dark' ? '#111827' : '#f3f4f6',
+                                color: theme === 'dark' ? '#d1d5db' : '#374151',
+                              }}
+                            >
+                              {op.content.slice(0, 500)}
+                              {op.content.length > 500 && '\n... (truncated)'}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3"
+              style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
+            >
               <button
-                onClick={() => setShowSessions(false)}
-                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={handleRejectFileOperations}
+                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                style={{
+                  borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                  color: theme === 'dark' ? '#f9fafb' : '#111827',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApproveFileOperations}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : 'Approve & Execute'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main AI Chat Panel */}
+      <div
+        className={`fixed inset-y-0 right-0 w-96 flex flex-col bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl z-50 ${className}`}
+        style={{
+          backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+          borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+        }}
+      >
+        {/* Header */}
+        <div
+          className="flex flex-col border-b border-gray-200 dark:border-gray-700"
+          style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
+        >
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h2
+                className="font-semibold text-gray-900 dark:text-white"
+                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+              >
+                AI Assistant
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowSessions(!showSessions)}
+                className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="Chat History"
+              >
+                <History className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+
+              <button
+                onClick={createNewSession}
+                className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="New Chat"
+              >
+                <Plus className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="Settings"
+              >
+                <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              </button>
+
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="Close"
               >
                 <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
               </button>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2">
-            {sessions.length === 0 ? (
-              <p
-                className="text-sm text-center py-8"
-                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-              >
-                No conversations yet
-              </p>
-            ) : (
-              sessions.map(session => (
-                <div
-                  key={session.id}
-                  className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors group ${
-                    currentSession?.id === session.id
-                      ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                  onClick={() => {
-                    setCurrentSession(session);
-                    setShowSessions(false);
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h4
-                        className="font-medium text-sm truncate"
-                        style={{
-                          color:
-                            currentSession?.id === session.id
-                              ? theme === 'dark'
-                                ? '#93c5fd'
-                                : '#1d4ed8'
-                              : theme === 'dark'
-                                ? '#f9fafb'
-                                : '#111827',
-                        }}
-                      >
-                        {session.title}
-                      </h4>
-                      <p
-                        className="text-xs mt-1"
-                        style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                      >
-                        {new Date(session.updatedAt).toLocaleDateString()}
-                      </p>
-                      {session.noteContext && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <LinkIcon className="w-3 h-3 text-gray-400" />
-                          <span
-                            className="text-xs"
-                            style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
-                          >
-                            Linked to note
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        deleteSession(session.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Settings panel */}
-      {showSettings && (
-        <AISettingsPanel
-          settings={settings}
-          onSettingsChange={newSettings => {
-            setSettings(newSettings);
-            setShowSettings(false);
-            // Reload settings to ensure they're persisted
-            loadSettings();
-          }}
-          onClose={() => setShowSettings(false)}
-          theme={theme}
-        />
-      )}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {!currentSession || currentSession.messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Brain className="w-12 h-12 text-gray-400 mb-4" />
-            <h3
-              className="text-lg font-medium mb-2"
-              style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
-            >
-              AI Assistant Ready
-            </h3>
-            <p className="text-sm mb-4" style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}>
-              {currentNoteId
-                ? 'I have access to your current note. Ask questions or use commands!'
-                : 'Open a note to enable context-aware assistance'}
-            </p>
+          {/* Note context indicator */}
+          {currentNoteId && (
             <div
-              className="text-xs space-y-1 mb-4"
+              className="px-4 pb-3 flex items-center gap-2 text-xs"
               style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
             >
-              <p>
-                <strong>Quick Commands:</strong>
-              </p>
-              <p>
-                • Type{' '}
-                <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/help</code> to
-                see all commands
-              </p>
-              <p>
-                • Try <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/tag</code>
-                ,{' '}
-                <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
-                  /connections
-                </code>
-                , or <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/gaps</code>
-              </p>
+              <LinkIcon className="w-3 h-3" />
+              <span>
+                Context:{' '}
+                {contextNoteCount > 0
+                  ? `${contextNoteCount} notes`
+                  : `Note ${currentNoteId.replace('.md', '')}`}
+                {contextNoteCount > 1 && (
+                  <span
+                    className="ml-1 text-blue-500 dark:text-blue-400"
+                    title="Including current note + related notes"
+                  >
+                    (enhanced)
+                  </span>
+                )}
+              </span>
             </div>
-            {currentNoteId && (
-              <div
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-                style={{
-                  backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                  color: theme === 'dark' ? '#d1d5db' : '#6b7280',
-                }}
-              >
-                <LinkIcon className="w-4 h-4" />
-                <span>📝 Note context active</span>
+          )}
+        </div>
+
+        {/* Sessions sidebar */}
+        {showSessions && (
+          <div
+            className="absolute left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform -translate-x-full z-10"
+            style={{
+              backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+              borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+            }}
+          >
+            <div
+              className="p-4 border-b border-gray-200 dark:border-gray-700"
+              style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
+            >
+              <div className="flex items-center justify-between">
+                <h3
+                  className="font-medium text-gray-900 dark:text-white"
+                  style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+                >
+                  Chat History
+                </h3>
+                <button
+                  onClick={() => setShowSessions(false)}
+                  className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
               </div>
-            )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2">
+              {sessions.length === 0 ? (
+                <p
+                  className="text-sm text-center py-8"
+                  style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                >
+                  No conversations yet
+                </p>
+              ) : (
+                sessions.map(session => (
+                  <div
+                    key={session.id}
+                    className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors group ${
+                      currentSession?.id === session.id
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={() => {
+                      setCurrentSession(session);
+                      setShowSessions(false);
+                    }}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4
+                          className="font-medium text-sm truncate"
+                          style={{
+                            color:
+                              currentSession?.id === session.id
+                                ? theme === 'dark'
+                                  ? '#93c5fd'
+                                  : '#1d4ed8'
+                                : theme === 'dark'
+                                  ? '#f9fafb'
+                                  : '#111827',
+                          }}
+                        >
+                          {session.title}
+                        </h4>
+                        <p
+                          className="text-xs mt-1"
+                          style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                        >
+                          {new Date(session.updatedAt).toLocaleDateString()}
+                        </p>
+                        {session.noteContext && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <LinkIcon className="w-3 h-3 text-gray-400" />
+                            <span
+                              className="text-xs"
+                              style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+                            >
+                              Linked to note
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          deleteSession(session.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/20 transition-all"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        ) : (
-          <>
-            {currentSession.messages.map(msg => (
-              <ChatMessage key={msg.id} message={msg} theme={theme} />
-            ))}
-            {/* Streaming message display */}
-            {isStreaming && streamingMessage && (
-              <div className="flex justify-start">
+        )}
+
+        {/* Settings panel */}
+        {showSettings && (
+          <AISettingsPanel
+            settings={settings}
+            onSettingsChange={newSettings => {
+              setSettings(newSettings);
+              setShowSettings(false);
+              // Reload settings to ensure they're persisted
+              loadSettings();
+            }}
+            onClose={() => setShowSettings(false)}
+            theme={theme}
+          />
+        )}
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {!currentSession || currentSession.messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <Brain className="w-12 h-12 text-gray-400 mb-4" />
+              <h3
+                className="text-lg font-medium mb-2"
+                style={{ color: theme === 'dark' ? '#f9fafb' : '#111827' }}
+              >
+                AI Assistant Ready
+              </h3>
+              <p
+                className="text-sm mb-4"
+                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+              >
+                {currentNoteId
+                  ? 'I have enhanced context with your current note and related notes!'
+                  : 'Open a note to enable context-aware assistance'}
+              </p>
+              <div
+                className="text-xs space-y-1 mb-4"
+                style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+              >
+                <p>
+                  <strong>Quick Commands:</strong>
+                </p>
+                <p>
+                  • Type{' '}
+                  <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/help</code> to
+                  see all commands
+                </p>
+                <p>
+                  • Try{' '}
+                  <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/tag</code>,{' '}
+                  <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                    /connections
+                  </code>
+                  , or{' '}
+                  <code className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">/gaps</code>
+                </p>
+              </div>
+              {currentNoteId && (
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'
-                  }`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
                   style={{
                     backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
-                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                    color: theme === 'dark' ? '#d1d5db' : '#6b7280',
                   }}
                 >
-                  <div className="flex items-start gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-1" />
-                    <div className="whitespace-pre-wrap break-words text-sm">
-                      {streamingMessage}
-                      <span className="inline-block w-1 h-4 bg-current animate-pulse ml-1" />
+                  <LinkIcon className="w-4 h-4" />
+                  <span>📝 Note context active</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {currentSession.messages.map(msg => (
+                <ChatMessage key={msg.id} message={msg} theme={theme} />
+              ))}
+              {/* Streaming message display */}
+              {isStreaming && streamingMessage && (
+                <div className="flex justify-start">
+                  <div
+                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      theme === 'dark' ? 'bg-gray-700 text-gray-100' : 'bg-gray-100 text-gray-900'
+                    }`}
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                      color: theme === 'dark' ? '#f9fafb' : '#111827',
+                    }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-1" />
+                      <div className="whitespace-pre-wrap break-words text-sm">
+                        {streamingMessage}
+                        <span className="inline-block w-1 h-4 bg-current animate-pulse ml-1" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
+              )}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
 
-      {/* Error display */}
-      {error && (
+        {/* Error display */}
+        {error && (
+          <div
+            className="mx-4 p-3 rounded-lg border border-red-200 dark:border-red-800 mb-4"
+            style={{
+              backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2',
+              borderColor: theme === 'dark' ? '#7f1d1d' : '#fecaca',
+            }}
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
         <div
-          className="mx-4 p-3 rounded-lg border border-red-200 dark:border-red-800 mb-4"
-          style={{
-            backgroundColor: theme === 'dark' ? '#7f1d1d' : '#fef2f2',
-            borderColor: theme === 'dark' ? '#7f1d1d' : '#fecaca',
-          }}
+          className="p-4 border-t border-gray-200 dark:border-gray-700"
+          style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
         >
-          <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          {/* Loading status message for file operation detection */}
+          {isLoading && !isStreaming && (
+            <div
+              className="mb-2 flex items-center gap-2 text-sm"
+              style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
+            >
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Analyzing your request with Ollama...</span>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <textarea
+              ref={textareaRef}
+              value={message}
+              onChange={handleTextareaChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything..."
+              disabled={isLoading || isStreaming}
+              className="flex-1 resize-none rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{
+                backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
+                color: theme === 'dark' ? '#f9fafb' : '#111827',
+                borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
+                minHeight: '38px',
+                maxHeight: '120px',
+              }}
+              rows={1}
+            />
+            <button
+              onClick={isStreaming ? stopGeneration : sendMessage}
+              disabled={(!message.trim() && !isStreaming) || (isLoading && !isStreaming)}
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title={isStreaming ? 'Stop generation' : 'Send message'}
+            >
+              {isStreaming ? (
+                <X className="w-4 h-4" />
+              ) : isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Input */}
-      <div
-        className="p-4 border-t border-gray-200 dark:border-gray-700"
-        style={{ borderColor: theme === 'dark' ? '#374151' : '#e5e7eb' }}
-      >
-        <div className="flex gap-2">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleTextareaChange}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything..."
-            disabled={isLoading || isStreaming}
-            className="flex-1 resize-none rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            style={{
-              backgroundColor: theme === 'dark' ? '#374151' : '#ffffff',
-              color: theme === 'dark' ? '#f9fafb' : '#111827',
-              borderColor: theme === 'dark' ? '#4b5563' : '#d1d5db',
-              minHeight: '38px',
-              maxHeight: '120px',
-            }}
-            rows={1}
-          />
-          <button
-            onClick={isStreaming ? stopGeneration : sendMessage}
-            disabled={(!message.trim() && !isStreaming) || (isLoading && !isStreaming)}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title={isStreaming ? 'Stop generation' : 'Send message'}
-          >
-            {isStreaming ? (
-              <X className="w-4 h-4" />
-            ) : isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </button>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
 
