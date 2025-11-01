@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
 
+  // Empty turbopack config to acknowledge webpack config is intentional
+  turbopack: {},
+
   // Exclude markdown folder from HMR watch to prevent page reloads when markdown files change
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
