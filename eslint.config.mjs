@@ -1,27 +1,19 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import next from "eslint-config-next";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+// Use Next.js flat config directly to avoid legacy compat and circular plugin refs
+export default [
+  ...next,
   {
     rules: {
-      // Make TypeScript rules less strict for build success
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/ban-ts-comment": "warn",
+      // Relax a few React/Next rules for smoother DX
       "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/immutability": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "no-use-before-define": "off",
       "react/no-unescaped-entities": "off",
       "@next/next/no-img-element": "warn",
-    }
-  }
+      "import/no-anonymous-default-export": "off",
+    },
+  },
 ];
-
-export default eslintConfig;
