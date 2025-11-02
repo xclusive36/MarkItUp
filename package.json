@@ -56,7 +56,8 @@
     "tiptap-markdown": "^0.9.0",
     "ws": "^8.18.3",
     "y-websocket": "^3.0.0",
-    "yjs": "^13.6.20"
+    "yjs": "^13.6.20",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

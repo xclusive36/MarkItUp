@@ -4,6 +4,7 @@ import { SimpleThemeProvider } from '@/contexts/SimpleThemeContext';
 import { CollaborationProvider } from '@/contexts/CollaborationContext';
 import { PluginSystemInitializer } from '@/components/PluginSystemInitializer';
 import { ToastProvider } from '@/components/ToastProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'MarkItUp - Markdown Editor',
@@ -18,14 +19,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <ToastProvider>
-          <SimpleThemeProvider>
-            <CollaborationProvider>
-              <PluginSystemInitializer />
-              {children}
-            </CollaborationProvider>
-          </SimpleThemeProvider>
-        </ToastProvider>
+        <ErrorBoundary>
+          <ToastProvider>
+            <SimpleThemeProvider>
+              <CollaborationProvider>
+                <PluginSystemInitializer />
+                {children}
+              </CollaborationProvider>
+            </SimpleThemeProvider>
+          </ToastProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

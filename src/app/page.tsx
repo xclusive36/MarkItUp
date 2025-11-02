@@ -36,6 +36,8 @@ import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
 import { useAutoIndexing } from '@/hooks/useAutoIndexing';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
@@ -293,6 +295,58 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Auto-save with 3 second debounce - only when there's a filename
+  useAutoSave(
+    markdown,
+    async (content) => {
+      if (!fileName.trim() || !activeNote) return; // Only auto-save existing notes
+      
+      const fullPath = folder.trim()
+        ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+        : `${fileName.trim().replace(/\/+$/, '')}.md`;
+
+      const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          overwrite: true, // Auto-save always overwrites
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Auto-save failed');
+      }
+
+      // Update PKM system
+      if (activeNote) {
+        await pkm.updateNote(activeNote.id, {
+          content,
+          name: fileName + '.md',
+          folder: folder || undefined,
+        });
+      }
+    },
+    {
+      delay: 3000, // 3 second debounce
+      enabled: !!fileName.trim() && !!activeNote, // Only enable for existing notes
+      onSaveStart: () => {
+        setIsSaving(true);
+        setSaveError(null);
+      },
+      onSaveSuccess: () => {
+        setIsSaving(false);
+        setLastSaved(new Date());
+        setSaveError(null);
+      },
+      onSaveError: (error) => {
+        setIsSaving(false);
+        setSaveError(error.message);
+        console.error('Auto-save error:', error);
+      },
+    }
+  );
 
   // Simplified button handler with event delegation
   const handleButtonClick = useCallback(
@@ -911,29 +965,63 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
   // Handle note selection
   const handleNoteSelect = useCallback(
-    (noteId: string) => {
+    async (noteId: string) => {
       const note = notes.find(n => n.id === noteId);
       if (note) {
         console.log('[PAGE] handleNoteSelect - note:', note.id, note.name);
 
-        // Track note view
-        analytics.trackEvent('note_viewed', {
-          noteId: note.id,
-          noteName: note.name,
-          wordCount: note.wordCount,
-          hasLinks: note.content.includes('[['),
-          tagCount: note.tags.length,
-        });
+        // Fetch the latest content from server to ensure auto-saved changes are loaded
+        try {
+          const filename = note.folder ? `${note.folder}/${note.name}` : note.name;
+          const response = await fetch(`/api/files/${encodeURIComponent(filename)}`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[PAGE] Loaded fresh content from server');
+            
+            // Use the fresh content from the server
+            const updatedNote = {
+              ...note,
+              content: data.content,
+              updatedAt: data.updatedAt,
+            };
 
-        setActiveNote(note);
-        setMarkdown(note.content);
-        setFileName(note.name.replace('.md', ''));
-        setFolder(note.folder || '');
+            // Track note view
+            analytics.trackEvent('note_viewed', {
+              noteId: updatedNote.id,
+              noteName: updatedNote.name,
+              wordCount: updatedNote.wordCount,
+              hasLinks: updatedNote.content.includes('[['),
+              tagCount: updatedNote.tags.length,
+            });
 
-        // Update PKM system's active note
-        console.log('[PAGE] Setting active note in PKM:', note.id);
-        pkm.setActiveNote(note.id);
-        console.log('[PAGE] PKM activeNoteId is now:', pkm.viewState.activeNoteId);
+            setActiveNote(updatedNote);
+            setMarkdown(data.content);
+            setFileName(updatedNote.name.replace('.md', ''));
+            setFolder(updatedNote.folder || '');
+
+            // Update PKM system's active note
+            console.log('[PAGE] Setting active note in PKM:', updatedNote.id);
+            pkm.setActiveNote(updatedNote.id);
+            console.log('[PAGE] PKM activeNoteId is now:', pkm.viewState.activeNoteId);
+          } else {
+            console.error('[PAGE] Failed to fetch note content:', response.status);
+            // Fallback to cached content if fetch fails
+            setActiveNote(note);
+            setMarkdown(note.content);
+            setFileName(note.name.replace('.md', ''));
+            setFolder(note.folder || '');
+            pkm.setActiveNote(note.id);
+          }
+        } catch (error) {
+          console.error('[PAGE] Error fetching note content:', error);
+          // Fallback to cached content if fetch fails
+          setActiveNote(note);
+          setMarkdown(note.content);
+          setFileName(note.name.replace('.md', ''));
+          setFolder(note.folder || '');
+          pkm.setActiveNote(note.id);
+        }
       }
     },
     [notes, pkm]
