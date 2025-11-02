@@ -38,6 +38,11 @@ import { useToast } from '@/components/ToastProvider';
 import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useModalState } from '@/hooks/useModalState';
+import { useNoteState } from '@/hooks/useNoteState';
+import { useViewState } from '@/hooks/useViewState';
+import { useGraphSearchState } from '@/hooks/useGraphSearchState';
+import { useSaveState } from '@/hooks/useSaveState';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
@@ -100,56 +105,16 @@ export default function Home() {
   // Ref for editor textarea (for plugin selection support)
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Collaboration UI state
-  const [showCollabSettings, setShowCollabSettings] = useState(false);
-  const [showUserProfile, setShowUserProfile] = useState(false);
-
-  // AI Chat state
-  const [showAIChat, setShowAIChat] = useState(false);
-
-  // Writing Assistant state
-  const [showWritingAssistant, setShowWritingAssistant] = useState(false);
-
-  // Knowledge Discovery state
-  const [showKnowledgeDiscovery, setShowKnowledgeDiscovery] = useState(false);
-
-  // Research Assistant state
-  const [showResearchAssistant, setShowResearchAssistant] = useState(false);
-
-  // Knowledge Map state
-  const [showKnowledgeMap, setShowKnowledgeMap] = useState(false);
-
-  // Batch Analyzer state
-  const [showBatchAnalyzer, setShowBatchAnalyzer] = useState(false);
-
-  // Global Search state
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
-
-  // Command Palette state
-  const [showCommandPalette, setShowCommandPalette] = useState(false);
-
-  // Daily Notes Calendar state
-  const [showCalendar, setShowCalendar] = useState(false);
+  // Modal state management (consolidated)
+  const modals = useModalState();
 
   // Plugin state - track if Daily Notes plugin is loaded
   const [isDailyNotesLoaded, setIsDailyNotesLoaded] = useState(false);
 
-  // Knowledge Graph Auto-Mapper modals state
-  const [showGraphAnalytics, setShowGraphAnalytics] = useState(false);
+  // Knowledge Graph Auto-Mapper data state (modal visibility handled by useModalState)
   const [graphAnalyticsData, setGraphAnalyticsData] = useState<any>(null);
-  const [showConnectionSuggestions, setShowConnectionSuggestions] = useState(false);
   const [connectionSuggestionsData, setConnectionSuggestionsData] = useState<any[]>([]);
-  const [showMOCSuggestions, setShowMOCSuggestions] = useState(false);
   const [mocSuggestionsData, setMOCSuggestionsData] = useState<any[]>([]);
-
-  // Keyboard Shortcuts Help state
-  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-
-  // Writing Stats Modal state
-  const [showWritingStats, setShowWritingStats] = useState(false);
-
-  // Zen Mode state
-  const [showZenMode, setShowZenMode] = useState(false);
 
   // Text selection state for SelectionActionBar
   const [selectedText, setSelectedText] = useState('');
@@ -157,51 +122,29 @@ export default function Home() {
     null
   );
 
-  // Core PKM state
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [activeNote, setActiveNote] = useState<Note | null>(null);
-  const [markdown, setMarkdown] = useState(`# Welcome to MarkItUp PKM System 🚀
-
-This is your **Personal Knowledge Management** system, now powered with advanced features that rival Obsidian!
-
-## Key Features ✨
-
-### 🔗 Wikilinks & Bidirectional Linking
-Create connections between notes using [[Note Name]] syntax. The system automatically tracks backlinks and builds your knowledge graph.
-
-### 🏷️ Smart Tagging
-Use #tags to organize your thoughts. Tags are automatically indexed and searchable.
-
-### 🕸️ Interactive Graph View  
-Visualize your knowledge network with an interactive force-directed graph showing all connections between notes.
-
-### 🔍 Powerful Search
-- Full-text search across all notes
-- Search by tags: \`tag:project\`
-- Search by folders: \`folder:work\`
-- Exact phrase search: \`"specific phrase"\`
-
-### 📊 Real-time Analytics
-Track your knowledge growth with statistics on notes, links, and connections.
-
-## Getting Started 🎯
-
-1. **Create notes** with the form on the left
-2. **Link notes** using [[Note Name]] syntax
-3. **Add tags** like #idea #project #important
-4. **Explore connections** in the Graph View
-5. **Search everything** with the powerful search
-
-Try creating a note about a project and linking it to other notes. Watch your knowledge graph grow!
-
----
-
-*Start writing and building your second brain...`);
+  // Note state management (consolidated)
+  const noteState = useNoteState();
+  const {
+    notes,
+    activeNote,
+    markdown,
+    fileName,
+    folder,
+    setNotes,
+    setActiveNote,
+    setMarkdown,
+    setFileName,
+    setFolder,
+    markdownRef,
+    updateMarkdown,
+    clearNote,
+    loadNote,
+  } = noteState;
 
   // Track markdown editing with debounce
   const [lastEditTrack, setLastEditTrack] = useState(0);
   const handleMarkdownChange = (value: string) => {
-    setMarkdown(value);
+    updateMarkdown(value);
 
     // Debounced analytics tracking for editing
     const now = Date.now();
@@ -216,10 +159,29 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     }
   };
 
-  const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('edit');
-  const [currentView, setCurrentView] = useState<
-    'editor' | 'graph' | 'search' | 'analytics' | 'plugins' | 'notes'
-  >('editor');
+  // View state management (consolidated)
+  const viewState = useViewState();
+  const {
+    viewMode,
+    setViewMode,
+    currentView,
+    setCurrentView,
+    showMobileSidebar,
+    setShowMobileSidebar,
+    toggleMobileSidebar,
+    isLeftSidebarCollapsed,
+    setIsLeftSidebarCollapsed,
+    toggleLeftSidebar,
+    isRightPanelOpen,
+    setIsRightPanelOpen,
+    toggleRightPanel,
+    isRightPanelCollapsed,
+    setIsRightPanelCollapsed,
+    toggleRightPanelCollapse,
+    isMounted,
+    isInitializing,
+    setIsInitializing,
+  } = viewState;
 
   // Listen for sidebar "All Notes" click event
   useEffect(() => {
@@ -230,10 +192,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       } else if (e.detail && typeof e.detail === 'object' && e.detail.view === 'editor') {
         if (!e.detail.notePath) {
           // New note: clear editor state
-          setActiveNote(null);
-          setMarkdown('');
-          setFileName('');
-          setFolder('');
+          clearNote();
         } else {
           // Find note by path (folder/name or just name)
           const note = notes.find(n => {
@@ -241,10 +200,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             return fullPath === e.detail.notePath;
           });
           if (note) {
-            setActiveNote(note);
-            setMarkdown(note.content);
-            setFileName(note.name.replace('.md', ''));
-            setFolder(note.folder || '');
+            loadNote(note);
           }
         }
         setCurrentView('editor');
@@ -252,56 +208,35 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     };
     window.addEventListener('setCurrentView', handler);
     return () => window.removeEventListener('setCurrentView', handler);
-  }, [notes]);
+  }, [notes, clearNote, loadNote]);
 
-  // File management
-  const [fileName, setFileName] = useState('');
-  const [folder, setFolder] = useState('');
-  const [saveStatus, setSaveStatus] = useState('');
+  // Graph and search state management (consolidated)
+  const graphSearchState = useGraphSearchState();
+  const { graph, setGraph, graphStats, setGraphStats, tags, setTags, folders, setFolders } =
+    graphSearchState;
 
-  // Ref to track the latest markdown content for immediate access in callbacks
-  const markdownRef = useRef(markdown);
-
-  // Update ref whenever markdown changes
-  useEffect(() => {
-    markdownRef.current = markdown;
-  }, [markdown]);
-
-  // Graph state
-  const [graph, setGraph] = useState<Graph>({ nodes: [], edges: [] });
-  const [graphStats, setGraphStats] = useState({
-    totalNotes: 0,
-    totalLinks: 0,
-    avgConnections: 0,
-    maxConnections: 0,
-    orphanCount: 0,
-  });
-
-  // Search and organization
-  const [tags, setTags] = useState<Array<{ name: string; count: number }>>([]);
-  const [folders, setFolders] = useState<Array<{ name: string; count: number }>>([]);
-
-  // Mobile sidebar state
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-
-  // Left sidebar collapse state
-  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
-
-  // Right side panel state
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
-  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(true);
-
-  // Status bar state
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  // Save state management (consolidated)
+  const saveState = useSaveState();
+  const {
+    saveStatus,
+    setSaveStatus,
+    lastSaved,
+    setLastSaved,
+    isSaving,
+    setIsSaving,
+    saveError,
+    setSaveError,
+    clearSaveStatus,
+    setSaveSuccess,
+    setSaveErrorWithTimeout,
+  } = saveState;
 
   // Auto-save with 3 second debounce - only when there's a filename
   useAutoSave(
     markdown,
-    async (content) => {
+    async content => {
       if (!fileName.trim() || !activeNote) return; // Only auto-save existing notes
-      
+
       const fullPath = folder.trim()
         ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
         : `${fileName.trim().replace(/\/+$/, '')}.md`;
@@ -340,7 +275,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         setLastSaved(new Date());
         setSaveError(null);
       },
-      onSaveError: (error) => {
+      onSaveError: error => {
         setIsSaving(false);
         setSaveError(error.message);
         console.error('Auto-save error:', error);
@@ -355,68 +290,63 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
       switch (buttonType) {
         case 'command-palette':
-          setShowCommandPalette(true);
+          modals.commandPalette.open();
           break;
         case 'calendar':
-          setShowCalendar(true);
+          modals.calendar.open();
           analytics.trackEvent('mode_switched', { view: 'daily-notes-calendar' });
           break;
         case 'ai-chat':
-          setShowAIChat(true);
+          modals.aiChat.open();
           analytics.trackEvent('ai_chat', { action: 'open_chat', noteContext: !!activeNote?.id });
           break;
         case 'writing-assistant':
-          setShowWritingAssistant(true);
+          modals.writingAssistant.open();
           analytics.trackEvent('ai_analysis', {
             action: 'open_writing_assistant',
             noteContext: !!activeNote?.id,
           });
           break;
         case 'knowledge-discovery':
-          setShowKnowledgeDiscovery(true);
+          modals.knowledgeDiscovery.open();
           analytics.trackEvent('ai_analysis', {
             action: 'open_knowledge_discovery',
             notesCount: notes.length,
           });
           break;
         case 'research-assistant':
-          setShowResearchAssistant(true);
+          modals.researchAssistant.open();
           analytics.trackEvent('ai_analysis', {
             action: 'open_research_assistant',
             notesCount: notes.length,
           });
           break;
         case 'knowledge-map':
-          setShowKnowledgeMap(true);
+          modals.knowledgeMap.open();
           analytics.trackEvent('ai_analysis', {
             action: 'open_knowledge_map',
             notesCount: notes.length,
           });
           break;
         case 'batch-analyzer':
-          setShowBatchAnalyzer(true);
+          modals.batchAnalyzer.open();
           analytics.trackEvent('ai_analysis', {
             action: 'open_batch_analyzer',
             notesCount: notes.length,
           });
           break;
         case 'user-profile':
-          setShowUserProfile(true);
+          modals.userProfile.open();
           break;
         case 'collab-settings':
-          setShowCollabSettings(true);
+          modals.collabSettings.open();
           break;
         default:
           console.log(`❌ Unknown button type: ${buttonType}`);
       }
     },
-    [activeNote?.id, notes.length]
+    [activeNote?.id, notes.length, modals]
   );
-
-  // Client-side mounting state to prevent hydration issues
-  const [isMounted, setIsMounted] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
-  // const [_initializationComplete, setInitializationComplete] = useState(false); // unused
 
   // Use ref to prevent double initialization
   const hasInitialized = useRef(false);
@@ -525,9 +455,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       return;
     }
 
-    // Set mounted state immediately to enable UI interactions
-    setIsMounted(true);
-    console.log('🔧 Component mounted, isMounted set to true');
+    // Mounted state is already set by useViewState hook
+    console.log('🔧 Component mounted, isMounted=', isMounted);
 
     const initializePKM = async () => {
       try {
@@ -688,17 +617,17 @@ Try creating a note about a project and linking it to other notes. Watch your kn
   useEffect(() => {
     const handleShowAnalytics = (event: CustomEvent) => {
       setGraphAnalyticsData(event.detail.analytics);
-      setShowGraphAnalytics(true);
+      modals.graphAnalytics.open();
     };
 
     const handleShowConnectionSuggestions = (event: CustomEvent) => {
       setConnectionSuggestionsData(event.detail.connections || []);
-      setShowConnectionSuggestions(true);
+      modals.connectionSuggestions.open();
     };
 
     const handleShowMOCSuggestions = (event: CustomEvent) => {
       setMOCSuggestionsData(event.detail.suggestions || []);
-      setShowMOCSuggestions(true);
+      modals.mocSuggestions.open();
     };
 
     window.addEventListener('showAnalyticsDashboard', handleShowAnalytics as EventListener);
@@ -716,7 +645,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       );
       window.removeEventListener('showMOCSuggestions', handleShowMOCSuggestions as EventListener);
     };
-  }, []);
+  }, [modals]);
 
   // Command Palette keyboard shortcut
   useEffect(() => {
@@ -727,7 +656,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       // Cmd/Ctrl+K to open command palette
       if (metaKey && e.key === 'k') {
         e.preventDefault();
-        setShowCommandPalette(true);
+        modals.commandPalette.open();
         analytics.trackEvent('mode_switched', { action: 'command_palette_opened' });
         return;
       }
@@ -743,14 +672,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       // Cmd/Ctrl+I to toggle AI Chat
       if (metaKey && e.key === 'i') {
         e.preventDefault();
-        setShowAIChat(prev => !prev);
+        modals.aiChat.toggle();
         return;
       }
 
       // Cmd/Ctrl+Shift+F to toggle Zen Mode
       if (metaKey && e.shiftKey && e.key === 'F') {
         e.preventDefault();
-        setShowZenMode(prev => !prev);
+        modals.zenMode.toggle();
         analytics.trackEvent('mode_switched', { action: 'zen_mode_toggled' });
         return;
       }
@@ -758,30 +687,30 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       // ? to show keyboard shortcuts
       if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) {
         e.preventDefault();
-        setShowKeyboardHelp(true);
+        modals.keyboardHelp.open();
         return;
       }
 
       // Ctrl+Shift+F or Cmd+Shift+F to show global search
       if (e.key === 'F' && (e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
-        setShowGlobalSearch(true);
+        modals.globalSearch.open();
         analytics.trackEvent('global_search_opened', { trigger: 'keyboard_shortcut' });
         return;
       }
 
       // Escape to close modals
       if (e.key === 'Escape') {
-        setShowCommandPalette(false);
-        setShowKeyboardHelp(false);
-        setShowAIChat(false);
-        setShowWritingAssistant(false);
-        setShowKnowledgeDiscovery(false);
-        setShowResearchAssistant(false);
-        setShowKnowledgeMap(false);
-        setShowBatchAnalyzer(false);
-        setShowGlobalSearch(false);
-        setShowZenMode(false);
+        modals.commandPalette.close();
+        modals.keyboardHelp.close();
+        modals.aiChat.close();
+        modals.writingAssistant.close();
+        modals.knowledgeDiscovery.close();
+        modals.researchAssistant.close();
+        modals.knowledgeMap.close();
+        modals.batchAnalyzer.close();
+        modals.globalSearch.close();
+        modals.zenMode.close();
       }
     };
 
@@ -791,23 +720,23 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       window.removeEventListener('keydown', handleKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [markdown, fileName, folder]);
+  }, [markdown, fileName, folder, modals]);
 
   // Command Palette custom event listeners
   useEffect(() => {
-    const handleOpenAIChat = () => setShowAIChat(true);
-    const handleOpenWritingAssistant = () => setShowWritingAssistant(true);
-    const handleOpenKnowledgeDiscovery = () => setShowKnowledgeDiscovery(true);
-    const handleOpenResearchAssistant = () => setShowResearchAssistant(true);
-    const handleOpenKnowledgeMap = () => setShowKnowledgeMap(true);
-    const handleOpenBatchAnalyzer = () => setShowBatchAnalyzer(true);
+    const handleOpenAIChat = () => modals.aiChat.open();
+    const handleOpenWritingAssistant = () => modals.writingAssistant.open();
+    const handleOpenKnowledgeDiscovery = () => modals.knowledgeDiscovery.open();
+    const handleOpenResearchAssistant = () => modals.researchAssistant.open();
+    const handleOpenKnowledgeMap = () => modals.knowledgeMap.open();
+    const handleOpenBatchAnalyzer = () => modals.batchAnalyzer.open();
     const handleOpenGlobalSearch = () => {
-      setShowGlobalSearch(true);
+      modals.globalSearch.open();
       analytics.trackEvent('global_search_opened', { trigger: 'event' });
     };
-    const handleToggleRightPanel = () => setIsRightPanelOpen(prev => !prev);
-    const handleToggleSidebar = () => setShowMobileSidebar(prev => !prev);
-    const handleToggleLeftSidebar = () => setIsLeftSidebarCollapsed(prev => !prev);
+    const handleToggleRightPanel = toggleRightPanel;
+    const handleToggleSidebar = toggleMobileSidebar;
+    const handleToggleLeftSidebar = toggleLeftSidebar;
 
     const handleRefreshNotes = async () => {
       // Refresh notes from API without reloading the page
@@ -844,12 +773,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       window.removeEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
       window.removeEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
       window.removeEventListener('openGlobalSearch', handleOpenGlobalSearch);
-      window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
+      window.addEventListener('toggleRightPanel', handleToggleRightPanel);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
       window.removeEventListener('refreshNotes', handleRefreshNotes);
     };
-  }, []);
+  }, [modals]);
 
   // Handle search
   type SearchOptions = {
@@ -974,11 +903,11 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         try {
           const filename = note.folder ? `${note.folder}/${note.name}` : note.name;
           const response = await fetch(`/api/files/${encodeURIComponent(filename)}`);
-          
+
           if (response.ok) {
             const data = await response.json();
             console.log('[PAGE] Loaded fresh content from server');
-            
+
             // Use the fresh content from the server
             const updatedNote = {
               ...note,
@@ -995,10 +924,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               tagCount: updatedNote.tags.length,
             });
 
-            setActiveNote(updatedNote);
-            setMarkdown(data.content);
-            setFileName(updatedNote.name.replace('.md', ''));
-            setFolder(updatedNote.folder || '');
+            // Load the note using helper
+            loadNote(updatedNote);
 
             // Update PKM system's active note
             console.log('[PAGE] Setting active note in PKM:', updatedNote.id);
@@ -1007,24 +934,18 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           } else {
             console.error('[PAGE] Failed to fetch note content:', response.status);
             // Fallback to cached content if fetch fails
-            setActiveNote(note);
-            setMarkdown(note.content);
-            setFileName(note.name.replace('.md', ''));
-            setFolder(note.folder || '');
+            loadNote(note);
             pkm.setActiveNote(note.id);
           }
         } catch (error) {
           console.error('[PAGE] Error fetching note content:', error);
           // Fallback to cached content if fetch fails
-          setActiveNote(note);
-          setMarkdown(note.content);
-          setFileName(note.name.replace('.md', ''));
-          setFolder(note.folder || '');
+          loadNote(note);
           pkm.setActiveNote(note.id);
         }
       }
     },
-    [notes, pkm]
+    [notes, pkm, loadNote]
   );
 
   // Save note
@@ -1033,17 +954,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
     const shouldOverwrite = typeof forceOverwrite === 'boolean' ? forceOverwrite : false;
 
     if (!fileName.trim()) {
-      setSaveStatus('Please enter a filename');
-      setSaveError('Please enter a filename');
-      setTimeout(() => {
-        setSaveStatus('');
-        setSaveError(null);
-      }, 3000);
+      setSaveErrorWithTimeout('Please enter a filename');
       return;
     }
 
     setIsSaving(true);
-    setSaveError(null);
+    clearSaveStatus();
 
     try {
       const fullPath = folder.trim()
@@ -1068,9 +984,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       });
 
       if (response.ok) {
-        setSaveStatus('Note saved successfully! 🎉');
-        setLastSaved(new Date());
-        setSaveError(null);
+        setSaveSuccess();
 
         // Show success toast
         if (shouldOverwrite) {
@@ -1133,35 +1047,15 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               saveNote(true);
             }
           );
-          setSaveStatus('File already exists');
-          setSaveError('File already exists');
-          setTimeout(() => {
-            setSaveStatus('');
-            setSaveError(null);
-          }, 3000);
+          setSaveErrorWithTimeout('File already exists');
         } else {
-          setSaveStatus(data.error || 'Error saving file');
-          setSaveError(data.error || 'Error saving file');
-          setTimeout(() => {
-            setSaveStatus('');
-            setSaveError(null);
-          }, 3000);
+          setSaveErrorWithTimeout(data.error || 'Error saving file');
         }
       } else {
-        setSaveStatus('Error saving file');
-        setSaveError('Error saving file');
-        setTimeout(() => {
-          setSaveStatus('');
-          setSaveError(null);
-        }, 3000);
+        setSaveErrorWithTimeout('Error saving file');
       }
     } catch (error) {
-      setSaveStatus('Error saving file');
-      setSaveError('Network error');
-      setTimeout(() => {
-        setSaveStatus('');
-        setSaveError(null);
-      }, 3000);
+      setSaveErrorWithTimeout('Network error');
       console.error('Error saving file:', error);
     } finally {
       setIsSaving(false);
@@ -1199,11 +1093,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         // Clear active note if it was deleted
         if (activeNote?.id === noteId) {
-          setActiveNote(null);
+          clearNote();
           pkm.setActiveNote(undefined); // Clear active note in PKM
-          setMarkdown('');
-          setFileName('');
-          setFolder('');
         }
 
         // Show success message
@@ -1232,11 +1123,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
       action: 'new_note_button_clicked',
     });
 
-    setActiveNote(null);
+    clearNote();
     pkm.setActiveNote(undefined); // Clear active note in PKM
-    setMarkdown('# New Note\n\nStart writing your thoughts here...');
-    setFileName('');
-    setFolder('');
     setCurrentView('editor');
   };
 
@@ -1468,7 +1356,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                 deleteNote={deleteNote}
                 theme={theme}
                 isCollapsed={isLeftSidebarCollapsed}
-                onToggleCollapse={() => setIsLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
+                onToggleCollapse={toggleLeftSidebar}
               />
             </div>
             {/* Main Content Area */}
@@ -1528,7 +1416,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         </div>
 
         {/* Collaboration Settings Modal */}
-        {showCollabSettings && (
+        {modals.collabSettings.isOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div
               className="rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
@@ -1545,7 +1433,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
                   Collaboration Settings
                 </h2>
                 <button
-                  onClick={() => setShowCollabSettings(false)}
+                  onClick={modals.collabSettings.close}
                   className="hover:opacity-70"
                   style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                 >
@@ -1558,12 +1446,12 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         )}
 
         {/* User Profile Modal */}
-        {showUserProfile && <UserProfile onClose={() => setShowUserProfile(false)} />}
+        {modals.userProfile.isOpen && <UserProfile onClose={modals.userProfile.close} />}
 
         {/* AI Chat Panel */}
         <AIChat
-          isOpen={showAIChat}
-          onClose={() => setShowAIChat(false)}
+          isOpen={modals.aiChat.isOpen}
+          onClose={modals.aiChat.close}
           currentNoteId={activeNote?.id}
           currentNoteContent={activeNote?.content}
           currentNoteName={activeNote?.name}
@@ -1573,8 +1461,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         {/* Writing Assistant Panel */}
         <WritingAssistant
-          isOpen={showWritingAssistant}
-          onClose={() => setShowWritingAssistant(false)}
+          isOpen={modals.writingAssistant.isOpen}
+          onClose={modals.writingAssistant.close}
           content={activeNote?.content || markdown}
           noteId={activeNote?.id}
           onContentChange={(newContent: string) => {
@@ -1606,8 +1494,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         {/* Knowledge Discovery Panel */}
         <KnowledgeDiscovery
-          isOpen={showKnowledgeDiscovery}
-          onClose={() => setShowKnowledgeDiscovery(false)}
+          isOpen={modals.knowledgeDiscovery.isOpen}
+          onClose={modals.knowledgeDiscovery.close}
           notes={notes}
           tags={tags}
           onCreateNote={async (title, content) => {
@@ -1677,7 +1565,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               // Switch to the new note
               setFileName(newFileName);
               setMarkdown(content);
-              setShowKnowledgeDiscovery(false);
+              modals.knowledgeDiscovery.close();
 
               toast.success(`Note "${title}" created successfully! 📝`);
             } catch (error) {
@@ -1687,14 +1575,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           }}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
-            setShowKnowledgeDiscovery(false);
+            modals.knowledgeDiscovery.close();
           }}
         />
 
         {/* Research Assistant Panel */}
         <ResearchAssistant
-          isOpen={showResearchAssistant}
-          onClose={() => setShowResearchAssistant(false)}
+          isOpen={modals.researchAssistant.isOpen}
+          onClose={modals.researchAssistant.close}
           notes={notes}
           onCreateNote={async (title, content) => {
             try {
@@ -1763,7 +1651,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
               // Switch to the new note
               setFileName(newFileName);
               setMarkdown(content);
-              setShowResearchAssistant(false);
+              modals.researchAssistant.close();
 
               toast.success(`Note "${title}" created successfully! 📝`);
             } catch (error) {
@@ -1773,18 +1661,18 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           }}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
-            setShowResearchAssistant(false);
+            modals.researchAssistant.close();
           }}
         />
 
         {/* Knowledge Map */}
         <KnowledgeMap
-          isOpen={showKnowledgeMap}
-          onClose={() => setShowKnowledgeMap(false)}
+          isOpen={modals.knowledgeMap.isOpen}
+          onClose={modals.knowledgeMap.close}
           notes={notes}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
-            setShowKnowledgeMap(false);
+            modals.knowledgeMap.close();
           }}
           onCreateNote={async (title, content) => {
             const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
@@ -1793,34 +1681,34 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             // Create and save the note
             const pkm = getPKMSystem();
             await pkm.createNote(newFileName, content);
-            setShowKnowledgeMap(false);
+            modals.knowledgeMap.close();
           }}
         />
 
         {/* Batch Analyzer */}
         <BatchAnalyzer
-          isOpen={showBatchAnalyzer}
-          onClose={() => setShowBatchAnalyzer(false)}
+          isOpen={modals.batchAnalyzer.isOpen}
+          onClose={modals.batchAnalyzer.close}
           notes={notes}
           onOpenNote={noteId => {
             handleNoteSelect(noteId);
-            setShowBatchAnalyzer(false);
+            modals.batchAnalyzer.close();
           }}
           onBulkUpdate={async updates => {
             // Handle bulk updates if needed
             console.log('Bulk updates:', updates);
-            setShowBatchAnalyzer(false);
+            modals.batchAnalyzer.close();
           }}
         />
 
         {/* Global Search Panel */}
         <GlobalSearchPanel
-          isOpen={showGlobalSearch}
-          onClose={() => setShowGlobalSearch(false)}
+          isOpen={modals.globalSearch.isOpen}
+          onClose={modals.globalSearch.close}
           onSearch={handleSearch}
           onSelectNote={noteId => {
             handleNoteSelect(noteId);
-            setShowGlobalSearch(false);
+            modals.globalSearch.close();
           }}
           onUpdateNote={async (noteId, content) => {
             const note = notes.find(n => n.id === noteId);
@@ -1853,8 +1741,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         {/* Command Palette */}
         {isMounted && !isInitializing && (
           <CommandPalette
-            isOpen={showCommandPalette}
-            onClose={() => setShowCommandPalette(false)}
+            isOpen={modals.commandPalette.isOpen}
+            onClose={modals.commandPalette.close}
             onSelectNote={noteId => {
               const note = notes.find(n => n.id === noteId);
               if (note) {
@@ -1870,8 +1758,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         {/* Daily Notes Calendar */}
         <DailyNotesCalendarModal
-          isOpen={showCalendar}
-          onClose={() => setShowCalendar(false)}
+          isOpen={modals.calendar.isOpen}
+          onClose={modals.calendar.close}
           onDateSelect={async dateStr => {
             // Find or create the note for this date
             const note = notes.find(n => n.name.includes(dateStr));
@@ -1899,9 +1787,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         {graphAnalyticsData && (
           <KnowledgeGraphAnalytics
             analytics={graphAnalyticsData}
-            isOpen={showGraphAnalytics}
+            isOpen={modals.graphAnalytics.isOpen}
             onClose={() => {
-              setShowGraphAnalytics(false);
+              modals.graphAnalytics.close();
               setGraphAnalyticsData(null);
             }}
           />
@@ -1910,9 +1798,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         {connectionSuggestionsData.length > 0 && (
           <ConnectionSuggestionsModal
             connections={connectionSuggestionsData}
-            isOpen={showConnectionSuggestions}
+            isOpen={modals.connectionSuggestions.isOpen}
             onClose={() => {
-              setShowConnectionSuggestions(false);
+              modals.connectionSuggestions.close();
               setConnectionSuggestionsData([]);
             }}
             onApply={async (source, target, reason) => {
@@ -1937,9 +1825,9 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         {mocSuggestionsData.length > 0 && (
           <MOCSuggestionsModal
             suggestions={mocSuggestionsData}
-            isOpen={showMOCSuggestions}
+            isOpen={modals.mocSuggestions.isOpen}
             onClose={() => {
-              setShowMOCSuggestions(false);
+              modals.mocSuggestions.close();
               setMOCSuggestionsData([]);
             }}
             onCreate={async (title, noteIds, reason) => {
@@ -1959,8 +1847,8 @@ Try creating a note about a project and linking it to other notes. Watch your kn
 
         {/* Keyboard Shortcuts Help */}
         <KeyboardShortcutsHelp
-          isOpen={showKeyboardHelp}
-          onClose={() => setShowKeyboardHelp(false)}
+          isOpen={modals.keyboardHelp.isOpen}
+          onClose={modals.keyboardHelp.close}
         />
 
         {/* Quick Actions Menu (Mobile-friendly FAB) */}
@@ -1972,10 +1860,10 @@ Try creating a note about a project and linking it to other notes. Watch your kn
             setActiveNote(null);
             setCurrentView('editor');
           }}
-          onSearch={() => setShowCommandPalette(true)}
+          onSearch={modals.commandPalette.open}
           onGraphView={() => setCurrentView('graph')}
-          onAIChat={() => setShowAIChat(true)}
-          onKeyboardHelp={() => setShowKeyboardHelp(true)}
+          onAIChat={modals.aiChat.open}
+          onKeyboardHelp={modals.keyboardHelp.open}
         />
 
         {/* Right Side Panel */}
@@ -2022,7 +1910,7 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentNoteName={fileName || activeNote?.name.replace('.md', '')}
           currentFolder={folder || activeNote?.folder}
           theme={theme}
-          onStatsClick={() => setShowWritingStats(true)}
+          onStatsClick={modals.writingStats.open}
         />
 
         {/* Mobile Bottom Navigation */}
@@ -2030,14 +1918,14 @@ Try creating a note about a project and linking it to other notes. Watch your kn
           currentView={currentView}
           onViewChange={view => setCurrentView(view)}
           onNewNote={createNewNote}
-          onAIChat={() => setShowAIChat(true)}
+          onAIChat={modals.aiChat.open}
           theme={theme as 'light' | 'dark'}
         />
 
         {/* Writing Stats Modal */}
         <WritingStatsModal
-          isOpen={showWritingStats}
-          onClose={() => setShowWritingStats(false)}
+          isOpen={modals.writingStats.isOpen}
+          onClose={modals.writingStats.close}
           stats={{
             wordCount: markdown.split(/\s+/).filter(word => word.length > 0).length,
             characterCount: markdown.length,
@@ -2054,11 +1942,11 @@ Try creating a note about a project and linking it to other notes. Watch your kn
         />
 
         {/* Zen Mode */}
-        {showZenMode && (
+        {modals.zenMode.isOpen && (
           <ZenMode
             markdown={markdown}
             onMarkdownChange={handleMarkdownChange}
-            onClose={() => setShowZenMode(false)}
+            onClose={modals.zenMode.close}
             theme={theme}
           />
         )}
