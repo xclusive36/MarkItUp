@@ -38,6 +38,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PageSkeleton, NotesListSkeleton, EditorSkeleton } from '@/components/SkeletonLoader';
 import { useModalState } from '@/hooks/useModalState';
 import { useNoteState } from '@/hooks/useNoteState';
 import { useViewState } from '@/hooks/useViewState';
@@ -48,6 +49,7 @@ import { useSaveState } from '@/hooks/useSaveState';
 import { getPKMSystem } from '@/lib/pkm';
 import { Note, Graph, SearchResult, SearchMatch } from '@/lib/types';
 import { analytics, AnalyticsEventType } from '@/lib/analytics';
+import { ViewMode, MainView, ButtonAction } from '@/types/ui';
 
 // Component imports
 // ...existing code...
@@ -208,7 +210,7 @@ export default function Home() {
     };
     window.addEventListener('setCurrentView', handler);
     return () => window.removeEventListener('setCurrentView', handler);
-  }, [notes, clearNote, loadNote]);
+  }, [notes, clearNote, loadNote, setCurrentView]);
 
   // Graph and search state management (consolidated)
   const graphSearchState = useGraphSearchState();
@@ -285,7 +287,7 @@ export default function Home() {
 
   // Simplified button handler with event delegation
   const handleButtonClick = useCallback(
-    (buttonType: string) => {
+    (buttonType: ButtonAction) => {
       console.log(`🎯 ${buttonType} button clicked via handleButtonClick`);
 
       switch (buttonType) {
@@ -509,7 +511,7 @@ export default function Home() {
       console.log('⏰ Starting PKM initialization after timeout');
       initializePKM();
     }, 100); // Increased timeout slightly
-  }, [pkm]);
+  }, [pkm, isMounted, setIsInitializing]);
 
   // Check if Daily Notes plugin is loaded
   useEffect(() => {
@@ -578,7 +580,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
-  }, []);
+  }, [setNotes, setGraph, setGraphStats, setTags, setFolders]);
 
   // Reload the currently active note from the server
   const reloadCurrentNote = useCallback(async () => {
@@ -604,7 +606,7 @@ export default function Home() {
     } catch (error) {
       console.error('[Page] Error reloading current note:', error);
     }
-  }, [activeNote]);
+  }, [activeNote, setActiveNote, setMarkdown]);
 
   // Load initial data after component is mounted
   useEffect(() => {
@@ -773,14 +775,12 @@ export default function Home() {
       window.removeEventListener('openKnowledgeMap', handleOpenKnowledgeMap);
       window.removeEventListener('openBatchAnalyzer', handleOpenBatchAnalyzer);
       window.removeEventListener('openGlobalSearch', handleOpenGlobalSearch);
-      window.addEventListener('toggleRightPanel', handleToggleRightPanel);
+      window.removeEventListener('toggleRightPanel', handleToggleRightPanel);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('toggleLeftSidebar', handleToggleLeftSidebar);
       window.removeEventListener('refreshNotes', handleRefreshNotes);
     };
-  }, [modals]);
-
-  // Handle search
+  }, [modals, toggleRightPanel, toggleMobileSidebar, toggleLeftSidebar, setNotes]); // Handle search
   type SearchOptions = {
     limit?: number;
     includeContent?: boolean;
@@ -1140,7 +1140,7 @@ export default function Home() {
       handleNoteSelect(nodeId);
       setCurrentView('editor');
     },
-    [handleNoteSelect]
+    [handleNoteSelect, setCurrentView]
   );
 
   // Render wikilinks in markdown
@@ -1150,6 +1150,11 @@ export default function Home() {
   if (markdown !== processedMarkdown) {
     console.log('Original markdown:', markdown.substring(0, 200) + '...');
     console.log('Processed markdown:', processedMarkdown.substring(0, 200) + '...');
+  }
+
+  // Show skeleton during initial load
+  if (!isMounted || isInitializing) {
+    return <PageSkeleton />;
   }
 
   return (
@@ -1246,10 +1251,8 @@ export default function Home() {
                 settings={settings}
                 isMounted={isMounted}
                 isDailyNotesLoaded={isDailyNotesLoaded}
-                onViewChange={view =>
-                  setCurrentView(view as 'editor' | 'graph' | 'search' | 'analytics' | 'plugins')
-                }
-                onViewModeChange={mode => setViewMode(mode as 'edit' | 'preview' | 'split')}
+                onViewChange={(view: MainView) => setCurrentView(view)}
+                onViewModeChange={(mode: ViewMode) => setViewMode(mode)}
                 onButtonClick={handleButtonClick}
                 onAnalyticsTrack={(event: string, data?: Record<string, unknown>) =>
                   analytics.trackEvent(event as AnalyticsEventType, data)

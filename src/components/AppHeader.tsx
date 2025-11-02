@@ -18,19 +18,20 @@ import {
 import Link from 'next/link';
 import { SimpleDropdown } from './SimpleDropdown';
 import ThemeToggle from './ThemeToggle';
+import { ViewMode, MainView, ButtonAction } from '@/types/ui';
 
 interface HeaderProps {
   theme: 'light' | 'dark';
-  currentView: string;
-  viewMode: string;
+  currentView: MainView;
+  viewMode: ViewMode;
   settings: {
     enableCollaboration: boolean;
   };
   isMounted: boolean;
   isDailyNotesLoaded?: boolean; // Whether Daily Notes plugin is loaded
-  onViewChange: (view: string) => void;
-  onViewModeChange: (mode: string) => void;
-  onButtonClick: (buttonType: string) => void;
+  onViewChange: (view: MainView) => void;
+  onViewModeChange: (mode: ViewMode) => void;
+  onButtonClick: (buttonType: ButtonAction) => void;
   onAnalyticsTrack: (event: string, data?: Record<string, unknown>) => void;
 }
 
@@ -164,7 +165,7 @@ export function AppHeader({
       {/* App Title as Home Link */}
       <Link
         href="/"
-        className="text-xl sm:text-2xl font-bold flex-shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 no-underline hover:no-underline"
+        className="text-xl sm:text-2xl font-bold shrink-0 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-blue-500 no-underline hover:no-underline"
         style={{ color: 'var(--text-primary)' }}
         onClick={e => {
           e.preventDefault();
