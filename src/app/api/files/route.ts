@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fileService } from '@/lib/services/fileService';
 import { validateRequest, createFileRequestSchema, createErrorResponse } from '@/lib/validations';
+import { getSyncService } from '@/lib/db/sync';
 
 /**
  * GET /api/files
@@ -23,10 +24,10 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate request body
     const validation = await validateRequest(createFileRequestSchema, body);
-    
+
     if (!validation.success) {
       return createErrorResponse(validation.error, 400);
     }
@@ -36,6 +37,17 @@ export async function POST(request: NextRequest) {
 
     // Create the file
     const result = await fileService.createFile(filename, content, folder);
+
+    // Sync with database
+    try {
+      const syncService = getSyncService();
+      const noteId = folder ? `${folder}/${filename}` : filename;
+      await syncService.indexNote(noteId, content);
+      console.log('[API] Note synced to database:', noteId);
+    } catch (dbError) {
+      console.error('[API] Database sync failed (non-fatal):', dbError);
+      // Don't fail the request if DB sync fails
+    }
 
     return NextResponse.json(result);
   } catch (error) {

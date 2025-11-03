@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, memo } from 'react';
 // import Link from 'next/link';
 import {
   FileText,
@@ -626,4 +626,38 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 };
 
-export default Sidebar;
+// Memoize Sidebar to prevent unnecessary re-renders
+export default memo(Sidebar, (prevProps, nextProps) => {
+  // Re-render if notes array changes (new/deleted notes)
+  if (prevProps.notes !== nextProps.notes) {
+    return false;
+  }
+
+  // Re-render if active note changes
+  if (prevProps.activeNote?.id !== nextProps.activeNote?.id) {
+    return false;
+  }
+
+  // Re-render if graph stats change
+  if (prevProps.graphStats !== nextProps.graphStats) {
+    return false;
+  }
+
+  // Re-render if tags change
+  if (prevProps.tags !== nextProps.tags) {
+    return false;
+  }
+
+  // Re-render if theme changes
+  if (prevProps.theme !== nextProps.theme) {
+    return false;
+  }
+
+  // Re-render if current view changes
+  if (prevProps.currentView !== nextProps.currentView) {
+    return false;
+  }
+
+  // Otherwise, skip re-render
+  return true;
+});

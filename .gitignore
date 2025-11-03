@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/
@@ -46,3 +51,8 @@ next-env.d.ts
 
 # analytics data
 /analytics/events.json
+
+# SQLite database
+markitup.db
+markitup.db-shm
+markitup.db-wal

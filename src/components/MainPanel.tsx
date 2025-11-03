@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import MainContent from './MainContent';
 import NotesPanel from './NotesPanel';
 import GraphView from './GraphView';
@@ -192,4 +192,43 @@ const MainPanel: React.FC<MainPanelProps> = ({
   return null;
 };
 
-export default MainPanel;
+// Memoize MainPanel to prevent unnecessary re-renders
+// Only re-render when props actually change
+export default memo(MainPanel, (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  // Only check the props relevant to current view
+  if (prevProps.currentView !== nextProps.currentView) {
+    return false; // Re-render if view changes
+  }
+
+  switch (nextProps.currentView) {
+    case 'editor':
+      return (
+        prevProps.markdown === nextProps.markdown &&
+        prevProps.viewMode === nextProps.viewMode &&
+        prevProps.processedMarkdown === nextProps.processedMarkdown &&
+        prevProps.theme === nextProps.theme
+      );
+    case 'graph':
+      return (
+        prevProps.graph === nextProps.graph && prevProps.activeNote?.id === nextProps.activeNote?.id
+      );
+    case 'search':
+      return (
+        prevProps.tags === nextProps.tags &&
+        prevProps.folders === nextProps.folders &&
+        prevProps.theme === nextProps.theme
+      );
+    case 'analytics':
+      return (
+        prevProps.notes === nextProps.notes &&
+        prevProps.graph === nextProps.graph &&
+        prevProps.tags === nextProps.tags
+      );
+    case 'notes':
+    case 'plugins':
+      return true; // These don't need re-renders
+    default:
+      return false;
+  }
+});

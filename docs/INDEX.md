@@ -28,10 +28,11 @@ Welcome to the MarkItUp documentation! This index provides quick access to all d
 | [Plugin System](PLUGIN_SYSTEM.md) | Using existing plugins |
 | [Plugin Development](PLUGIN_DEVELOPMENT.md) | Creating custom plugins |
 
-## � Search & Discovery
+## 🔍 Search & Discovery
 
 | Document | Description |
 |----------|-------------|
+| [Advanced Search Implementation](ADVANCED_SEARCH_IMPLEMENTATION.md) | Fuzzy search, boolean operators, filters, saved searches |
 | [Global Search Quick Reference](GLOBAL_SEARCH_QUICK_REFERENCE.md) | Quick guide to using global search |
 | [Vector Search Quick Start](VECTOR_SEARCH_QUICK_START.md) | Getting started with semantic search |
 | [Vector Search Phase 2 Summary](VECTOR_SEARCH_PHASE2_SUMMARY.md) | Vector search implementation details |
@@ -107,6 +108,14 @@ Located in `changelogs/general/`:
 ## 🔧 Development Documentation
 
 Located in `development/`:
+
+### Performance & Optimization
+
+| Document | Description |
+|----------|-------------|
+| [React Performance Optimization](REACT_PERFORMANCE_OPTIMIZATION.md) | Component memoization, hooks optimization, performance monitoring |
+| [PWA Implementation](PWA_IMPLEMENTATION.md) | Progressive Web App support, offline capabilities, installation |
+| [Markdown Caching Implementation](MARKDOWN_CACHING_IMPLEMENTATION.md) | LRU cache, IndexedDB persistence, instant re-rendering |
 
 ### Fixes & Implementation Notes (`development/fixes/`)
 

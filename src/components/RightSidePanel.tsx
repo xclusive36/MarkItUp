@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import {
   X,
   ChevronLeft,
@@ -350,4 +350,43 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
   );
 };
 
-export default RightSidePanel;
+// Memoize RightSidePanel to prevent re-renders when props haven't changed
+export default memo(RightSidePanel, (prevProps, nextProps) => {
+  // Don't re-render if panel is closed and stays closed
+  if (!prevProps.isOpen && !nextProps.isOpen) {
+    return true;
+  }
+
+  // Re-render if open state changes
+  if (prevProps.isOpen !== nextProps.isOpen) {
+    return false;
+  }
+
+  // Re-render if collapsed state changes
+  if (prevProps.isCollapsed !== nextProps.isCollapsed) {
+    return false;
+  }
+
+  // Re-render if markdown changes (for outline panel)
+  if (prevProps.markdown !== nextProps.markdown) {
+    return false;
+  }
+
+  // Re-render if current note changes (for backlinks/metadata)
+  if (prevProps.currentNote?.id !== nextProps.currentNote?.id) {
+    return false;
+  }
+
+  // Re-render if all notes array reference changes
+  if (prevProps.allNotes !== nextProps.allNotes) {
+    return false;
+  }
+
+  // Re-render if theme changes
+  if (prevProps.theme !== nextProps.theme) {
+    return false;
+  }
+
+  // Otherwise, skip re-render
+  return true;
+});

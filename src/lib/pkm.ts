@@ -383,7 +383,38 @@ export class PKMSystem {
   }
 
   renderContent(content: string): string {
-    // Replace wikilinks with proper links
+    // Use markdown cache for performance
+    if (typeof window !== 'undefined') {
+      try {
+        const { getMarkdownCache, hashContent } = require('@/lib/cache');
+        const cache = getMarkdownCache();
+        const key = hashContent(content);
+
+        // Check memory cache (synchronous)
+        const cached = cache.cache.get(key);
+        if (cached) {
+          return cached.html;
+        }
+
+        // Parse content
+        const html = MarkdownParser.replaceWikilinks(content, target => {
+          const note = this.resolveWikilink(target);
+          return note ? `#note/${note.id}` : null;
+        });
+
+        // Store in cache (synchronous for memory, async for IndexedDB)
+        cache.set(content, { html }).catch((err: Error) => {
+          console.warn('Failed to cache markdown:', err);
+        });
+
+        return html;
+      } catch (error) {
+        // Fall back to uncached rendering if cache fails
+        console.warn('Cache error, falling back:', error);
+      }
+    }
+
+    // Fallback: render without cache
     return MarkdownParser.replaceWikilinks(content, target => {
       const note = this.resolveWikilink(target);
       return note ? `#note/${note.id}` : null;

@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 // React and markdown imports
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 // ...existing code...
 // MainContent import
 import MainPanel from '@/components/MainPanel';
@@ -37,13 +37,17 @@ import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
 import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PageSkeleton, NotesListSkeleton, EditorSkeleton } from '@/components/SkeletonLoader';
-import { useModalState } from '@/hooks/useModalState';
-import { useNoteState } from '@/hooks/useNoteState';
-import { useViewState } from '@/hooks/useViewState';
-import { useGraphSearchState } from '@/hooks/useGraphSearchState';
-import { useSaveState } from '@/hooks/useSaveState';
+import {
+  useModalState,
+  useNoteState,
+  useViewState,
+  useGraphSearchState,
+  useSaveState,
+  useAppStore,
+} from '@/store/app-store';
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
@@ -72,6 +76,9 @@ export default function Home() {
   const { theme } = useSimpleTheme();
   const { settings, updateSettings } = useCollaboration();
   const toast = useToast();
+
+  // Performance monitoring (development only)
+  usePerformanceMonitor('HomePage');
 
   // Auto-indexing hook (enabled based on user setting)
   const autoIndexEnabled =
@@ -110,19 +117,24 @@ export default function Home() {
   // Modal state management (consolidated)
   const modals = useModalState();
 
-  // Plugin state - track if Daily Notes plugin is loaded
-  const [isDailyNotesLoaded, setIsDailyNotesLoaded] = useState(false);
+  // Additional state from Zustand store
+  const isDailyNotesLoaded = useAppStore(state => state.isDailyNotesLoaded);
+  const setIsDailyNotesLoaded = useAppStore(state => state.setIsDailyNotesLoaded);
+  const graphAnalyticsData = useAppStore(state => state.graphAnalyticsData);
+  const setGraphAnalyticsData = useAppStore(state => state.setGraphAnalyticsData);
+  const connectionSuggestionsData = useAppStore(state => state.connectionSuggestionsData);
+  const setConnectionSuggestionsData = useAppStore(state => state.setConnectionSuggestionsData);
+  const mocSuggestionsData = useAppStore(state => state.mocSuggestionsData);
+  const setMOCSuggestionsData = useAppStore(state => state.setMocSuggestionsData);
+  const selectedText = useAppStore(state => state.selectedText);
+  const setSelectedText = useAppStore(state => state.setSelectedText);
+  const selectionPosition = useAppStore(state => state.selectionPosition);
+  const setSelectionPosition = useAppStore(state => state.setSelectionPosition);
+  const lastEditTrack = useAppStore(state => state.lastEditTrack);
+  const setLastEditTrack = useAppStore(state => state.setLastEditTrack);
 
-  // Knowledge Graph Auto-Mapper data state (modal visibility handled by useModalState)
-  const [graphAnalyticsData, setGraphAnalyticsData] = useState<any>(null);
-  const [connectionSuggestionsData, setConnectionSuggestionsData] = useState<any[]>([]);
-  const [mocSuggestionsData, setMOCSuggestionsData] = useState<any[]>([]);
-
-  // Text selection state for SelectionActionBar
-  const [selectedText, setSelectedText] = useState('');
-  const [selectionPosition, setSelectionPosition] = useState<{ top: number; left: number } | null>(
-    null
-  );
+  // PKM is still managed locally with useState due to complex initialization
+  // TODO: Consider migrating PKM to store in future iteration
 
   // Note state management (consolidated)
   const noteState = useNoteState();
@@ -137,14 +149,18 @@ export default function Home() {
     setMarkdown,
     setFileName,
     setFolder,
-    markdownRef,
     updateMarkdown,
     clearNote,
     loadNote,
   } = noteState;
 
+  // Create markdownRef for save operations (syncs with store)
+  const markdownRef = useRef(markdown);
+  useEffect(() => {
+    markdownRef.current = markdown;
+  }, [markdown]);
+
   // Track markdown editing with debounce
-  const [lastEditTrack, setLastEditTrack] = useState(0);
   const handleMarkdownChange = (value: string) => {
     updateMarkdown(value);
 
@@ -152,7 +168,7 @@ export default function Home() {
     const now = Date.now();
     if (now - lastEditTrack > 5000) {
       analytics.trackEvent('note_edited', {
-        wordCount: value.split(/\s+/).filter(word => word.length > 0).length,
+        wordCount: value.split(/\s+/).filter((word: string) => word.length > 0).length,
         characterCount: value.length,
         hasWikilinks: value.includes('[['),
         tagCount: (value.match(/#\w+/g) || []).length,
@@ -537,6 +553,7 @@ export default function Home() {
     const interval = setInterval(checkDailyNotesPlugin, 1000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refresh all PKM data
@@ -647,6 +664,7 @@ export default function Home() {
       );
       window.removeEventListener('showMOCSuggestions', handleShowMOCSuggestions as EventListener);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modals]);
 
   // Command Palette keyboard shortcut
@@ -948,177 +966,198 @@ export default function Home() {
     [notes, pkm, loadNote]
   );
 
-  // Save note
-  const saveNote = async (forceOverwrite: boolean | React.MouseEvent = false) => {
-    // If forceOverwrite is an event object, treat it as false
-    const shouldOverwrite = typeof forceOverwrite === 'boolean' ? forceOverwrite : false;
+  // Save note - MEMOIZED for performance
+  const saveNote = useCallback(
+    async (forceOverwrite: boolean | React.MouseEvent = false) => {
+      // If forceOverwrite is an event object, treat it as false
+      const shouldOverwrite = typeof forceOverwrite === 'boolean' ? forceOverwrite : false;
 
-    if (!fileName.trim()) {
-      setSaveErrorWithTimeout('Please enter a filename');
-      return;
-    }
-
-    setIsSaving(true);
-    clearSaveStatus();
-
-    try {
-      const fullPath = folder.trim()
-        ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
-        : `${fileName.trim().replace(/\/+$/, '')}.md`;
-
-      // Use the ref to get the latest content (important for WritingAssistant auto-save)
-      const currentMarkdown = markdownRef.current;
-      console.log('[saveNote] Using markdown from ref, length:', currentMarkdown.length);
-
-      // Ensure markdown is a string to prevent circular reference errors
-      const cleanMarkdown =
-        typeof currentMarkdown === 'string' ? currentMarkdown : String(currentMarkdown);
-
-      const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: cleanMarkdown,
-          overwrite: shouldOverwrite,
-        }),
-      });
-
-      if (response.ok) {
-        setSaveSuccess();
-
-        // Show success toast
-        if (shouldOverwrite) {
-          toast.success('File overwritten successfully! 🎉');
-        } else {
-          toast.success('Note saved successfully! 🎉');
-        }
-
-        // Track note save
-        const wordCount = currentMarkdown.split(/\s+/).filter(word => word.length > 0).length;
-        const hasWikilinks = currentMarkdown.includes('[[');
-        const tagMatches = currentMarkdown.match(/#\w+/g) || [];
-
-        analytics.trackEvent(activeNote ? 'note_updated' : 'note_created', {
-          noteId:
-            typeof activeNote === 'object' && activeNote && 'id' in activeNote
-              ? activeNote.id
-              : 'new',
-          fileName: fileName,
-          wordCount: wordCount,
-          characterCount: currentMarkdown.length,
-          hasWikilinks: hasWikilinks,
-          tagCount: tagMatches.length,
-          folder: folder || null,
-          isOverwrite: shouldOverwrite,
-        });
-
-        // Create or update note in PKM system
-        if (activeNote) {
-          await pkm.updateNote(activeNote.id, {
-            content: currentMarkdown,
-            name: fileName + '.md',
-            folder: folder || undefined,
-          });
-        } else {
-          await pkm.createNote(fileName, currentMarkdown, folder || undefined);
-        }
-
-        // Refresh data
-        await refreshData();
-
-        // Trigger auto-indexing if enabled
-        if (autoIndexEnabled && indexNote) {
-          // Get the updated note for indexing
-          const updatedNote = await pkm.getNote(fileName + '.md');
-          if (updatedNote) {
-            indexNote(updatedNote);
-          }
-        }
-
-        setTimeout(() => setSaveStatus(''), 3000);
-      } else if (response.status === 409) {
-        const data = await response.json();
-        if (data.requiresOverwrite) {
-          // Show toast with action button to overwrite
-          toast.warning(
-            data.prompt || 'File already exists. Click Overwrite to replace it.',
-            'Overwrite',
-            () => {
-              saveNote(true);
-            }
-          );
-          setSaveErrorWithTimeout('File already exists');
-        } else {
-          setSaveErrorWithTimeout(data.error || 'Error saving file');
-        }
-      } else {
-        setSaveErrorWithTimeout('Error saving file');
-      }
-    } catch (error) {
-      setSaveErrorWithTimeout('Network error');
-      console.error('Error saving file:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Delete note
-  const deleteNote = async (noteId: string) => {
-    if (
-      !window.confirm('Are you sure you want to delete this note? This action cannot be undone.')
-    ) {
-      return;
-    }
-
-    try {
-      const note = notes.find(n => n.id === noteId);
-      if (!note) {
-        toast.error('Note not found!');
+      if (!fileName.trim()) {
+        setSaveErrorWithTimeout('Please enter a filename');
         return;
       }
 
-      const fullPath = note.folder ? `${note.folder}/${note.name}` : note.name;
-      const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
-        method: 'DELETE',
-      });
+      setIsSaving(true);
+      clearSaveStatus();
 
-      if (response.ok) {
-        await pkm.deleteNote(noteId);
-        await refreshData();
+      try {
+        const fullPath = folder.trim()
+          ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+          : `${fileName.trim().replace(/\/+$/, '')}.md`;
 
-        // Remove from vector index if auto-indexing is enabled
-        if (autoIndexEnabled && removeNoteFromIndex) {
-          await removeNoteFromIndex(noteId);
+        // Use the ref to get the latest content (important for WritingAssistant auto-save)
+        const currentMarkdown = markdownRef.current;
+        console.log('[saveNote] Using markdown from ref, length:', currentMarkdown.length);
+
+        // Ensure markdown is a string to prevent circular reference errors
+        const cleanMarkdown =
+          typeof currentMarkdown === 'string' ? currentMarkdown : String(currentMarkdown);
+
+        const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: cleanMarkdown,
+            overwrite: shouldOverwrite,
+          }),
+        });
+
+        if (response.ok) {
+          setSaveSuccess();
+
+          // Show success toast
+          if (shouldOverwrite) {
+            toast.success('File overwritten successfully! 🎉');
+          } else {
+            toast.success('Note saved successfully! 🎉');
+          }
+
+          // Track note save
+          const wordCount = currentMarkdown.split(/\s+/).filter(word => word.length > 0).length;
+          const hasWikilinks = currentMarkdown.includes('[[');
+          const tagMatches = currentMarkdown.match(/#\w+/g) || [];
+
+          analytics.trackEvent(activeNote ? 'note_updated' : 'note_created', {
+            noteId:
+              typeof activeNote === 'object' && activeNote && 'id' in activeNote
+                ? activeNote.id
+                : 'new',
+            fileName: fileName,
+            wordCount: wordCount,
+            characterCount: currentMarkdown.length,
+            hasWikilinks: hasWikilinks,
+            tagCount: tagMatches.length,
+            folder: folder || null,
+            isOverwrite: shouldOverwrite,
+          });
+
+          // Create or update note in PKM system
+          if (activeNote) {
+            await pkm.updateNote(activeNote.id, {
+              content: currentMarkdown,
+              name: fileName + '.md',
+              folder: folder || undefined,
+            });
+          } else {
+            await pkm.createNote(fileName, currentMarkdown, folder || undefined);
+          }
+
+          // Refresh data
+          await refreshData();
+
+          // Trigger auto-indexing if enabled
+          if (autoIndexEnabled && indexNote) {
+            // Get the updated note for indexing
+            const updatedNote = await pkm.getNote(fileName + '.md');
+            if (updatedNote) {
+              indexNote(updatedNote);
+            }
+          }
+
+          setTimeout(() => setSaveStatus(''), 3000);
+        } else if (response.status === 409) {
+          const data = await response.json();
+          if (data.requiresOverwrite) {
+            // Show toast with action button to overwrite
+            toast.warning(
+              data.prompt || 'File already exists. Click Overwrite to replace it.',
+              'Overwrite',
+              () => {
+                saveNote(true);
+              }
+            );
+            setSaveErrorWithTimeout('File already exists');
+          } else {
+            setSaveErrorWithTimeout(data.error || 'Error saving file');
+          }
+        } else {
+          setSaveErrorWithTimeout('Error saving file');
+        }
+      } catch (error) {
+        setSaveErrorWithTimeout('Network error');
+        console.error('Error saving file:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [
+      fileName,
+      folder,
+      activeNote,
+      pkm,
+      toast,
+      refreshData,
+      autoIndexEnabled,
+      indexNote,
+      setSaveErrorWithTimeout,
+      setSaveSuccess,
+      setIsSaving,
+      clearSaveStatus,
+      setSaveStatus,
+      markdownRef,
+    ]
+  );
+
+  // Delete note - MEMOIZED for performance
+  const deleteNote = useCallback(
+    async (noteId: string) => {
+      if (
+        !window.confirm('Are you sure you want to delete this note? This action cannot be undone.')
+      ) {
+        return;
+      }
+
+      try {
+        const note = notes.find(n => n.id === noteId);
+        if (!note) {
+          toast.error('Note not found!');
+          return;
         }
 
-        // Clear active note if it was deleted
-        if (activeNote?.id === noteId) {
-          clearNote();
-          pkm.setActiveNote(undefined); // Clear active note in PKM
+        const fullPath = note.folder ? `${note.folder}/${note.name}` : note.name;
+        const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          await pkm.deleteNote(noteId);
+          await refreshData();
+
+          // Remove from vector index if auto-indexing is enabled
+          if (autoIndexEnabled && removeNoteFromIndex) {
+            await removeNoteFromIndex(noteId);
+          }
+
+          // Clear active note if it was deleted
+          if (activeNote?.id === noteId) {
+            clearNote();
+            pkm.setActiveNote(undefined); // Clear active note in PKM
+          }
+
+          // Show success message
+          toast.success('Note deleted successfully! 🗑️');
+        } else {
+          // Handle HTTP error responses
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          toast.error(`Failed to delete note: ${errorData.error || response.statusText}`);
         }
-
-        // Show success message
-        toast.success('Note deleted successfully! 🗑️');
-      } else {
-        // Handle HTTP error responses
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        toast.error(`Failed to delete note: ${errorData.error || response.statusText}`);
+      } catch (error) {
+        console.error('Error deleting note:', error);
+        // Handle network errors (like server not running)
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+          toast.error(
+            'Cannot connect to server. Please make sure the development server is running.'
+          );
+        } else {
+          toast.error('An unexpected error occurred while deleting the note.');
+        }
       }
-    } catch (error) {
-      console.error('Error deleting note:', error);
-      // Handle network errors (like server not running)
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        toast.error(
-          'Cannot connect to server. Please make sure the development server is running.'
-        );
-      } else {
-        toast.error('An unexpected error occurred while deleting the note.');
-      }
-    }
-  };
+    },
+    [notes, toast, pkm, refreshData, autoIndexEnabled, removeNoteFromIndex, activeNote, clearNote]
+  );
 
-  // Create new note
-  const createNewNote = () => {
+  // Create new note - MEMOIZED for performance
+  const createNewNote = useCallback(() => {
     analytics.trackEvent('note_created', {
       action: 'new_note_button_clicked',
     });
@@ -1126,7 +1165,7 @@ export default function Home() {
     clearNote();
     pkm.setActiveNote(undefined); // Clear active note in PKM
     setCurrentView('editor');
-  };
+  }, [clearNote, pkm, setCurrentView]);
 
   // Graph node click handler
   const handleGraphNodeClick = useCallback(
@@ -1143,14 +1182,10 @@ export default function Home() {
     [handleNoteSelect, setCurrentView]
   );
 
-  // Render wikilinks in markdown
-  const processedMarkdown = pkm.renderContent(markdown);
-
-  // Debug logging to see if wikilinks are being processed
-  if (markdown !== processedMarkdown) {
-    console.log('Original markdown:', markdown.substring(0, 200) + '...');
-    console.log('Processed markdown:', processedMarkdown.substring(0, 200) + '...');
-  }
+  // Render wikilinks in markdown - MEMOIZED for performance
+  const processedMarkdown = useMemo(() => {
+    return pkm.renderContent(markdown);
+  }, [markdown, pkm]);
 
   // Show skeleton during initial load
   if (!isMounted || isInitializing) {
