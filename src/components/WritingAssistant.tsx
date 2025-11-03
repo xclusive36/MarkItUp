@@ -18,6 +18,7 @@ import {
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { ContentAnalysis, WritingAssistance } from '@/lib/ai/analyzers';
 import { analytics } from '@/lib/analytics';
+import { optimizeContext, estimateTokens } from '@/lib/ai-context-optimizer';
 
 interface WritingAssistantProps {
   content: string;
@@ -63,18 +64,35 @@ export default function WritingAssistant({
       const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
       const model = settings.model || 'llama3.2';
 
+      // Optimize content for analysis (reduce tokens while keeping important parts)
+      const optimizedContent = optimizeContext(content, {
+        maxTokens: 2000, // Reasonable limit for writing analysis
+        preserveHeadings: true,
+        preserveLinks: false, // Not needed for writing analysis
+        preserveTasks: true,
+        preserveCodeBlocks: true, // Keep code for style analysis
+        preserveTags: true,
+      });
+
+      console.log('[WritingAssistant] Content optimization:', {
+        original: content.length,
+        optimized: optimizedContent.content.length,
+        tokens: optimizedContent.tokenEstimate,
+        truncated: optimizedContent.truncated,
+      });
+
       // Create prompts for analysis
       const analysisPrompt = `Analyze this content and provide a JSON response with: summary, keyTopics (array), suggestedTags (array), sentiment (positive/negative/neutral), complexity (0-10), readabilityScore (0-100), and writingStyle (tone, formality, perspective).
 
 Content:
-${content}
+${optimizedContent.content}
 
 Respond with valid JSON only.`;
 
       const assistancePrompt = `Analyze this content and provide writing suggestions in JSON format with: suggestions array (each with type, original text, suggestion, explanation, position), expandablePoints array (points that could be expanded), and strengthenArguments array.
 
 Content:
-${content}
+${optimizedContent.content}
 
 Respond with valid JSON only.`;
 

@@ -16,6 +16,12 @@ import {
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { AIMessage, ChatSession, AISettings, FileOperationRequest } from '@/lib/ai/types';
 import { analytics } from '@/lib/analytics';
+import {
+  optimizeNoteContext,
+  optimizeConversationHistory,
+  calculateContextBudget,
+  estimateTokens,
+} from '@/lib/ai-context-optimizer';
 import VectorSearchSettings from './VectorSearchSettings';
 
 interface AIChatProps {
@@ -1126,12 +1132,51 @@ CRITICAL: Use double quotes for all strings.`;
         const ollamaUrl = (settings?.ollamaUrl || 'http://localhost:11434').replace(/\/$/, '');
         const model = settings?.model || 'llama3.2';
 
-        // Build context from current note if available
+        // Calculate context budget for the model
+        const modelMaxTokens = 8000; // Most Ollama models support at least 8k tokens
+        const budget = calculateContextBudget(modelMaxTokens, 2000);
+
+        console.log('[AIChat] Context budget:', budget);
+
+        // Build optimized context from current note if available
         let noteContextMessage = '';
         if (currentNoteId && currentNoteContent) {
-          noteContextMessage = `\n\n[Current Note Context: "${currentNoteName || currentNoteId}"]\n${currentNoteContent.slice(0, 1500)}\n[End of Note Context]\n\n`;
-          console.log('[AIChat] Added note context to message, length:', noteContextMessage.length);
+          // Use context optimizer to reduce token usage
+          noteContextMessage =
+            '\n\n' +
+            optimizeNoteContext(currentNoteName || currentNoteId, currentNoteContent, {
+              maxTokens: budget.currentNote,
+              preserveHeadings: true,
+              preserveLinks: true,
+              preserveTasks: true,
+              preserveCodeBlocks: false, // Reduce token usage
+              preserveTags: true,
+            }) +
+            '\n\n';
+
+          const tokenEstimate = estimateTokens(noteContextMessage);
+          console.log(
+            '[AIChat] Optimized note context - tokens:',
+            tokenEstimate,
+            'budget:',
+            budget.currentNote
+          );
         }
+
+        // Optimize conversation history
+        const optimizedHistory = optimizeConversationHistory(
+          currentSession?.messages || [],
+          8, // Keep last 8 messages
+          budget.conversationHistory / 8 // Tokens per message
+        );
+
+        console.log(
+          '[AIChat] Optimized conversation history from',
+          currentSession?.messages?.length || 0,
+          'to',
+          optimizedHistory.length,
+          'messages'
+        );
 
         // Build messages for Ollama
         const ollamaMessages = [
@@ -1143,8 +1188,8 @@ CRITICAL: Use double quotes for all strings.`;
                 ? ' The user has a note open, and its content is provided for context.'
                 : ''),
           },
-          // Include previous messages from current session
-          ...(currentSession?.messages || []).map(msg => ({
+          // Include optimized previous messages
+          ...optimizedHistory.map(msg => ({
             role: msg.role as 'user' | 'assistant',
             content: msg.content,
           })),
@@ -1153,6 +1198,13 @@ CRITICAL: Use double quotes for all strings.`;
             content: noteContextMessage + currentMessage,
           },
         ];
+
+        // Log total context size
+        const totalTokens = ollamaMessages.reduce(
+          (sum, msg) => sum + estimateTokens(msg.content),
+          0
+        );
+        console.log('[AIChat] Total context tokens:', totalTokens, '/', budget.totalBudget);
 
         if (useStreaming) {
           // Direct streaming to Ollama
