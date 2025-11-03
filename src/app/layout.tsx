@@ -5,6 +5,7 @@ import { CollaborationProvider } from '@/contexts/CollaborationContext';
 import { PluginSystemInitializer } from '@/components/PluginSystemInitializer';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { BrowserCompatibility } from '@/components/BrowserCompatibility';
 
 export const metadata: Metadata = {
   title: 'MarkItUp - Personal Knowledge Management',
@@ -44,6 +45,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="antialiased">
+        <BrowserCompatibility />
         <ErrorBoundary>
           <ToastProvider>
             <SimpleThemeProvider>
