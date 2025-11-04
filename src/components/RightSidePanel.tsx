@@ -73,6 +73,7 @@ export const RightSidePanel: React.FC<RightSidePanelProps> = ({
         return () => clearTimeout(timer);
       }
     }
+    return undefined;
   }, [activeTab, currentNote]);
 
   // Resizable panel hook

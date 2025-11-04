@@ -54,6 +54,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
       const timer = setTimeout(() => setShowTooltip(true), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [searchMode, query]);
 
   // Debounced search

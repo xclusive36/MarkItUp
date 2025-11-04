@@ -279,6 +279,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
       return () => clearTimeout(debounce);
     } else {
       setResults([]);
+      return undefined;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, searchMode, selectedTags, selectedFolders]);
@@ -764,6 +765,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
       }, 500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [query, naturalLanguageMode, aiAvailable, parseNaturalLanguageQuery]);
 
   // Generate suggestions when results are available and AI is enabled
@@ -774,6 +776,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
       }, 1000); // Wait 1s after search completes
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [aiEnabled, results, isSearching, generateAISuggestions]);
 
   // Analyze query for corrections
@@ -785,6 +788,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
       return () => clearTimeout(timer);
     } else {
       setQueryCorrection(null);
+      return undefined;
     }
   }, [query, aiEnabled, analyzeQueryWithAI]);
 
@@ -875,14 +879,16 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
         if (e.key === 'ArrowDown') {
           e.preventDefault();
           setSelectedResultIndex(prev => (prev < sortedResults.length - 1 ? prev + 1 : prev));
-          if (showPreview && sortedResults[selectedResultIndex + 1]) {
-            loadPreview(sortedResults[selectedResultIndex + 1].noteId);
+          const nextResult = sortedResults[selectedResultIndex + 1];
+          if (showPreview && nextResult) {
+            loadPreview(nextResult.noteId);
           }
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
           setSelectedResultIndex(prev => (prev > 0 ? prev - 1 : prev));
-          if (showPreview && sortedResults[selectedResultIndex - 1]) {
-            loadPreview(sortedResults[selectedResultIndex - 1].noteId);
+          const prevResult = sortedResults[selectedResultIndex - 1];
+          if (showPreview && prevResult) {
+            loadPreview(prevResult.noteId);
           }
         } else if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
           // Open selected result on Enter
@@ -900,6 +906,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
+    return undefined;
   }, [
     isOpen,
     onClose,

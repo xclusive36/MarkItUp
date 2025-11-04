@@ -44,7 +44,10 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
 
     notes.forEach(note => {
       const date = new Date(note.createdAt);
-      const dateKey = date.toISOString().split('T')[0];
+      const isoString = date.toISOString().split('T');
+      const dateKey = isoString[0];
+
+      if (!dateKey) return;
 
       if (date < minDate) minDate = date;
       if (date > maxDate) maxDate = date;
@@ -52,7 +55,10 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
       if (!notesByDate.has(dateKey)) {
         notesByDate.set(dateKey, []);
       }
-      notesByDate.get(dateKey)!.push(note);
+      const dateNotes = notesByDate.get(dateKey);
+      if (dateNotes) {
+        dateNotes.push(note);
+      }
     });
 
     setDateRange({ min: minDate, max: maxDate });
@@ -66,7 +72,8 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
     const sortedDates = Array.from(notesByDate.keys()).sort();
 
     sortedDates.forEach(dateKey => {
-      const dataNotes = notesByDate.get(dateKey)!;
+      const dataNotes = notesByDate.get(dateKey);
+      if (!dataNotes) return;
       const newNodes: string[] = [];
       let newEdgeCount = 0;
 
@@ -147,8 +154,6 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
 
   // Get node color based on folder
   const getNodeColor = (folder?: string): string => {
-    if (!folder) return '#6366f1';
-
     const colors = [
       '#ef4444',
       '#f97316',
@@ -168,6 +173,8 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
       '#ec4899',
       '#f43f5e',
     ];
+
+    if (!folder) return '#6366f1';
 
     let hash = 0;
     for (let i = 0; i < folder.length; i++) {
@@ -192,7 +199,9 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
       return closest;
     }, snapshots[0]);
 
-    onGraphUpdate(snapshot.graph, snapshot.date);
+    if (snapshot) {
+      onGraphUpdate(snapshot.graph, snapshot.date);
+    }
   }, [selectedDate, snapshots, onGraphUpdate]);
 
   // Playback animation
