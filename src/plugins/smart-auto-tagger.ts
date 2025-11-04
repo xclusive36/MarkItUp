@@ -754,7 +754,18 @@ class SmartAutoTaggerPlugin {
             }
 
             const note = untaggedNotes[currentIndex];
-            progressItems[currentIndex].status = 'processing';
+            if (!note) {
+              currentIndex++;
+              continue;
+            }
+
+            const progressItem = progressItems[currentIndex];
+            if (!progressItem) {
+              currentIndex++;
+              continue;
+            }
+
+            progressItem.status = 'processing';
             updateProgress();
 
             try {
@@ -769,17 +780,16 @@ class SmartAutoTaggerPlugin {
 
               if (suggestedTags.length > 0) {
                 await this.applyTagsWithTracking(note.id, suggestedTags);
-                progressItems[currentIndex].status = 'completed';
-                progressItems[currentIndex].tagsAdded = suggestedTags;
+                progressItem.status = 'completed';
+                progressItem.tagsAdded = suggestedTags;
                 this.updateAnalytics(suggestedTags.length, 0, suggestedTags);
               } else {
-                progressItems[currentIndex].status = 'completed';
+                progressItem.status = 'completed';
               }
             } catch (error) {
               console.error(`Error processing note ${note.id}:`, error);
-              progressItems[currentIndex].status = 'error';
-              progressItems[currentIndex].error =
-                error instanceof Error ? error.message : 'Unknown error';
+              progressItem.status = 'error';
+              progressItem.error = error instanceof Error ? error.message : 'Unknown error';
             }
 
             currentIndex++;
@@ -832,11 +842,13 @@ class SmartAutoTaggerPlugin {
     // Process first suggestion
     if (this.pendingSuggestions.length > 0) {
       const firstSuggestion = this.pendingSuggestions[0];
-      await this.showTagSuggestions(
-        firstSuggestion.noteId,
-        firstSuggestion.tags,
-        firstSuggestion.analysis
-      );
+      if (firstSuggestion) {
+        await this.showTagSuggestions(
+          firstSuggestion.noteId,
+          firstSuggestion.tags,
+          firstSuggestion.analysis
+        );
+      }
     }
   }
 
@@ -844,7 +856,11 @@ class SmartAutoTaggerPlugin {
    * Get plugin settings
    */
   private getSettings(): Record<string, unknown> {
-    return this.api.settings.get('ai-smart-auto-tagger') || {};
+    const settings = this.api.settings.get('ai-smart-auto-tagger');
+    if (settings instanceof Promise) {
+      return {};
+    }
+    return settings || {};
   }
 
   /**

@@ -107,10 +107,13 @@ export const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onClose, manag
 
       // Update session stats
       const ratingNames = ['again', 'hard', 'good', 'easy'] as const;
-      setSessionStats(prev => ({
-        ...prev,
-        [ratingNames[rating - 1]]: prev[ratingNames[rating - 1]] + 1,
-      }));
+      const ratingName = ratingNames[rating - 1];
+      if (ratingName) {
+        setSessionStats(prev => ({
+          ...prev,
+          [ratingName]: prev[ratingName] + 1,
+        }));
+      }
 
       setReviewCount(prev => prev + 1);
 
@@ -118,8 +121,9 @@ export const FlashcardReview: React.FC<FlashcardReviewProps> = ({ onClose, manag
       const newQueue = queue.slice(1);
       setQueue(newQueue);
 
-      if (newQueue.length > 0) {
-        setCurrentCard(newQueue[0]);
+      const nextCard = newQueue[0];
+      if (nextCard) {
+        setCurrentCard(nextCard);
         setShowAnswer(false);
         setReviewStartTime(Date.now());
       } else {

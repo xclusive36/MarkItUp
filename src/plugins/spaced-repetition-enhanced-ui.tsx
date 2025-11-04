@@ -130,8 +130,9 @@ export const EnhancedFlashcardReview: React.FC<FlashcardReviewProps> = ({ onClos
 
       setQueue(combined);
       setTotalCards(combined.length);
-      if (combined.length > 0) {
-        setCurrentCard(combined[0]);
+      const firstCard = combined[0];
+      if (firstCard) {
+        setCurrentCard(firstCard);
         setReviewStartTime(Date.now());
       }
     } catch (error) {
@@ -150,18 +151,22 @@ export const EnhancedFlashcardReview: React.FC<FlashcardReviewProps> = ({ onClos
         await manager.reviewCard(currentCard.id, rating, reviewTime);
 
         const ratingNames = ['again', 'hard', 'good', 'easy'] as const;
-        setSessionStats(prev => ({
-          ...prev,
-          [ratingNames[rating - 1]]: prev[ratingNames[rating - 1]] + 1,
-        }));
+        const ratingName = ratingNames[rating - 1];
+        if (ratingName) {
+          setSessionStats(prev => ({
+            ...prev,
+            [ratingName]: prev[ratingName] + 1,
+          }));
+        }
 
         setReviewCount(prev => prev + 1);
 
         const newQueue = queue.slice(1);
         setQueue(newQueue);
 
-        if (newQueue.length > 0) {
-          setCurrentCard(newQueue[0]);
+        const nextCard = newQueue[0];
+        if (nextCard) {
+          setCurrentCard(nextCard);
           setShowAnswer(false);
           setCardFlipped(false);
           setReviewStartTime(Date.now());
