@@ -95,6 +95,12 @@ export function sanitizeFolderPath(folderPath: string | undefined): Sanitization
   const errors: string[] = [];
   let sanitized = folderPath.trim();
 
+  // Check for path traversal and absolute paths BEFORE any sanitization
+  if (sanitized.includes('..') || sanitized.startsWith('/') || path.isAbsolute(sanitized)) {
+    errors.push('Invalid folder path');
+    return { valid: false, sanitized, errors };
+  }
+
   // Remove leading/trailing slashes
   sanitized = sanitized.replace(/^\/+|\/+$/g, '');
 
@@ -113,9 +119,9 @@ export function sanitizeFolderPath(folderPath: string | undefined): Sanitization
   // Normalize path
   sanitized = path.normalize(sanitized);
 
-  // Check if normalized path is absolute or contains parent directory references
-  if (path.isAbsolute(sanitized) || sanitized.includes('..')) {
-    errors.push('Path traversal attempt detected in folder path');
+  // Check if normalized path is absolute
+  if (path.isAbsolute(sanitized)) {
+    errors.push('Absolute paths are not allowed');
     return { valid: false, sanitized, errors };
   }
 

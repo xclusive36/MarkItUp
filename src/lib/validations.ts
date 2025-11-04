@@ -5,25 +5,19 @@ import { z } from 'zod';
  */
 
 // Filename validation
-export const fileNameSchema = z.string()
+export const fileNameSchema = z
+  .string()
   .min(1, 'Filename cannot be empty')
   .max(255, 'Filename too long')
   .regex(
-    /^[a-zA-Z0-9-_. ]+\.md$/,
-    'Invalid filename format. Must end with .md and contain only letters, numbers, spaces, hyphens, underscores, and periods.'
+    /^[a-zA-Z0-9-_. ]+(?:\.md)?$/,
+    'Invalid filename format. Must contain only letters, numbers, spaces, hyphens, underscores, and periods. Extension .md is optional.'
   )
-  .refine(
-    (filename) => !filename.startsWith('.'),
-    'Filename cannot start with a period'
-  )
-  .refine(
-    (filename) => !filename.includes('..'),
-    'Filename cannot contain consecutive periods'
-  );
+  .refine(filename => !filename.startsWith('.'), 'Filename cannot start with a period')
+  .refine(filename => !filename.includes('..'), 'Filename cannot contain consecutive periods');
 
 // Markdown content validation
-export const markdownContentSchema = z.string()
-  .max(10000000, 'Content too large (max 10MB)'); // 10MB limit
+export const markdownContentSchema = z.string().max(10000000, 'Content too large (max 10MB)'); // 10MB limit
 
 // File list request validation
 export const fileListRequestSchema = z.object({
@@ -55,10 +49,7 @@ export const readFileParamsSchema = z.object({
  * Helper function to create standardized error responses
  */
 export function createErrorResponse(message: string, status: number = 400) {
-  return Response.json(
-    { error: message },
-    { status }
-  );
+  return Response.json({ error: message }, { status });
 }
 
 /**
@@ -74,14 +65,14 @@ export async function validateRequest<T>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.issues[0];
-      return { 
-        success: false, 
-        error: firstError.message 
+      return {
+        success: false,
+        error: firstError.message,
       };
     }
-    return { 
-      success: false, 
-      error: 'Invalid request data' 
+    return {
+      success: false,
+      error: 'Invalid request data',
     };
   }
 }

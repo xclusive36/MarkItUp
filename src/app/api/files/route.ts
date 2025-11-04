@@ -132,7 +132,20 @@ export async function POST(request: NextRequest) {
       return createRateLimitResponse(rateLimit.resetTime);
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      // JSON parse error often means the body was truncated due to size limit
+      apiLogger.warn('JSON parse error in file creation request', {
+        clientId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return createErrorResponse(
+        'Invalid request body. Content may be too large or malformed.',
+        400
+      );
+    }
 
     // Validate request body
     const validation = await validateRequest(createFileRequestSchema, body);
