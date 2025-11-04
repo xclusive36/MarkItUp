@@ -174,8 +174,12 @@ export function calculateBetweennessCentrality(graph: Graph): Map<string, number
   // For each pair of nodes, find shortest paths
   for (let i = 0; i < graph.nodes.length; i++) {
     for (let j = i + 1; j < graph.nodes.length; j++) {
-      const source = graph.nodes[i].id;
-      const target = graph.nodes[j].id;
+      const sourceNode = graph.nodes[i];
+      const targetNode = graph.nodes[j];
+      if (!sourceNode || !targetNode) continue;
+
+      const source = sourceNode.id;
+      const target = targetNode.id;
 
       const paths = findAllShortestPaths(graph, source, target);
       if (paths.length === 0) continue;
@@ -186,6 +190,7 @@ export function calculateBetweennessCentrality(graph: Graph): Map<string, number
         // Exclude source and target
         for (let k = 1; k < path.length - 1; k++) {
           const nodeId = path[k];
+          if (!nodeId) continue;
           nodeAppearances.set(nodeId, (nodeAppearances.get(nodeId) || 0) + 1);
         }
       });
