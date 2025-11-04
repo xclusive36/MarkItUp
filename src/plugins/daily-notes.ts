@@ -583,7 +583,10 @@ export class DailyNotesPlugin {
       today.setHours(0, 0, 0, 0);
 
       for (let i = 0; i < sortedDates.length; i++) {
-        const noteDate = new Date(sortedDates[i]);
+        const dateStr = sortedDates[i];
+        if (!dateStr) continue;
+
+        const noteDate = new Date(dateStr);
         noteDate.setHours(0, 0, 0, 0);
 
         const expectedDate = new Date(today);
@@ -611,8 +614,12 @@ export class DailyNotesPlugin {
       let tempStreak = 1;
 
       for (let i = 1; i < sortedDates.length; i++) {
-        const currentDate = new Date(sortedDates[i]);
-        const prevDate = new Date(sortedDates[i - 1]);
+        const currentDateStr = sortedDates[i];
+        const prevDateStr = sortedDates[i - 1];
+        if (!currentDateStr || !prevDateStr) continue;
+
+        const currentDate = new Date(currentDateStr);
+        const prevDate = new Date(prevDateStr);
 
         const dayDiff = Math.floor(
           (prevDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -767,14 +774,17 @@ export class DailyNotesPlugin {
 
     let processed = template;
     for (const [placeholder, value] of Object.entries(replacements)) {
-      processed = processed.replace(new RegExp(placeholder, 'g'), value);
+      if (value !== undefined) {
+        processed = processed.replace(new RegExp(placeholder, 'g'), value);
+      }
     }
 
     return processed;
   }
 
   private formatDate(date: Date): string {
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const formatted = date.toISOString().split('T')[0];
+    return formatted || ''; // YYYY-MM-DD format
   }
 
   private setupDailyReminder(): void {
@@ -874,10 +884,13 @@ export class DailyNotesPlugin {
 
     dailyNotes.forEach(note => {
       const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) {
+      if (match && match[1]) {
         const date = new Date(match[1]);
-        const dayName = weekdays[date.getDay()];
-        weekdayDistribution[dayName]++;
+        const dayIndex = date.getDay();
+        const dayName = weekdays[dayIndex];
+        if (dayName && weekdayDistribution[dayName] !== undefined) {
+          weekdayDistribution[dayName]++;
+        }
 
         const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         monthlyCount[monthKey] = (monthlyCount[monthKey] || 0) + 1;
@@ -903,7 +916,7 @@ export class DailyNotesPlugin {
 
     const notesThisWeek = dailyNotes.filter(note => {
       const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) {
+      if (match && match[1]) {
         const date = new Date(match[1]);
         return date >= weekAgo;
       }
@@ -912,7 +925,7 @@ export class DailyNotesPlugin {
 
     const notesThisMonth = dailyNotes.filter(note => {
       const match = note.name.match(/(\d{4}-\d{2}-\d{2})/);
-      if (match) {
+      if (match && match[1]) {
         const date = new Date(match[1]);
         return date >= monthAgo;
       }
