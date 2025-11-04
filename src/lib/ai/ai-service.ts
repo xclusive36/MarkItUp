@@ -227,7 +227,7 @@ export class AIService {
         context.searchResults = searchResults.map((result: SearchResult) => ({
           noteId: result.noteId,
           noteName: result.noteName,
-          snippet: result.matches.length > 0 ? result.matches[0].context : '',
+          snippet: result.matches.length > 0 && result.matches[0] ? result.matches[0].context : '',
           score: result.score,
         }));
 

@@ -326,7 +326,9 @@ export class SemanticSearchEngine {
       let lineNumber = 0;
       let lineStart = 0;
       for (let i = 0; i < lines.length; i++) {
-        const lineEnd = lineStart + lines[i].length;
+        const line = lines[i];
+        if (!line) continue;
+        const lineEnd = lineStart + line.length;
         if (index >= lineStart && index <= lineEnd) {
           lineNumber = i;
           break;

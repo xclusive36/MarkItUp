@@ -296,7 +296,10 @@ export class PKMSystem {
     const modes: ViewState['viewMode'][] = ['edit', 'preview', 'split'];
     const currentIndex = modes.indexOf(this.viewState.viewMode);
     const nextIndex = (currentIndex + 1) % modes.length;
-    this.viewState.viewMode = modes[nextIndex];
+    const nextMode = modes[nextIndex];
+    if (nextMode) {
+      this.viewState.viewMode = nextMode;
+    }
   }
 
   // ===== EVENT SYSTEM =====

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CollaborativeSettings, Participant } from '../lib/types';
@@ -45,7 +45,10 @@ interface CollaborationProviderProps {
 
 export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ children }) => {
   const [settings, setSettings] = useState<CollaborativeSettings>(defaultSettings);
-  const [currentUser, setCurrentUserState] = useState<Omit<Participant, 'id' | 'lastSeen' | 'isActive'> | null>(null);
+  const [currentUser, setCurrentUserState] = useState<Omit<
+    Participant,
+    'id' | 'lastSeen' | 'isActive'
+  > | null>(null);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -99,13 +102,14 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
   const generateUserColor = (): string => {
     const usedColors = new Set(); // In a real app, you'd track used colors
     const availableColors = userColors.filter(color => !usedColors.has(color));
-    
+
     if (availableColors.length === 0) {
       // Generate a random color if all predefined colors are used
       return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
     }
-    
-    return availableColors[Math.floor(Math.random() * availableColors.length)];
+
+    const selectedColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+    return selectedColor || '#3b82f6';
   };
 
   const value: CollaborationContextType = {
@@ -116,11 +120,7 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({ ch
     generateUserColor,
   };
 
-  return (
-    <CollaborationContext.Provider value={value}>
-      {children}
-    </CollaborationContext.Provider>
-  );
+  return <CollaborationContext.Provider value={value}>{children}</CollaborationContext.Provider>;
 };
 
 export const useCollaboration = (): CollaborationContextType => {

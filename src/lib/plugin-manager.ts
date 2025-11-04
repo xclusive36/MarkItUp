@@ -501,7 +501,9 @@ export class PluginManager {
       },
       settings: {
         get: key => this.getPluginSettings(pluginId)[key],
-        set: (key, value) => this.setPluginSetting(pluginId, key, value),
+        set: async (key, value) => {
+          this.setPluginSetting(pluginId, key, value);
+        },
       },
       graph: {
         getLinks: (noteId: string) => {

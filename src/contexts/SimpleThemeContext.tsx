@@ -104,7 +104,10 @@ const applyStoredTheme = (theme: CustomTheme): void => {
         medium: '0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)',
         strong: '0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)',
       };
-      root.style.setProperty('--theme-shadow', shadows[shadowIntensity] || shadows.medium);
+      const shadowValue = shadows[shadowIntensity] || shadows.medium;
+      if (shadowValue) {
+        root.style.setProperty('--theme-shadow', shadowValue);
+      }
     }
   }
 };
@@ -116,11 +119,13 @@ const applyThemeToDOM = (theme: Theme) => {
   // Remove all theme classes
   html.classList.remove('light', 'dark');
 
-  // Add new theme class
-  html.classList.add(theme);
+  // Add new theme class (with null check)
+  if (theme) {
+    html.classList.add(theme);
 
-  // Force CSS recalculation
-  html.style.colorScheme = theme;
+    // Force CSS recalculation
+    html.style.colorScheme = theme;
+  }
 
   // Use CSS variable for body background instead of hardcoding
   // This allows custom themes to override

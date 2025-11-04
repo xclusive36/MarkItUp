@@ -394,7 +394,9 @@ export class UnifiedAIPluginManager {
       },
       settings: {
         get: (key: string) => this.getPluginSettings(pluginId)[key],
-        set: (key: string, value: any) => this.setPluginSetting(pluginId, key, value),
+        set: async (key: string, value: any) => {
+          this.setPluginSetting(pluginId, key, value);
+        },
       },
     };
   }

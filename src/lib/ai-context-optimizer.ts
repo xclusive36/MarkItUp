@@ -311,7 +311,7 @@ export function summarizeContent(content: string, targetLength: number = 500): s
   // 3. Sentences with questions
   // 4. Shorter, impactful sentences
 
-  if (sentences.length > 0) {
+  if (sentences.length > 0 && sentences[0]) {
     important.push(sentences[0]); // Always keep first sentence
   }
 
