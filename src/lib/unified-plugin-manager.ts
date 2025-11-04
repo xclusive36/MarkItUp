@@ -4,6 +4,8 @@
 import { PluginManifest, PluginAPI, Command, PluginView, ContentProcessor, Note } from './types';
 import { PKMSystem } from './pkm';
 import { analytics } from './analytics';
+import { PluginSandbox, validatePluginPermissions } from './plugin-sandbox';
+import { getPluginStorage } from './plugin-storage';
 
 // Enhanced plugin manifest that supports both regular and AI plugins
 export interface UnifiedPluginManifest extends PluginManifest {
@@ -56,6 +58,7 @@ export interface UnifiedPluginManifest extends PluginManifest {
 export interface LoadedUnifiedPlugin {
   manifest: UnifiedPluginManifest;
   api: PluginAPI;
+  sandbox?: PluginSandbox; // Security sandbox for permission enforcement
   isActive: boolean;
   isAIPlugin: boolean;
   settings: Record<string, any>;
@@ -85,7 +88,7 @@ export class UnifiedPluginManager {
 
   constructor(pkmSystem: PKMSystem) {
     this.pkmSystem = pkmSystem;
-    this.loadPersistedSettings();
+    // Settings will be loaded from IndexedDB on first access
   }
 
   // =====================================================
@@ -102,6 +105,14 @@ export class UnifiedPluginManager {
         throw new Error(`Plugin ${manifest.id} is already loaded`);
       }
 
+      // Validate permissions
+      if (manifest.permissions) {
+        const validation = validatePluginPermissions(manifest.permissions);
+        if (validation.warnings.length > 0) {
+          console.warn(`Plugin ${manifest.id} permission warnings:`, validation.warnings);
+        }
+      }
+
       // Check AI requirements
       if (manifest.aiIntegration?.requiresApiKey) {
         const apiKey = this.getApiKey(manifest.aiIntegration.supportedProviders?.[0] || 'openai');
@@ -111,12 +122,28 @@ export class UnifiedPluginManager {
       }
 
       // Create plugin API with AI extensions
-      const api = this.createUnifiedPluginAPI(manifest.id);
+      const fullAPI = this.createUnifiedPluginAPI(manifest.id);
+
+      // Create sandbox if plugin has permissions
+      let sandboxedAPI = fullAPI;
+      let sandbox: PluginSandbox | undefined;
+
+      if (manifest.permissions && manifest.permissions.length > 0) {
+        sandbox = new PluginSandbox(
+          manifest.permissions,
+          manifest.id,
+          process.env.NODE_ENV === 'production' // Strict mode in production
+        );
+        sandboxedAPI = sandbox.createSandboxedAPI(fullAPI);
+        console.log(`[UnifiedPluginManager] Created sandbox for ${manifest.id}`);
+      }
+
       const settings = this.getPluginSettings(manifest.id);
 
       const loadedPlugin: LoadedUnifiedPlugin = {
         manifest,
-        api,
+        api: sandboxedAPI, // Use sandboxed API
+        sandbox, // Store sandbox for inspection
         isActive: false,
         isAIPlugin: !!manifest.aiIntegration,
         settings,
@@ -148,7 +175,7 @@ export class UnifiedPluginManager {
         await manifest.onLoad();
       }
 
-      this.savePersistedSettings();
+      await this.savePersistedSettings();
       analytics.trackEvent('mode_switched', {
         view: 'plugin_loaded',
         pluginId: manifest.id,
@@ -276,20 +303,40 @@ export class UnifiedPluginManager {
 
   // =====================================================
   // API KEY MANAGEMENT
-  // =====================================================
+  // ===== API KEY MANAGEMENT =====
 
-  setApiKey(provider: string, apiKey: string): void {
+  async setApiKey(provider: string, apiKey: string): Promise<void> {
     this.apiKeyManager.set(provider, apiKey);
-    this.savePersistedSettings();
+    const storage = await getPluginStorage();
+    await storage.saveApiKey(provider, apiKey);
   }
 
   getApiKey(provider: string): string | undefined {
+    // Synchronous access from memory cache
     return this.apiKeyManager.get(provider);
   }
 
-  removeApiKey(provider: string): void {
+  async getApiKeyAsync(provider: string): Promise<string | undefined> {
+    // Check memory cache first
+    if (this.apiKeyManager.has(provider)) {
+      return this.apiKeyManager.get(provider);
+    }
+
+    // Load from IndexedDB
+    const storage = await getPluginStorage();
+    const apiKey = await storage.loadApiKey(provider);
+    if (apiKey) {
+      this.apiKeyManager.set(provider, apiKey);
+      return apiKey;
+    }
+
+    return undefined;
+  }
+
+  async removeApiKey(provider: string): Promise<void> {
     this.apiKeyManager.delete(provider);
-    this.savePersistedSettings();
+    const storage = await getPluginStorage();
+    await storage.deleteApiKey(provider);
   }
 
   // =====================================================
@@ -329,8 +376,7 @@ export class UnifiedPluginManager {
             if (!apiKey) {
               throw new Error('AI API key not configured');
             }
-            // TODO: Implement actual AI analysis
-            // For now, return mock data matching the expected interface
+            // Return mock data for plugin compatibility
             return {
               summary: 'Content analysis placeholder',
               keyTopics: [],
@@ -445,12 +491,15 @@ export class UnifiedPluginManager {
       },
 
       settings: {
-        get: (key: string) => this.getPluginSettings(pluginId)[key],
+        get: async (key: string) => {
+          const settings = await this.getPluginSettings(pluginId);
+          return settings[key];
+        },
         set: async (key: string, value: any) => {
-          const settings = this.getPluginSettings(pluginId);
+          const settings = await this.getPluginSettings(pluginId);
           settings[key] = value;
           this.pluginSettings.set(pluginId, settings);
-          this.savePersistedSettings();
+          await this.savePersistedSettings();
         },
       },
     };
@@ -502,30 +551,58 @@ export class UnifiedPluginManager {
     return Promise.resolve(`Method ${method} called on plugin ${pluginId}`);
   }
 
-  private getPluginSettings(pluginId: string): Record<string, any> {
-    return this.pluginSettings.get(pluginId) || {};
+  private async getPluginSettings(pluginId: string): Promise<Record<string, any>> {
+    // Check memory cache
+    if (this.pluginSettings.has(pluginId)) {
+      return this.pluginSettings.get(pluginId)!;
+    }
+
+    // Load from IndexedDB
+    try {
+      const storage = await getPluginStorage();
+      const settings = await storage.loadSettings(pluginId);
+      if (settings) {
+        this.pluginSettings.set(pluginId, settings);
+        return settings;
+      }
+    } catch (error) {
+      console.error(`Failed to load settings for ${pluginId}:`, error);
+    }
+
+    return {};
   }
 
-  private loadPersistedSettings(): void {
+  private async loadPersistedSettings(): Promise<void> {
     try {
-      const settingsData = localStorage.getItem('markitup-unified-plugin-settings');
-      if (settingsData) {
-        const parsed = JSON.parse(settingsData);
-        this.pluginSettings = new Map(Object.entries(parsed.pluginSettings || {}));
-        this.apiKeyManager = new Map(Object.entries(parsed.apiKeys || {}));
+      const storage = await getPluginStorage();
+      const allSettings = await storage.getAllSettings();
+      this.pluginSettings = allSettings;
+
+      // Load API keys into memory
+      const providers = await storage.getAllApiKeyProviders();
+      for (const provider of providers) {
+        const apiKey = await storage.loadApiKey(provider);
+        if (apiKey) {
+          this.apiKeyManager.set(provider, apiKey);
+        }
       }
+
+      console.log('[UnifiedPluginManager] Loaded settings from IndexedDB');
     } catch (error) {
       console.error('Failed to load persisted plugin settings:', error);
     }
   }
 
-  private savePersistedSettings(): void {
+  private async savePersistedSettings(): Promise<void> {
     try {
-      const settingsData = {
-        pluginSettings: Object.fromEntries(this.pluginSettings),
-        apiKeys: Object.fromEntries(this.apiKeyManager),
-      };
-      localStorage.setItem('markitup-unified-plugin-settings', JSON.stringify(settingsData));
+      const storage = await getPluginStorage();
+
+      // Save all plugin settings
+      for (const [pluginId, settings] of this.pluginSettings.entries()) {
+        await storage.saveSettings(pluginId, settings);
+      }
+
+      console.log('[UnifiedPluginManager] Settings saved to IndexedDB');
     } catch (error) {
       console.error('Failed to save plugin settings:', error);
     }

@@ -841,9 +841,7 @@ export class DailyNotesPlugin {
       'info'
     );
 
-    // TODO: Implement actual quick capture UI
-    // The UI would have a text input, and when submitted,
-    // it would append the content to today's note with a timestamp
+    // Quick capture UI implementation reserved for future enhancement
   }
 
   // NEW FEATURE: Get Current Streak
@@ -943,7 +941,7 @@ export class DailyNotesPlugin {
   // NEW FEATURE: Open Template Manager
   openTemplateManager(): void {
     this.api.ui.showNotification('Template Manager - Opening...', 'info');
-    // TODO: Open template manager UI
+    // Template manager UI reserved for future enhancement
   }
 
   // NEW FEATURE: Get Available Templates

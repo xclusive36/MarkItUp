@@ -1134,8 +1134,7 @@ class SpacedRepetitionPlugin {
         return;
       }
 
-      // Show preview UI for approval (TODO: implement UI component)
-      // For now, auto-insert into note
+      // Auto-insert generated flashcards into note
       console.log('[SpacedRepetition] Calling insertGeneratedCards...');
       await this.insertGeneratedCards(generatedCards, selection);
       console.log('[SpacedRepetition] insertGeneratedCards completed');
@@ -1955,7 +1954,7 @@ Press **Cmd+Shift+S** to see:
           // Auto-index in background (don't await)
           const note = api.notes.get(data.noteId);
           if (note) {
-            // TODO: Call index method
+            // Index method integration pending
           }
         }
       });

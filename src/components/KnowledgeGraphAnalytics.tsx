@@ -189,7 +189,7 @@ export function AnalyticsDashboard({
                       style={{ backgroundColor: 'var(--bg-primary)' }}
                     >
                       <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                        className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-300"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -222,7 +222,7 @@ export function AnalyticsDashboard({
                         w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold
                         ${
                           index < 3
-                            ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white'
+                            ? 'bg-linear-to-br from-yellow-400 to-orange-500 text-white'
                             : ''
                         }
                       `}

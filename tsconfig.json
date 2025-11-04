@@ -14,6 +14,14 @@
     "jsx": "react-jsx",
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
+    // Additional strict checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false, // Can be problematic with React props
+    "noPropertyAccessFromIndexSignature": false, // Too strict for dynamic objects
     "plugins": [
       {
         "name": "next"

@@ -57,6 +57,7 @@ export default function WritingAssistant({
 
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content, isOpen]);
 
   const analyzeWithOllama = async (settings: any) => {
@@ -712,7 +713,7 @@ Respond with valid JSON only.`;
                                     key={suggestionIndex}
                                     className="flex items-start gap-2 text-sm"
                                   >
-                                    <ArrowRight className="w-3 h-3 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                                    <ArrowRight className="w-3 h-3 text-purple-600 dark:text-purple-400 mt-0.5 shrink-0" />
                                     <span
                                       style={{ color: theme === 'dark' ? '#d1d5db' : '#6b7280' }}
                                     >

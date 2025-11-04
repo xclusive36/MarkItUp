@@ -7,6 +7,7 @@
 ## 🆕 What's New
 
 ### v3.6.0 - October 2025 🛑
+
 - **🛑 AI Chat Stop Button** - Take control of streaming responses:
   - ⏹️ **Stop Generation** - Halt streaming output mid-generation with dedicated stop button
   - 💾 **Save Partial Content** - Automatically saves partial responses with user-stopped indicator
@@ -17,6 +18,7 @@
   - 📡 **AbortController Pattern** - Standard Fetch API cancellation for reliable control
 
 ### v3.5.1 - October 2025 🎓
+
 - **📚 Spaced Repetition Plugin v1.2.1** - Professional flashcard system with major enhancements:
   - 🎨 **Enhanced Modal Interface** - Beautiful full-screen review with 3D card flip animations
   - 📊 **Interactive Dashboard** - Statistics with gradient cards and animated progress charts
@@ -28,6 +30,7 @@
   - 🧠 **FSRS Algorithm** - Scientific spaced repetition scheduling for optimal retention
 
 ### v3.5.0 - October 2025 🎉
+
 - **🌐 Universal Multi-Provider AI Support** - All AI features now work with any provider:
   - ✅ **Ollama Support Everywhere** - Writing Assistant, Research Assistant, Knowledge Discovery now work with local Ollama
   - 🔑 **No API Key for Ollama** - Self-hosted AI works without configuration across all features
@@ -39,6 +42,7 @@
   - 🔒 **Privacy-First Option** - Use 100% local AI (Ollama) for all features including content analysis
 
 ### v3.4.0 - October 2025
+
 - **🤖 Google Gemini Feature Parity** - Gemini provider enhanced to match OpenAI/Anthropic:
   - 🌊 **Streaming Support** - Real-time token streaming with Server-Sent Events (SSE)
   - 📊 **Performance Tracking** - Comprehensive metrics (response time, tokens/sec, success rate)
@@ -49,12 +53,14 @@
   - 🎯 **Production Ready** - Fully backward compatible, zero breaking changes
 
 ### v3.3.0 - October 2025
+
 - **🎨 Enhanced UI/UX** - Refined interface for better workflow:
   - 📐 **Right Panel Collapsed by Default** - More screen space for your content on startup
   - 🔄 **Consistent Chevron Icons** - Unified expand/collapse controls across both sidebars
   - ⚡ **Improved Layout Balance** - Better default workspace configuration
 
 ### v3.2 - October 2025
+
 - **🔗 Intelligent Link Suggester v3.2** - The most advanced link suggestion system in the PKM space:
   - 📜 **Suggestion History & Undo** - Track all link decisions with one-click undo (Cmd+Shift+H)
   - 📥 **Export Suggestions Report** - Download link opportunities as markdown with confidence scores
@@ -67,6 +73,7 @@
   - 🌉 **Bridge Note Generation** - AI suggests notes to connect isolated knowledge clusters
 
 ### Previous Updates
+
 - **✨ WYSIWYG Editor** - Rich text editing with TipTap, toggle between markdown and visual editing
 - **🤖 Multi-Provider AI** - Choose from 4 AI providers: OpenAI, Anthropic Claude, Google Gemini, or Ollama (local)
 - **🐳 Optimized Docker Builds** - Improved build process with system fonts for faster deployment
@@ -230,6 +237,7 @@ MarkItUp offers the most flexible AI integration in any PKM system:
 We're constantly improving MarkItUp. Here's what's on the roadmap:
 
 ### 🔗 Intelligent Link Suggester Enhancements
+
 - **Batch Accept for Orphans** - One-click to apply all suggestions to unconnected notes
 - **Priority Scoring** - AI ranks orphans by importance and potential impact
 - **Pause/Resume Batch Analysis** - Better control over long-running operations
@@ -238,6 +246,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Smart Notifications** - Desktop alerts when analysis completes with summary
 
 ### 📚 Knowledge Base Features
+
 - **Advanced Graph View** - 3D visualization, clustering, and interactive filtering
 - **Template System** - Quick note creation with customizable templates
 - **Folder-based Contexts** - Different AI personalities per folder
@@ -246,6 +255,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Citation Management** - BibTeX integration and automatic bibliography
 
 ### 🤖 AI Enhancements
+
 - **Multi-Note Context** - AI analyzes relationships across multiple notes
 - **Smart Summarization** - Automatic note summaries and highlights
 - **Content Outliner** - AI-powered document structure suggestions
@@ -254,6 +264,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Language Translation** - Real-time note translation
 
 ### 🤝 Collaboration Features
+
 - **Comment Threads** - Inline discussions on specific content
 - **Change Tracking** - Detailed edit history with user attribution
 - **Role-Based Permissions** - Fine-grained access control
@@ -261,6 +272,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Review Workflow** - Approval process for collaborative editing
 
 ### 🔌 Plugin Ecosystem
+
 - **Plugin Marketplace** - Discover and install community plugins
 - **Visual Plugin Builder** - No-code plugin creation interface
 - **Plugin Analytics** - Usage statistics and performance monitoring
@@ -268,6 +280,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Hot Module Reloading** - Develop plugins without restart
 
 ### 📱 Platform Extensions
+
 - **Mobile Apps** - Native iOS and Android applications
 - **Desktop App** - Electron-based desktop client
 - **Browser Extension** - Clip web content directly to MarkItUp
@@ -275,6 +288,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **API Webhooks** - Integration with third-party services
 
 ### 🎨 Customization
+
 - **Advanced Theme Builder** - Visual theme editor with preview
 - **Custom Font Support** - Upload and use custom fonts
 - **Layout Presets** - Save and share custom workspace layouts
@@ -282,6 +296,7 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **CSS Snippets** - User stylesheets for advanced customization
 
 ### 📊 Analytics & Insights
+
 - **Knowledge Map** - Visualize topic coverage and gaps
 - **Writing Analytics** - Track productivity and habits
 - **Link Quality Score** - Measure knowledge base connectivity
@@ -289,7 +304,9 @@ We're constantly improving MarkItUp. Here's what's on the roadmap:
 - **Progress Tracking** - Goals and milestones for knowledge building
 
 ### Want to Contribute?
+
 Vote on features, suggest new ones, or help build them! Join the discussion:
+
 - 💬 [GitHub Discussions](https://github.com/xclusive36/MarkItUp/discussions)
 - 🐛 [Feature Requests](https://github.com/xclusive36/MarkItUp/issues/new?labels=enhancement)
 - 🤝 [Contributing Guide](CONTRIBUTING.md)

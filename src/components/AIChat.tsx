@@ -1534,7 +1534,7 @@ CRITICAL: Use double quotes for all strings.`;
     <>
       {/* File Operations Approval Modal */}
       {showFileApproval && pendingFileOperations && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
           <div
             className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
             style={{
@@ -1950,8 +1950,8 @@ CRITICAL: Use double quotes for all strings.`;
                     }}
                   >
                     <div className="flex items-start gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin flex-shrink-0 mt-1" />
-                      <div className="whitespace-pre-wrap break-words text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin shrink-0 mt-1" />
+                      <div className="whitespace-pre-wrap wrap-break-word text-sm">
                         {streamingMessage}
                         <span className="inline-block w-1 h-4 bg-current animate-pulse ml-1" />
                       </div>
@@ -1974,7 +1974,7 @@ CRITICAL: Use double quotes for all strings.`;
             }}
           >
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
               <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
           </div>
@@ -2412,6 +2412,7 @@ function AISettingsPanel({
     } finally {
       setTestingConnection(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.ollamaUrl, fetchOllamaModels]);
 
   // Pull a model from Ollama
@@ -2674,11 +2675,9 @@ function AISettingsPanel({
   );
 
   // Update context usage when session changes
-  // TODO: Integrate with session state properly
   useEffect(() => {
     if (formData.provider === 'ollama') {
-      // Placeholder for context tracking
-      // Will be activated when integrated with message history
+      // Context tracking placeholder for future session state integration
       setContextUsage(null);
     }
   }, [formData.provider]);
@@ -2998,7 +2997,7 @@ function AISettingsPanel({
                   checked={formData.enableStreaming !== false}
                   onChange={e => setFormData({ ...formData, enableStreaming: e.target.checked })}
                 />
-                <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-gray-300 dark:bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
 
@@ -3160,7 +3159,7 @@ function AISettingsPanel({
                 }}
               >
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
                   <p className="text-sm text-red-700 dark:text-red-300">{modelError}</p>
                 </div>
               </div>

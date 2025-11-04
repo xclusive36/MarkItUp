@@ -158,7 +158,7 @@ export interface PluginManifest extends Plugin {
 }
 
 export interface PluginPermission {
-  type: 'file-system' | 'network' | 'clipboard' | 'notifications';
+  type: 'file-system' | 'network' | 'clipboard' | 'notifications' | 'ui' | 'settings' | 'analytics';
   description: string;
 }
 
@@ -286,8 +286,8 @@ export interface PluginAPI {
 
   // Settings
   settings: {
-    get: (key: string) => any;
-    set: (key: string, value: any) => void;
+    get: (key: string) => Promise<any>;
+    set: (key: string, value: any) => Promise<void>;
   };
 
   // AI capabilities

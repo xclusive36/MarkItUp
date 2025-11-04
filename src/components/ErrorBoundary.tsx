@@ -7,6 +7,7 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  name?: string;
 }
 
 interface State {
@@ -30,14 +31,25 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to console in development
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error to console with context
+    console.error('ErrorBoundary caught an error:', {
+      component: this.props.name || 'Unknown',
+      error,
+      errorInfo,
+      componentStack: errorInfo.componentStack,
+    });
 
     // Store error info in state
     this.setState({ errorInfo });
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);
+
+    // Log to analytics in production
+    if (process.env.NODE_ENV === 'production') {
+      // Send to error tracking service (e.g., Sentry, LogRocket)
+      // analytics.trackError({ error, errorInfo, component: this.props.name });
+    }
   }
 
   handleReset = () => {
@@ -67,6 +79,11 @@ export class ErrorBoundary extends Component<Props, State> {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Oops! Something went wrong
                 </h1>
+                {this.props.name && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Error in: {this.props.name}
+                  </p>
+                )}
                 <p className="text-gray-600 dark:text-gray-300 mt-1">
                   We&apos;re sorry for the inconvenience. The application encountered an unexpected
                   error.

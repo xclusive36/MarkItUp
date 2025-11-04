@@ -2,8 +2,37 @@
 
 import React, { useEffect, useState } from 'react';
 
+interface DebugInfo {
+  localStorage?: {
+    hasStoredPlugins: boolean;
+    storedPlugins: string[] | null;
+    allLocalStorageKeys: string[];
+  };
+  pluginManager?: {
+    exists: boolean;
+    loadedCount: number;
+    enabledCount: number;
+  };
+  registry?: {
+    availableCount: number;
+    firstFewPlugins: Array<{ id: string; name: string }>;
+  };
+  browser?: {
+    userAgent: string;
+    localStorage: boolean;
+    window: boolean;
+  };
+  lastTest?: {
+    pluginId: string;
+    success: boolean;
+    storedAfterLoad: string | null;
+    loadedPlugins: string[];
+  };
+  storageCleared?: boolean;
+}
+
 export function PluginDebugger() {
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -11,14 +40,14 @@ export function PluginDebugger() {
       try {
         // Check if localStorage has any data
         const storedPlugins = localStorage.getItem('markitup-enabled-plugins');
-        
+
         // Try to get plugin manager
         const { getPluginManager } = await import('@/lib/plugin-init');
         const pluginManager = getPluginManager();
-        
+
         // Try to get available plugins
         const { AVAILABLE_PLUGINS } = await import('@/plugins/plugin-registry');
-        
+
         setDebugInfo({
           localStorage: {
             hasStoredPlugins: !!storedPlugins,
@@ -32,13 +61,14 @@ export function PluginDebugger() {
           },
           registry: {
             availableCount: AVAILABLE_PLUGINS?.length || 0,
-            firstFewPlugins: AVAILABLE_PLUGINS?.slice(0, 3)?.map(p => ({ id: p.id, name: p.name })) || [],
+            firstFewPlugins:
+              AVAILABLE_PLUGINS?.slice(0, 3)?.map(p => ({ id: p.id, name: p.name })) || [],
           },
           browser: {
             userAgent: navigator.userAgent,
             localStorage: typeof localStorage !== 'undefined',
             window: typeof window !== 'undefined',
-          }
+          },
         });
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -52,34 +82,34 @@ export function PluginDebugger() {
     try {
       const { getPluginManager } = await import('@/lib/plugin-init');
       const { AVAILABLE_PLUGINS } = await import('@/plugins/plugin-registry');
-      
+
       let pluginManager = getPluginManager();
-      
+
       if (!pluginManager) {
         const { initializePluginSystem } = await import('@/lib/plugin-init');
         pluginManager = await initializePluginSystem();
       }
-      
+
       if (AVAILABLE_PLUGINS.length > 0) {
         const firstPlugin = AVAILABLE_PLUGINS[0];
         console.log('Attempting to load plugin:', firstPlugin.id);
-        
+
         const success = await pluginManager.loadPlugin(firstPlugin);
         console.log('Load result:', success);
-        
+
         // Check localStorage after loading
         const stored = localStorage.getItem('markitup-enabled-plugins');
         console.log('localStorage after load:', stored);
-        
+
         // Update debug info
-        setDebugInfo((prev: any) => ({
+        setDebugInfo(prev => ({
           ...prev,
           lastTest: {
             pluginId: firstPlugin.id,
             success,
             storedAfterLoad: stored,
             loadedPlugins: pluginManager.getLoadedPlugins().map(p => p.id),
-          }
+          },
         }));
       }
     } catch (err) {
@@ -89,7 +119,7 @@ export function PluginDebugger() {
 
   const clearStorage = () => {
     localStorage.removeItem('markitup-enabled-plugins');
-    setDebugInfo((prev: any) => ({ ...prev, storageCleared: true }));
+    setDebugInfo(prev => ({ ...prev, storageCleared: true }));
   };
 
   return (
@@ -97,21 +127,23 @@ export function PluginDebugger() {
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
         🔍 Plugin System Debugger
       </h2>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded">
           <strong>Error:</strong> {error}
         </div>
       )}
-      
+
       <div className="space-y-4">
         <div className="bg-white dark:bg-gray-700 p-4 rounded border">
-          <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Debug Information:</h3>
+          <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            Debug Information:
+          </h3>
           <pre className="text-xs overflow-auto bg-gray-50 dark:bg-gray-600 p-2 rounded text-gray-800 dark:text-gray-200">
             {JSON.stringify(debugInfo, null, 2)}
           </pre>
         </div>
-        
+
         <div className="flex gap-2">
           <button
             onClick={testLoadPlugin}

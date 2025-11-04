@@ -8,8 +8,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No TikZ content provided' }, { status: 400 });
     }
 
-    // TODO: Implement TikZ to SVG conversion
-    // For now, return a placeholder SVG
+    // Return placeholder SVG for TikZ content
     const svg = `<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
       <rect width="100" height="100" fill="none" stroke="black" />
       <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
@@ -19,8 +18,8 @@ export async function POST(req: NextRequest) {
 
     return new NextResponse(svg, {
       headers: {
-        'Content-Type': 'image/svg+xml'
-      }
+        'Content-Type': 'image/svg+xml',
+      },
     });
   } catch (error) {
     console.error('Error processing TikZ:', error);

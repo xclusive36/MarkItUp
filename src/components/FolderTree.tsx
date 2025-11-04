@@ -236,7 +236,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setContextMenu(null)} />
           <div
-            className="fixed z-50 border rounded shadow-lg py-1 text-sm min-w-[160px]"
+            className="fixed z-50 border rounded shadow-lg py-1 text-sm min-w-40"
             style={{
               top: contextMenu.y,
               left: contextMenu.x,

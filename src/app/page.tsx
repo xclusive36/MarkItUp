@@ -32,6 +32,7 @@ import SelectionActionBar from '@/components/SelectionActionBar';
 import MobileEditorToolbar from '@/components/MobileEditorToolbar';
 import ZenMode from '@/components/ZenMode';
 import NotificationQueue from '@/components/NotificationQueue';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { useCollaboration } from '@/contexts/CollaborationContext';
 import { useToast } from '@/components/ToastProvider';
@@ -134,8 +135,7 @@ export default function Home() {
   const lastEditTrack = useAppStore(state => state.lastEditTrack);
   const setLastEditTrack = useAppStore(state => state.setLastEditTrack);
 
-  // PKM is still managed locally with useState due to complex initialization
-  // TODO: Consider migrating PKM to store in future iteration
+  // PKM is managed locally with useState due to complex initialization requirements
 
   // Note state management (consolidated)
   const noteState = useNoteState();
@@ -1419,25 +1419,27 @@ export default function Home() {
               {currentView === 'notes' ? (
                 <NotesComponent refreshNotes={notesComponentRefreshRef} />
               ) : (
-                <MainPanel
-                  currentView={currentView}
-                  markdown={markdown}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  handleMarkdownChange={handleMarkdownChange}
-                  processedMarkdown={processedMarkdown}
-                  theme={theme}
-                  analytics={analytics}
-                  editorRef={editorRef}
-                  graph={graph}
-                  activeNote={activeNote}
-                  handleGraphNodeClick={handleGraphNodeClick}
-                  handleSearch={handleSearch}
-                  handleNoteSelect={handleNoteSelect}
-                  tags={tags}
-                  folders={folders}
-                  notes={notes}
-                />
+                <ErrorBoundary name="Main Editor Panel">
+                  <MainPanel
+                    currentView={currentView}
+                    markdown={markdown}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    handleMarkdownChange={handleMarkdownChange}
+                    processedMarkdown={processedMarkdown}
+                    theme={theme}
+                    analytics={analytics}
+                    editorRef={editorRef}
+                    graph={graph}
+                    activeNote={activeNote}
+                    handleGraphNodeClick={handleGraphNodeClick}
+                    handleSearch={handleSearch}
+                    handleNoteSelect={handleNoteSelect}
+                    tags={tags}
+                    folders={folders}
+                    notes={notes}
+                  />
+                </ErrorBoundary>
               )}
             </div>
           </div>
@@ -1477,311 +1479,333 @@ export default function Home() {
         {modals.userProfile.isOpen && <UserProfile onClose={modals.userProfile.close} />}
 
         {/* AI Chat Panel */}
-        <AIChat
-          isOpen={modals.aiChat.isOpen}
-          onClose={modals.aiChat.close}
-          currentNoteId={activeNote?.id}
-          currentNoteContent={activeNote?.content}
-          currentNoteName={activeNote?.name}
-          onRefreshData={refreshData}
-          onReloadCurrentNote={reloadCurrentNote}
-        />
+        <ErrorBoundary name="AI Chat">
+          <AIChat
+            isOpen={modals.aiChat.isOpen}
+            onClose={modals.aiChat.close}
+            currentNoteId={activeNote?.id}
+            currentNoteContent={activeNote?.content}
+            currentNoteName={activeNote?.name}
+            onRefreshData={refreshData}
+            onReloadCurrentNote={reloadCurrentNote}
+          />
+        </ErrorBoundary>
 
         {/* Writing Assistant Panel */}
-        <WritingAssistant
-          isOpen={modals.writingAssistant.isOpen}
-          onClose={modals.writingAssistant.close}
-          content={activeNote?.content || markdown}
-          noteId={activeNote?.id}
-          onContentChange={(newContent: string) => {
-            console.log('[PAGE] WritingAssistant onContentChange called');
-            console.log('[PAGE] New content length:', newContent.length);
-            console.log('[PAGE] Old markdown length:', markdown.length);
-            if (activeNote) {
-              console.log('[PAGE] Updating active note:', activeNote.id);
-              const updatedNote = { ...activeNote, content: newContent };
-              setActiveNote(updatedNote);
-              setMarkdown(newContent);
-              const updatedNotes = notes.map(n => (n.id === activeNote.id ? updatedNote : n));
-              setNotes(updatedNotes);
-            } else {
-              console.log('[PAGE] No active note, updating markdown only');
-              setMarkdown(newContent);
-            }
-            console.log('[PAGE] State updates queued');
-          }}
-          onSave={async () => {
-            console.log('[PAGE] WritingAssistant onSave called');
-            console.log('[PAGE] Using markdownRef.current length:', markdownRef.current.length);
-            console.log('[PAGE] markdown state length:', markdown.length);
-            // The ref should have the latest value even if state hasn't updated yet
-            // Auto-save from WritingAssistant should force overwrite (file already exists)
-            await saveNote(true);
-          }}
-        />
+        <ErrorBoundary name="Writing Assistant">
+          <WritingAssistant
+            isOpen={modals.writingAssistant.isOpen}
+            onClose={modals.writingAssistant.close}
+            content={activeNote?.content || markdown}
+            noteId={activeNote?.id}
+            onContentChange={(newContent: string) => {
+              console.log('[PAGE] WritingAssistant onContentChange called');
+              console.log('[PAGE] New content length:', newContent.length);
+              console.log('[PAGE] Old markdown length:', markdown.length);
+              if (activeNote) {
+                console.log('[PAGE] Updating active note:', activeNote.id);
+                const updatedNote = { ...activeNote, content: newContent };
+                setActiveNote(updatedNote);
+                setMarkdown(newContent);
+                const updatedNotes = notes.map(n => (n.id === activeNote.id ? updatedNote : n));
+                setNotes(updatedNotes);
+              } else {
+                console.log('[PAGE] No active note, updating markdown only');
+                setMarkdown(newContent);
+              }
+              console.log('[PAGE] State updates queued');
+            }}
+            onSave={async () => {
+              console.log('[PAGE] WritingAssistant onSave called');
+              console.log('[PAGE] Using markdownRef.current length:', markdownRef.current.length);
+              console.log('[PAGE] markdown state length:', markdown.length);
+              // The ref should have the latest value even if state hasn't updated yet
+              // Auto-save from WritingAssistant should force overwrite (file already exists)
+              await saveNote(true);
+            }}
+          />
+        </ErrorBoundary>
 
         {/* Knowledge Discovery Panel */}
-        <KnowledgeDiscovery
-          isOpen={modals.knowledgeDiscovery.isOpen}
-          onClose={modals.knowledgeDiscovery.close}
-          notes={notes}
-          tags={tags}
-          onCreateNote={async (title, content) => {
-            try {
-              toast.info('Creating note...');
+        <ErrorBoundary name="Knowledge Discovery">
+          <KnowledgeDiscovery
+            isOpen={modals.knowledgeDiscovery.isOpen}
+            onClose={modals.knowledgeDiscovery.close}
+            notes={notes}
+            tags={tags}
+            onCreateNote={async (title, content) => {
+              try {
+                toast.info('Creating note...');
 
-              // Save current note first if there's content
-              if (fileName && markdown.trim()) {
-                try {
-                  const fullPath = folder.trim()
-                    ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
-                    : `${fileName.trim().replace(/\/+$/, '')}.md`;
+                // Save current note first if there's content
+                if (fileName && markdown.trim()) {
+                  try {
+                    const fullPath = folder.trim()
+                      ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+                      : `${fileName.trim().replace(/\/+$/, '')}.md`;
 
-                  await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                    await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        content: markdown,
+                        overwrite: true, // Allow overwriting existing file
+                      }),
+                    });
+                    console.log('✅ Current note saved before creating new note');
+                  } catch (error) {
+                    console.error('Failed to save current note:', error);
+                    toast.error('Failed to save current note');
+                  }
+                }
+
+                // Create the new suggested note
+                const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                const newFilePath = `${newFileName}.md`;
+
+                // Save the new note file to disk via API
+                const createResponse = await fetch(
+                  `/api/files/${encodeURIComponent(newFilePath)}`,
+                  {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      content: markdown,
-                      overwrite: true, // Allow overwriting existing file
+                      content: content,
+                      overwrite: false, // Don't overwrite if it already exists
                     }),
-                  });
-                  console.log('✅ Current note saved before creating new note');
-                } catch (error) {
-                  console.error('Failed to save current note:', error);
-                  toast.error('Failed to save current note');
+                  }
+                );
+
+                if (!createResponse.ok) {
+                  throw new Error(`Failed to create note file: ${createResponse.statusText}`);
                 }
+                console.log('✅ New note file created:', newFilePath);
+
+                // Refresh ALL data (notes list, graph, tags, etc.)
+                console.log('🔄 Refreshing all PKM data...');
+                await refreshData();
+                console.log('✅ PKM data refreshed');
+
+                // Also refresh the NotesComponent sidebar
+                if (notesComponentRefreshRef.current) {
+                  console.log('🔄 Refreshing notes sidebar...');
+                  await notesComponentRefreshRef.current();
+                  console.log('✅ Notes sidebar refreshed');
+                }
+
+                // Give the UI a moment to update
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Update PKM system
+                const pkm = getPKMSystem();
+                await pkm.createNote(newFileName, content);
+
+                // Switch to the new note
+                setFileName(newFileName);
+                setMarkdown(content);
+                modals.knowledgeDiscovery.close();
+
+                toast.success(`Note "${title}" created successfully! 📝`);
+              } catch (error) {
+                console.error('Failed to create note:', error);
+                toast.error('Failed to create note');
               }
-
-              // Create the new suggested note
-              const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-              const newFilePath = `${newFileName}.md`;
-
-              // Save the new note file to disk via API
-              const createResponse = await fetch(`/api/files/${encodeURIComponent(newFilePath)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  content: content,
-                  overwrite: false, // Don't overwrite if it already exists
-                }),
-              });
-
-              if (!createResponse.ok) {
-                throw new Error(`Failed to create note file: ${createResponse.statusText}`);
-              }
-              console.log('✅ New note file created:', newFilePath);
-
-              // Refresh ALL data (notes list, graph, tags, etc.)
-              console.log('🔄 Refreshing all PKM data...');
-              await refreshData();
-              console.log('✅ PKM data refreshed');
-
-              // Also refresh the NotesComponent sidebar
-              if (notesComponentRefreshRef.current) {
-                console.log('🔄 Refreshing notes sidebar...');
-                await notesComponentRefreshRef.current();
-                console.log('✅ Notes sidebar refreshed');
-              }
-
-              // Give the UI a moment to update
-              await new Promise(resolve => setTimeout(resolve, 100));
-
-              // Update PKM system
-              const pkm = getPKMSystem();
-              await pkm.createNote(newFileName, content);
-
-              // Switch to the new note
-              setFileName(newFileName);
-              setMarkdown(content);
+            }}
+            onOpenNote={noteId => {
+              handleNoteSelect(noteId);
               modals.knowledgeDiscovery.close();
-
-              toast.success(`Note "${title}" created successfully! 📝`);
-            } catch (error) {
-              console.error('Failed to create note:', error);
-              toast.error('Failed to create note');
-            }
-          }}
-          onOpenNote={noteId => {
-            handleNoteSelect(noteId);
-            modals.knowledgeDiscovery.close();
-          }}
-        />
+            }}
+          />
+        </ErrorBoundary>
 
         {/* Research Assistant Panel */}
-        <ResearchAssistant
-          isOpen={modals.researchAssistant.isOpen}
-          onClose={modals.researchAssistant.close}
-          notes={notes}
-          onCreateNote={async (title, content) => {
-            try {
-              toast.info('Creating note...');
+        <ErrorBoundary name="Research Assistant">
+          <ResearchAssistant
+            isOpen={modals.researchAssistant.isOpen}
+            onClose={modals.researchAssistant.close}
+            notes={notes}
+            onCreateNote={async (title, content) => {
+              try {
+                toast.info('Creating note...');
 
-              // Save current note first if there's content
-              if (fileName && markdown.trim()) {
-                try {
-                  const fullPath = folder.trim()
-                    ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
-                    : `${fileName.trim().replace(/\/+$/, '')}.md`;
+                // Save current note first if there's content
+                if (fileName && markdown.trim()) {
+                  try {
+                    const fullPath = folder.trim()
+                      ? `${folder.trim().replace(/\/+$/, '')}/${fileName.trim().replace(/\/+$/, '')}.md`
+                      : `${fileName.trim().replace(/\/+$/, '')}.md`;
 
-                  await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                    await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        content: markdown,
+                        overwrite: true, // Allow overwriting existing file
+                      }),
+                    });
+                    console.log('✅ Current note saved before creating new note');
+                  } catch (error) {
+                    console.error('Failed to save current note:', error);
+                    toast.error('Failed to save current note');
+                  }
+                }
+
+                // Create the new suggested note
+                const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                const newFilePath = `${newFileName}.md`;
+
+                // Save the new note file to disk via API
+                const createResponse = await fetch(
+                  `/api/files/${encodeURIComponent(newFilePath)}`,
+                  {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      content: markdown,
-                      overwrite: true, // Allow overwriting existing file
+                      content: content,
+                      overwrite: false, // Don't overwrite if it already exists
                     }),
-                  });
-                  console.log('✅ Current note saved before creating new note');
-                } catch (error) {
-                  console.error('Failed to save current note:', error);
-                  toast.error('Failed to save current note');
+                  }
+                );
+
+                if (!createResponse.ok) {
+                  throw new Error(`Failed to create note file: ${createResponse.statusText}`);
                 }
+                console.log('✅ New note file created:', newFilePath);
+
+                // Refresh ALL data (notes list, graph, tags, etc.)
+                console.log('🔄 Refreshing all PKM data...');
+                await refreshData();
+                console.log('✅ PKM data refreshed');
+
+                // Also refresh the NotesComponent sidebar
+                if (notesComponentRefreshRef.current) {
+                  console.log('🔄 Refreshing notes sidebar...');
+                  await notesComponentRefreshRef.current();
+                  console.log('✅ Notes sidebar refreshed');
+                }
+
+                // Give the UI a moment to update
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Update PKM system
+                const pkm = getPKMSystem();
+                await pkm.createNote(newFileName, content);
+
+                // Switch to the new note
+                setFileName(newFileName);
+                setMarkdown(content);
+                modals.researchAssistant.close();
+
+                toast.success(`Note "${title}" created successfully! 📝`);
+              } catch (error) {
+                console.error('Failed to create note:', error);
+                toast.error('Failed to create note');
               }
-
-              // Create the new suggested note
-              const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-              const newFilePath = `${newFileName}.md`;
-
-              // Save the new note file to disk via API
-              const createResponse = await fetch(`/api/files/${encodeURIComponent(newFilePath)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  content: content,
-                  overwrite: false, // Don't overwrite if it already exists
-                }),
-              });
-
-              if (!createResponse.ok) {
-                throw new Error(`Failed to create note file: ${createResponse.statusText}`);
-              }
-              console.log('✅ New note file created:', newFilePath);
-
-              // Refresh ALL data (notes list, graph, tags, etc.)
-              console.log('🔄 Refreshing all PKM data...');
-              await refreshData();
-              console.log('✅ PKM data refreshed');
-
-              // Also refresh the NotesComponent sidebar
-              if (notesComponentRefreshRef.current) {
-                console.log('🔄 Refreshing notes sidebar...');
-                await notesComponentRefreshRef.current();
-                console.log('✅ Notes sidebar refreshed');
-              }
-
-              // Give the UI a moment to update
-              await new Promise(resolve => setTimeout(resolve, 100));
-
-              // Update PKM system
-              const pkm = getPKMSystem();
-              await pkm.createNote(newFileName, content);
-
-              // Switch to the new note
-              setFileName(newFileName);
-              setMarkdown(content);
+            }}
+            onOpenNote={noteId => {
+              handleNoteSelect(noteId);
               modals.researchAssistant.close();
-
-              toast.success(`Note "${title}" created successfully! 📝`);
-            } catch (error) {
-              console.error('Failed to create note:', error);
-              toast.error('Failed to create note');
-            }
-          }}
-          onOpenNote={noteId => {
-            handleNoteSelect(noteId);
-            modals.researchAssistant.close();
-          }}
-        />
+            }}
+          />
+        </ErrorBoundary>
 
         {/* Knowledge Map */}
-        <KnowledgeMap
-          isOpen={modals.knowledgeMap.isOpen}
-          onClose={modals.knowledgeMap.close}
-          notes={notes}
-          onOpenNote={noteId => {
-            handleNoteSelect(noteId);
-            modals.knowledgeMap.close();
-          }}
-          onCreateNote={async (title, content) => {
-            const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-            setFileName(newFileName);
-            setMarkdown(content);
-            // Create and save the note
-            const pkm = getPKMSystem();
-            await pkm.createNote(newFileName, content);
-            modals.knowledgeMap.close();
-          }}
-        />
+        <ErrorBoundary name="Knowledge Map">
+          <KnowledgeMap
+            isOpen={modals.knowledgeMap.isOpen}
+            onClose={modals.knowledgeMap.close}
+            notes={notes}
+            onOpenNote={noteId => {
+              handleNoteSelect(noteId);
+              modals.knowledgeMap.close();
+            }}
+            onCreateNote={async (title, content) => {
+              const newFileName = title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+              setFileName(newFileName);
+              setMarkdown(content);
+              // Create and save the note
+              const pkm = getPKMSystem();
+              await pkm.createNote(newFileName, content);
+              modals.knowledgeMap.close();
+            }}
+          />
+        </ErrorBoundary>
 
         {/* Batch Analyzer */}
-        <BatchAnalyzer
-          isOpen={modals.batchAnalyzer.isOpen}
-          onClose={modals.batchAnalyzer.close}
-          notes={notes}
-          onOpenNote={noteId => {
-            handleNoteSelect(noteId);
-            modals.batchAnalyzer.close();
-          }}
-          onBulkUpdate={async updates => {
-            // Handle bulk updates if needed
-            console.log('Bulk updates:', updates);
-            modals.batchAnalyzer.close();
-          }}
-        />
+        <ErrorBoundary name="Batch Analyzer">
+          <BatchAnalyzer
+            isOpen={modals.batchAnalyzer.isOpen}
+            onClose={modals.batchAnalyzer.close}
+            notes={notes}
+            onOpenNote={noteId => {
+              handleNoteSelect(noteId);
+              modals.batchAnalyzer.close();
+            }}
+            onBulkUpdate={async updates => {
+              // Handle bulk updates if needed
+              console.log('Bulk updates:', updates);
+              modals.batchAnalyzer.close();
+            }}
+          />
+        </ErrorBoundary>
 
         {/* Global Search Panel */}
-        <GlobalSearchPanel
-          isOpen={modals.globalSearch.isOpen}
-          onClose={modals.globalSearch.close}
-          onSearch={handleSearch}
-          onSelectNote={noteId => {
-            handleNoteSelect(noteId);
-            modals.globalSearch.close();
-          }}
-          onUpdateNote={async (noteId, content) => {
-            const note = notes.find(n => n.id === noteId);
-            if (note) {
-              await pkm.updateNote(noteId, { content });
-              await refreshData();
-            }
-          }}
-          onBulkUpdateNotes={async updates => {
-            for (const update of updates) {
-              const note = notes.find(n => n.id === update.noteId);
+        <ErrorBoundary name="Global Search">
+          <GlobalSearchPanel
+            isOpen={modals.globalSearch.isOpen}
+            onClose={modals.globalSearch.close}
+            onSearch={handleSearch}
+            onSelectNote={noteId => {
+              handleNoteSelect(noteId);
+              modals.globalSearch.close();
+            }}
+            onUpdateNote={async (noteId, content) => {
+              const note = notes.find(n => n.id === noteId);
               if (note) {
-                await pkm.updateNote(update.noteId, {
-                  tags: update.tags,
-                  folder: update.folder,
-                });
+                await pkm.updateNote(noteId, { content });
+                await refreshData();
               }
-            }
-            await refreshData();
-          }}
-          onBulkDeleteNotes={async noteIds => {
-            for (const noteId of noteIds) {
-              await pkm.deleteNote(noteId);
-            }
-            await refreshData();
-          }}
-          notes={notes}
-        />
+            }}
+            onBulkUpdateNotes={async updates => {
+              for (const update of updates) {
+                const note = notes.find(n => n.id === update.noteId);
+                if (note) {
+                  await pkm.updateNote(update.noteId, {
+                    tags: update.tags,
+                    folder: update.folder,
+                  });
+                }
+              }
+              await refreshData();
+            }}
+            onBulkDeleteNotes={async noteIds => {
+              for (const noteId of noteIds) {
+                await pkm.deleteNote(noteId);
+              }
+              await refreshData();
+            }}
+            notes={notes}
+          />
+        </ErrorBoundary>
 
         {/* Command Palette */}
         {isMounted && !isInitializing && (
-          <CommandPalette
-            isOpen={modals.commandPalette.isOpen}
-            onClose={modals.commandPalette.close}
-            onSelectNote={noteId => {
-              const note = notes.find(n => n.id === noteId);
-              if (note) {
-                setActiveNote(note);
-                setMarkdown(note.content);
-                setFileName(note.name);
-              }
-            }}
-            notes={notes}
-            pkm={pkm}
-          />
+          <ErrorBoundary name="Command Palette">
+            <CommandPalette
+              isOpen={modals.commandPalette.isOpen}
+              onClose={modals.commandPalette.close}
+              onSelectNote={noteId => {
+                const note = notes.find(n => n.id === noteId);
+                if (note) {
+                  setActiveNote(note);
+                  setMarkdown(note.content);
+                  setFileName(note.name);
+                }
+              }}
+              notes={notes}
+              pkm={pkm}
+            />
+          </ErrorBoundary>
         )}
 
         {/* Daily Notes Calendar */}
@@ -1910,7 +1934,10 @@ export default function Home() {
               const lines = textarea.value.split('\n');
               let charCount = 0;
               for (let i = 0; i < line && i < lines.length; i++) {
-                charCount += lines[i].length + 1; // +1 for newline
+                const currentLine = lines[i];
+                if (currentLine !== undefined) {
+                  charCount += currentLine.length + 1; // +1 for newline
+                }
               }
               textarea.focus();
               textarea.setSelectionRange(charCount, charCount);

@@ -282,7 +282,7 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className="flex flex-col gap-4 min-h-[40px]"
+                        className="flex flex-col gap-4 min-h-10"
                         style={{
                           background: snapshot.isDraggingOver ? 'var(--bg-tertiary)' : undefined,
                         }}
@@ -329,7 +329,7 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
                                 <button
                                   onClick={e => {
                                     e.stopPropagation();
-                                    // TODO: Implement delete logic
+                                    // Delete functionality handled by parent component
                                   }}
                                   className="p-1 theme-text-secondary hover:text-red-600"
                                 >

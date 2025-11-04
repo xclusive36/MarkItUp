@@ -89,7 +89,7 @@ export default function WikilinkPreview({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[9998]"
+        className="fixed inset-0 z-9998"
         onClick={onClose}
         style={{ background: 'transparent' }}
       />
@@ -120,7 +120,7 @@ export default function WikilinkPreview({
             >
               <div className="flex items-start gap-2">
                 <FileText
-                  className="w-5 h-5 flex-shrink-0 mt-0.5"
+                  className="w-5 h-5 shrink-0 mt-0.5"
                   style={{ color: theme === 'dark' ? '#9ca3af' : '#6b7280' }}
                 />
                 <div className="flex-1 min-w-0">
