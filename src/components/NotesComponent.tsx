@@ -94,8 +94,8 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
   const folderOrder = Object.keys(notesByFolder);
 
   // Drag and drop handler (persist order)
-  // Store last move for undo
-  const [lastMove, setLastMove] = useState<{
+  // Store last move for undo (unused but kept for future undo functionality)
+  const [, setLastMove] = useState<{
     noteId: string;
     fromFolder: string;
     toFolder: string;
@@ -130,13 +130,16 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
       for (const n of prevNotes) {
         const folder = n.folder || 'Uncategorized';
         if (!notesByFolderCopy[folder]) notesByFolderCopy[folder] = [];
-        notesByFolderCopy[folder].push(n);
+        notesByFolderCopy[folder]!.push(n);
       }
       const folderOrderLocal = Object.keys(notesByFolderCopy);
 
       // Make shallow copies to avoid mutating state
       for (const key in notesByFolderCopy) {
-        notesByFolderCopy[key] = notesByFolderCopy[key].slice();
+        const arr = notesByFolderCopy[key];
+        if (arr) {
+          notesByFolderCopy[key] = arr.slice();
+        }
       }
 
       const moved = notesByFolderCopy[sourceFolder]?.[sourceIdx] as Note | undefined;
@@ -170,15 +173,15 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
         setLastMove(null);
       }
 
-      notesByFolderCopy[sourceFolder].splice(sourceIdx, 1);
+      notesByFolderCopy[sourceFolder]!.splice(sourceIdx, 1);
       // Always create a new object for the moved note
       const movedNote =
         sourceFolder !== destFolder
           ? { ...moved, folder: destFolder === 'Uncategorized' ? '' : destFolder }
           : { ...moved };
-      notesByFolderCopy[destFolder].splice(destIdx, 0, movedNote);
+      notesByFolderCopy[destFolder]!.splice(destIdx, 0, movedNote);
       // Flatten back to array, preserving folder order
-      const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f]);
+      const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f] ?? []);
 
       // Persist order to backend
       fetch('/api/files/order', {
@@ -219,21 +222,22 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
             for (const n of prevNotes) {
               const folder = n.folder || 'Uncategorized';
               if (!notesByFolderCopy[folder]) notesByFolderCopy[folder] = [];
-              notesByFolderCopy[folder].push(n);
+              notesByFolderCopy[folder]!.push(n);
             }
             // Find the note in destFolder
             const idx = notesByFolderCopy[destFolder]?.findIndex(n => n.id === moved.id);
             if (idx === undefined || idx < 0) return prevNotes;
-            const [note] = notesByFolderCopy[destFolder].splice(idx, 1);
+            const [note] = notesByFolderCopy[destFolder]!.splice(idx, 1);
+            if (!note) return prevNotes; // Guard: note not found
             // Insert back into sourceFolder at sourceIdx
             notesByFolderCopy[sourceFolder] = notesByFolderCopy[sourceFolder] || [];
-            notesByFolderCopy[sourceFolder].splice(sourceIdx, 0, {
+            notesByFolderCopy[sourceFolder]!.splice(sourceIdx, 0, {
               ...note,
               folder: sourceFolder === 'Uncategorized' ? '' : sourceFolder,
             });
             // Flatten
             const folderOrderLocal = Object.keys(notesByFolderCopy);
-            const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f]);
+            const newOrder = folderOrderLocal.flatMap(f => notesByFolderCopy[f] ?? []);
             // Persist order
             fetch('/api/files/order', {
               method: 'PUT',
@@ -264,87 +268,90 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
         ) : (
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="space-y-8">
-              {folderOrder.map(folder => (
-                <div
-                  key={folder}
-                  className="rounded-xl theme-border-primary border theme-bg-secondary p-6 shadow-sm"
-                >
-                  <div className="flex items-center mb-4">
-                    <Folder className="w-5 h-5 mr-2 theme-text-secondary" />
-                    <h4 className="text-lg font-semibold theme-text-primary">{folder}</h4>
-                    <span className="ml-2 text-xs theme-text-secondary">
-                      {notesByFolder[folder].length} note
-                      {notesByFolder[folder].length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  <Droppable droppableId={folder}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="flex flex-col gap-4 min-h-10"
-                        style={{
-                          background: snapshot.isDraggingOver ? 'var(--bg-tertiary)' : undefined,
-                        }}
-                      >
-                        {notesByFolder[folder].map((note, idx) => (
-                          <Draggable key={note.id} draggableId={note.id} index={idx}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`p-4 rounded-lg cursor-pointer transition-colors border flex items-center theme-bg-secondary theme-border-secondary hover:theme-bg-tertiary ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
-                              >
-                                {getFileIcon(note.name)}
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="text-base font-medium truncate theme-text-primary">
-                                    {note.name.replace('.md', '')}
-                                  </h5>
-                                  <div className="flex items-center gap-4 mt-2 text-xs theme-text-secondary">
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      {note.readingTime}m
-                                    </span>
-                                    <span>{note.wordCount} words</span>
-                                  </div>
-                                  {note.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                      {note.tags.slice(0, 3).map(tag => (
-                                        <span
-                                          key={tag}
-                                          className="text-xs px-1.5 py-0.5 rounded theme-bg-tertiary theme-text-secondary"
-                                        >
-                                          #{tag}
-                                        </span>
-                                      ))}
-                                      {note.tags.length > 3 && (
-                                        <span className="text-xs theme-text-secondary">
-                                          +{note.tags.length - 3}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    // Delete functionality handled by parent component
-                                  }}
-                                  className="p-1 theme-text-secondary hover:text-red-600"
+              {folderOrder.map(folder => {
+                const folderNotes = notesByFolder[folder] ?? [];
+                return (
+                  <div
+                    key={folder}
+                    className="rounded-xl theme-border-primary border theme-bg-secondary p-6 shadow-sm"
+                  >
+                    <div className="flex items-center mb-4">
+                      <Folder className="w-5 h-5 mr-2 theme-text-secondary" />
+                      <h4 className="text-lg font-semibold theme-text-primary">{folder}</h4>
+                      <span className="ml-2 text-xs theme-text-secondary">
+                        {folderNotes.length} note
+                        {folderNotes.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <Droppable droppableId={folder}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="flex flex-col gap-4 min-h-10"
+                          style={{
+                            background: snapshot.isDraggingOver ? 'var(--bg-tertiary)' : undefined,
+                          }}
+                        >
+                          {folderNotes.map((note, idx) => (
+                            <Draggable key={note.id} draggableId={note.id} index={idx}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`p-4 rounded-lg cursor-pointer transition-colors border flex items-center theme-bg-secondary theme-border-secondary hover:theme-bg-tertiary ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
                                 >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              ))}
+                                  {getFileIcon(note.name)}
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="text-base font-medium truncate theme-text-primary">
+                                      {note.name.replace('.md', '')}
+                                    </h5>
+                                    <div className="flex items-center gap-4 mt-2 text-xs theme-text-secondary">
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        {note.readingTime}m
+                                      </span>
+                                      <span>{note.wordCount} words</span>
+                                    </div>
+                                    {note.tags.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-2">
+                                        {note.tags.slice(0, 3).map(tag => (
+                                          <span
+                                            key={tag}
+                                            className="text-xs px-1.5 py-0.5 rounded theme-bg-tertiary theme-text-secondary"
+                                          >
+                                            #{tag}
+                                          </span>
+                                        ))}
+                                        {note.tags.length > 3 && (
+                                          <span className="text-xs theme-text-secondary">
+                                            +{note.tags.length - 3}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      // Delete functionality handled by parent component
+                                    }}
+                                    className="p-1 theme-text-secondary hover:text-red-600"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                );
+              })}
             </div>
           </DragDropContext>
         )}
