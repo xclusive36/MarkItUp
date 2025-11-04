@@ -1,3 +1,4 @@
+import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { SimpleThemeProvider } from '@/contexts/SimpleThemeContext';
@@ -12,6 +13,43 @@ export const metadata: Metadata = {
   description:
     'A powerful Markdown-based personal knowledge management system with AI integration, graph visualization, and advanced search',
   manifest: '/manifest.json',
+  keywords: [
+    'markdown',
+    'knowledge management',
+    'PKM',
+    'note-taking',
+    'AI',
+    'graph visualization',
+    'second brain',
+    'obsidian alternative',
+  ],
+  authors: [{ name: 'MarkItUp Team' }],
+  creator: 'MarkItUp',
+  publisher: 'MarkItUp',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://github.com/xclusive36/MarkItUp',
+    title: 'MarkItUp - Personal Knowledge Management',
+    description:
+      'Self-hosted PKM system with AI-powered features, bidirectional linking, and knowledge graph visualization',
+    siteName: 'MarkItUp',
+    images: [
+      {
+        url: '/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'MarkItUp Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MarkItUp - Personal Knowledge Management',
+    description:
+      'Self-hosted PKM system with AI-powered features, bidirectional linking, and knowledge graph visualization',
+    images: ['/icon-512x512.png'],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -26,8 +64,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: '#3b82f6',
 };
 
@@ -50,8 +86,17 @@ export default function RootLayout({
           <ToastProvider>
             <SimpleThemeProvider>
               <CollaborationProvider>
-                <PluginSystemInitializer />
-                {children}
+                {process.env.NODE_ENV === 'development' ? (
+                  <React.StrictMode>
+                    <PluginSystemInitializer />
+                    {children}
+                  </React.StrictMode>
+                ) : (
+                  <>
+                    <PluginSystemInitializer />
+                    {children}
+                  </>
+                )}
               </CollaborationProvider>
             </SimpleThemeProvider>
           </ToastProvider>

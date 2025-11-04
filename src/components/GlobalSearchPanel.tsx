@@ -1726,7 +1726,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
           >
             <div className="flex items-start gap-3">
               <Lightbulb
-                className="w-5 h-5 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 shrink-0 mt-0.5"
                 style={{ color: 'var(--warning-color)' }}
               />
               <div className="flex-1">
@@ -1813,7 +1813,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
                   }
                 >
                   <div className="flex items-start gap-2">
-                    <Zap className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#a855f7' }} />
+                    <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#a855f7' }} />
                     <div className="flex-1">
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                         {suggestion.value}
@@ -1848,7 +1848,7 @@ const GlobalSearchPanel: React.FC<GlobalSearchPanelProps> = ({
             }}
           >
             <div className="flex items-start gap-3">
-              <Brain className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#6366f1' }} />
+              <Brain className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#6366f1' }} />
               <div className="flex-1">
                 <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                   Parsed Query (AI Interpretation):

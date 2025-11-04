@@ -13,13 +13,72 @@ import MainPanel from '@/components/MainPanel';
 import { CollaborationSettings } from '@/components/CollaborationSettings';
 import { UserProfile } from '@/components/UserProfile';
 import CommandPalette from '@/components/CommandPalette';
-import AIChat from '@/components/AIChat';
-import WritingAssistant from '@/components/WritingAssistant';
-import KnowledgeDiscovery from '@/components/KnowledgeDiscovery';
-import ResearchAssistant from '@/components/ResearchAssistant';
-import KnowledgeMap from '@/components/KnowledgeMap';
-import BatchAnalyzer from '@/components/BatchAnalyzer';
-import GlobalSearchPanel from '@/components/GlobalSearchPanel';
+
+// Lazy-load heavy AI components for better initial page load performance
+const AIChat = dynamic(() => import('@/components/AIChat'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading AI Chat...</div>
+    </div>
+  ),
+});
+
+const WritingAssistant = dynamic(() => import('@/components/WritingAssistant'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Writing Assistant...</div>
+    </div>
+  ),
+});
+
+const KnowledgeDiscovery = dynamic(() => import('@/components/KnowledgeDiscovery'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Knowledge Discovery...</div>
+    </div>
+  ),
+});
+
+const ResearchAssistant = dynamic(() => import('@/components/ResearchAssistant'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Research Assistant...</div>
+    </div>
+  ),
+});
+
+const KnowledgeMap = dynamic(() => import('@/components/KnowledgeMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Knowledge Map...</div>
+    </div>
+  ),
+});
+
+const BatchAnalyzer = dynamic(() => import('@/components/BatchAnalyzer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Batch Analyzer...</div>
+    </div>
+  ),
+});
+
+// Also lazy-load other heavy components
+const GlobalSearchPanel = dynamic(() => import('@/components/GlobalSearchPanel'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="animate-pulse text-sm">Loading Search...</div>
+    </div>
+  ),
+});
+
 import DailyNotesCalendarModal from '@/components/DailyNotesCalendarModal';
 import { AnalyticsDashboard as KnowledgeGraphAnalytics } from '@/components/KnowledgeGraphAnalytics';
 import ConnectionSuggestionsModal from '@/components/ConnectionSuggestionsModal';

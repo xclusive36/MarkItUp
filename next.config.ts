@@ -5,16 +5,30 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
 
-  // Configure API routes
+  // Optimize package imports for better bundle size
   experimental: {
     // Increase body size limit for file uploads
     serverActions: {
       bodySizeLimit: '15mb',
     },
+    // Optimize imports for heavy packages
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      'd3',
+      '@tiptap/react',
+      '@tiptap/starter-kit',
+      '@tiptap/extension-code-block-lowlight',
+      'react-markdown',
+    ],
   },
 
-  // Empty turbopack config to acknowledge webpack config is intentional
-  turbopack: {},
+  // Configure turbopack for faster builds
+  turbopack: {
+    resolveAlias: {
+      // Add any path aliases you use frequently
+    },
+  },
 
   // Exclude markdown folder from HMR watch to prevent page reloads when markdown files change
   webpack: (config, { dev, isServer }) => {
