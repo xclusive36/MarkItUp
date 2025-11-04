@@ -60,10 +60,15 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
   // Helper function to parse color with opacity (e.g., "blue!20")
   const parseColorWithOpacity = (colorStr: string): { color: string; opacity: number } => {
     if (colorStr.includes('!')) {
-      const [colorName, opacityStr] = colorStr.split('!');
+      const parts = colorStr.split('!');
+      const colorName = parts[0]?.trim();
+      const opacityStr = parts[1];
+      if (!colorName || !opacityStr) {
+        return { color: getColor(colorStr), opacity: 1 };
+      }
       const opacity = parseFloat(opacityStr) / 100; // Convert percentage to decimal
       return {
-        color: getColor(colorName.trim()),
+        color: getColor(colorName),
         opacity: opacity,
       };
     }
@@ -85,7 +90,11 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
 
     for (const option of options) {
       if (option.includes('=')) {
-        const [key, value] = option.split('=').map(s => s.trim());
+        const parts = option.split('=').map(s => s.trim());
+        const key = parts[0];
+        const value = parts[1];
+        if (!key || !value) continue;
+
         switch (key) {
           case 'color': {
             const { color, opacity } = parseColorWithOpacity(value);
@@ -165,8 +174,11 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
             const points = command.match(/\((.*?)\)/g)?.map((p: string) => p.slice(1, -1)) || [];
             if (points.length >= 2) {
               const coords = points.map(parseCoords);
+              const firstCoord = coords[0];
+              if (!firstCoord) continue;
+
               const pathData =
-                `M ${coords[0].x} ${coords[0].y} ` +
+                `M ${firstCoord.x} ${firstCoord.y} ` +
                 coords
                   .slice(1)
                   .map((p: Point) => `L ${p.x} ${p.y}`)
@@ -186,9 +198,11 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
           } else if (command.includes('circle')) {
             // Circle
             const match = command.match(/\((.*?)\)\s*circle\s*\((.*?)\)/);
-            if (match) {
-              const center = parseCoords(match[1]);
-              const r = parseFloat(match[2].replace(/cm/, '')) * 50;
+            const centerStr = match?.[1];
+            const radiusStr = match?.[2];
+            if (match && centerStr && radiusStr) {
+              const center = parseCoords(centerStr);
+              const r = parseFloat(radiusStr.replace(/cm/, '')) * 50;
               svgElements.push(
                 <circle
                   key={svgElements.length}
@@ -206,11 +220,14 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
           } else if (command.includes('arc')) {
             // Arc
             const match = command.match(/\((.*?)\)\s*arc\s*\((.*?)\)/);
-            if (match) {
-              const center = parseCoords(match[1]);
-              const [startAngle, endAngle, radius] = match[2]
-                .split(':')
-                .map((n: string) => parseFloat(n.trim()));
+            const centerStr = match?.[1];
+            const arcParams = match?.[2];
+            if (match && centerStr && arcParams) {
+              const center = parseCoords(centerStr);
+              const parts = arcParams.split(':').map((n: string) => parseFloat(n.trim()));
+              const startAngle = parts[0] ?? 0;
+              const endAngle = parts[1] ?? 0;
+              const radius = parts[2] ?? 1;
               const r = radius * 50;
               const start = {
                 x: center.x + r * Math.cos((startAngle * Math.PI) / 180),
@@ -237,9 +254,11 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
           } else if (command.includes('rectangle')) {
             // Rectangle
             const match = command.match(/\((.*?)\)\s*rectangle\s*\((.*?)\)/);
-            if (match) {
-              const start = parseCoords(match[1]);
-              const end = parseCoords(match[2]);
+            const startStr = match?.[1];
+            const endStr = match?.[2];
+            if (match && startStr && endStr) {
+              const start = parseCoords(startStr);
+              const end = parseCoords(endStr);
               svgElements.push(
                 <rect
                   key={svgElements.length}
@@ -261,6 +280,7 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
           const match = command.match(/\\node\s*(?:\[(.*?)\])?\s*at\s*\((.*?)\)\s*{(.*?)};/);
           if (match) {
             const [, nodeStyle, coords, text] = match;
+            if (!coords) continue;
             const point = parseCoords(coords);
             const textStyle = parseStyle(nodeStyle);
             svgElements.push(
