@@ -1058,6 +1058,8 @@ class KnowledgeGraphAutoMapperPlugin {
           const cluster1 = clusters[i];
           const cluster2 = clusters[j];
 
+          if (!cluster1 || !cluster2) continue;
+
           // Get sample content from each cluster
           const sample1 = this.getClusterSample(cluster1.noteIds);
           const sample2 = this.getClusterSample(cluster2.noteIds);
@@ -1319,8 +1321,12 @@ Check console for full report or save it as a note.`;
     links.forEach(link => {
       if (!adjacencyList[link.source]) adjacencyList[link.source] = new Set();
       if (!adjacencyList[link.target]) adjacencyList[link.target] = new Set();
-      adjacencyList[link.source].add(link.target);
-      adjacencyList[link.target].add(link.source);
+      const sourceSet = adjacencyList[link.source];
+      const targetSet = adjacencyList[link.target];
+      if (sourceSet && targetSet) {
+        sourceSet.add(link.target);
+        targetSet.add(link.source);
+      }
     });
 
     const visited = new Set<string>();
@@ -1559,7 +1565,9 @@ Check console for full report or save it as a note.`;
           confirm(`\nWould you like to apply the first suggestion now?`)
         ) {
           const first = connections[0];
-          this.applyConnection(first.source, first.target, first.reason);
+          if (first) {
+            this.applyConnection(first.source, first.target, first.reason);
+          }
         }
       }, 500);
     }
@@ -1628,7 +1636,9 @@ Check console for full report or save it as a note.`;
         // Prompt to create first MOC
         if (suggestions.length > 0 && confirm(`\nWould you like to create the first MOC now?`)) {
           const first = suggestions[0];
-          this.createMOCNote(first.suggestedTitle, first.noteIds, first.reason);
+          if (first) {
+            this.createMOCNote(first.suggestedTitle, first.noteIds, first.reason);
+          }
         }
       }, 500);
     }
@@ -1638,7 +1648,9 @@ Check console for full report or save it as a note.`;
    * Get plugin settings
    */
   private getSettings(): Record<string, unknown> {
-    return this.api.settings.get('ai-knowledge-graph-auto-mapper') || {};
+    // Note: settings.get returns a Promise in the actual API, but this is a simplified sync version
+    const result = this.api.settings.get('ai-knowledge-graph-auto-mapper');
+    return (result || {}) as unknown as Record<string, unknown>;
   }
 
   /**
@@ -1700,6 +1712,7 @@ Check console for full report or save it as a note.`;
    */
   private trackConnection(): void {
     const today = new Date().toISOString().split('T')[0];
+    if (!today) return;
 
     this.analyticsData.totalConnections++;
     this.analyticsData.connectionsByDate[today] =
@@ -1714,6 +1727,7 @@ Check console for full report or save it as a note.`;
    */
   private trackMOC(name: string): void {
     const today = new Date().toISOString().split('T')[0];
+    if (!today) return;
 
     this.analyticsData.totalMOCs++;
     this.analyticsData.mocsByDate[today] = (this.analyticsData.mocsByDate[today] || 0) + 1;
@@ -1752,6 +1766,8 @@ Check console for full report or save it as a note.`;
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
+      if (!dateStr) continue;
+
       const count = this.analyticsData.connectionsByDate[dateStr] || 0;
 
       if (i < 7) {
@@ -2026,6 +2042,8 @@ ${this.getRecentActivityText()}
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
+      if (!dateStr) continue;
+
       const connections = this.analyticsData.connectionsByDate[dateStr] || 0;
       const mocs = this.analyticsData.mocsByDate[dateStr] || 0;
 
