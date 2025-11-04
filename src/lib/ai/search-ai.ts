@@ -378,7 +378,9 @@ If none are relevant, return: []`;
       throw new Error('Invalid response format');
     }
 
-    return relevantIndices.map(idx => results[idx]).filter(Boolean);
+    return relevantIndices
+      .map(idx => results[idx])
+      .filter((r): r is SearchResult => r !== undefined);
   } catch (error) {
     console.error('[SearchAI] Error in semantic refinement:', error);
     // Fallback to text matching
@@ -439,7 +441,7 @@ Most relevant first.`;
       return results;
     }
 
-    return rankedIndices.map(idx => results[idx]).filter(Boolean);
+    return rankedIndices.map(idx => results[idx]).filter((r): r is SearchResult => r !== undefined);
   } catch (error) {
     console.error('[SearchAI] Error re-ranking results:', error);
     return results;
