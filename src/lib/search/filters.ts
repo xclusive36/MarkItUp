@@ -163,7 +163,8 @@ function countLinks(text: string): number {
  */
 function extractFolder(filePath: string): string {
   const parts = filePath.split('/');
-  return parts.length > 1 ? parts[0] : '';
+  const firstPart = parts[0];
+  return parts.length > 1 && firstPart ? firstPart : '';
 }
 
 /**
@@ -176,35 +177,35 @@ export function parseFilterQuery(query: string): { query: string; filters: Searc
 
   // Tag filter: tag:tagname or tag:tag1,tag2
   const tagMatch = query.match(/tag:([^\s]+)/);
-  if (tagMatch) {
+  if (tagMatch && tagMatch[1]) {
     filters.tags = tagMatch[1].split(',');
     cleanQuery = cleanQuery.replace(tagMatch[0], '').trim();
   }
 
   // Exclude tag: -tag:tagname
   const excludeTagMatch = query.match(/-tag:([^\s]+)/);
-  if (excludeTagMatch) {
+  if (excludeTagMatch && excludeTagMatch[1]) {
     filters.excludeTags = excludeTagMatch[1].split(',');
     cleanQuery = cleanQuery.replace(excludeTagMatch[0], '').trim();
   }
 
   // Date created: created:YYYY-MM-DD or created:YYYY-MM-DD..YYYY-MM-DD
   const createdMatch = query.match(/created:([^\s]+)/);
-  if (createdMatch) {
+  if (createdMatch && createdMatch[1]) {
     filters.dateCreated = parseDateRange(createdMatch[1]);
     cleanQuery = cleanQuery.replace(createdMatch[0], '').trim();
   }
 
   // Date modified: modified:YYYY-MM-DD or modified:YYYY-MM-DD..YYYY-MM-DD
   const modifiedMatch = query.match(/modified:([^\s]+)/);
-  if (modifiedMatch) {
+  if (modifiedMatch && modifiedMatch[1]) {
     filters.dateModified = parseDateRange(modifiedMatch[1]);
     cleanQuery = cleanQuery.replace(modifiedMatch[0], '').trim();
   }
 
   // Word count: words:100 or words:100..1000
   const wordsMatch = query.match(/words:([^\s]+)/);
-  if (wordsMatch) {
+  if (wordsMatch && wordsMatch[1]) {
     filters.wordCount = parseNumberRange(wordsMatch[1]);
     cleanQuery = cleanQuery.replace(wordsMatch[0], '').trim();
   }
