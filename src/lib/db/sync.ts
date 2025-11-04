@@ -25,7 +25,8 @@ export class FileSystemDBSync {
   private extractMetadata(filePath: string, content: string) {
     // Extract title (first H1 or filename)
     const titleMatch = content.match(/^#\s+(.+)$/m);
-    const title = titleMatch ? titleMatch[1].trim() : path.basename(filePath, '.md');
+    const title =
+      titleMatch && titleMatch[1] ? titleMatch[1].trim() : path.basename(filePath, '.md');
 
     // Extract tags (#tag format)
     const tagMatches = content.match(/#[\w-]+/g) || [];
@@ -33,10 +34,14 @@ export class FileSystemDBSync {
 
     // Extract wikilinks ([[link]])
     const wikilinkMatches = content.match(/\[\[([^\]]+)\]\]/g) || [];
-    const wikilinks = wikilinkMatches.map(match => {
-      const link = match.slice(2, -2); // Remove [[ ]]
-      return link.split('|')[0].trim(); // Handle [[link|alias]]
-    });
+    const wikilinks = wikilinkMatches
+      .map(match => {
+        const link = match.slice(2, -2); // Remove [[ ]]
+        const parts = link.split('|');
+        const firstPart = parts[0];
+        return firstPart ? firstPart.trim() : ''; // Handle [[link|alias]]
+      })
+      .filter(link => link.length > 0);
 
     // Calculate statistics
     const words = content.split(/\s+/).filter(w => w.length > 0);
