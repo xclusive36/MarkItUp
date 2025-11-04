@@ -36,7 +36,9 @@ export const BacklinksPanel: React.FC<BacklinksPanelProps> = ({
       const matches = [...note.content.matchAll(wikilinkPattern)];
 
       const relevantMatches = matches.filter(match => {
-        const linkedName = match[1].split('|')[0].trim();
+        const matchText = match[1];
+        if (!matchText) return false;
+        const linkedName = matchText.split('|')[0]?.trim();
         return linkedName === currentNoteName;
       });
 

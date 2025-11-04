@@ -2248,8 +2248,9 @@ function AISettingsPanel({
         );
 
         // If current model is not in the list, set to the first available model
-        if (!models.find((m: { name: string }) => m.name === formData.model)) {
-          setFormData(prev => ({ ...prev, model: models[0].name }));
+        const firstModel = models[0];
+        if (!models.find((m: { name: string }) => m.name === formData.model) && firstModel) {
+          setFormData(prev => ({ ...prev, model: firstModel.name }));
         }
       }
     } catch (error) {

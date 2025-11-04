@@ -96,7 +96,10 @@ export default function DailyNotesCalendarModal({
     today.setHours(0, 0, 0, 0);
 
     for (let i = 0; i < sortedDates.length; i++) {
-      const noteDate = new Date(sortedDates[i]);
+      const dateString = sortedDates[i];
+      if (!dateString) break;
+
+      const noteDate = new Date(dateString);
       noteDate.setHours(0, 0, 0, 0);
 
       const expectedDate = new Date(today);
