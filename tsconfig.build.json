@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Relax these for build - they're good for development but too strict for production
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    // Keep these strict checks
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "exclude": ["node_modules", "tests/**/*", ".next"]
+}
