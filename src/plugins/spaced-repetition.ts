@@ -338,7 +338,9 @@ class FSRSAlgorithm {
    * Apply mean reversion to difficulty
    */
   private meanReversion(init: number, current: number): number {
-    return this.w[7] * init + (1 - this.w[7]) * current;
+    const w7 = this.w[7];
+    if (w7 === undefined) return current;
+    return w7 * init + (1 - w7) * current;
   }
 
   /**
