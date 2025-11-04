@@ -31,6 +31,8 @@ export class MarkdownParser {
 
     try {
       const yamlContent = match[1];
+      if (!yamlContent) return {};
+
       const frontmatter: FrontMatter = {};
 
       // Simple YAML parser for common frontmatter fields
@@ -83,24 +85,30 @@ export class MarkdownParser {
     // Parse wikilinks [[Note Name|Display Text]]
     const wikilinkRegex = new RegExp(this.WIKILINK_REGEX);
     while ((match = wikilinkRegex.exec(content)) !== null) {
-      links.push({
-        type: 'wikilink',
-        target: match[1].trim(),
-        displayText: match[2] || match[1].trim(),
-        start: match.index,
-        end: match.index + match[0].length,
-      });
+      const target = match[1]?.trim();
+      const displayText = match[2] || target;
+      if (target && displayText) {
+        links.push({
+          type: 'wikilink',
+          target,
+          displayText,
+          start: match.index,
+          end: match.index + match[0].length,
+        });
+      }
     }
 
     // Parse markdown links [Display Text](url)
     const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
     while ((match = markdownLinkRegex.exec(content)) !== null) {
+      const url = match[2];
+      const text = match[1];
       // Only include if it looks like an internal link (no http/https)
-      if (!match[2].startsWith('http')) {
+      if (url && text && !url.startsWith('http')) {
         links.push({
           type: 'markdown',
-          target: match[2],
-          displayText: match[1],
+          target: url,
+          displayText: text,
           start: match.index,
           end: match.index + match[0].length,
         });
@@ -120,7 +128,10 @@ export class MarkdownParser {
 
     const tagRegex = new RegExp(this.TAG_REGEX);
     while ((match = tagRegex.exec(contentWithoutLinks)) !== null) {
-      tags.push(match[1]);
+      const tag = match[1];
+      if (tag) {
+        tags.push(tag);
+      }
     }
 
     return [...new Set(tags)]; // Remove duplicates
@@ -134,6 +145,11 @@ export class MarkdownParser {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) {
+        lineStart += 1; // Account for newline
+        continue;
+      }
+
       const lineEnd = lineStart + line.length + 1; // +1 for newline
 
       // Check for block ID at end of line
@@ -145,7 +161,8 @@ export class MarkdownParser {
 
       if (line.match(/^#{1,6}\s/)) {
         blockType = 'heading';
-        level = line.match(/^(#{1,6})/)?.[1].length;
+        const levelMatch = line.match(/^(#{1,6})/)?.[1];
+        level = levelMatch?.length;
       } else if (line.match(/^[-*+]\s/) || line.match(/^\d+\.\s/)) {
         blockType = 'list';
       } else if (line.match(/^```/) || line.match(/^    /)) {
@@ -214,8 +231,9 @@ export class MarkdownParser {
     const lines = parsed.content.split('\n');
     for (const line of lines) {
       const headingMatch = line.match(/^#\s+(.+)/);
-      if (headingMatch) {
-        return headingMatch[1].trim();
+      const title = headingMatch?.[1]?.trim();
+      if (title) {
+        return title;
       }
     }
 
