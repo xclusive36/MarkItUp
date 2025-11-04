@@ -88,6 +88,8 @@ export class OllamaProvider implements AIProviderInterface {
   private formatModelName(name: string): string {
     // Convert model name like "llama3.2:latest" to "Llama 3.2"
     const baseName = name.split(':')[0];
+    if (!baseName) return name;
+
     return baseName
       .split(/[-_]/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
@@ -553,14 +555,14 @@ Guidelines:
   private extractSection(text: string, section: string): string | null {
     const regex = new RegExp(`\\b${section}:?\\s*([^\n]+)`, 'i');
     const match = text.match(regex);
-    return match ? match[1].trim() : null;
+    return match && match[1] ? match[1].trim() : null;
   }
 
   private extractListItems(text: string, section: string): string[] {
     const sectionMatch = text.match(
       new RegExp(`\\b${section}:?([^\\n]+(?:\\n[^\\n]*)*?)(?=\\n\\d+\\.|\\n[A-Z]|$)`, 'i')
     );
-    if (!sectionMatch) return [];
+    if (!sectionMatch || !sectionMatch[1]) return [];
 
     return sectionMatch[1]
       .split(/[\n,]/)
@@ -570,7 +572,7 @@ Guidelines:
 
   private extractTags(text: string): string[] {
     const tagsMatch = text.match(/tags?:?\s*([^\n]+)/i);
-    if (!tagsMatch) return [];
+    if (!tagsMatch || !tagsMatch[1]) return [];
 
     return tagsMatch[1]
       .split(',')
@@ -585,7 +587,7 @@ Guidelines:
 
   private extractComplexity(text: string): number {
     const complexityMatch = text.match(/complexity:?\s*(\d+)/i);
-    return complexityMatch ? parseInt(complexityMatch[1]) : 5;
+    return complexityMatch && complexityMatch[1] ? parseInt(complexityMatch[1]) : 5;
   }
 
   private createAIError(code: string, message: string): AIError {
