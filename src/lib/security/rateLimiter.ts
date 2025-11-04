@@ -84,10 +84,14 @@ class RateLimiter {
   }
 }
 
+// Detect test environment
+const isTestEnvironment = process.env.NODE_ENV === 'test' || process.env.PLAYWRIGHT_TEST === 'true';
+
 // Create singleton instances for different operations
-export const fileOperationsLimiter = new RateLimiter(50, 60000); // 50 requests per minute
-export const fileCreationLimiter = new RateLimiter(20, 60000); // 20 file creations per minute
-export const fileReadLimiter = new RateLimiter(100, 60000); // 100 reads per minute
+// More permissive limits in test environment
+export const fileOperationsLimiter = new RateLimiter(isTestEnvironment ? 1000 : 50, 60000); // 1000/min in tests, 50/min in production
+export const fileCreationLimiter = new RateLimiter(isTestEnvironment ? 500 : 20, 60000); // 500/min in tests, 20/min in production
+export const fileReadLimiter = new RateLimiter(isTestEnvironment ? 2000 : 100, 60000); // 2000/min in tests, 100/min in production
 
 /**
  * Get client identifier from request (IP address)

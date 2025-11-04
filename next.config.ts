@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
 
+  // Configure API routes
+  experimental: {
+    // Increase body size limit for file uploads
+    serverActions: {
+      bodySizeLimit: '15mb',
+    },
+  },
+
   // Empty turbopack config to acknowledge webpack config is intentional
   turbopack: {},
 
