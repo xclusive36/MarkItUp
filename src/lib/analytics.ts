@@ -533,7 +533,7 @@ export class AnalyticsSystem {
 
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = date.toISOString().split('T')[0] || '';
 
       const dayEvents = events.filter(
         e => new Date(e.timestamp).toDateString() === date.toDateString()
@@ -683,15 +683,17 @@ export class AnalyticsSystem {
     // Peak hours insight
     if (metrics.peakWritingHours.length > 0) {
       const peak = metrics.peakWritingHours[0];
-      const timeStr =
-        peak < 12 ? `${peak === 0 ? 12 : peak}:00 AM` : `${peak === 12 ? 12 : peak - 12}:00 PM`;
-      insights.push({
-        id: 'peak_hours',
-        title: '⏰ Optimal Writing Time',
-        description: `You're most productive around ${timeStr}. Schedule deep work during these golden hours!`,
-        type: 'neutral',
-        icon: '⏰',
-      });
+      if (peak !== undefined) {
+        const timeStr =
+          peak < 12 ? `${peak === 0 ? 12 : peak}:00 AM` : `${peak === 12 ? 12 : peak - 12}:00 PM`;
+        insights.push({
+          id: 'peak_hours',
+          title: '⏰ Optimal Writing Time',
+          description: `You're most productive around ${timeStr}. Schedule deep work during these golden hours!`,
+          type: 'neutral',
+          icon: '⏰',
+        });
+      }
     }
 
     // Content organization insights
@@ -888,8 +890,12 @@ export class AnalyticsSystem {
     let tempStreak = 1;
 
     for (let i = 1; i < sortedDays.length; i++) {
-      const prevDate = new Date(sortedDays[i - 1]);
-      const currDate = new Date(sortedDays[i]);
+      const prevDateStr = sortedDays[i - 1];
+      const currDateStr = sortedDays[i];
+      if (!prevDateStr || !currDateStr) continue;
+
+      const prevDate = new Date(prevDateStr);
+      const currDate = new Date(currDateStr);
       const dayDiff = (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
 
       if (dayDiff === 1) {
