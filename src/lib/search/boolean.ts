@@ -36,6 +36,10 @@ export function tokenize(query: string): SearchToken[] {
 
   while (i < query.length) {
     const char = query[i];
+    if (!char) {
+      i++;
+      continue;
+    }
 
     // Skip whitespace
     if (/\s/.test(char)) {
@@ -71,8 +75,11 @@ export function tokenize(query: string): SearchToken[] {
 
     // Term or operator
     let word = '';
-    while (i < query.length && !/[\s()"']/.test(query[i])) {
-      word += query[i];
+    while (i < query.length && !/[\s()"']/.test(query[i]!)) {
+      const currentChar = query[i];
+      if (currentChar) {
+        word += currentChar;
+      }
       i++;
     }
 
@@ -100,11 +107,10 @@ export function parse(tokens: SearchToken[]): SearchNode | null {
   function parseOr(): SearchNode | null {
     let left = parseAnd();
 
-    while (
-      position < tokens.length &&
-      tokens[position].type === 'OPERATOR' &&
-      tokens[position].value === 'OR'
-    ) {
+    while (position < tokens.length) {
+      const token = tokens[position];
+      if (!token || token.type !== 'OPERATOR' || token.value !== 'OR') break;
+
       position++; // consume OR
       const right = parseAnd();
       if (!right) throw new Error('Expected expression after OR');
@@ -117,11 +123,10 @@ export function parse(tokens: SearchToken[]): SearchNode | null {
   function parseAnd(): SearchNode | null {
     let left = parseNot();
 
-    while (
-      position < tokens.length &&
-      tokens[position].type === 'OPERATOR' &&
-      tokens[position].value === 'AND'
-    ) {
+    while (position < tokens.length) {
+      const token = tokens[position];
+      if (!token || token.type !== 'OPERATOR' || token.value !== 'AND') break;
+
       position++; // consume AND
       const right = parseNot();
       if (!right) throw new Error('Expected expression after AND');
@@ -132,15 +137,14 @@ export function parse(tokens: SearchToken[]): SearchNode | null {
   }
 
   function parseNot(): SearchNode | null {
-    if (
-      position < tokens.length &&
-      tokens[position].type === 'OPERATOR' &&
-      tokens[position].value === 'NOT'
-    ) {
-      position++; // consume NOT
-      const child = parsePrimary();
-      if (!child) throw new Error('Expected expression after NOT');
-      return { type: 'NOT', child };
+    if (position < tokens.length) {
+      const token = tokens[position];
+      if (token && token.type === 'OPERATOR' && token.value === 'NOT') {
+        position++; // consume NOT
+        const child = parsePrimary();
+        if (!child) throw new Error('Expected expression after NOT');
+        return { type: 'NOT', child };
+      }
     }
 
     return parsePrimary();
@@ -150,12 +154,14 @@ export function parse(tokens: SearchToken[]): SearchNode | null {
     if (position >= tokens.length) return null;
 
     const token = tokens[position];
+    if (!token) return null;
 
     // Parenthesized expression
     if (token.type === 'LPAREN') {
       position++; // consume (
       const expr = parseExpression();
-      if (position >= tokens.length || tokens[position].type !== 'RPAREN') {
+      const closeToken = tokens[position];
+      if (position >= tokens.length || !closeToken || closeToken.type !== 'RPAREN') {
         throw new Error('Expected closing parenthesis');
       }
       position++; // consume )
