@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIAnalyzer } from '@/lib/ai/analyzers';
-import { Note, Tag } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
 import { getAIService } from '@/lib/ai/ai-service';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { notes, tags, analysisType, content, noteId, settings: clientSettings } = body;
+    const { notes, tags, analysisType, content, settings: clientSettings } = body;
 
     // Check if we have either notes array OR content for analysis
     if (!notes && !content) {

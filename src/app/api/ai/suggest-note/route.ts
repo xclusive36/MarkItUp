@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIAnalyzer } from '@/lib/ai/analyzers';
 import { getAIService } from '@/lib/ai/ai-service';
-import { Note } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
 
 export async function POST(request: NextRequest) {

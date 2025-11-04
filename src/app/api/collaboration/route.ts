@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CollaborativeSession, Participant } from '../../../lib/types';
+import { CollaborativeSession } from '../../../lib/types';
 
 // In-memory storage for demo purposes
 // In production, you'd use a database
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     let session = sessions.get(sessionId);
-    
+
     if (!session) {
       // Create new session
       session = {
@@ -66,10 +66,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(session);
   } catch (error) {
     console.error('Error handling collaboration session:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -104,10 +101,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(session);
   } catch (error) {
     console.error('Error updating participant:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -118,10 +112,7 @@ export async function DELETE(request: NextRequest) {
     const participantId = searchParams.get('participantId');
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Missing sessionId parameter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing sessionId parameter' }, { status: 400 });
     }
 
     const session = sessions.get(sessionId);
@@ -132,13 +123,13 @@ export async function DELETE(request: NextRequest) {
     if (participantId) {
       // Remove specific participant
       session.participants = session.participants.filter(p => p.id !== participantId);
-      
+
       // Remove session if no participants left
       if (session.participants.length === 0) {
         sessions.delete(sessionId);
         return NextResponse.json({ message: 'Session deleted' });
       }
-      
+
       session.lastActivity = new Date().toISOString();
       return NextResponse.json(session);
     } else {
@@ -148,10 +139,7 @@ export async function DELETE(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error deleting session/participant:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -162,7 +150,7 @@ async function cleanupInactiveSessions() {
 
   for (const [sessionId, session] of sessions.entries()) {
     const lastActivity = new Date(session.lastActivity).getTime();
-    
+
     if (now - lastActivity > timeoutDuration) {
       sessions.delete(sessionId);
       console.log(`Cleaned up inactive session: ${sessionId}`);
@@ -171,11 +159,11 @@ async function cleanupInactiveSessions() {
       session.participants = session.participants.filter(participant => {
         const lastSeen = new Date(participant.lastSeen).getTime();
         const isActive = now - lastSeen < timeoutDuration;
-        
+
         if (isActive) {
           participant.isActive = true;
         }
-        
+
         return isActive;
       });
 

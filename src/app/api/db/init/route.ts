@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSyncService } from '@/lib/db/sync';
 
 /**
@@ -7,7 +7,7 @@ import { getSyncService } from '@/lib/db/sync';
  * POST /api/db/init - Initialize database from file system
  * GET /api/db/stats - Get sync statistics
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('[DB Init] Starting database initialization...');
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const syncService = getSyncService();
     const stats = await syncService.getStats();

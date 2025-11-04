@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
         const searchResults = results.map(note => {
           // Extract context snippets around search term
           const content = note.content || '';
-          const lowerContent = content.toLowerCase();
           const lowerQuery = query.toLowerCase();
 
           // Find all occurrences

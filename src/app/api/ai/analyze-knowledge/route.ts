@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIAnalyzer } from '@/lib/ai/analyzers';
 import { getAIService } from '@/lib/ai/ai-service';
-import { Note, Tag } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { notes, tags, analysisType, settings: clientSettings } = body;
+    const { notes, tags, settings: clientSettings } = body;
 
     if (!notes || !Array.isArray(notes)) {
       return NextResponse.json(
