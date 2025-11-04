@@ -68,7 +68,8 @@ export default function DocumentOutline({
     if (currentLine === undefined) return -1;
 
     for (let i = headings.length - 1; i >= 0; i--) {
-      if (headings[i].line <= currentLine) {
+      const heading = headings[i];
+      if (heading && heading.line <= currentLine) {
         return i;
       }
     }
@@ -102,14 +103,20 @@ export default function DocumentOutline({
   const isHidden = (index: number): boolean => {
     if (index === 0) return false;
 
-    const currentLevel = headings[index].level;
+    const currentHeading = headings[index];
+    if (!currentHeading) return false;
+
+    const currentLevel = currentHeading.level;
 
     // Look backward to find parent
     for (let i = index - 1; i >= 0; i--) {
-      const parentLevel = headings[i].level;
+      const parentHeading = headings[i];
+      if (!parentHeading) continue;
+
+      const parentLevel = parentHeading.level;
       if (parentLevel < currentLevel) {
         // Found parent
-        if (collapsedSections.has(headings[i].id)) {
+        if (collapsedSections.has(parentHeading.id)) {
           return true;
         }
         // Check if this parent is also hidden
@@ -124,10 +131,13 @@ export default function DocumentOutline({
   const hasChildren = (index: number): boolean => {
     if (index >= headings.length - 1) return false;
 
-    const currentLevel = headings[index].level;
+    const currentHeading = headings[index];
+    if (!currentHeading) return false;
+
+    const currentLevel = currentHeading.level;
     const nextLevel = headings[index + 1]?.level;
 
-    return nextLevel > currentLevel;
+    return nextLevel !== undefined && nextLevel > currentLevel;
   };
 
   if (headings.length === 0) {

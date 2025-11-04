@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
-import { 
-  CollaborativeSession, 
-  Participant, 
-  CollaborativeOperation, 
+import {
+  CollaborativeSession,
+  Participant,
+  CollaborativeOperation,
   CursorPosition,
   SelectionRange,
-  CollaborativeSettings 
+  CollaborativeSettings,
 } from '../lib/types';
 
 interface CollaborativeEditorProps {
@@ -40,11 +40,13 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   const yjsDocRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<WebsocketProvider | null>(null);
   const cursorsRef = useRef<Map<string, ParticipantCursor>>(new Map());
-  
+
   const [session, setSession] = useState<CollaborativeSession | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'connecting' | 'connected' | 'disconnected'
+  >('connecting');
 
   // Initialize YJS document and WebSocket provider
   useEffect(() => {
@@ -55,16 +57,17 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     yjsDocRef.current = yjsDoc;
 
     // Create WebSocket provider for YJS sync - using correct port and path
-    const wsUrl = process.env.NODE_ENV === 'production' 
-      ? `wss://${window.location.host}/ws` 
-      : 'ws://localhost:3000/ws';
-    
+    const wsUrl =
+      process.env.NODE_ENV === 'production'
+        ? `wss://${window.location.host}/ws`
+        : 'ws://localhost:3000/ws';
+
     const provider = new WebsocketProvider(wsUrl, noteId, yjsDoc);
     providerRef.current = provider;
 
     // Get shared text type
     const yText = yjsDoc.getText('content');
-    
+
     // Set initial content if document is empty
     if (yText.length === 0 && initialContent) {
       yText.insert(0, initialContent);
@@ -78,15 +81,15 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         // Save current cursor position
         const cursorStart = editorRef.current.selectionStart;
         const cursorEnd = editorRef.current.selectionEnd;
-        
+
         // Update content
         editorRef.current.value = content;
-        
+
         // Restore cursor position (or adjust if content changed)
         const maxPosition = content.length;
         const newStart = Math.min(cursorStart, maxPosition);
         const newEnd = Math.min(cursorEnd, maxPosition);
-        
+
         // Use setTimeout to ensure DOM is updated
         setTimeout(() => {
           if (editorRef.current) {
@@ -167,30 +170,33 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     });
   };
 
-  const handleTextChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = event.target.value;
-    
-    if (!settings.enableCollaboration || !yjsDocRef.current) {
-      onContentChange(newContent);
-      return;
-    }
+  const handleTextChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = event.target.value;
 
-    const yText = yjsDocRef.current.getText('content');
-    const currentContent = yText.toString();
-
-    if (newContent !== currentContent) {
-      // Calculate the difference between old and new content
-      const diff = calculateTextDiff(currentContent, newContent);
-      
-      // Apply changes to YJS document
-      yText.delete(diff.deleteStart, diff.deleteLength);
-      if (diff.insertText) {
-        yText.insert(diff.deleteStart, diff.insertText);
+      if (!settings.enableCollaboration || !yjsDocRef.current) {
+        onContentChange(newContent);
+        return;
       }
-    }
 
-    onContentChange(newContent);
-  }, [settings.enableCollaboration, onContentChange]);
+      const yText = yjsDocRef.current.getText('content');
+      const currentContent = yText.toString();
+
+      if (newContent !== currentContent) {
+        // Calculate the difference between old and new content
+        const diff = calculateTextDiff(currentContent, newContent);
+
+        // Apply changes to YJS document
+        yText.delete(diff.deleteStart, diff.deleteLength);
+        if (diff.insertText) {
+          yText.insert(diff.deleteStart, diff.insertText);
+        }
+      }
+
+      onContentChange(newContent);
+    },
+    [settings.enableCollaboration, onContentChange]
+  );
 
   const handleCursorMove = useCallback(() => {
     if (!settings.enableCollaboration || !socketRef.current || !editorRef.current) return;
@@ -258,7 +264,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     return {
       deleteStart: start,
       deleteLength: oldEnd - start,
-      insertText: newText.substring(start, newEnd)
+      insertText: newText.substring(start, newEnd),
     };
   };
 
@@ -273,7 +279,8 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
 
   const getColumnNumber = (text: string, position: number): number => {
     const lines = text.substring(0, position).split('\n');
-    return lines[lines.length - 1].length;
+    const lastLine = lines[lines.length - 1];
+    return lastLine ? lastLine.length : 0;
   };
 
   const updateCursor = (participantId: string, cursor: CursorPosition) => {
@@ -291,7 +298,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       cursorElement.style.backgroundColor = participant.color;
       cursorElement.style.zIndex = '1000';
       cursorElement.style.pointerEvents = 'none';
-      
+
       const label = document.createElement('div');
       label.textContent = participant.name;
       label.style.position = 'absolute';
@@ -303,9 +310,9 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       label.style.padding = '2px 4px';
       label.style.borderRadius = '2px';
       label.style.whiteSpace = 'nowrap';
-      
+
       cursorElement.appendChild(label);
-      
+
       if (editorRef.current?.parentElement) {
         editorRef.current.parentElement.appendChild(cursorElement);
       }
@@ -317,7 +324,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     // This is a simplified positioning - in practice, you'd need more precise calculation
     const lineHeight = 1.2; // em
     const charWidth = 0.6; // em (approximate for monospace)
-    
+
     cursorElement.style.top = `${cursor.line * lineHeight}em`;
     cursorElement.style.left = `${cursor.column * charWidth}ch`;
   };
@@ -357,16 +364,24 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       {/* Collaboration status bar */}
       <div className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-800 border-b">
         <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
-            connectionStatus === 'connected' ? 'bg-green-500' : 
-            connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
-          }`} />
+          <div
+            className={`w-2 h-2 rounded-full ${
+              connectionStatus === 'connected'
+                ? 'bg-green-500'
+                : connectionStatus === 'connecting'
+                  ? 'bg-yellow-500'
+                  : 'bg-red-500'
+            }`}
+          />
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {connectionStatus === 'connected' ? 'Connected' : 
-             connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+            {connectionStatus === 'connected'
+              ? 'Connected'
+              : connectionStatus === 'connecting'
+                ? 'Connecting...'
+                : 'Disconnected'}
           </span>
         </div>
-        
+
         {participants.length > 0 && (
           <div className="flex items-center space-x-1">
             <span className="text-sm text-gray-600 dark:text-gray-400">

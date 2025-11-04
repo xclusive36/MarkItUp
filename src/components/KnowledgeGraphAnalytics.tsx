@@ -60,13 +60,16 @@ export function AnalyticsDashboard({
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const isoStr = date.toISOString().split('T');
+      const dateStr = isoStr[0];
 
-      data.push({
-        date: dateStr,
-        connections: analytics.connectionsByDate[dateStr] || 0,
-        mocs: analytics.mocsByDate[dateStr] || 0,
-      });
+      if (dateStr) {
+        data.push({
+          date: dateStr,
+          connections: analytics.connectionsByDate[dateStr] || 0,
+          mocs: analytics.mocsByDate[dateStr] || 0,
+        });
+      }
     }
 
     return data;

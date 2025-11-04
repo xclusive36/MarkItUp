@@ -115,7 +115,10 @@ export default function ConnectionMapPanel({
               ) : (
                 <div className="space-y-3">
                   {hubNotes.map((note, index) => {
-                    const barWidth = (note.connections / hubNotes[0].connections) * 100;
+                    const firstHub = hubNotes[0];
+                    const barWidth = firstHub
+                      ? (note.connections / firstHub.connections) * 100
+                      : 100;
                     return (
                       <div
                         key={note.id}
