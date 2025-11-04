@@ -189,7 +189,7 @@ class FSRSAlgorithm {
    * Initialize a new card with first rating
    */
   private initCard(card: FlashcardRecord, rating: CardRating): FlashcardRecord {
-    const stability = this.INITIAL_STABILITY[rating - 1];
+    const stability = this.INITIAL_STABILITY[rating - 1] || 0.4;
     const difficulty = this.initDifficulty(rating);
     const interval = this.nextInterval(stability);
 
@@ -258,7 +258,7 @@ class FSRSAlgorithm {
    * Calculate initial difficulty for new card
    */
   private initDifficulty(rating: CardRating): number {
-    return this.w[4] - (rating - 3) * this.w[5];
+    return (this.w[4] || 0) - (rating - 3) * (this.w[5] || 0);
   }
 
   /**
@@ -266,8 +266,8 @@ class FSRSAlgorithm {
    */
   private nextDifficulty(difficulty: number, rating: CardRating): number {
     const delta = rating - 3;
-    const new_diff = difficulty - this.w[6] * delta;
-    return this.constrainDifficulty(this.meanReversion(this.w[4], new_diff));
+    const new_diff = difficulty - (this.w[6] || 0) * delta;
+    return this.constrainDifficulty(this.meanReversion(this.w[4] || 0, new_diff));
   }
 
   /**
