@@ -69,8 +69,11 @@ export function updateSavedSearch(id: string, updates: Partial<SavedSearch>): vo
   const index = searches.findIndex(s => s.id === id);
 
   if (index !== -1) {
-    searches[index] = { ...searches[index], ...updates };
-    saveToStorage(searches);
+    const existing = searches[index];
+    if (existing) {
+      searches[index] = { ...existing, ...updates };
+      saveToStorage(searches);
+    }
   }
 }
 
@@ -90,9 +93,12 @@ export function recordSearchUse(id: string): void {
   const index = searches.findIndex(s => s.id === id);
 
   if (index !== -1) {
-    searches[index].useCount++;
-    searches[index].lastUsed = new Date();
-    saveToStorage(searches);
+    const search = searches[index];
+    if (search) {
+      search.useCount++;
+      search.lastUsed = new Date();
+      saveToStorage(searches);
+    }
   }
 }
 
