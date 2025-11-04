@@ -56,8 +56,12 @@ export class TouchGestureHandler {
 
     // Two finger pinch/zoom
     if (touches.length === 2) {
+      const touch0 = touches[0];
+      const touch1 = touches[1];
+      if (!touch0 || !touch1) return;
+
       this.touchState.isPinching = true;
-      this.touchState.initialDistance = this.getDistance(touches[0], touches[1]);
+      this.touchState.initialDistance = this.getDistance(touch0, touch1);
 
       if (this.callbacks.onPinchStart) {
         this.callbacks.onPinchStart(1);
@@ -72,6 +76,8 @@ export class TouchGestureHandler {
     // Single finger pan
     else if (touches.length === 1) {
       const touch = touches[0];
+      if (!touch) return;
+
       this.initialTouchPos = { x: touch.clientX, y: touch.clientY };
 
       // Double tap detection
@@ -112,7 +118,11 @@ export class TouchGestureHandler {
 
     // Pinch zoom
     if (this.touchState.isPinching && touches.length === 2) {
-      const currentDistance = this.getDistance(touches[0], touches[1]);
+      const touch0 = touches[0];
+      const touch1 = touches[1];
+      if (!touch0 || !touch1) return;
+
+      const currentDistance = this.getDistance(touch0, touch1);
       const scale = currentDistance / this.touchState.initialDistance;
       const delta = scale - this.touchState.initialScale;
 
@@ -131,6 +141,8 @@ export class TouchGestureHandler {
     // Pan
     else if (this.touchState.isPanning && touches.length === 1 && this.initialTouchPos) {
       const touch = touches[0];
+      if (!touch) return;
+
       const deltaX = touch.clientX - this.initialTouchPos.x;
       const deltaY = touch.clientY - this.initialTouchPos.y;
 
