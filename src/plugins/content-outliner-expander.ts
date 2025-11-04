@@ -1137,17 +1137,19 @@ Provide clear, well-written paragraphs with smooth flow.`;
 
     // Find which line the cursor is on
     for (let i = 0; i < lines.length; i++) {
-      if (currentLinePos + lines[i].length >= cursorPos) {
+      const line = lines[i];
+      if (line && currentLinePos + line.length >= cursorPos) {
         currentLine = i;
         break;
       }
-      currentLinePos += lines[i].length + 1; // +1 for newline
+      currentLinePos += (line?.length || 0) + 1; // +1 for newline
     }
 
     // Find the nearest heading before cursor
     let sectionStart = 0;
     for (let i = currentLine; i >= 0; i--) {
-      if (lines[i].match(/^#+\s+/)) {
+      const line = lines[i];
+      if (line?.match(/^#+\s+/)) {
         sectionStart = i;
         break;
       }
@@ -1156,7 +1158,8 @@ Provide clear, well-written paragraphs with smooth flow.`;
     // Find the next heading after cursor (or end of document)
     let sectionEnd = lines.length;
     for (let i = currentLine + 1; i < lines.length; i++) {
-      if (lines[i].match(/^#+\s+/)) {
+      const line = lines[i];
+      if (line?.match(/^#+\s+/)) {
         sectionEnd = i;
         break;
       }
@@ -1292,8 +1295,10 @@ Provide a well-structured, coherent expansion.`;
         const expandedSection = analysis.summary;
 
         // Replace section
-        const newContent = note.content.replace(section, expandedSection);
-        await this.api.notes.update(currentNoteId, { content: newContent });
+        if (section) {
+          const newContent = note.content.replace(section, expandedSection);
+          await this.api.notes.update(currentNoteId, { content: newContent });
+        }
 
         this.showNotification(`Expanded section ${i + 1}/${sections.length}`, 'info');
       } catch (error) {
@@ -1314,6 +1319,7 @@ Provide a well-structured, coherent expansion.`;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line) continue;
 
       if (line.match(/^#+\s+/)) {
         // New heading found
@@ -1458,10 +1464,10 @@ Provide a well-structured, coherent expansion.`;
     // If we have old settings but not new, migrate them
     if (oldSettings && !newSettings) {
       this.api.settings.set('ai-content-structurer', oldSettings);
-      return oldSettings;
+      return oldSettings as unknown as Record<string, unknown>;
     }
 
-    return newSettings || {};
+    return (newSettings || {}) as unknown as Record<string, unknown>;
   }
 
   /**
@@ -2718,7 +2724,10 @@ Add [CITATION NEEDED] markers where sources should be cited.`;
     let prevWasVowel = false;
 
     for (let i = 0; i < word.length; i++) {
-      const isVowel = vowels.includes(word[i]);
+      const char = word[i];
+      if (!char) continue;
+
+      const isVowel = vowels.includes(char);
       if (isVowel && !prevWasVowel) {
         count++;
       }
@@ -3067,7 +3076,8 @@ What's NOT included in this version
 Milestones and deadlines`,
     };
 
-    return templates[type] || templates.blog;
+    const template = templates[type];
+    return (template || templates.blog) as string;
   }
 
   /**
@@ -3244,7 +3254,8 @@ Format as structured analysis.`;
 
     // Parse AI response for score
     const scoreMatch = analysis.summary.match(/(?:consistency|score):\s*(\d+)/i);
-    const consistencyScore = scoreMatch ? parseInt(scoreMatch[1]) : 75;
+    const scoreStr = scoreMatch?.[1];
+    const consistencyScore = scoreStr ? parseInt(scoreStr, 10) : 75;
 
     // Extract recommendations (simple heuristic)
     const recommendations: string[] = [];
