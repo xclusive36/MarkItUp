@@ -207,8 +207,11 @@ Analyze this knowledge base and suggest research directions.`,
     });
 
     if (relevantSentences.length > 0) {
-      const snippet = relevantSentences[0].trim();
-      return snippet.length > 150 ? snippet.substring(0, 147) + '...' : snippet;
+      const firstSentence = relevantSentences[0];
+      if (firstSentence) {
+        const snippet = firstSentence.trim();
+        return snippet.length > 150 ? snippet.substring(0, 147) + '...' : snippet;
+      }
     }
 
     return '';
@@ -270,24 +273,30 @@ Analyze this knowledge base and suggest research directions.`,
 
       // Analyze connections between search results
       for (let i = 0; i < topResults.length; i++) {
-        const fromNote = notes.find(n => n.id === topResults[i].noteId);
+        const fromResult = topResults[i];
+        if (!fromResult) continue;
+
+        const fromNote = notes.find(n => n.id === fromResult.noteId);
         if (!fromNote) continue;
 
         // Find potential connections to other notes in results
         for (let j = i + 1; j < topResults.length; j++) {
-          const toNote = notes.find(n => n.id === topResults[j].noteId);
+          const toResult = topResults[j];
+          if (!toResult) continue;
+
+          const toNote = notes.find(n => n.id === toResult.noteId);
           if (!toNote) continue;
 
           // Check if notes share conceptual matches
-          const sharedConcepts = topResults[i].conceptualMatches.filter(concept =>
-            topResults[j].conceptualMatches.includes(concept)
+          const sharedConcepts = fromResult.conceptualMatches.filter(concept =>
+            toResult.conceptualMatches.includes(concept)
           );
 
           if (sharedConcepts.length > 0) {
             const confidence = Math.min(
-              (sharedConcepts.length / Math.max(topResults[i].conceptualMatches.length, 1)) * 0.8 +
-                topResults[i].semanticScore * 0.1 +
-                topResults[j].semanticScore * 0.1,
+              (sharedConcepts.length / Math.max(fromResult.conceptualMatches.length, 1)) * 0.8 +
+                fromResult.semanticScore * 0.1 +
+                toResult.semanticScore * 0.1,
               0.95
             );
 

@@ -230,8 +230,9 @@ export default function LocalGraphView({
       const nodeY = centerY + Math.sin(angle) * radius;
 
       const distance = Math.sqrt((x - nodeX) ** 2 + (y - nodeY) ** 2);
-      if (distance <= 5) {
-        setHoveredNode(otherNodes[i].id);
+      const otherNode = otherNodes[i];
+      if (distance <= 5 && otherNode) {
+        setHoveredNode(otherNode.id);
         return;
       }
     }

@@ -38,12 +38,14 @@ export default function MetadataPanel({ note, allNotes, theme = 'light' }: Metad
   const frontmatter: Record<string, string> = {};
   if (frontmatterMatch) {
     const frontmatterText = frontmatterMatch[1];
-    frontmatterText.split('\n').forEach(line => {
-      const [key, ...valueParts] = line.split(':');
-      if (key && valueParts.length) {
-        frontmatter[key.trim()] = valueParts.join(':').trim();
-      }
-    });
+    if (frontmatterText) {
+      frontmatterText.split('\n').forEach(line => {
+        const [key, ...valueParts] = line.split(':');
+        if (key && valueParts.length) {
+          frontmatter[key.trim()] = valueParts.join(':').trim();
+        }
+      });
+    }
   }
 
   const metadataItems = [

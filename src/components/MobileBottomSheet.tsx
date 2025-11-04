@@ -38,16 +38,22 @@ export default function MobileBottomSheet({
   }, [isOpen]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    startY.current = e.touches[0].clientY;
+    const firstTouch = e.touches[0];
+    if (firstTouch) {
+      startY.current = firstTouch.clientY;
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    currentY.current = e.touches[0].clientY;
-    const diff = currentY.current - startY.current;
+    const firstTouch = e.touches[0];
+    if (firstTouch) {
+      currentY.current = firstTouch.clientY;
+      const diff = currentY.current - startY.current;
 
-    // Only allow dragging down
-    if (diff > 0 && sheetRef.current) {
-      sheetRef.current.style.transform = `translateY(${diff}px)`;
+      // Only allow dragging down
+      if (diff > 0 && sheetRef.current) {
+        sheetRef.current.style.transform = `translateY(${diff}px)`;
+      }
     }
   };
 

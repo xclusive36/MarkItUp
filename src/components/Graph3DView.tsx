@@ -370,8 +370,11 @@ const Graph3DView: React.FC<Graph3DViewProps> = ({
     );
 
     if (intersects.length > 0) {
-      const nodeId = intersects[0].object.userData.nodeId;
-      return nodesRef.current.find(n => n.id === nodeId) || null;
+      const firstIntersect = intersects[0];
+      if (firstIntersect?.object.userData.nodeId) {
+        const nodeId = firstIntersect.object.userData.nodeId;
+        return nodesRef.current.find(n => n.id === nodeId) || null;
+      }
     }
 
     return null;
