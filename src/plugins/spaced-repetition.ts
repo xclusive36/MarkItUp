@@ -283,23 +283,42 @@ class FSRSAlgorithm {
 
     if (rating === 1) {
       // Card forgotten - use relearning stability
+      const w11 = this.w[11];
+      const w12 = this.w[12];
+      const w13 = this.w[13];
+      const w14 = this.w[14];
+
+      if (w11 === undefined || w12 === undefined || w13 === undefined || w14 === undefined) {
+        return stability;
+      }
+
       new_stability =
-        this.w[11] *
-        Math.pow(difficulty, -this.w[12]) *
-        (Math.pow(stability + 1, this.w[13]) - 1) *
-        Math.exp((1 - retrievability) * this.w[14]);
+        w11 *
+        Math.pow(difficulty, -w12) *
+        (Math.pow(stability + 1, w13) - 1) *
+        Math.exp((1 - retrievability) * w14);
     } else {
       // Card remembered - increase stability
-      const hard_penalty = rating === 2 ? this.w[15] : 1;
-      const easy_bonus = rating === 4 ? this.w[16] : 1;
+      const w8 = this.w[8];
+      const w9 = this.w[9];
+      const w10 = this.w[10];
+      const w15 = this.w[15];
+      const w16 = this.w[16];
+
+      if (w8 === undefined || w9 === undefined || w10 === undefined) {
+        return stability;
+      }
+
+      const hard_penalty = rating === 2 && w15 !== undefined ? w15 : 1;
+      const easy_bonus = rating === 4 && w16 !== undefined ? w16 : 1;
 
       new_stability =
         stability *
         (1 +
-          Math.exp(this.w[8]) *
+          Math.exp(w8) *
             (11 - difficulty) *
-            Math.pow(stability, -this.w[9]) *
-            (Math.exp((1 - retrievability) * this.w[10]) - 1) *
+            Math.pow(stability, -w9) *
+            (Math.exp((1 - retrievability) * w10) - 1) *
             hard_penalty *
             easy_bonus);
     }
@@ -389,6 +408,8 @@ class FlashcardParser {
       const tags = ['flashcard'];
       if (subtag) tags.push(subtag);
 
+      if (!question || !answer) continue;
+
       flashcards.push({
         front: question.trim(),
         back: answer.trim(),
@@ -412,6 +433,8 @@ class FlashcardParser {
         continue;
       }
 
+      if (!text) continue;
+
       // Parse cloze deletions - can have multiple {deletions}
       const clozeMatches = text.matchAll(/{([^}]+)}/g);
       const deletions = Array.from(clozeMatches);
@@ -420,7 +443,9 @@ class FlashcardParser {
         // Create one card per deletion
         deletions.forEach((deletion, index) => {
           const deletedWord = deletion[1];
-          const questionText = text.replace(/{([^}]+)}/g, (match, word, offset) => {
+          if (!deletedWord) return;
+
+          const questionText = text.replace(/{([^}]+)}/g, (_match, word, offset) => {
             // Only hide the current deletion
             const currentIndex = Array.from(text.matchAll(/{([^}]+)}/g)).findIndex(
               m => m.index === offset
@@ -457,6 +482,8 @@ class FlashcardParser {
         continue;
       }
 
+      if (!text) continue;
+
       const context = this.extractContext(content, start);
       const tags = ['flashcard'];
       if (subtag) tags.push(subtag);
@@ -486,7 +513,10 @@ class FlashcardParser {
 
     // Find line containing the flashcard
     for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length + 1; // +1 for \n
+      const line = lines[i];
+      if (!line) continue;
+
+      const lineLength = line.length + 1; // +1 for \n
       if (currentPos + lineLength > start) {
         lineIndex = i;
         break;
