@@ -67,7 +67,7 @@ export async function validateRequest<T>(
       const firstError = error.issues[0];
       return {
         success: false,
-        error: firstError.message,
+        error: firstError?.message || 'Validation error',
       };
     }
     return {

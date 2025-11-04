@@ -100,6 +100,7 @@ export function useResizablePanel({
         document.body.style.cursor = '';
       };
     }
+    return undefined;
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return {

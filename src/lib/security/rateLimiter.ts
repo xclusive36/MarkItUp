@@ -103,7 +103,8 @@ export function getClientIdentifier(request: Request): string {
   const cfConnectingIp = request.headers.get('cf-connecting-ip');
 
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    const firstIp = forwarded.split(',')[0];
+    if (firstIp) return firstIp.trim();
   }
   if (realIp) {
     return realIp;

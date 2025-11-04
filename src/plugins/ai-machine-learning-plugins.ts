@@ -399,7 +399,7 @@ ${['productivity', 'AI', 'automation', 'tools', 'efficiency']
 ### Recommendations
 - Apply suggested tags for better organization
 - Link to similar content for context
-- Consider creating a ${primaryCategory.toLowerCase()} category
+- Consider creating a ${primaryCategory?.toLowerCase() || 'general'} category
 `;
 
     const updatedContent = content + '\n\n' + report;
