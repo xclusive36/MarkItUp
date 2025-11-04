@@ -3,6 +3,8 @@ import { sql, eq } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Note } from '../types';
+import { withRetry, dbCircuitBreaker } from './retry';
+import { dbLogger } from '../logger';
 
 /**
  * File System <-> Database Sync Service
@@ -93,7 +95,7 @@ export class FileSystemDBSync {
     try {
       await scanDir(this.markdownDir, this.markdownDir);
     } catch (error) {
-      console.error('[Sync] Error scanning files:', error);
+      dbLogger.error('Error scanning markdown files', {}, error as Error);
     }
 
     return files;
@@ -101,6 +103,7 @@ export class FileSystemDBSync {
 
   /**
    * Index a single note (insert or update)
+   * Uses retry logic and circuit breaker for reliability
    */
   async indexNote(noteId: string, content: string, createdAt?: Date, updatedAt?: Date) {
     const metadata = this.extractMetadata(noteId, content);
@@ -125,30 +128,40 @@ export class FileSystemDBSync {
     };
 
     try {
-      // Upsert note (insert or update if exists)
-      await this.db
-        .insert(schema.notes)
-        .values(noteData)
-        .onConflictDoUpdate({
-          target: schema.notes.id,
-          set: {
-            content: noteData.content,
-            title: noteData.title,
-            tags: noteData.tags,
-            updatedAt: noteData.updatedAt,
-            wordCount: noteData.wordCount,
-            characterCount: noteData.characterCount,
-            linkCount: noteData.linkCount,
+      // Use circuit breaker and retry logic for database operations
+      await dbCircuitBreaker.execute(async () => {
+        await withRetry(
+          async () => {
+            // Upsert note (insert or update if exists)
+            await this.db
+              .insert(schema.notes)
+              .values(noteData)
+              .onConflictDoUpdate({
+                target: schema.notes.id,
+                set: {
+                  content: noteData.content,
+                  title: noteData.title,
+                  tags: noteData.tags,
+                  updatedAt: noteData.updatedAt,
+                  wordCount: noteData.wordCount,
+                  characterCount: noteData.characterCount,
+                  linkCount: noteData.linkCount,
+                },
+              })
+              .run();
+
+            // Update links
+            await this.updateLinks(noteId, metadata.wikilinks);
           },
-        })
-        .run();
+          `indexNote:${noteId}`,
+          { maxAttempts: 3 }
+        );
+      }, `indexNote:${noteId}`);
 
-      // Update links
-      await this.updateLinks(noteId, metadata.wikilinks);
-
-      console.log(`[Sync] Indexed note: ${noteId}`);
+      dbLogger.debug('Note indexed successfully', { noteId });
     } catch (error) {
-      console.error(`[Sync] Error indexing note ${noteId}:`, error);
+      dbLogger.error('Failed to index note after retries', { noteId }, error as Error);
+      throw error; // Re-throw to let caller handle
     }
   }
 
@@ -182,7 +195,7 @@ export class FileSystemDBSync {
       // Update backlink counts
       await this.updateBacklinkCounts();
     } catch (error) {
-      console.error(`[Sync] Error updating links for ${sourceId}:`, error);
+      dbLogger.error('Error updating links', { sourceId }, error as Error);
     }
   }
 
@@ -224,7 +237,7 @@ export class FileSystemDBSync {
           .run();
       }
     } catch (error) {
-      console.error('[Sync] Error updating backlink counts:', error);
+      dbLogger.error('Error updating backlink counts', {}, error as Error);
     }
   }
 
@@ -235,12 +248,12 @@ export class FileSystemDBSync {
     try {
       await this.db.delete(schema.notes).where(eq(schema.notes.id, noteId)).run();
 
-      console.log(`[Sync] Deleted note: ${noteId}`);
+      dbLogger.debug('Note deleted from database', { noteId });
 
       // Update backlink counts (cascading delete will remove links)
       await this.updateBacklinkCounts();
     } catch (error) {
-      console.error(`[Sync] Error deleting note ${noteId}:`, error);
+      dbLogger.error('Error deleting note from database', { noteId }, error as Error);
     }
   }
 
@@ -249,12 +262,12 @@ export class FileSystemDBSync {
    * Scans all markdown files and syncs with database
    */
   async initialize() {
-    console.log('[Sync] Starting initial sync...');
+    dbLogger.info('Starting database initialization');
 
     try {
       // Scan all markdown files
       const files = await this.scanMarkdownFiles();
-      console.log(`[Sync] Found ${files.length} markdown files`);
+      dbLogger.info('Scanned markdown files', { count: files.length });
 
       // Get all notes from database
       const dbNotes = await this.db.select().from(schema.notes).all();
@@ -286,12 +299,15 @@ export class FileSystemDBSync {
         await this.deleteNote(note.id);
       }
 
-      console.log(`[Sync] Initial sync complete:`);
-      console.log(`  - Added: ${addedCount}`);
-      console.log(`  - Updated: ${updatedCount}`);
-      console.log(`  - Deleted: ${deletedNotes.length}`);
+      dbLogger.info('Database initialization complete', {
+        added: addedCount,
+        updated: updatedCount,
+        deleted: deletedNotes.length,
+        total: files.length,
+      });
     } catch (error) {
-      console.error('[Sync] Error during initialization:', error);
+      dbLogger.error('Database initialization failed', {}, error as Error);
+      throw error; // Re-throw to prevent app from starting with corrupt state
     }
   }
 

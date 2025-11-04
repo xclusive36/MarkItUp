@@ -65,23 +65,14 @@ export function usePerformanceMonitor(
 
     performanceData.set(componentName, metrics);
 
-    // Log slow renders in development
-    if (renderTime > 16) {
-      console.warn(
-        `⚠️ Slow render detected in ${componentName}:`,
-        `${renderTime.toFixed(2)}ms (${renderCount.current} total renders)`
-      );
+    // Only log slow renders if they're significantly slow (>50ms)
+    // This reduces noise while still catching real performance issues
+    if (renderTime > 50) {
+      console.warn(`⚠️ Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`);
     }
 
-    // Log every 10 renders
-    if (renderCount.current % 10 === 0) {
-      console.log(
-        `📊 ${componentName} performance:`,
-        `${renderCount.current} renders,`,
-        `avg: ${metrics.avgRenderTime.toFixed(2)}ms,`,
-        `slow: ${metrics.slowRenders} (${((metrics.slowRenders / renderCount.current) * 100).toFixed(1)}%)`
-      );
-    }
+    // Removed: Regular logging every 10 renders (too noisy)
+    // Use __performanceReport() in console to see full metrics
   });
 
   return {
@@ -130,5 +121,9 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as any).__performanceReport = logPerformanceReport;
   (window as any).__clearPerformance = clearPerformanceData;
 
-  console.log('💡 Performance monitoring active. Run __performanceReport() to see metrics.');
+  // Only log this once on initial load, not on every hot reload
+  if (!(window as any).__perfMonitorInitialized) {
+    (window as any).__perfMonitorInitialized = true;
+    console.log('💡 Performance monitoring active. Run __performanceReport() to see metrics.');
+  }
 }

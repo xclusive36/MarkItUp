@@ -54,6 +54,7 @@ import { getPKMSystem } from '@/lib/pkm';
 import { Note, Graph, SearchResult, SearchMatch } from '@/lib/types';
 import { analytics, AnalyticsEventType } from '@/lib/analytics';
 import { ViewMode, MainView, ButtonAction } from '@/types/ui';
+import { apiLogger } from '@/lib/logger';
 
 // Component imports
 // ...existing code...
@@ -90,10 +91,10 @@ export default function Home() {
     enabled: autoIndexEnabled,
     debounceMs: 3000, // Wait 3 seconds after save before indexing
     onIndexComplete: noteId => {
-      console.log(`[AutoIndex] Completed indexing: ${noteId}`);
+      // Silently complete - too verbose for console
     },
     onIndexError: (noteId, error) => {
-      console.error(`[AutoIndex] Failed to index ${noteId}:`, error);
+      apiLogger.error('Auto-indexing failed', { noteId }, error as Error);
     },
   });
 
@@ -296,7 +297,7 @@ export default function Home() {
       onSaveError: error => {
         setIsSaving(false);
         setSaveError(error.message);
-        console.error('Auto-save error:', error);
+        apiLogger.error('Auto-save failed', { fileName }, error as Error);
       },
     }
   );
@@ -304,8 +305,6 @@ export default function Home() {
   // Simplified button handler with event delegation
   const handleButtonClick = useCallback(
     (buttonType: ButtonAction) => {
-      console.log(`🎯 ${buttonType} button clicked via handleButtonClick`);
-
       switch (buttonType) {
         case 'command-palette':
           modals.commandPalette.open();
@@ -360,7 +359,7 @@ export default function Home() {
           modals.collabSettings.open();
           break;
         default:
-          console.log(`❌ Unknown button type: ${buttonType}`);
+          apiLogger.warn('Unknown button type clicked', { buttonType });
       }
     },
     [activeNote?.id, notes.length, modals]
@@ -382,12 +381,9 @@ export default function Home() {
         setFolder(note.folder || '');
       },
       setMarkdown: (content: string) => {
-        console.log('[PAGE] setMarkdown called with content length:', content.length);
-        console.log('[PAGE] Content preview:', content.substring(0, 100));
         setMarkdown(content);
         // Force textarea to update by directly setting its value
         if (editorRef.current) {
-          console.log('[PAGE] Forcing textarea value update');
           editorRef.current.value = content;
         }
       },
@@ -395,9 +391,11 @@ export default function Home() {
       setFolder: setFolder,
       refreshNotes: async () => {
         // Refresh notes from API
-        const notesResponse = await fetch('/api/files');
+        const notesResponse = await fetch('/api/files?limit=1000');
         if (notesResponse.ok) {
-          const notesData = await notesResponse.json();
+          const responseData = await notesResponse.json();
+          // Handle both old array format and new pagination format for backward compatibility
+          const notesData = Array.isArray(responseData) ? responseData : responseData.notes;
           setNotes(notesData);
         }
       },
@@ -469,52 +467,40 @@ export default function Home() {
   useEffect(() => {
     // Prevent double initialization
     if (hasInitialized.current) {
-      console.log('🚫 Initialization already ran, skipping');
       return;
     }
-
-    // Mounted state is already set by useViewState hook
-    console.log('🔧 Component mounted, isMounted=', isMounted);
 
     const initializePKM = async () => {
       try {
         hasInitialized.current = true;
-        console.log('🚀 Initializing PKM system...');
-        console.log('🔧 Setting isInitializing to true');
         setIsInitializing(true);
 
         // Session tracking is now handled automatically by AnalyticsSystem
         // No need to manually track session_started here
 
         // Load notes first
-        console.log('🔧 Loading notes from API...');
-        const notesResponse = await fetch('/api/files');
+        const notesResponse = await fetch('/api/files?limit=1000');
         let loadedNotes: Note[] = [];
         if (notesResponse.ok) {
-          loadedNotes = await notesResponse.json();
-          console.log('✅ Loaded', loadedNotes.length, 'notes from API');
+          const responseData = await notesResponse.json();
+          // Handle both old array format and new pagination format for backward compatibility
+          loadedNotes = Array.isArray(responseData) ? responseData : responseData.notes;
         } else {
-          console.error('❌ Failed to fetch notes:', notesResponse.status);
+          apiLogger.error('Failed to fetch notes', { status: notesResponse.status });
         }
 
         // Initialize PKM system with notes (this will load plugins)
-        console.log('🔧 Calling pkm.initialize() with', loadedNotes.length, 'notes...');
         await pkm.initialize(loadedNotes);
-        console.log('✅ pkm.initialize() completed');
 
         // Initialize AI service with PKM system (non-blocking)
-        console.log('🔧 Initializing AI service...');
         const { initializeAIService } = await import('@/lib/ai/ai-service');
         initializeAIService(pkm);
-        console.log('✅ AI service initialized');
 
-        console.log('✅ PKM system initialization complete');
+        apiLogger.info('PKM system initialized', { noteCount: loadedNotes.length });
       } catch (error) {
-        console.error('❌ Error initializing PKM system:', error);
+        apiLogger.error('PKM initialization failed', {}, error as Error);
       } finally {
-        console.log('🔧 Setting isInitializing to false');
         setIsInitializing(false);
-        console.log('🔧 Setting initializationComplete to true');
         // setInitializationComplete(true); // removed, variable is unused
         console.log(
           '🎯 Button state should now be: enabled (isMounted=true, isInitializing=false, initializationComplete=true)'
@@ -543,7 +529,7 @@ export default function Home() {
           setIsDailyNotesLoaded(false);
         }
       } catch (error) {
-        console.error('Error checking Daily Notes plugin:', error);
+        apiLogger.error('Failed to check Daily Notes plugin', {}, error as Error);
         setIsDailyNotesLoaded(false);
       }
     };
@@ -562,9 +548,11 @@ export default function Home() {
       console.log('Refreshing PKM data...');
 
       // Update notes list
-      const notesResponse = await fetch('/api/files');
+      const notesResponse = await fetch('/api/files?limit=1000');
       if (notesResponse.ok) {
-        const notesData = await notesResponse.json();
+        const responseData = await notesResponse.json();
+        // Handle both old array format and new pagination format for backward compatibility
+        const notesData = Array.isArray(responseData) ? responseData : responseData.notes;
         console.log('Loaded notes:', notesData.length);
         setNotes(notesData);
       } else {
@@ -762,9 +750,11 @@ export default function Home() {
       // Refresh notes from API without reloading the page
       console.log('[Page] handleRefreshNotes called');
       try {
-        const notesResponse = await fetch('/api/files');
+        const notesResponse = await fetch('/api/files?limit=1000');
         if (notesResponse.ok) {
-          const notesData = await notesResponse.json();
+          const responseData = await notesResponse.json();
+          // Handle both old array format and new pagination format for backward compatibility
+          const notesData = Array.isArray(responseData) ? responseData : responseData.notes;
           console.log('[Page] Notes refreshed, count:', notesData.length);
           setNotes(notesData);
         }

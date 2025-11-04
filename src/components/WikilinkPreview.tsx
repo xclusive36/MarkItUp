@@ -29,9 +29,11 @@ export default function WikilinkPreview({
         setError(null);
 
         // Fetch note content
-        const response = await fetch('/api/files');
+        const response = await fetch('/api/files?limit=1000');
         if (response.ok) {
-          const notes: Note[] = await response.json();
+          const responseData = await response.json();
+          // Handle both old array format and new pagination format
+          const notes: Note[] = Array.isArray(responseData) ? responseData : responseData.notes;
           const foundNote = notes.find(
             (n: Note) =>
               n.name === noteName ||

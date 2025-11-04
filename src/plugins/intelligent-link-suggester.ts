@@ -318,7 +318,6 @@ class IntelligentLinkSuggesterPlugin {
     // Hook into the note editor's content change event
     // This is a simplified version - in production, you'd hook into the actual editor
     if (typeof window !== 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).__linkSuggesterContentWatcher = this.handleContentChange.bind(this);
     }
   }
@@ -333,7 +332,6 @@ class IntelligentLinkSuggesterPlugin {
     }
 
     if (typeof window !== 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).__linkSuggesterContentWatcher = null;
     }
   }
@@ -1580,7 +1578,6 @@ Respond in JSON format:
 }`;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const provider = (this.api.ai as any).getCurrentProvider?.() || this.api.ai;
       const response = await (provider.complete
         ? provider.complete(prompt, { model: 'gpt-4', temperature: 0.7 })

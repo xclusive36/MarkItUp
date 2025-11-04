@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileService } from '@/lib/services/fileService';
 import { validateRequest, updateFileRequestSchema, createErrorResponse } from '@/lib/validations';
 import { getSyncService } from '@/lib/db/sync';
+import {
+  fileReadLimiter,
+  fileOperationsLimiter,
+  getClientIdentifier,
+  createRateLimitResponse,
+} from '@/lib/security/rateLimiter';
+import {
+  sanitizeFilename,
+  validateContentSize,
+  sanitizeMarkdownContent,
+} from '@/lib/security/pathSanitizer';
 
 // Prevent dynamic route from catching static routes like /move, /order, etc.
 const RESERVED = ['move', 'order', 'rename', 'duplicate'];
@@ -19,6 +30,7 @@ interface RouteParams {
 /**
  * GET /api/files/[filename]
  * Read a single file
+ * Rate limited to prevent abuse
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const resolvedParams = await params;
@@ -28,17 +40,40 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimit = fileReadLimiter.check(clientId);
+
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetTime);
+    }
+
     const { filename } = resolvedParams;
 
-    const note = await fileService.readFile(filename);
+    // Sanitize filename
+    const filenameSanitization = sanitizeFilename(filename);
+    if (!filenameSanitization.valid) {
+      return createErrorResponse(
+        `Invalid filename: ${filenameSanitization.errors.join(', ')}`,
+        400
+      );
+    }
+
+    const note = await fileService.readFile(filenameSanitization.sanitized);
 
     if (!note) {
       return createErrorResponse('File not found', 404);
     }
 
-    return NextResponse.json(note);
+    // Add rate limit headers
+    const response = NextResponse.json(note);
+    response.headers.set('X-RateLimit-Limit', '100');
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+
+    return response;
   } catch (error) {
-    console.error('Error reading file:', error);
+    console.error('[API Error] Error reading file:', error);
     return createErrorResponse('Failed to read file', 500);
   }
 }
@@ -46,6 +81,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 /**
  * PUT /api/files/[filename]
  * Update or create a file
+ * Includes rate limiting, path sanitization, and content validation
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const resolvedParams = await params;
@@ -55,6 +91,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimit = fileOperationsLimiter.check(clientId);
+
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetTime);
+    }
+
     const { filename } = resolvedParams;
     const body = await request.json();
 
@@ -68,10 +112,32 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { content } = validation.data;
     const { overwrite } = body;
 
-    console.log('[API PUT] Updating file:', filename);
-    console.log('[API PUT] Content length:', content.length);
+    // Sanitize filename
+    const filenameSanitization = sanitizeFilename(filename);
+    if (!filenameSanitization.valid) {
+      return createErrorResponse(
+        `Invalid filename: ${filenameSanitization.errors.join(', ')}`,
+        400
+      );
+    }
 
-    const result = await fileService.updateFile(filename, content, overwrite);
+    // Validate content size (10MB max)
+    const sizeValidation = validateContentSize(content);
+    if (!sizeValidation.valid) {
+      return createErrorResponse(sizeValidation.error!, 413);
+    }
+
+    // Sanitize markdown content to prevent XSS
+    const sanitizedContent = sanitizeMarkdownContent(content);
+
+    console.log('[API PUT] Updating file:', filenameSanitization.sanitized);
+    console.log('[API PUT] Content size:', sizeValidation.size, 'bytes');
+
+    const result = await fileService.updateFile(
+      filenameSanitization.sanitized,
+      sanitizedContent,
+      overwrite
+    );
 
     if (!result.success) {
       if (result.requiresOverwrite) {
@@ -92,16 +158,28 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Sync with database
     try {
       const syncService = getSyncService();
-      await syncService.indexNote(filename, content);
-      console.log('[API] Note synced to database:', filename);
+      await syncService.indexNote(filenameSanitization.sanitized, sanitizedContent);
+      console.log('[API] Note synced to database:', filenameSanitization.sanitized);
     } catch (dbError) {
       console.error('[API] Database sync failed (non-fatal):', dbError);
       // Don't fail the request if DB sync fails
     }
 
-    return NextResponse.json({ message: result.message });
+    // Add rate limit headers
+    const response = NextResponse.json({ message: result.message });
+    response.headers.set('X-RateLimit-Limit', '50');
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+
+    return response;
   } catch (error) {
-    console.error('Error writing file:', error);
+    console.error('[API Error] Error writing file:', error);
+
+    // Provide more helpful error messages
+    if (error instanceof SyntaxError) {
+      return createErrorResponse('Invalid JSON in request body', 400);
+    }
+
     return createErrorResponse('Failed to write file', 500);
   }
 }
@@ -109,6 +187,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 /**
  * DELETE /api/files/[filename]
  * Delete a file
+ * Rate limited to prevent abuse
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const resolvedParams = await params;
@@ -118,9 +197,26 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimit = fileOperationsLimiter.check(clientId);
+
+    if (!rateLimit.allowed) {
+      return createRateLimitResponse(rateLimit.resetTime);
+    }
+
     const { filename } = resolvedParams;
 
-    const result = await fileService.deleteFile(filename);
+    // Sanitize filename
+    const filenameSanitization = sanitizeFilename(filename);
+    if (!filenameSanitization.valid) {
+      return createErrorResponse(
+        `Invalid filename: ${filenameSanitization.errors.join(', ')}`,
+        400
+      );
+    }
+
+    const result = await fileService.deleteFile(filenameSanitization.sanitized);
 
     if (!result.success) {
       const status = result.message === 'File not found' ? 404 : 400;
@@ -130,16 +226,22 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Sync with database (delete note)
     try {
       const syncService = getSyncService();
-      await syncService.deleteNote(filename);
-      console.log('[API] Note deleted from database:', filename);
+      await syncService.deleteNote(filenameSanitization.sanitized);
+      console.log('[API] Note deleted from database:', filenameSanitization.sanitized);
     } catch (dbError) {
       console.error('[API] Database delete sync failed (non-fatal):', dbError);
       // Don't fail the request if DB sync fails
     }
 
-    return NextResponse.json({ message: result.message });
+    // Add rate limit headers
+    const response = NextResponse.json({ message: result.message });
+    response.headers.set('X-RateLimit-Limit', '50');
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+
+    return response;
   } catch (error) {
-    console.error('Error deleting file:', error);
+    console.error('[API Error] Error deleting file:', error);
     return createErrorResponse('Failed to delete file', 500);
   }
 }

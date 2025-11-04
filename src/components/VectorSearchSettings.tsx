@@ -71,7 +71,7 @@ const VectorSearchSettings: React.FC<VectorSearchSettingsProps> = () => {
 
       // Get indexed count from IndexedDB
       // This is a placeholder - in a real implementation, you'd query the vector store
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const vectorStore = (window as any).__vectorStore;
       if (vectorStore) {
         const count = await vectorStore.getCount?.();

@@ -2,17 +2,116 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileService } from '@/lib/services/fileService';
 import { validateRequest, createFileRequestSchema, createErrorResponse } from '@/lib/validations';
 import { getSyncService } from '@/lib/db/sync';
+import {
+  fileReadLimiter,
+  fileCreationLimiter,
+  getClientIdentifier,
+  createRateLimitResponse,
+} from '@/lib/security/rateLimiter';
+import {
+  sanitizeFilename,
+  sanitizeFolderPath,
+  validateContentSize,
+  sanitizeMarkdownContent,
+} from '@/lib/security/pathSanitizer';
+import { apiLogger } from '@/lib/logger';
 
 /**
  * GET /api/files
- * List all markdown files
+ * List all markdown files with optional pagination
+ * Query params:
+ * - page: page number (default: 1)
+ * - limit: items per page (default: 100, max: 500)
+ * - sort: sort field (name, modified, created)
+ * - order: sort order (asc, desc)
+ * Rate limited to prevent abuse
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const notes = await fileService.listFiles();
-    return NextResponse.json(notes);
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimit = fileReadLimiter.check(clientId);
+
+    if (!rateLimit.allowed) {
+      apiLogger.warn('Rate limit exceeded for file list', { clientId, operation: 'list' });
+      return createRateLimitResponse(rateLimit.resetTime);
+    }
+
+    // Parse pagination parameters
+    const searchParams = request.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '100', 10)));
+    const sortField = searchParams.get('sort') || 'modified';
+    const sortOrder = searchParams.get('order') || 'desc';
+
+    const allNotes = await fileService.listFiles();
+
+    // Sort notes
+    const sortedNotes = [...allNotes].sort((a, b) => {
+      let aVal: string | number = '';
+      let bVal: string | number = '';
+
+      switch (sortField) {
+        case 'name':
+          aVal = a.id.toLowerCase();
+          bVal = b.id.toLowerCase();
+          break;
+        case 'modified':
+        case 'updated':
+          aVal = new Date(a.updatedAt || 0).getTime();
+          bVal = new Date(b.updatedAt || 0).getTime();
+          break;
+        case 'created':
+          aVal = new Date(a.createdAt || 0).getTime();
+          bVal = new Date(b.createdAt || 0).getTime();
+          break;
+        default:
+          aVal = new Date(a.updatedAt || 0).getTime();
+          bVal = new Date(b.updatedAt || 0).getTime();
+      }
+
+      const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Paginate
+    const total = sortedNotes.length;
+    const totalPages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedNotes = sortedNotes.slice(startIndex, endIndex);
+
+    apiLogger.debug('Files listed successfully', {
+      count: paginatedNotes.length,
+      total,
+      page,
+      limit,
+      clientId,
+    });
+
+    // Add rate limit and pagination headers
+    const response = NextResponse.json({
+      notes: paginatedNotes,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    });
+
+    response.headers.set('X-RateLimit-Limit', '100');
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+    response.headers.set('X-Total-Count', total.toString());
+    response.headers.set('X-Page', page.toString());
+    response.headers.set('X-Total-Pages', totalPages.toString());
+
+    return response;
   } catch (error) {
-    console.error('Error reading files:', error);
+    apiLogger.error('Failed to list files', { operation: 'list' }, error as Error);
     return createErrorResponse('Failed to read files', 500);
   }
 }
@@ -20,38 +119,117 @@ export async function GET() {
 /**
  * POST /api/files
  * Create a new markdown file
+ * Includes rate limiting, path sanitization, and content validation
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientId = getClientIdentifier(request);
+    const rateLimit = fileCreationLimiter.check(clientId);
+
+    if (!rateLimit.allowed) {
+      apiLogger.warn('Rate limit exceeded for file creation', { clientId, operation: 'create' });
+      return createRateLimitResponse(rateLimit.resetTime);
+    }
+
     const body = await request.json();
 
     // Validate request body
     const validation = await validateRequest(createFileRequestSchema, body);
 
     if (!validation.success) {
+      apiLogger.warn('Invalid file creation request', { error: validation.error, clientId });
       return createErrorResponse(validation.error, 400);
     }
 
     const { filename, content } = validation.data;
     const folder = body.folder; // Optional, not in schema
 
-    // Create the file
-    const result = await fileService.createFile(filename, content, folder);
+    // Sanitize filename
+    const filenameSanitization = sanitizeFilename(filename);
+    if (!filenameSanitization.valid) {
+      apiLogger.warn('Invalid filename attempted', {
+        filename,
+        errors: filenameSanitization.errors,
+        clientId,
+      });
+      return createErrorResponse(
+        `Invalid filename: ${filenameSanitization.errors.join(', ')}`,
+        400
+      );
+    }
+
+    // Sanitize folder path if provided
+    if (folder) {
+      const folderSanitization = sanitizeFolderPath(folder);
+      if (!folderSanitization.valid) {
+        apiLogger.warn('Invalid folder path attempted', {
+          folder,
+          errors: folderSanitization.errors,
+          clientId,
+        });
+        return createErrorResponse(
+          `Invalid folder path: ${folderSanitization.errors.join(', ')}`,
+          400
+        );
+      }
+    }
+
+    // Validate content size (10MB max)
+    const sizeValidation = validateContentSize(content);
+    if (!sizeValidation.valid) {
+      apiLogger.warn('File size limit exceeded', {
+        size: sizeValidation.size,
+        clientId,
+      });
+      return createErrorResponse(sizeValidation.error!, 413);
+    }
+
+    // Sanitize markdown content to prevent XSS
+    const sanitizedContent = sanitizeMarkdownContent(content);
+
+    // Create the file with sanitized data
+    const result = await fileService.createFile(
+      filenameSanitization.sanitized,
+      sanitizedContent,
+      folder
+    );
+
+    apiLogger.info('File created successfully', {
+      filename: filenameSanitization.sanitized,
+      folder,
+      size: sizeValidation.size,
+      clientId,
+    });
 
     // Sync with database
     try {
       const syncService = getSyncService();
-      const noteId = folder ? `${folder}/${filename}` : filename;
-      await syncService.indexNote(noteId, content);
-      console.log('[API] Note synced to database:', noteId);
+      const noteId = folder
+        ? `${folder}/${filenameSanitization.sanitized}`
+        : filenameSanitization.sanitized;
+      await syncService.indexNote(noteId, sanitizedContent);
+      apiLogger.debug('Note synced to database', { noteId });
     } catch (dbError) {
-      console.error('[API] Database sync failed (non-fatal):', dbError);
-      // Don't fail the request if DB sync fails
+      apiLogger.error('Database sync failed (non-fatal)', { noteId: filename }, dbError as Error);
+      // Don't fail the request if DB sync fails - this needs improvement in future
     }
 
-    return NextResponse.json(result);
+    // Add rate limit headers to response
+    const response = NextResponse.json(result);
+    response.headers.set('X-RateLimit-Limit', '20');
+    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString());
+
+    return response;
   } catch (error) {
-    console.error('Error saving file:', error);
+    apiLogger.error('Failed to save file', { operation: 'create' }, error as Error);
+
+    // Provide more helpful error messages
+    if (error instanceof SyntaxError) {
+      return createErrorResponse('Invalid JSON in request body', 400);
+    }
+
     return createErrorResponse('Failed to save file', 500);
   }
 }

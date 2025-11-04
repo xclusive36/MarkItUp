@@ -18,7 +18,6 @@
 
 import { Embedder } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TransformersModel = any;
 
 export class LocalEmbedder implements Embedder {

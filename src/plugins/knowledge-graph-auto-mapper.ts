@@ -403,14 +403,14 @@ class KnowledgeGraphAutoMapperPlugin {
     string,
     {
       timestamp: number;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: any;
     }
   > = new Map();
   private lastAnalysisReport: string = '';
   private pendingSuggestions: Array<{
     type: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     data: any;
   }> = [];
   private actionHistory: HistoryAction[] = [];
@@ -569,7 +569,7 @@ class KnowledgeGraphAutoMapperPlugin {
   /**
    * Get cached data or null if expired
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private getCachedData(key: string): any | null {
     const settings = this.getSettings();
     const enableCaching = settings['enable-caching'] !== false;
@@ -598,7 +598,7 @@ class KnowledgeGraphAutoMapperPlugin {
   /**
    * Cache data with timestamp
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private setCachedData(key: string, data: any): void {
     const settings = this.getSettings();
     const enableCaching = settings['enable-caching'] !== false;

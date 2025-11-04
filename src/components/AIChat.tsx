@@ -632,8 +632,10 @@ Just type naturally without "/" to have a conversation!`;
         setError(null);
 
         // Fetch all notes for context
-        const notesResponse = await fetch('/api/files');
-        const allNotes = notesResponse.ok ? await notesResponse.json() : [];
+        const notesResponse = await fetch('/api/files?limit=1000');
+        const responseData = notesResponse.ok ? await notesResponse.json() : { notes: [] };
+        // Handle both old array format and new pagination format
+        const allNotes = Array.isArray(responseData) ? responseData : responseData.notes;
         const notesList = allNotes
           .map(
             (n: { name: string; folder?: string }) =>

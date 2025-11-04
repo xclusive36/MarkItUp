@@ -49,9 +49,11 @@ export default function DailyNotesCalendarModal({
       const allNotes = pluginManager.getLoadedPlugins().find(p => p.id === 'daily-notes');
 
       // Fallback: fetch from API
-      const response = await fetch('/api/files');
+      const response = await fetch('/api/files?limit=1000');
       if (response.ok) {
-        const notes = await response.json();
+        const responseData = await response.json();
+        // Handle both old array format and new pagination format
+        const notes = Array.isArray(responseData) ? responseData : responseData.notes;
         const datePattern = /^\d{4}-\d{2}-\d{2}(\.md)?$/;
 
         const formattedNotes: DailyNote[] = notes

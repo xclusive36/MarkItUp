@@ -356,7 +356,7 @@ class IntelligentLinkSuggesterPlugin {
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         root.render(React.createElement(LinkSuggestionsPanel, props as any));
       } else if (panelType === 'bridge') {
         const BridgeNoteSuggestionPanel = (await import('../components/BridgeNoteSuggestionPanel'))
@@ -365,7 +365,7 @@ class IntelligentLinkSuggesterPlugin {
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         root.render(React.createElement(BridgeNoteSuggestionPanel, props as any));
       } else if (panelType === 'map') {
         const ConnectionMapPanel = (await import('../components/ConnectionMapPanel')).default;
@@ -373,7 +373,7 @@ class IntelligentLinkSuggesterPlugin {
         const React = (await import('react')).default;
 
         const root = createRoot(this.panelContainer);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         root.render(React.createElement(ConnectionMapPanel, props as any));
       }
     } catch (error) {
@@ -1096,7 +1096,6 @@ Respond in JSON format:
 }`;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const provider = (this.api.ai as any).getCurrentProvider?.() || this.api.ai;
       const response = await (provider.complete
         ? provider.complete(prompt, { model: 'gpt-4', temperature: 0.7 })

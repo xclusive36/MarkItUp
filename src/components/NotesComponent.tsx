@@ -26,11 +26,13 @@ const NotesComponent: React.FC<NotesComponentProps> = ({ refreshNotes }) => {
     setError(null);
     try {
       const [notesRes, orderRes] = await Promise.all([
-        fetch('/api/files'),
+        fetch('/api/files?limit=1000'),
         fetch('/api/files/order'),
       ]);
       if (!notesRes.ok) throw new Error('Failed to fetch notes');
-      const notesArr: Note[] = await notesRes.json();
+      const responseData = await notesRes.json();
+      // Handle both old array format and new pagination format
+      const notesArr: Note[] = Array.isArray(responseData) ? responseData : responseData.notes;
       let ordered: Note[] = notesArr;
       if (orderRes.ok) {
         const orderArr: { id: string; folder?: string }[] = await orderRes.json();
