@@ -87,8 +87,6 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import WritingStatsModal from '@/components/WritingStatsModal';
 import ToolbarArea from '@/components/ToolbarArea';
 import BottomNav from '@/components/BottomNav';
-import SelectionActionBar from '@/components/SelectionActionBar';
-import MobileEditorToolbar from '@/components/MobileEditorToolbar';
 import ZenMode from '@/components/ZenMode';
 import NotificationQueue from '@/components/NotificationQueue';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -98,8 +96,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useAutoIndexing } from '@/hooks/useAutoIndexing';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { PageSkeleton, NotesListSkeleton, EditorSkeleton } from '@/components/SkeletonLoader';
+import { PageSkeleton } from '@/components/SkeletonLoader';
 import {
   useModalState,
   useNoteState,
@@ -111,7 +108,7 @@ import {
 
 // PKM imports
 import { getPKMSystem } from '@/lib/pkm';
-import { Note, Graph, SearchResult, SearchMatch } from '@/lib/types';
+import { Note, SearchResult, SearchMatch } from '@/lib/types';
 import { analytics, AnalyticsEventType } from '@/lib/analytics';
 import { ViewMode, MainView, ButtonAction } from '@/types/ui';
 import { apiLogger } from '@/lib/logger';
