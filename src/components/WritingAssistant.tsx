@@ -57,6 +57,7 @@ export default function WritingAssistant({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content, isOpen]);
 

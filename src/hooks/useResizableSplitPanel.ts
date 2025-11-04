@@ -67,6 +67,7 @@ export function useResizableSplitPanel({
         document.body.style.userSelect = '';
       };
     }
+    return undefined;
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   return {

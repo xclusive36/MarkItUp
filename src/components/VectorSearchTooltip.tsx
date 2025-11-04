@@ -35,6 +35,7 @@ export const VectorSearchTooltip: React.FC<VectorSearchTooltipProps> = ({
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [trigger]);
 
   const handleDismiss = () => {

@@ -123,6 +123,7 @@ export function useFocusRestore(isActive: boolean): void {
         }
       };
     }
+    return undefined;
   }, [isActive]);
 }
 
