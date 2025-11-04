@@ -295,11 +295,15 @@ export class ContentPublisherPlugin {
   async publishContent() {
     const content = this.api.ui.getEditorContent();
 
+    const lines = content.split('\n');
+    const firstLine = lines[0];
+    const title = firstLine ? firstLine.replace(/^#\s*/, '') || 'Untitled Post' : 'Untitled Post';
+
     const report = `# Content Publisher - Publishing Dashboard
 
 ## Content Ready for Publication
 
-📝 **Title**: ${content.split('\n')[0].replace(/^#\s*/, '') || 'Untitled Post'}
+📝 **Title**: ${title}
 📊 **Word Count**: ${content.split(/\s+/).length}
 ⏱️ **Read Time**: ~${Math.ceil(content.split(/\s+/).length / 200)} minutes
 
@@ -324,7 +328,7 @@ export class ContentPublisherPlugin {
 - Hashtags: #productivity #writing
 
 ## SEO Settings
-- Meta Title: ${content.split('\n')[0].substring(0, 60)}...
+- Meta Title: ${title.substring(0, 60)}...
 - Meta Description: Auto-generated
 - Focus Keyword: content publishing
 - Readability: Good ✅
@@ -438,6 +442,9 @@ export class SEOOptimizerPlugin {
       )
     );
 
+    const lines = content.split('\n');
+    const firstLine = lines[0] || '';
+
     const report = `# SEO Analysis Report
 
 ## Overall SEO Score: ${seoScore}/100
@@ -463,9 +470,9 @@ ${seoScore > 80 ? '🟢 Excellent' : seoScore > 60 ? '🟡 Good' : '🔴 Needs I
 ## On-Page SEO
 
 ### Title Tag
-- Current: ${content.split('\n')[0].substring(0, 60)}
-- Length: ${content.split('\n')[0].length} chars ${content.split('\n')[0].length <= 60 ? '✅' : '⚠️'}
-- Keyword: ${content.split('\n')[0].toLowerCase().includes('seo') ? 'Present ✅' : 'Missing ⚠️'}
+- Current: ${firstLine ? firstLine.substring(0, 60) : 'No title'}
+- Length: ${firstLine ? firstLine.length : 0} chars ${(firstLine?.length || 0) <= 60 ? '✅' : '⚠️'}
+- Keyword: ${firstLine?.toLowerCase().includes('seo') ? 'Present ✅' : 'Missing ⚠️'}
 
 ### Meta Description
 - Recommended: 155-160 characters
@@ -595,7 +602,9 @@ export class SocialMediaPlugin {
 
   async schedulePost() {
     const content = this.api.ui.getEditorContent();
-    const title = content.split('\n')[0].replace(/^#\s*/, '') || 'Untitled';
+    const lines = content.split('\n');
+    const firstLine = lines[0];
+    const title = firstLine ? firstLine.replace(/^#\s*/, '') || 'Untitled' : 'Untitled';
 
     const report = `# Social Media Scheduler
 

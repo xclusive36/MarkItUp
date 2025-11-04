@@ -228,6 +228,9 @@ function extractLinks(content: string): LinkInfo[] {
     while ((match = markdownLinkRegex.exec(line)) !== null) {
       const text = match[1];
       const url = match[2];
+
+      if (!text || !url) continue;
+
       const type = determineUrlType(url);
 
       links.push({
@@ -244,6 +247,7 @@ function extractLinks(content: string): LinkInfo[] {
     const wikiLinkRegex = /\[\[([^\]]+)\]\]/g;
     while ((match = wikiLinkRegex.exec(line)) !== null) {
       const text = match[1];
+      if (!text) continue;
 
       links.push({
         type: 'wikilink',
@@ -261,10 +265,12 @@ function extractLinks(content: string): LinkInfo[] {
       const text = match[1];
       const url = match[2];
 
+      if (!url) continue;
+
       links.push({
         type: 'image',
         url,
-        text,
+        text: text || '',
         line: lineIndex + 1,
         column: match.index + 1,
         valid: null,
@@ -508,10 +514,11 @@ export class LinkCheckerPlugin {
         noteName.toLowerCase().includes(note.name.toLowerCase())
     );
 
-    if (similarNotes.length > 0) {
+    const firstSimilar = similarNotes[0];
+    if (firstSimilar) {
       return {
         valid: false,
-        error: `Note not found. Similar: ${similarNotes[0].name}`,
+        error: `Note not found. Similar: ${firstSimilar.name}`,
       };
     }
 

@@ -86,8 +86,10 @@ export function ThemeCreator({ isOpen, onClose }: ThemeCreatorProps) {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
       const theme = themeHistory[newIndex];
-      setCurrentTheme(theme);
-      applyTheme(theme);
+      if (theme) {
+        setCurrentTheme(theme);
+        applyTheme(theme);
+      }
       showToast('Undone', 'info');
     }
   }, [historyIndex, themeHistory, showToast]);
@@ -97,8 +99,10 @@ export function ThemeCreator({ isOpen, onClose }: ThemeCreatorProps) {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
       const theme = themeHistory[newIndex];
-      setCurrentTheme(theme);
-      applyTheme(theme);
+      if (theme) {
+        setCurrentTheme(theme);
+        applyTheme(theme);
+      }
       showToast('Redone', 'info');
     }
   }, [historyIndex, themeHistory, showToast]);

@@ -182,7 +182,8 @@ const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
       hash = hash & hash;
     }
 
-    return colors[Math.abs(hash) % colors.length];
+    const color = colors[Math.abs(hash) % colors.length];
+    return color || '#6366f1';
   };
 
   // Update graph when selected date changes

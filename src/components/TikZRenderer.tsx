@@ -31,7 +31,7 @@ const colorMap: { [key: string]: { light: string; dark: string } } = {
   orange: { light: '#ea580c', dark: '#fb923c' },
   black: { light: '#000000', dark: '#ffffff' },
   gray: { light: '#6b7280', dark: '#9ca3af' },
-  white: { light: '#ffffff', dark: '#000000' }
+  white: { light: '#ffffff', dark: '#000000' },
 };
 
 // TikZ Renderer Component
@@ -48,10 +48,12 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
 
   // Helper function to parse coordinates
   const parseCoords = (coordStr: string): Point => {
-    const [x, y] = coordStr.split(',').map((n: string) => parseFloat(n.trim()));
+    const coords = coordStr.split(',').map((n: string) => parseFloat(n.trim()));
+    const x = coords[0] ?? 0;
+    const y = coords[1] ?? 0;
     return {
       x: x * 50 + 150, // Scale and center in a larger viewport
-      y: y * 50 + 150
+      y: y * 50 + 150,
     };
   };
 
@@ -62,22 +64,25 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
       const opacity = parseFloat(opacityStr) / 100; // Convert percentage to decimal
       return {
         color: getColor(colorName.trim()),
-        opacity: opacity
+        opacity: opacity,
       };
     }
     return {
       color: getColor(colorStr),
-      opacity: 1
+      opacity: 1,
     };
   };
 
   // Helper function to parse TikZ style options
   const parseStyle = (styleStr?: string): StyleOptions => {
     if (!styleStr) return {};
-    
+
     const style: StyleOptions = {};
-    const options = styleStr.replace(/[\[\]]/g, '').split(',').map(s => s.trim());
-    
+    const options = styleStr
+      .replace(/[\[\]]/g, '')
+      .split(',')
+      .map(s => s.trim());
+
     for (const option of options) {
       if (option.includes('=')) {
         const [key, value] = option.split('=').map(s => s.trim());
@@ -160,8 +165,12 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
             const points = command.match(/\((.*?)\)/g)?.map((p: string) => p.slice(1, -1)) || [];
             if (points.length >= 2) {
               const coords = points.map(parseCoords);
-              const pathData = `M ${coords[0].x} ${coords[0].y} ` +
-                coords.slice(1).map((p: Point) => `L ${p.x} ${p.y}`).join(' ');
+              const pathData =
+                `M ${coords[0].x} ${coords[0].y} ` +
+                coords
+                  .slice(1)
+                  .map((p: Point) => `L ${p.x} ${p.y}`)
+                  .join(' ');
               svgElements.push(
                 <path
                   key={svgElements.length}
@@ -199,15 +208,17 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
             const match = command.match(/\((.*?)\)\s*arc\s*\((.*?)\)/);
             if (match) {
               const center = parseCoords(match[1]);
-              const [startAngle, endAngle, radius] = match[2].split(':').map((n: string) => parseFloat(n.trim()));
+              const [startAngle, endAngle, radius] = match[2]
+                .split(':')
+                .map((n: string) => parseFloat(n.trim()));
               const r = radius * 50;
               const start = {
-                x: center.x + r * Math.cos(startAngle * Math.PI / 180),
-                y: center.y + r * Math.sin(startAngle * Math.PI / 180)
+                x: center.x + r * Math.cos((startAngle * Math.PI) / 180),
+                y: center.y + r * Math.sin((startAngle * Math.PI) / 180),
               };
               const end = {
-                x: center.x + r * Math.cos(endAngle * Math.PI / 180),
-                y: center.y + r * Math.sin(endAngle * Math.PI / 180)
+                x: center.x + r * Math.cos((endAngle * Math.PI) / 180),
+                y: center.y + r * Math.sin((endAngle * Math.PI) / 180),
               };
               const largeArc = Math.abs(endAngle - startAngle) > 180 ? 1 : 0;
               const pathData = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
@@ -282,7 +293,7 @@ const TikZRenderer: React.FC<TikZRendererProps> = ({ content }) => {
         width: '100%',
         height: 'auto',
         maxWidth: '500px',
-        backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff'
+        backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
       }}
     >
       {processTikZ(content)}

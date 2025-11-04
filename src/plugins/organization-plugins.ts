@@ -549,14 +549,17 @@ export class ProjectTrackerPlugin {
     const progressMatch = currentContent.match(/\*\*Progress:\*\* (\d+)%/);
 
     if (progressMatch) {
-      const currentProgress = parseInt(progressMatch[1]);
-      const newProgress = Math.min(100, currentProgress + 10);
-      const updatedContent = currentContent.replace(
-        /\*\*Progress:\*\* \d+%/,
-        `**Progress:** ${newProgress}%`
-      );
-      this.api.ui.setEditorContent(updatedContent);
-      this.api.ui.showNotification(`Progress updated to ${newProgress}%`, 'info');
+      const progressStr = progressMatch[1];
+      if (progressStr) {
+        const currentProgress = parseInt(progressStr);
+        const newProgress = Math.min(100, currentProgress + 10);
+        const updatedContent = currentContent.replace(
+          /\*\*Progress:\*\* \d+%/,
+          `**Progress:** ${newProgress}%`
+        );
+        this.api.ui.setEditorContent(updatedContent);
+        this.api.ui.showNotification(`Progress updated to ${newProgress}%`, 'info');
+      }
     } else {
       this.api.ui.showNotification('No project progress found in current note', 'warning');
     }

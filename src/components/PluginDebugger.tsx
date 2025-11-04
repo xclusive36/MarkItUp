@@ -92,6 +92,8 @@ export function PluginDebugger() {
 
       if (AVAILABLE_PLUGINS.length > 0) {
         const firstPlugin = AVAILABLE_PLUGINS[0];
+        if (!firstPlugin) return;
+
         console.log('Attempting to load plugin:', firstPlugin.id);
 
         const success = await pluginManager.loadPlugin(firstPlugin);

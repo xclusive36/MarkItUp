@@ -108,9 +108,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       if (fromIdx !== -1 && toIdx !== -1) {
         const updated = [...notes];
         const [moved] = updated.splice(fromIdx, 1);
-        updated.splice(toIdx, 0, moved);
-        setNotes(updated);
-        if (onReorderNotes) onReorderNotes(updated);
+        if (moved) {
+          updated.splice(toIdx, 0, moved);
+          setNotes(updated);
+          if (onReorderNotes) onReorderNotes(updated);
+        }
       }
     }
     setDraggedNoteId(null);

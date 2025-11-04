@@ -372,7 +372,9 @@ class SmartAutoTaggerPlugin {
       // Update tags over time
       if (!data.tagsOverTime) data.tagsOverTime = {};
       const today = new Date().toISOString().split('T')[0];
-      data.tagsOverTime[today] = (data.tagsOverTime[today] || 0) + tagsAdded.length;
+      if (today) {
+        data.tagsOverTime[today] = (data.tagsOverTime[today] || 0) + tagsAdded.length;
+      }
 
       // Update recently added tags
       if (!data.recentlyAddedTags) data.recentlyAddedTags = [];
