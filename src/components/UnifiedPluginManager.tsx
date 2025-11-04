@@ -141,8 +141,7 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
     try {
       const loaded = manager.getLoadedPlugins();
       const enhancedPlugins: LoadedPlugin[] = loaded.map(plugin => {
-        // Enhance plugins with metadata
-        const metadata = PLUGIN_METADATA[plugin.id] || {};
+        const metadata = PLUGIN_METADATA[plugin.id] || ({} as Record<string, unknown>);
         const isAI =
           plugin.id.includes('ai-') ||
           plugin.id.includes('ml-') ||
@@ -153,12 +152,13 @@ export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProp
           manifest: plugin,
           isActive: true, // Loaded plugins are active
           isAIPlugin: isAI,
-          category: metadata.category || 'Utility',
-          tags: metadata.tags || [],
-          rating: parseFloat(metadata.rating) || 4.0,
-          downloads: parseInt(metadata.downloadCount?.replace(/k/g, '000') || '0') || 0,
+          category: (metadata.category as string) || 'Utility',
+          tags: (metadata.tags as string[]) || [],
+          rating: parseFloat((metadata.rating as string) || '4.0') || 4.0,
+          downloads:
+            parseInt(((metadata.downloadCount as string) || '0').replace(/k/g, '000')) || 0,
           pricing: 'free' as const,
-          featured: metadata.featured || false,
+          featured: (metadata.featured as boolean) || false,
         };
       });
 
@@ -740,7 +740,7 @@ function SettingsTab({ theme, manager }: any) {
 }
 
 function PluginCard({ plugin, isLoaded, theme, onAction, manager, onOpenSettings }: any) {
-  const metadata = PLUGIN_METADATA[plugin.id] || {};
+  const metadata = PLUGIN_METADATA[plugin.id] || ({} as Record<string, unknown>);
   const isAI =
     plugin.id.includes('ai-') ||
     plugin.id.includes('ml-') ||
@@ -784,7 +784,9 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, onOpenSettings
                 AI
               </span>
             )}
-            {metadata.featured && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+            {(metadata.featured as boolean) && (
+              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+            )}
           </div>
           <p className="text-sm opacity-70 line-clamp-2">{plugin.description}</p>
 
@@ -866,22 +868,22 @@ function PluginCard({ plugin, isLoaded, theme, onAction, manager, onOpenSettings
         <span>v{plugin.version}</span>
       </div>
 
-      {metadata.rating && (
+      {(metadata.rating as string) && (
         <div className="flex items-center gap-2 mb-3">
           <div className="flex items-center">
             <Star className="h-3 w-3 text-yellow-500 fill-current" />
-            <span className="text-sm ml-1">{metadata.rating}</span>
+            <span className="text-sm ml-1">{metadata.rating as string}</span>
           </div>
-          {metadata.downloadCount && (
+          {(metadata.downloadCount as string) && (
             <div className="flex items-center">
               <Download className="h-3 w-3" />
-              <span className="text-sm ml-1">{metadata.downloadCount}</span>
+              <span className="text-sm ml-1">{metadata.downloadCount as string}</span>
             </div>
           )}
         </div>
       )}
 
-      <div className="text-xs opacity-70 mb-3">{metadata.category || 'Utility'}</div>
+      <div className="text-xs opacity-70 mb-3">{(metadata.category as string) || 'Utility'}</div>
 
       <div className="flex gap-2 w-full">
         {isLoaded ? (
