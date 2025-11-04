@@ -297,8 +297,9 @@ export default function AIChat({
   };
 
   const handleQuickCommand = async (command: string) => {
-    const cmd = command.toLowerCase().split(' ')[0];
-    const args = command.slice(cmd.length).trim();
+    const cmdParts = command.toLowerCase().split(' ');
+    const cmd = cmdParts[0];
+    const args = command.slice(cmd?.length || 0).trim();
 
     setMessage('');
     if (textareaRef.current) {

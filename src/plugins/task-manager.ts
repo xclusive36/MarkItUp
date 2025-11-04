@@ -184,10 +184,24 @@ export class TaskManagerPlugin {
   };
 
   constructor(private api: PluginAPI) {
+    // Initialize with defaults, load from settings asynchronously
     this.settings = {
-      defaultPriority: this.api.settings.get('defaultPriority') || 'medium',
-      reminderTime: this.api.settings.get('reminderTime') || 30,
-      showCompletedTasks: this.api.settings.get('showCompletedTasks') !== false,
+      defaultPriority: 'medium',
+      reminderTime: 30,
+      showCompletedTasks: true,
+    };
+    this.loadSettings();
+  }
+
+  private async loadSettings() {
+    const defaultPriority = await this.api.settings.get('defaultPriority');
+    const reminderTime = await this.api.settings.get('reminderTime');
+    const showCompletedTasks = await this.api.settings.get('showCompletedTasks');
+
+    this.settings = {
+      defaultPriority: (defaultPriority as string) || 'medium',
+      reminderTime: (reminderTime as number) || 30,
+      showCompletedTasks: (showCompletedTasks as boolean) !== false,
     };
   }
 

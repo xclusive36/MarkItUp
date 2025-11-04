@@ -330,7 +330,8 @@ function generateNumberedTOC(
     while (numbering.length > heading.level) {
       numbering.pop();
     }
-    numbering[heading.level - 1]++;
+    const currentLevel = numbering[heading.level - 1];
+    numbering[heading.level - 1] = (currentLevel || 0) + 1;
 
     // Reset deeper levels
     for (let i = heading.level; i < numbering.length; i++) {
@@ -449,12 +450,12 @@ function generateTableOfContents(content: string, settings: Partial<TOCSettings>
     }
 
     // Skip title (first H1)
-    if (insertIndex < lines.length && lines[insertIndex].match(/^#\s+/)) {
+    if (insertIndex < lines.length && lines[insertIndex]?.match(/^#\s+/)) {
       insertIndex++;
     }
 
     // Skip empty lines after title
-    while (insertIndex < lines.length && lines[insertIndex].trim() === '') {
+    while (insertIndex < lines.length && lines[insertIndex]?.trim() === '') {
       insertIndex++;
     }
 
@@ -779,7 +780,7 @@ export class TableOfContentsPlugin {
       const lines = editor.value.split('\n');
       let position = 0;
       for (let i = 0; i < line - 1 && i < lines.length; i++) {
-        position += lines[i].length + 1; // +1 for newline
+        position += (lines[i]?.length || 0) + 1; // +1 for newline
       }
 
       editor.focus();
@@ -824,8 +825,10 @@ export class TableOfContentsPlugin {
     // Check for skipped levels
     const levels = Object.keys(levelCounts).map(Number).sort();
     for (let i = 1; i < levels.length; i++) {
-      if (levels[i] - levels[i - 1] > 1) {
-        issues.push(`⚠️ Skipped heading level (jumped from H${levels[i - 1]} to H${levels[i]})`);
+      const current = levels[i];
+      const previous = levels[i - 1];
+      if (current && previous && current - previous > 1) {
+        issues.push(`⚠️ Skipped heading level (jumped from H${previous} to H${current})`);
       }
     }
 
