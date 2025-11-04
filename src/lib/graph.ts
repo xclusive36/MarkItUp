@@ -284,8 +284,11 @@ export class GraphBuilder {
 
     // Color by primary tag
     if (note.tags.length > 0) {
-      const tagHash = this.hashString(note.tags[0]);
-      return this.getColorFromHash(tagHash);
+      const firstTag = note.tags[0];
+      if (firstTag) {
+        const tagHash = this.hashString(firstTag);
+        return this.getColorFromHash(tagHash);
+      }
     }
 
     // Default color
@@ -324,7 +327,8 @@ export class GraphBuilder {
       '#ec4899',
       '#f43f5e',
     ];
-    return colors[hash % colors.length];
+    const color = colors[hash % colors.length];
+    return color || '#6366f1';
   }
 
   // Find shortest path between two notes
@@ -479,9 +483,10 @@ export class GraphBuilder {
 
         const mostCommonTag = Array.from(tagCounts.entries()).sort((a, b) => b[1] - a[1])[0];
 
+        const firstNote = clusterNotes[0];
         const label = mostCommonTag
           ? mostCommonTag[0]
-          : clusterNotes[0].folder || `Cluster ${clusters.length + 1}`;
+          : firstNote?.folder || `Cluster ${clusters.length + 1}`;
 
         clusters.push({
           id: `cluster-${clusters.length}`,
@@ -566,8 +571,10 @@ export class GraphBuilder {
     const linksByDate = new Map<string, number>();
 
     for (const note of this.notes.values()) {
-      const date = new Date(note.createdAt).toISOString().split('T')[0];
-      notesByDate.set(date, (notesByDate.get(date) || 0) + 1);
+      const datePart = new Date(note.createdAt).toISOString().split('T')[0];
+      if (datePart) {
+        notesByDate.set(datePart, (notesByDate.get(datePart) || 0) + 1);
+      }
     }
 
     // Approximate link creation dates from note dates
@@ -575,10 +582,12 @@ export class GraphBuilder {
       const sourceNote = this.notes.get(nodeId);
       if (!sourceNote) continue;
 
-      const date = new Date(sourceNote.updatedAt || sourceNote.createdAt)
+      const datePart = new Date(sourceNote.updatedAt || sourceNote.createdAt)
         .toISOString()
         .split('T')[0];
-      linksByDate.set(date, (linksByDate.get(date) || 0) + links.length);
+      if (datePart) {
+        linksByDate.set(datePart, (linksByDate.get(datePart) || 0) + links.length);
+      }
     }
 
     return {
