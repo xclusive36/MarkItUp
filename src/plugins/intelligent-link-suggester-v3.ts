@@ -592,6 +592,8 @@ class IntelligentLinkSuggesterPlugin {
       if (insertionPoints.length > 0) {
         // Insert at the first occurrence only (to avoid over-linking)
         const point = insertionPoints[0];
+        if (!point) continue;
+
         updatedContent = this.insertLinkAtPosition(updatedContent, point, noteName);
         insertCount++;
       }
@@ -621,7 +623,14 @@ class IntelligentLinkSuggesterPlugin {
     let match;
 
     while ((match = wikilinkRegex.exec(content)) !== null) {
-      const linkText = match[1].split('|')[0].trim().toLowerCase();
+      const matchText = match[1];
+      if (!matchText) continue;
+
+      const parts = matchText.split('|');
+      const firstPart = parts[0];
+      if (!firstPart) continue;
+
+      const linkText = firstPart.trim().toLowerCase();
       links.add(linkText);
     }
 
@@ -1185,7 +1194,8 @@ Tags: ${suggestion.suggestedTags.map(tag => `#${tag}`).join(' ')}
    * Get plugin settings
    */
   private getSettings(): Record<string, unknown> {
-    return this.api.settings.get('ai-intelligent-link-suggester') || {};
+    const result = this.api.settings.get('ai-intelligent-link-suggester');
+    return (result || {}) as unknown as Record<string, unknown>;
   }
 
   /**
