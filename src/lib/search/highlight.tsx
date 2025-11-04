@@ -148,6 +148,10 @@ export function generateSnippet(
 
   // Use the first match to extract context
   const firstMatch = matches[0];
+  if (!firstMatch) {
+    return content.slice(0, maxLength) + (content.length > maxLength ? '...' : '');
+  }
+
   const start = Math.max(0, firstMatch.start - 50);
   const end = Math.min(content.length, firstMatch.end + 150);
 
@@ -271,7 +275,8 @@ export function SearchResultSnippet({
       {Array.from(groupedMatches.entries())
         .slice(0, 3) // Show max 3 line groups
         .map(([lineNumber, lineMatches]) => {
-          const context = lineMatches[0].context || snippet;
+          const firstLineMatch = lineMatches[0];
+          const context = firstLineMatch?.context || snippet;
 
           return (
             <div
