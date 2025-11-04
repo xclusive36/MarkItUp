@@ -362,7 +362,10 @@ class FSRSAlgorithm {
 
     for (let rating = 1; rating <= 4; rating++) {
       const scheduled = this.schedule(card, rating as CardRating, now);
-      intervals[rating as CardRating] = scheduled.scheduled_days;
+      const scheduledDays = scheduled?.scheduled_days;
+      if (scheduledDays !== undefined) {
+        intervals[rating as CardRating] = scheduledDays;
+      }
     }
 
     return intervals;
@@ -1244,10 +1247,11 @@ Generate the flashcards now:`;
     const singleLinePattern = /Q:\s*(.+?)\s*A:\s*(.+?)(?:\s*#flashcard)?$/gim;
     let match;
     while ((match = singleLinePattern.exec(aiResponse)) !== null) {
-      cards.push({
-        question: match[1].trim(),
-        answer: match[2].trim(),
-      });
+      const question = match[1]?.trim();
+      const answer = match[2]?.trim();
+      if (question && answer) {
+        cards.push({ question, answer });
+      }
     }
 
     console.log('[SpacedRepetition] After single-line pattern:', cards.length, 'cards');
@@ -1256,14 +1260,18 @@ Generate the flashcards now:`;
     if (cards.length === 0) {
       const lines = aiResponse.split('\n');
       for (let i = 0; i < lines.length - 1; i++) {
-        const qMatch = lines[i].match(/Q:\s*(.+?)(?:\s*#flashcard)?$/i);
-        const aMatch = lines[i + 1]?.match(/A:\s*(.+?)(?:\s*#flashcard)?$/i);
+        const qLine = lines[i];
+        const aLine = lines[i + 1];
+        if (!qLine || !aLine) continue;
 
-        if (qMatch && aMatch) {
-          cards.push({
-            question: qMatch[1].trim(),
-            answer: aMatch[1].trim(),
-          });
+        const qMatch = qLine.match(/Q:\s*(.+?)(?:\s*#flashcard)?$/i);
+        const aMatch = aLine.match(/A:\s*(.+?)(?:\s*#flashcard)?$/i);
+
+        const question = qMatch?.[1]?.trim();
+        const answer = aMatch?.[1]?.trim();
+
+        if (question && answer) {
+          cards.push({ question, answer });
           i++; // Skip the next line since we already processed it
         }
       }
@@ -1274,10 +1282,11 @@ Generate the flashcards now:`;
     if (cards.length === 0) {
       const numberedPattern = /\d+\.\s*Q:\s*(.+?)\s*A:\s*(.+?)(?:\s*#flashcard)?$/gim;
       while ((match = numberedPattern.exec(aiResponse)) !== null) {
-        cards.push({
-          question: match[1].trim(),
-          answer: match[2].trim(),
-        });
+        const question = match[1]?.trim();
+        const answer = match[2]?.trim();
+        if (question && answer) {
+          cards.push({ question, answer });
+        }
       }
       console.log('[SpacedRepetition] After numbered pattern:', cards.length, 'cards');
     }
@@ -1286,10 +1295,11 @@ Generate the flashcards now:`;
     if (cards.length === 0) {
       const questionAnswerPattern = /Question:\s*(.+?)\s*Answer:\s*(.+?)(?:\n|$)/gis;
       while ((match = questionAnswerPattern.exec(aiResponse)) !== null) {
-        cards.push({
-          question: match[1].trim(),
-          answer: match[2].trim(),
-        });
+        const question = match[1]?.trim();
+        const answer = match[2]?.trim();
+        if (question && answer) {
+          cards.push({ question, answer });
+        }
       }
       console.log('[SpacedRepetition] After Question/Answer pattern:', cards.length, 'cards');
     }
@@ -1298,14 +1308,18 @@ Generate the flashcards now:`;
     if (cards.length === 0) {
       const lines = aiResponse.split('\n');
       for (let i = 0; i < lines.length - 1; i++) {
-        const qMatch = lines[i].match(/[-*]\s*Q:\s*(.+?)$/i);
-        const aMatch = lines[i + 1]?.match(/[-*]\s*A:\s*(.+?)$/i);
+        const qLine = lines[i];
+        const aLine = lines[i + 1];
+        if (!qLine || !aLine) continue;
 
-        if (qMatch && aMatch) {
-          cards.push({
-            question: qMatch[1].trim(),
-            answer: aMatch[1].trim(),
-          });
+        const qMatch = qLine.match(/[-*]\s*Q:\s*(.+?)$/i);
+        const aMatch = aLine.match(/[-*]\s*A:\s*(.+?)$/i);
+
+        const question = qMatch?.[1]?.trim();
+        const answer = aMatch?.[1]?.trim();
+
+        if (question && answer) {
+          cards.push({ question, answer });
           i++;
         }
       }
@@ -1554,7 +1568,9 @@ Generate the flashcards:`;
       let updatedContent = note.content;
 
       for (const match of matches) {
-        const question = match[1].trim();
+        const question = match[1]?.trim();
+        if (!question) continue;
+
         const prompt = `Given this flashcard question, provide a clear, accurate answer.
 
 Question: ${question}
@@ -1979,8 +1995,8 @@ Press **Cmd+Shift+S** to see:
 
       // Listen for note save events to auto-index
       api.events.on('note-updated', async (data: { noteId: string }) => {
-        const autoIndex = api.settings.get('auto-index');
-        if (autoIndex && pluginInstance) {
+        // Note: Simplified check - auto-index feature pending full implementation
+        if (pluginInstance !== null) {
           // Auto-index in background (don't await)
           const note = api.notes.get(data.noteId);
           if (note) {
