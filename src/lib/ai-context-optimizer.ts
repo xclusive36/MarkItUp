@@ -32,7 +32,7 @@ export function estimateTokens(text: string): number {
   // - Punctuation and spaces
   // - Code/special characters
   const words = text.trim().split(/\s+/).length;
-  const chars = text.length;
+  // const chars = text.length; // Commented out: not used
 
   // Use word count as primary metric, add 20% for punctuation/formatting
   return Math.ceil(words * 1.3);

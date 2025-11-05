@@ -286,7 +286,8 @@ export class UnifiedAIPluginManager {
     }
   }
 
-  getPluginMetrics(pluginId: string): Record<string, any> {
+  getPluginMetrics(_pluginId: string): Record<string, any> {
+    // pluginId parameter unused
     // Return usage metrics for the plugin
     return {
       usageCount: 0,
@@ -303,12 +304,14 @@ export class UnifiedAIPluginManager {
   private createPluginAPI(pluginId: string): PluginAPI {
     return {
       notes: {
-        create: async (name: string, content: string, folder?: string) => {
+        create: async (name: string, _content: string, _folder?: string) => {
+          // content and folder unused
           // Simplified implementation - would connect to actual PKM system
           console.log(`Creating note: ${name}`);
           return {} as any;
         },
-        update: async (id: string, updates: any) => {
+        update: async (id: string, _updates: any) => {
+          // updates parameter unused
           console.log(`Updating note: ${id}`);
           return {} as any;
         },
@@ -337,7 +340,8 @@ export class UnifiedAIPluginManager {
         showNotification: (message: string, type = 'info') => {
           console.log(`[${type}] ${message}`);
         },
-        showModal: async (title: string, content: any) => {
+        showModal: async (title: string, _content: any) => {
+          // content parameter unused
           console.log(`Modal: ${title}`);
           return Promise.resolve();
         },
@@ -382,10 +386,12 @@ export class UnifiedAIPluginManager {
         },
       },
       events: {
-        on: (event: string, callback: (data: any) => void) => {
+        on: (event: string, _callback: (data: any) => void) => {
+          // callback parameter unused
           console.log(`Listening to event: ${event}`);
         },
-        off: (event: string, callback: (data: any) => void) => {
+        off: (event: string, _callback: (data: any) => void) => {
+          // callback parameter unused
           console.log(`Removing listener for event: ${event}`);
         },
         emit: (event: string, data: any) => {

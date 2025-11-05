@@ -783,17 +783,17 @@ Expanded Version:`;
   ): Promise<FileOperationRequest | null> {
     try {
       // Keywords that indicate file operations
-      const createKeywords = ['create', 'make', 'new', 'add', 'write'];
-      const modifyKeywords = ['modify', 'update', 'change', 'edit', 'rewrite', 'fix'];
-      const deleteKeywords = ['delete', 'remove', 'erase'];
+      // const createKeywords = ['create', 'make', 'new', 'add', 'write']; // Commented out: not used
+      // const modifyKeywords = ['modify', 'update', 'change', 'edit', 'rewrite', 'fix']; // Commented out: not used
+      // const deleteKeywords = ['delete', 'remove', 'erase']; // Commented out: not used
       const folderKeywords = ['folder', 'directory', 'organize'];
 
       const lowerMessage = message.toLowerCase();
 
       // Check if message contains file operation keywords
-      const hasCreate = createKeywords.some(kw => lowerMessage.includes(kw));
-      const hasModify = modifyKeywords.some(kw => lowerMessage.includes(kw));
-      const hasDelete = deleteKeywords.some(kw => lowerMessage.includes(kw));
+      // const hasCreate = createKeywords.some(kw => lowerMessage.includes(kw)); // Commented out: not used
+      // const hasModify = modifyKeywords.some(kw => lowerMessage.includes(kw)); // Commented out: not used
+      // const hasDelete = deleteKeywords.some(kw => lowerMessage.includes(kw)); // Commented out: not used
       const hasFolder = folderKeywords.some(kw => lowerMessage.includes(kw));
       const hasFileRef = lowerMessage.includes('file') || lowerMessage.includes('note');
 

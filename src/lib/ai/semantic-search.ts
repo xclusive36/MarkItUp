@@ -1,6 +1,6 @@
 import { Note, SearchResult, SearchMatch } from '../types';
 import { analytics } from '../analytics';
-import { BrowserVectorStore, EmbeddingService, SimilarNote } from '../vector';
+import { BrowserVectorStore, EmbeddingService } from '../vector';
 
 export interface SemanticSearchResult extends SearchResult {
   semanticScore: number;
@@ -387,7 +387,7 @@ export class SemanticSearchEngine {
 
   private applySemanticScoring(
     results: SearchResult[],
-    originalQuery: string,
+    _originalQuery: string, // Unused parameter
     expandedTerms: string[],
     maxResults: number
   ): SemanticSearchResult[] {

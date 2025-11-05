@@ -106,7 +106,8 @@ export class AIPluginManager {
           if (pluginMetadata) {
             const plugin: AIPlugin = {
               metadata: pluginMetadata,
-              execute: async (action: string, params: any, api: AIPluginAPI) => {
+              execute: async (action: string, params: any, _api: AIPluginAPI) => {
+                // api parameter unused
                 console.log(`Executing ${action} on ${pluginId}`, params);
                 return { success: true };
               },
@@ -315,7 +316,8 @@ export class AIPluginManager {
 
       const plugin: AIPlugin = {
         metadata: pluginMetadata,
-        execute: async (action: string, params: any, api: AIPluginAPI) => {
+        execute: async (action: string, params: any, _api: AIPluginAPI) => {
+          // api parameter unused
           console.log(`Executing ${action} on ${pluginId}`, params);
           return { success: true };
         },

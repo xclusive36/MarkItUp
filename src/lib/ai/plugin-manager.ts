@@ -66,7 +66,7 @@ export class AIPluginManager {
   private installedPlugins: Map<string, AIPlugin> = new Map();
   private enabledPlugins: Set<string> = new Set();
   private pluginSettings: Map<string, Record<string, any>> = new Map();
-  
+
   constructor() {
     this.loadPersistedState();
   }
@@ -82,10 +82,11 @@ export class AIPluginManager {
           if (pluginMetadata) {
             const plugin: AIPlugin = {
               metadata: pluginMetadata,
-              execute: async (action: string, params: any, api: AIPluginAPI) => {
+              execute: async (action: string, params: any, _api: AIPluginAPI) => {
+                // api parameter unused
                 console.log(`Executing ${action} on ${pluginId}`, params);
                 return { success: true };
-              }
+              },
             };
             this.installedPlugins.set(pluginId, plugin);
             this.enabledPlugins.add(pluginId);
@@ -105,20 +106,21 @@ export class AIPluginManager {
       console.error('Failed to save plugin state:', error);
     }
   }
-  
+
   private mockPlugins: AIPluginMetadata[] = [
     {
       id: 'ai-writing-assistant',
       name: 'AI Writing Assistant',
       version: '2.1.0',
-      description: 'Enhanced writing assistance with style analysis, grammar checking, and content suggestions',
+      description:
+        'Enhanced writing assistance with style analysis, grammar checking, and content suggestions',
       author: 'MarkItUp Team',
       category: 'ai-chat',
       capabilities: {
         chat: true,
         generation: true,
         analysis: true,
-        automation: true
+        automation: true,
       },
       settings: {
         writingStyle: {
@@ -130,22 +132,22 @@ export class AIPluginManager {
             { value: 'casual', label: 'Casual' },
             { value: 'professional', label: 'Professional' },
             { value: 'academic', label: 'Academic' },
-            { value: 'creative', label: 'Creative' }
-          ]
+            { value: 'creative', label: 'Creative' },
+          ],
         },
         apiKey: {
           type: 'apikey',
           label: 'OpenAI API Key',
           description: 'Your OpenAI API key for enhanced features',
           required: true,
-          placeholder: 'sk-...'
+          placeholder: 'sk-...',
         },
         enableRealtime: {
           type: 'boolean',
           label: 'Real-time Suggestions',
           description: 'Show writing suggestions as you type',
-          default: true
-        }
+          default: true,
+        },
       },
       tags: ['writing', 'ai', 'assistance', 'grammar'],
       rating: 4.8,
@@ -155,21 +157,22 @@ export class AIPluginManager {
       aiRequirements: {
         requiresApiKey: true,
         supportedProviders: ['openai', 'anthropic'],
-        minTokens: 1000
+        minTokens: 1000,
       },
       homepage: 'https://example.com/ai-writing-assistant',
-      repository: 'https://github.com/example/ai-writing-assistant'
+      repository: 'https://github.com/example/ai-writing-assistant',
     },
     {
       id: 'smart-link-detector',
       name: 'Smart Link Detector',
       version: '1.3.2',
-      description: 'Automatically detects and suggests relevant links between notes using AI analysis',
+      description:
+        'Automatically detects and suggests relevant links between notes using AI analysis',
       author: 'Community',
       category: 'automation',
       capabilities: {
         analysis: true,
-        automation: true
+        automation: true,
       },
       tags: ['linking', 'automation', 'ai', 'connections'],
       rating: 4.5,
@@ -179,19 +182,20 @@ export class AIPluginManager {
       aiRequirements: {
         requiresApiKey: false,
         supportedProviders: ['openai'],
-        minTokens: 500
-      }
+        minTokens: 500,
+      },
     },
     {
       id: 'knowledge-graph-analytics',
       name: 'Knowledge Graph Analytics',
       version: '1.0.5',
-      description: 'Advanced analytics and insights for your knowledge graph with AI-powered recommendations',
+      description:
+        'Advanced analytics and insights for your knowledge graph with AI-powered recommendations',
       author: 'Analytics Pro',
       category: 'analysis',
       capabilities: {
         analysis: true,
-        visualization: true
+        visualization: true,
       },
       tags: ['analytics', 'visualization', 'insights', 'ai'],
       rating: 4.7,
@@ -201,19 +205,20 @@ export class AIPluginManager {
       aiRequirements: {
         requiresApiKey: true,
         supportedProviders: ['openai', 'anthropic'],
-        minTokens: 2000
-      }
+        minTokens: 2000,
+      },
     },
     {
       id: 'ai-content-generator',
       name: 'AI Content Generator',
       version: '3.0.1',
-      description: 'Generate high-quality content including summaries, outlines, and full articles using advanced AI',
+      description:
+        'Generate high-quality content including summaries, outlines, and full articles using advanced AI',
       author: 'Content AI Inc.',
       category: 'knowledge-enhancement',
       capabilities: {
         generation: true,
-        chat: true
+        chat: true,
       },
       tags: ['generation', 'content', 'ai', 'templates'],
       rating: 4.9,
@@ -223,27 +228,28 @@ export class AIPluginManager {
       aiRequirements: {
         requiresApiKey: true,
         supportedProviders: ['openai', 'anthropic', 'google'],
-        minTokens: 3000
-      }
-    }
+        minTokens: 3000,
+      },
+    },
   ];
 
   async discoverPlugins(query = '', category = ''): Promise<AIPluginMetadata[]> {
     let filtered = [...this.mockPlugins];
-    
+
     if (query) {
       const searchLower = query.toLowerCase();
-      filtered = filtered.filter(plugin =>
-        plugin.name.toLowerCase().includes(searchLower) ||
-        plugin.description.toLowerCase().includes(searchLower) ||
-        (plugin.tags && plugin.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+      filtered = filtered.filter(
+        plugin =>
+          plugin.name.toLowerCase().includes(searchLower) ||
+          plugin.description.toLowerCase().includes(searchLower) ||
+          (plugin.tags && plugin.tags.some(tag => tag.toLowerCase().includes(searchLower)))
       );
     }
-    
+
     if (category) {
       filtered = filtered.filter(plugin => plugin.category === category);
     }
-    
+
     await new Promise(resolve => setTimeout(resolve, 300));
     return filtered;
   }
@@ -252,20 +258,20 @@ export class AIPluginManager {
     const suggestions: AIPluginMetadata[] = [];
     const noteCount = context.notes.length;
     const hasLongNotes = context.notes.some(note => note.content.length > 2000);
-    
+
     if (noteCount > 20) {
       const analytics = this.mockPlugins.find(p => p.id === 'knowledge-graph-analytics');
       if (analytics) suggestions.push(analytics);
     }
-    
+
     if (hasLongNotes) {
       const writing = this.mockPlugins.find(p => p.id === 'ai-writing-assistant');
       if (writing) suggestions.push(writing);
     }
-    
+
     const linking = this.mockPlugins.find(p => p.id === 'smart-link-detector');
     if (linking) suggestions.push(linking);
-    
+
     return suggestions;
   }
 
@@ -280,10 +286,11 @@ export class AIPluginManager {
 
       const plugin: AIPlugin = {
         metadata: pluginMetadata,
-        execute: async (action: string, params: any, api: AIPluginAPI) => {
+        execute: async (action: string, params: any, _api: AIPluginAPI) => {
+          // api parameter unused
           console.log(`Executing ${action} on ${pluginId}`, params);
           return { success: true };
-        }
+        },
       };
 
       this.installedPlugins.set(pluginId, plugin);
@@ -295,7 +302,7 @@ export class AIPluginManager {
       analytics.trackEvent('ai_analysis', {
         action: 'plugin_installed',
         pluginId,
-        pluginName: pluginMetadata.name
+        pluginName: pluginMetadata.name,
       });
 
       return true;
@@ -316,7 +323,7 @@ export class AIPluginManager {
 
       analytics.trackEvent('ai_analysis', {
         action: 'plugin_uninstalled',
-        pluginId
+        pluginId,
       });
 
       return true;
@@ -338,7 +345,7 @@ export class AIPluginManager {
     this.enabledPlugins.add(pluginId);
     analytics.trackEvent('ai_analysis', {
       action: 'plugin_enabled',
-      pluginId
+      pluginId,
     });
   }
 
@@ -346,7 +353,7 @@ export class AIPluginManager {
     this.enabledPlugins.delete(pluginId);
     analytics.trackEvent('ai_analysis', {
       action: 'plugin_disabled',
-      pluginId
+      pluginId,
     });
   }
 
@@ -354,7 +361,7 @@ export class AIPluginManager {
     this.pluginSettings.set(pluginId, settings);
     analytics.trackEvent('ai_analysis', {
       action: 'plugin_settings_updated',
-      pluginId
+      pluginId,
     });
   }
 

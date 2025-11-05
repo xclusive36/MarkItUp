@@ -248,7 +248,8 @@ export const exampleMigration: Migration = {
       ALTER TABLE notes ADD COLUMN example_field TEXT
     `);
   },
-  down: async db => {
+  down: async _db => {
+    // db parameter unused in rollback
     // SQLite doesn't support DROP COLUMN easily, so we'd need to recreate table
     dbLogger.warn('Rollback not implemented for this migration');
   },

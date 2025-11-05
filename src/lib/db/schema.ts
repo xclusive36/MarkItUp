@@ -1,5 +1,5 @@
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+// sql import not used currently
 
 /**
  * Notes table - Metadata and content cache from markdown files

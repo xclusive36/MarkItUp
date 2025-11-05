@@ -157,7 +157,7 @@ export class CircuitBreaker {
   constructor(
     private failureThreshold: number = 5,
     private resetTimeoutMs: number = 60000,
-    private halfOpenAttempts: number = 1
+    private halfOpenAttempts: number = 1 // Used in constructor signature but not in logic currently
   ) {}
 
   async execute<T>(operation: () => Promise<T>, context: string): Promise<T> {

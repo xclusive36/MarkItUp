@@ -1,5 +1,5 @@
 // Advanced Analytics System for MarkItUp PKM
-import { Note, Link, Tag, SearchResult } from './types';
+import { Note, Link, Tag } from './types';
 
 // Analytics Data Types
 export interface AnalyticsEvent {

@@ -92,7 +92,8 @@ export class AIAnalyzer {
     this.aiService = aiService;
   }
 
-  async analyzeContent(content: string, noteId?: string): Promise<ContentAnalysis> {
+  async analyzeContent(content: string, _noteId?: string): Promise<ContentAnalysis> {
+    // noteId unused
     const prompt = `Analyze this content comprehensively and provide a JSON response with the following structure:
 
 {

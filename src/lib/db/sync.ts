@@ -2,7 +2,7 @@ import { getDatabase, schema } from './index';
 import { sql, eq } from 'drizzle-orm';
 import fs from 'fs/promises';
 import path from 'path';
-import type { Note } from '../types';
+// Note type import not directly used - only for documentation
 import { withRetry, dbCircuitBreaker } from './retry';
 import { dbLogger } from '../logger';
 
@@ -81,7 +81,7 @@ export class FileSystemDBSync {
 
           // Create relative path from markdown dir
           const relativePath = path.relative(baseDir, fullPath);
-          const folder = path.dirname(relativePath) === '.' ? null : path.dirname(relativePath);
+          // const folder = path.dirname(relativePath) === '.' ? null : path.dirname(relativePath); // Commented out: folder not used
           const name = path.basename(relativePath, '.md');
 
           // ID is the full relative path
