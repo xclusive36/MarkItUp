@@ -1,4 +1,4 @@
-import React from 'react';
+// No React imports needed
 
 export interface LoadingSpinnerProps {
   /** Size of the spinner (default: 'md') */
@@ -28,7 +28,7 @@ const variantClasses = {
 
 /**
  * Loading spinner component with various sizes and variants
- * 
+ *
  * @example
  * ```tsx
  * <LoadingSpinner size="md" label="Loading..." />
@@ -55,9 +55,7 @@ export function LoadingSpinner({
     return (
       <div className="flex flex-col items-center justify-center gap-2 p-4">
         {spinner}
-        {label && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
-        )}
+        {label && <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>}
       </div>
     );
   }
@@ -65,9 +63,7 @@ export function LoadingSpinner({
   return (
     <div className="flex items-center gap-2">
       {spinner}
-      {label && (
-        <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
-      )}
+      {label && <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>}
     </div>
   );
 }
@@ -88,13 +84,7 @@ export function LoadingOverlay({ label }: { label?: string }) {
 /**
  * Skeleton loader for content placeholders
  */
-export function Skeleton({ 
-  className = '',
-  count = 1,
-}: { 
-  className?: string;
-  count?: number;
-}) {
+export function Skeleton({ className = '', count = 1 }: { className?: string; count?: number }) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React hooks used
 import { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {

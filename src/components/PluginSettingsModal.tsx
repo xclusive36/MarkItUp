@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { PluginManifest } from '../lib/types';
 
 interface PluginSettingsModalProps {

@@ -147,11 +147,11 @@ export default function Home() {
   const { indexNote, removeNote: removeNoteFromIndex } = useAutoIndexing({
     enabled: autoIndexEnabled,
     debounceMs: 3000, // Wait 3 seconds after save before indexing
-    onIndexComplete: noteId => {
+    onIndexComplete: () => {
       // Silently complete - too verbose for console
     },
-    onIndexError: (noteId, error) => {
-      apiLogger.error('Auto-indexing failed', { noteId }, error as Error);
+    onIndexError: (_noteId, error) => {
+      apiLogger.error('Auto-indexing failed', { noteId: _noteId }, error as Error);
     },
   });
 

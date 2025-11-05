@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Check, Tag, Sparkles, Info } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 

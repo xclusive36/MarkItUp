@@ -24,7 +24,7 @@ interface TimeSnapshot {
 
 const GraphTimeMachine: React.FC<GraphTimeMachineProps> = ({
   notes,
-  currentGraph,
+  // currentGraph, // Commented out: not used in component
   onGraphUpdate,
   className = '',
 }) => {

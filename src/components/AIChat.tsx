@@ -2131,8 +2131,8 @@ function AISettingsPanel({
   //     responseTime: number;
   //   }>
   // >([]);
-  const [presetName, setPresetName] = useState('');
-  const [presetDescription, setPresetDescription] = useState('');
+  // const [presetName, setPresetName] = useState('');
+  // const [presetDescription, setPresetDescription] = useState('');
   // const [modelLibrary, setModelLibrary] = useState<
   //   Array<{
   //     name: string;

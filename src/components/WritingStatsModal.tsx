@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React hooks used
 import { X, FileText, Link2, Hash, TrendingUp, Clock, BarChart2 } from 'lucide-react';
 
 interface WritingStatsModalProps {

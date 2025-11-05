@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { PermissionRequest, PluginPermission } from '../lib/types';
+import { useState, useEffect } from 'react';
+import { PermissionRequest } from '../lib/types';
 
 interface PluginPermissionsUIProps {
   pluginManager?: {
@@ -20,7 +20,8 @@ interface PermissionGroup {
 export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps) {
   const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PermissionRequest[]>([]);
-  const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null);
+  // const [activeTab, setActiveTab] = useState<'permissions' | 'requests'>('permissions'); // Commented out: not used
+  // const [selectedPlugin, setSelectedPlugin] = useState<string | null>(null); // Commented out: not used
   const [showRevoke, setShowRevoke] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,17 +37,15 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
           groups.push({
             pluginId: plugin.id,
             pluginName: plugin.name,
-            permissions
+            permissions,
           });
         }
       });
 
       setPermissionGroups(groups);
-      
+
       // Extract pending requests
-      const pending = groups.flatMap(group => 
-        group.permissions.filter(p => !p.granted)
-      );
+      const pending = groups.flatMap(group => group.permissions.filter(p => !p.granted));
       setPendingRequests(pending);
     };
 
@@ -65,10 +64,12 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
 
       if (granted) {
         // Update the request status
-        setPendingRequests(prev => 
-          prev.filter(r => r.pluginId !== request.pluginId || r.permission.type !== request.permission.type)
+        setPendingRequests(prev =>
+          prev.filter(
+            r => r.pluginId !== request.pluginId || r.permission.type !== request.permission.type
+          )
         );
-        
+
         // Reload permissions
         const plugins = pluginManager.getLoadedPlugins();
         const groups: PermissionGroup[] = [];
@@ -79,7 +80,7 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
             groups.push({
               pluginId: plugin.id,
               pluginName: plugin.name,
-              permissions
+              permissions,
             });
           }
         });
@@ -93,21 +94,31 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
 
   const getPermissionIcon = (type: string) => {
     switch (type) {
-      case 'file-system': return '📁';
-      case 'network': return '🌐';
-      case 'clipboard': return '📋';
-      case 'notifications': return '🔔';
-      default: return '🔐';
+      case 'file-system':
+        return '📁';
+      case 'network':
+        return '🌐';
+      case 'clipboard':
+        return '📋';
+      case 'notifications':
+        return '🔔';
+      default:
+        return '🔐';
     }
   };
 
   const getPermissionDescription = (type: string) => {
     switch (type) {
-      case 'file-system': return 'Access to read and write files on your system';
-      case 'network': return 'Access to make network requests to external services';
-      case 'clipboard': return 'Access to read from and write to the clipboard';
-      case 'notifications': return 'Permission to show desktop notifications';
-      default: return 'Unknown permission type';
+      case 'file-system':
+        return 'Access to read and write files on your system';
+      case 'network':
+        return 'Access to make network requests to external services';
+      case 'clipboard':
+        return 'Access to read from and write to the clipboard';
+      case 'notifications':
+        return 'Permission to show desktop notifications';
+      default:
+        return 'Unknown permission type';
     }
   };
 
@@ -127,7 +138,7 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
           <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-4">
             🔔 Pending Permission Requests
           </h3>
-          
+
           <div className="space-y-3">
             {pendingRequests.map((request, index) => (
               <div
@@ -145,16 +156,16 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
                         {request.permission.type}
                       </span>
                     </div>
-                    
+
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                       {request.reason}
                     </p>
-                    
+
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {getPermissionDescription(request.permission.type)}
                     </p>
                   </div>
-                  
+
                   <div className="flex space-x-2 ml-4">
                     <button
                       onClick={() => handleGrantPermission(request)}
@@ -163,9 +174,7 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
                       Grant
                     </button>
                     <button
-                      onClick={() => setPendingRequests(prev => 
-                        prev.filter(r => r !== request)
-                      )}
+                      onClick={() => setPendingRequests(prev => prev.filter(r => r !== request))}
                       className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
                     >
                       Deny
@@ -181,33 +190,27 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
       {/* Plugin Permissions Overview */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-            Plugin Permissions
-          </h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Plugin Permissions</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Manage permissions for all installed plugins
           </p>
         </div>
-        
+
         {permissionGroups.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-gray-500 dark:text-gray-400">
-              No plugins with permissions found
-            </p>
+            <p className="text-gray-500 dark:text-gray-400">No plugins with permissions found</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {permissionGroups.map(group => (
               <div key={group.pluginId} className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
-                    {group.pluginName}
-                  </h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">{group.pluginName}</h4>
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {group.permissions.length} permission(s)
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {group.permissions.map((permission, index) => (
                     <div
@@ -220,7 +223,9 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-2">
-                          <span className="text-lg">{getPermissionIcon(permission.permission.type)}</span>
+                          <span className="text-lg">
+                            {getPermissionIcon(permission.permission.type)}
+                          </span>
                           <div>
                             <p className="text-sm font-medium text-gray-900 dark:text-white">
                               {permission.permission.type}
@@ -230,23 +235,27 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            permission.granted
-                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-                              : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${
+                              permission.granted
+                                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200'
+                            }`}
+                          >
                             {permission.granted ? 'Granted' : 'Denied'}
                           </span>
-                          
+
                           {permission.granted && (
                             <button
-                              onClick={() => setShowRevoke(
-                                showRevoke === `${group.pluginId}-${permission.permission.type}` 
-                                  ? null 
-                                  : `${group.pluginId}-${permission.permission.type}`
-                              )}
+                              onClick={() =>
+                                setShowRevoke(
+                                  showRevoke === `${group.pluginId}-${permission.permission.type}`
+                                    ? null
+                                    : `${group.pluginId}-${permission.permission.type}`
+                                )
+                              }
                               className="text-red-600 hover:text-red-800 text-xs"
                             >
                               Revoke
@@ -254,23 +263,26 @@ export function PluginPermissionsUI({ pluginManager }: PluginPermissionsUIProps)
                           )}
                         </div>
                       </div>
-                      
+
                       {permission.grantedAt && (
                         <p className="text-xs text-gray-400 mt-2">
                           Granted: {new Date(permission.grantedAt).toLocaleString()}
                         </p>
                       )}
-                      
+
                       {showRevoke === `${group.pluginId}-${permission.permission.type}` && (
                         <div className="mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded">
                           <p className="text-xs text-red-700 dark:text-red-300 mb-2">
-                            Are you sure you want to revoke this permission? The plugin may not function correctly.
+                            Are you sure you want to revoke this permission? The plugin may not
+                            function correctly.
                           </p>
                           <div className="flex space-x-2">
                             <button
                               onClick={() => {
                                 // In a real implementation, this would revoke the permission
-                                console.log(`Revoking ${permission.permission.type} for ${group.pluginId}`);
+                                console.log(
+                                  `Revoking ${permission.permission.type} for ${group.pluginId}`
+                                );
                                 setShowRevoke(null);
                               }}
                               className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"

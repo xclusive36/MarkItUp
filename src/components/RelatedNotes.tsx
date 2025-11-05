@@ -14,7 +14,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { Note } from '@/lib/types';
 import { Sparkles, ChevronRight, Loader2, FileText, AlertCircle, X, RefreshCw } from 'lucide-react';

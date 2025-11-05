@@ -7,7 +7,7 @@ import { WebsocketProvider } from 'y-websocket';
 import {
   CollaborativeSession,
   Participant,
-  CollaborativeOperation,
+  // CollaborativeOperation,
   CursorPosition,
   SelectionRange,
   CollaborativeSettings,
@@ -41,7 +41,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   const providerRef = useRef<WebsocketProvider | null>(null);
   const cursorsRef = useRef<Map<string, ParticipantCursor>>(new Map());
 
-  const [session, setSession] = useState<CollaborativeSession | null>(null);
+  // const [session, setSession] = useState<CollaborativeSession | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -134,7 +134,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     });
 
     socket.on('session-joined', (sessionData: CollaborativeSession) => {
-      setSession(sessionData);
+      // setSession(sessionData); // Commented out: session state not used
       setParticipants(sessionData.participants);
     });
 
@@ -160,7 +160,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       }
     });
 
-    socket.on('document-saved', (timestamp: number) => {
+    socket.on('document-saved', (_timestamp: number) => {
       // Visual feedback for successful save
       showSaveIndicator();
     });
@@ -268,10 +268,10 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     };
   };
 
-  const calculateDiff = (oldText: string, newText: string) => {
-    // Legacy function for compatibility
-    return calculateTextDiff(oldText, newText);
-  };
+  // const calculateDiff = (oldText: string, newText: string) => {
+  //   // Legacy function for compatibility
+  //   return calculateTextDiff(oldText, newText);
+  // };
 
   const getLineNumber = (text: string, position: number): number => {
     return text.substring(0, position).split('\n').length - 1;
@@ -329,7 +329,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     cursorElement.style.left = `${cursor.column * charWidth}ch`;
   };
 
-  const updateSelection = (participantId: string, selection: SelectionRange) => {
+  const updateSelection = (_participantId: string, _selection: SelectionRange) => {
     // Similar to cursor update but for selection ranges
     // Would create highlighted regions for other participants' selections
   };

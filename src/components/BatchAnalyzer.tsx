@@ -9,15 +9,15 @@ import {
   Download,
   RefreshCw,
   // CheckCircle,
-  AlertTriangle,
-  Info,
+  // AlertTriangle,
+  // Info,
   X,
   Target,
   FileText,
-  Tag,
-  Clock,
-  Users,
-  Search,
+  // Tag,
+  // Clock,
+  // Users,
+  // Search,
   Zap,
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
@@ -75,7 +75,7 @@ export default function BatchAnalyzer({
   isOpen,
   onClose,
   onOpenNote,
-  onBulkUpdate,
+  // onBulkUpdate, // Not currently used
 }: BatchAnalyzerProps) {
   const { theme } = useSimpleTheme();
 
@@ -86,7 +86,7 @@ export default function BatchAnalyzer({
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed' | 'insights' | 'filters'>(
     'overview'
   );
-  const [filters, setFilters] = useState<BatchFilter>({
+  const [filters] = useState<BatchFilter>({
     tags: [],
     complexity: [],
     sentiment: [],
@@ -189,7 +189,7 @@ export default function BatchAnalyzer({
         });
 
         const topics = Object.entries(wordFreq)
-          .filter(([word, count]) => count > 1)
+          .filter(([, count]) => count > 1)
           .sort(([, a], [, b]) => b - a)
           .slice(0, 5)
           .map(([word]) => word);
@@ -724,7 +724,7 @@ export default function BatchAnalyzer({
                         Top Tags
                       </h3>
                       <div className="space-y-2">
-                        {analyticsSummary.topTags.slice(0, 5).map((tag, index) => (
+                        {analyticsSummary.topTags.slice(0, 5).map(tag => (
                           <div key={tag.tag} className="flex items-center justify-between">
                             <span
                               className="text-sm"
@@ -760,7 +760,7 @@ export default function BatchAnalyzer({
                         Top Topics
                       </h3>
                       <div className="space-y-2">
-                        {analyticsSummary.topTopics.slice(0, 5).map((topic, index) => (
+                        {analyticsSummary.topTopics.slice(0, 5).map(topic => (
                           <div key={topic.topic} className="flex items-center justify-between">
                             <span
                               className="text-sm"

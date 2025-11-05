@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React imports needed
 
 interface LinkSuggesterStatusProps {
   isRealtimeEnabled: boolean;

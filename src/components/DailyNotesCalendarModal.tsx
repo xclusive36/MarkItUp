@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import DailyNotesCalendar from './DailyNotesCalendar';
 import { getPluginManager } from '@/lib/plugin-init';
@@ -46,7 +46,7 @@ export default function DailyNotesCalendarModal({
       }
 
       // Try to get all notes
-      const allNotes = pluginManager.getLoadedPlugins().find(p => p.id === 'daily-notes');
+      // const allNotes = pluginManager.getLoadedPlugins().find(p => p.id === 'daily-notes'); // Commented out: allNotes not used
 
       // Fallback: fetch from API
       const response = await fetch('/api/files?limit=1000');

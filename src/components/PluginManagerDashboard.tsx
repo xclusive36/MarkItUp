@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PluginAnalytics from './PluginAnalytics';
 import PluginHealthMonitor from './PluginHealthMonitor';
 import PluginPermissionsUI from './PluginPermissionsUI';

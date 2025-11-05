@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { X, Check, BookOpen, ChevronDown, ChevronUp, Zap, AlertCircle } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 

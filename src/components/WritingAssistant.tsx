@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   PenTool,
   CheckCircle,
-  AlertCircle,
+  // AlertCircle, // Commented out: not used in component
   Lightbulb,
   Target,
   BarChart3,
@@ -18,7 +18,7 @@ import {
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { ContentAnalysis, WritingAssistance } from '@/lib/ai/analyzers';
 import { analytics } from '@/lib/analytics';
-import { optimizeContext, estimateTokens } from '@/lib/ai-context-optimizer';
+import { optimizeContext } from '@/lib/ai-context-optimizer';
 
 interface WritingAssistantProps {
   content: string;

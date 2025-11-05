@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React imports needed - component is a simple div with props
 import { X, Pause, Play, StopCircle, CheckCircle, AlertCircle } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 

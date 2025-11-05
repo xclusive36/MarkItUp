@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link2, Sparkles, Tag, Copy, Check } from 'lucide-react';
 
 interface SelectionActionBarProps {

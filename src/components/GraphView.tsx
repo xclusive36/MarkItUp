@@ -202,7 +202,7 @@ const GraphView: React.FC<GraphViewProps> = ({
         event.stopPropagation();
         onNodeClick?.(d.id);
       })
-      .on('mouseenter', (event, d) => {
+      .on('mouseenter', (_event, d) => {
         onNodeHover?.(d.id);
 
         // Highlight connected nodes and links

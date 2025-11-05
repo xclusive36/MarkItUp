@@ -6,17 +6,17 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Maximize2,
-  Filter,
-  Search,
+  // Maximize2, // Commented out: not used
+  // Filter, // Commented out: not used
+  // Search, // Commented out: not used
   BookOpen,
   Tag,
-  Calendar,
+  // Calendar, // Commented out: not used
   TrendingUp,
   X,
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
-import { Note, SearchResult } from '@/lib/types';
+import { Note } from '@/lib/types';
 import { analytics } from '@/lib/analytics';
 
 interface ConceptNode {
@@ -70,7 +70,7 @@ export default function KnowledgeMap({
   isOpen,
   onClose,
   onOpenNote,
-  onCreateNote,
+  // onCreateNote, // Commented out: not used
   searchQuery,
 }: KnowledgeMapProps) {
   const { theme } = useSimpleTheme();
@@ -80,7 +80,7 @@ export default function KnowledgeMap({
   // State
   const [mapData, setMapData] = useState<KnowledgeMapData>({ nodes: [], edges: [], clusters: [] });
   const [selectedNode, setSelectedNode] = useState<ConceptNode | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<ConceptNode | null>(null);
+  const [hoveredNode] = useState<ConceptNode | null>(null); // setHoveredNode removed - not used
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewOptions, setViewOptions] = useState({
     showTags: true,
@@ -113,7 +113,8 @@ export default function KnowledgeMap({
       const tagMap: { [key: string]: number } = {};
 
       // Create note nodes
-      notes.forEach((note, index) => {
+      notes.forEach(note => {
+        // index removed - not used
         nodes.push({
           id: `note-${note.id}`,
           label: note.name,
@@ -148,7 +149,7 @@ export default function KnowledgeMap({
 
       // Create tag nodes
       Object.entries(tagMap)
-        .filter(([tag, count]) => count > 1) // Only show tags used multiple times
+        .filter(([, count]) => count > 1) // Only show tags used multiple times (tag name not used in filter)
         .forEach(([tag, count]) => {
           nodes.push({
             id: `tag-${tag}`,
@@ -214,7 +215,7 @@ export default function KnowledgeMap({
         });
 
         Object.entries(wordCounts)
-          .filter(([word, count]) => count > 1)
+          .filter(([, count]) => count > 1) // word not used in filter
           .forEach(([word, count]) => {
             const conceptNode = nodes.find(n => n.id === `concept-${word}`);
             if (conceptNode) {

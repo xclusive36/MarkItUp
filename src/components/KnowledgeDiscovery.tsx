@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   Compass,
-  Search,
+  // Search, // Commented out: not used
   Link as LinkIcon,
   Plus,
   Brain,
@@ -14,7 +14,7 @@ import {
   ArrowRight,
   RefreshCw,
   X,
-  Zap,
+  // Zap, // Commented out: not used
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import { KnowledgeGapAnalysis } from '@/lib/ai/analyzers';

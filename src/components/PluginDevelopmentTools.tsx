@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PluginManifest } from '../lib/types';
 
 interface PluginDevelopmentToolsProps {
@@ -22,16 +22,18 @@ const PLUGIN_TEMPLATES: PluginTemplate[] = [
     description: 'Process and transform markdown content',
     category: 'content',
     template: {
-      processors: [{
-        id: 'custom-processor',
-        name: 'Custom Content Processor',
-        type: 'markdown',
-        process: async (content: string) => {
-          // Custom processing logic here
-          return content.replace(/TODO:/g, '✅ TODO:');
-        }
-      }]
-    }
+      processors: [
+        {
+          id: 'custom-processor',
+          name: 'Custom Content Processor',
+          type: 'markdown',
+          process: async (content: string) => {
+            // Custom processing logic here
+            return content.replace(/TODO:/g, '✅ TODO:');
+          },
+        },
+      ],
+    },
   },
   {
     id: 'sidebar-view',
@@ -39,14 +41,16 @@ const PLUGIN_TEMPLATES: PluginTemplate[] = [
     description: 'Add a custom sidebar panel',
     category: 'ui',
     template: {
-      views: [{
-        id: 'custom-sidebar',
-        name: 'Custom Sidebar',
-        type: 'sidebar',
-        component: null as any, // Will be generated
-        icon: '🔧'
-      }]
-    }
+      views: [
+        {
+          id: 'custom-sidebar',
+          name: 'Custom Sidebar',
+          type: 'sidebar',
+          component: null as any, // Will be generated
+          icon: '🔧',
+        },
+      ],
+    },
   },
   {
     id: 'command-plugin',
@@ -54,24 +58,26 @@ const PLUGIN_TEMPLATES: PluginTemplate[] = [
     description: 'Add custom commands to the editor',
     category: 'ui',
     template: {
-      commands: [{
-        id: 'custom-command',
-        name: 'Custom Command',
-        description: 'Execute custom functionality',
-        keybinding: 'Ctrl+Shift+X',
-        callback: async () => {
-          console.log('Custom command executed!');
-        }
-      }]
-    }
+      commands: [
+        {
+          id: 'custom-command',
+          name: 'Custom Command',
+          description: 'Execute custom functionality',
+          keybinding: 'Ctrl+Shift+X',
+          callback: async () => {
+            console.log('Custom command executed!');
+          },
+        },
+      ],
+    },
   },
   {
     id: 'analytics-tracker',
     name: 'Analytics Tracker',
     description: 'Track user interactions and events',
     category: 'analytics',
-    template: {}
-  }
+    template: {},
+  },
 ];
 
 export function PluginDevelopmentTools({ onPluginGenerated }: PluginDevelopmentToolsProps) {
@@ -81,11 +87,15 @@ export function PluginDevelopmentTools({ onPluginGenerated }: PluginDevelopmentT
     name: '',
     description: '',
     author: '',
-    version: '1.0.0'
+    version: '1.0.0',
   });
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'templates' | 'validator' | 'docs'>('templates');
-  const [validationResult, setValidationResult] = useState<{ valid: boolean; errors: string[]; warnings: string[] } | null>(null);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    errors: string[];
+    warnings: string[];
+  } | null>(null);
 
   const handleTemplateSelect = (template: PluginTemplate) => {
     setSelectedTemplate(template);
@@ -93,7 +103,7 @@ export function PluginDevelopmentTools({ onPluginGenerated }: PluginDevelopmentT
       ...prev,
       id: template.id,
       name: template.name,
-      description: template.description
+      description: template.description,
     }));
   };
 
@@ -113,12 +123,12 @@ export function PluginDevelopmentTools({ onPluginGenerated }: PluginDevelopmentT
       },
       onUnload: async () => {
         console.log(`${pluginInfo.name} unloaded`);
-      }
+      },
     };
 
     const code = generatePluginCode(manifest);
     setGeneratedCode(code);
-    
+
     if (onPluginGenerated) {
       onPluginGenerated(manifest);
     }
@@ -197,7 +207,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
     setValidationResult({
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     });
   };
 
@@ -218,7 +228,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
           {[
             { id: 'templates', label: 'Templates', icon: '📄' },
             { id: 'validator', label: 'Validator', icon: '✅' },
-            { id: 'docs', label: 'Documentation', icon: '📚' }
+            { id: 'docs', label: 'Documentation', icon: '📚' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -241,10 +251,8 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Template Selection */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              Choose a Template
-            </h3>
-            
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Choose a Template</h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {PLUGIN_TEMPLATES.map(template => (
                 <button
@@ -275,7 +283,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">
                   Plugin Information
                 </h4>
-                
+
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -289,7 +297,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                       placeholder="my-awesome-plugin"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Plugin Name
@@ -302,20 +310,22 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                       placeholder="My Awesome Plugin"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Description
                     </label>
                     <textarea
                       value={pluginInfo.description}
-                      onChange={e => setPluginInfo(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={e =>
+                        setPluginInfo(prev => ({ ...prev, description: e.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       rows={3}
                       placeholder="What does your plugin do?"
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -329,7 +339,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                         placeholder="Your Name"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Version
@@ -337,14 +347,16 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                       <input
                         type="text"
                         value={pluginInfo.version}
-                        onChange={e => setPluginInfo(prev => ({ ...prev, version: e.target.value }))}
+                        onChange={e =>
+                          setPluginInfo(prev => ({ ...prev, version: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         placeholder="1.0.0"
                       />
                     </div>
                   </div>
                 </div>
-                
+
                 <button
                   onClick={generatePlugin}
                   className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -360,7 +372,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Generated Code
             </h3>
-            
+
             {generatedCode ? (
               <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-auto max-h-96">
                 <pre>{generatedCode}</pre>
@@ -382,7 +394,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
             Plugin Validator
           </h3>
-          
+
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="space-y-4">
               <div>
@@ -396,7 +408,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Plugin Name
@@ -408,7 +420,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
-              
+
               <button
                 onClick={validatePlugin}
                 className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
@@ -416,21 +428,17 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                 Validate Plugin
               </button>
             </div>
-            
+
             {validationResult && (
               <div className="mt-6 p-4 rounded-lg border">
                 <h4 className="font-medium mb-2">Validation Results</h4>
-                
+
                 {validationResult.valid ? (
-                  <div className="text-green-600 dark:text-green-400">
-                    ✅ Plugin is valid!
-                  </div>
+                  <div className="text-green-600 dark:text-green-400">✅ Plugin is valid!</div>
                 ) : (
-                  <div className="text-red-600 dark:text-red-400">
-                    ❌ Plugin has errors
-                  </div>
+                  <div className="text-red-600 dark:text-red-400">❌ Plugin has errors</div>
                 )}
-                
+
                 {validationResult.errors.length > 0 && (
                   <div className="mt-3">
                     <h5 className="font-medium text-red-600 dark:text-red-400">Errors:</h5>
@@ -441,7 +449,7 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
                     </ul>
                   </div>
                 )}
-                
+
                 {validationResult.warnings.length > 0 && (
                   <div className="mt-3">
                     <h5 className="font-medium text-yellow-600 dark:text-yellow-400">Warnings:</h5>
@@ -462,16 +470,16 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
       {activeTab === 'docs' && (
         <div className="prose dark:prose-invert max-w-none">
           <h3>Plugin Development Documentation</h3>
-          
+
           <h4>Getting Started</h4>
           <p>
             MarkItUp plugins are JavaScript modules that extend the functionality of the editor.
             Each plugin must have a manifest that describes its capabilities and requirements.
           </p>
-          
+
           <h4>Plugin Manifest</h4>
           <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded">
-{`{
+            {`{
   "id": "my-plugin",
   "name": "My Plugin",
   "version": "1.0.0",
@@ -486,18 +494,24 @@ export default ${manifest.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin;`;
   ]
 }`}
           </pre>
-          
+
           <h4>Plugin API</h4>
-          <p>
-            Plugins have access to a comprehensive API that includes:
-          </p>
+          <p>Plugins have access to a comprehensive API that includes:</p>
           <ul>
-            <li><strong>notes</strong> - Create, read, update, and delete notes</li>
-            <li><strong>ui</strong> - Show notifications, modals, and add UI elements</li>
-            <li><strong>events</strong> - Listen to and emit system events</li>
-            <li><strong>settings</strong> - Store and retrieve plugin settings</li>
+            <li>
+              <strong>notes</strong> - Create, read, update, and delete notes
+            </li>
+            <li>
+              <strong>ui</strong> - Show notifications, modals, and add UI elements
+            </li>
+            <li>
+              <strong>events</strong> - Listen to and emit system events
+            </li>
+            <li>
+              <strong>settings</strong> - Store and retrieve plugin settings
+            </li>
           </ul>
-          
+
           <h4>Best Practices</h4>
           <ul>
             <li>Always validate user input</li>

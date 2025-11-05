@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React imports needed
 import { X, TrendingUp, Tag, BarChart3, PieChart } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 

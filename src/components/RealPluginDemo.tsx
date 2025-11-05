@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RealPluginDemo {
   loadedPlugins: any[];
@@ -16,7 +16,7 @@ export function RealPluginDemo() {
     availablePlugins: [],
     pluginManager: null,
     isLoading: true,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function RealPluginDemo() {
         // Import the plugin system
         const { initializePluginSystem, getPluginManager } = await import('@/lib/plugin-init');
         const { AVAILABLE_PLUGINS } = await import('@/plugins/plugin-registry');
-        
+
         // Get or initialize plugin manager
         let pluginManager = getPluginManager();
         if (!pluginManager) {
@@ -39,11 +39,14 @@ export function RealPluginDemo() {
             try {
               const enabledPluginIds = JSON.parse(storedEnabled);
               console.log('Restoring plugins from localStorage:', enabledPluginIds);
-              
+
               // Load each enabled plugin
               for (const pluginId of enabledPluginIds) {
                 const plugin = AVAILABLE_PLUGINS.find(p => p.id === pluginId);
-                if (plugin && !pluginManager.getLoadedPlugins().some(loaded => loaded.id === pluginId)) {
+                if (
+                  plugin &&
+                  !pluginManager.getLoadedPlugins().some(loaded => loaded.id === pluginId)
+                ) {
                   console.log('Auto-loading plugin:', pluginId);
                   await pluginManager.loadPlugin(plugin);
                 }
@@ -56,20 +59,19 @@ export function RealPluginDemo() {
 
         // Get current state
         const loadedPlugins = pluginManager.getLoadedPlugins();
-        
+
         setState({
           loadedPlugins,
           availablePlugins: AVAILABLE_PLUGINS,
           pluginManager,
           isLoading: false,
-          error: null
+          error: null,
         });
-
       } catch (error) {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         }));
       }
     };
@@ -79,7 +81,7 @@ export function RealPluginDemo() {
 
   const loadPlugin = async (pluginId: string) => {
     if (!state.pluginManager) return;
-    
+
     try {
       // Find the plugin manifest
       const plugin = state.availablePlugins.find(p => p.id === pluginId);
@@ -106,7 +108,6 @@ export function RealPluginDemo() {
       // Update state
       const newLoadedPlugins = state.pluginManager.getLoadedPlugins();
       setState(prev => ({ ...prev, loadedPlugins: newLoadedPlugins }));
-
     } catch (error) {
       console.error('Failed to load plugin:', error);
       setState(prev => ({ ...prev, error: `Failed to load ${pluginId}: ${error}` }));
@@ -115,7 +116,7 @@ export function RealPluginDemo() {
 
   const unloadPlugin = async (pluginId: string) => {
     if (!state.pluginManager) return;
-    
+
     try {
       console.log('Unloading plugin:', pluginId);
       const success = await state.pluginManager.unloadPlugin(pluginId);
@@ -132,7 +133,6 @@ export function RealPluginDemo() {
       // Update state
       const newLoadedPlugins = state.pluginManager.getLoadedPlugins();
       setState(prev => ({ ...prev, loadedPlugins: newLoadedPlugins }));
-
     } catch (error) {
       console.error('Failed to unload plugin:', error);
       setState(prev => ({ ...prev, error: `Failed to unload ${pluginId}: ${error}` }));
@@ -161,7 +161,9 @@ export function RealPluginDemo() {
   if (state.error) {
     return (
       <div className="p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-700">
-        <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">❌ Plugin System Error</h3>
+        <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+          ❌ Plugin System Error
+        </h3>
         <p className="text-red-700 dark:text-red-300 text-sm">{state.error}</p>
       </div>
     );
@@ -174,8 +176,8 @@ export function RealPluginDemo() {
           ✅ Real Plugin System Test
         </h3>
         <p className="text-green-700 dark:text-green-300 text-sm">
-          This tests the actual MarkItUp plugin system with {state.availablePlugins.length} real plugins available.
-          Load plugins and refresh to test persistence!
+          This tests the actual MarkItUp plugin system with {state.availablePlugins.length} real
+          plugins available. Load plugins and refresh to test persistence!
         </p>
       </div>
 
@@ -191,7 +193,7 @@ export function RealPluginDemo() {
             </p>
           ) : (
             <div className="space-y-2">
-              {state.loadedPlugins.map((plugin) => (
+              {state.loadedPlugins.map(plugin => (
                 <div
                   key={plugin.id}
                   className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded"
@@ -223,20 +225,16 @@ export function RealPluginDemo() {
           </h3>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {state.availablePlugins
-              .filter((plugin) => !state.loadedPlugins.some(loaded => loaded.id === plugin.id))
+              .filter(plugin => !state.loadedPlugins.some(loaded => loaded.id === plugin.id))
               .slice(0, 8) // Show first 8 for testing
-              .map((plugin) => (
+              .map(plugin => (
                 <div
                   key={plugin.id}
                   className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded"
                 >
                   <div>
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200">
-                      {plugin.name}
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {plugin.description}
-                    </p>
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200">{plugin.name}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{plugin.description}</p>
                   </div>
                   <button
                     onClick={() => loadPlugin(plugin.id)}
@@ -273,7 +271,9 @@ export function RealPluginDemo() {
       <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900 p-3 rounded">
         <strong>Plugin localStorage:</strong>
         <br />
-        {typeof window !== 'undefined' ? (localStorage.getItem('markitup-enabled-plugins') || '(empty)') : '(SSR)'}
+        {typeof window !== 'undefined'
+          ? localStorage.getItem('markitup-enabled-plugins') || '(empty)'
+          : '(SSR)'}
       </div>
     </div>
   );

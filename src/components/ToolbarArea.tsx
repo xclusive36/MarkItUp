@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React imports needed
 import { Save, Eye, Edit, Columns } from 'lucide-react';
 
 interface ToolbarAreaProps {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { PluginHealth, PluginUpdateInfo } from '../lib/types';
 
 interface PluginAnalyticsProps {
@@ -32,7 +32,9 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
         // Check if methods exist before calling them
         const healthMap = pluginManager.getAllPluginHealth?.() || new Map();
         const plugins = pluginManager.getLoadedPlugins?.() || [];
-        const availableUpdates = pluginManager.checkForUpdates ? await pluginManager.checkForUpdates() : [];
+        const availableUpdates = pluginManager.checkForUpdates
+          ? await pluginManager.checkForUpdates()
+          : [];
 
         setUpdates(availableUpdates);
 
@@ -42,14 +44,16 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
             errorCount: 0,
             responseTime: 0,
             memoryUsage: 0,
-            executionCount: 0
+            executionCount: 0,
           };
 
           return {
             id: plugin.id,
             name: plugin.name,
             health,
-            hasUpdates: availableUpdates.some(update => update.currentVersion !== update.latestVersion)
+            hasUpdates: availableUpdates.some(
+              update => update.currentVersion !== update.latestVersion
+            ),
           };
         });
 
@@ -66,21 +70,31 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'error': return 'text-red-600';
-      case 'disabled': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case 'healthy':
+        return 'text-green-600';
+      case 'warning':
+        return 'text-yellow-600';
+      case 'error':
+        return 'text-red-600';
+      case 'disabled':
+        return 'text-gray-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return '✓';
-      case 'warning': return '⚠';
-      case 'error': return '✗';
-      case 'disabled': return '⏸';
-      default: return '?';
+      case 'healthy':
+        return '✓';
+      case 'warning':
+        return '⚠';
+      case 'error':
+        return '✗';
+      case 'disabled':
+        return '⏸';
+      default:
+        return '?';
     }
   };
 
@@ -99,9 +113,7 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
     );
   }
 
-  const selectedPluginData = selectedPlugin 
-    ? pluginStats.find(p => p.id === selectedPlugin)
-    : null;
+  const selectedPluginData = selectedPlugin ? pluginStats.find(p => p.id === selectedPlugin) : null;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -120,23 +132,28 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Plugins</h3>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{pluginStats.length}</p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Healthy</h3>
           <p className="text-2xl font-bold text-green-600">
             {pluginStats.filter(p => p.health.status === 'healthy').length}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Issues</h3>
           <p className="text-2xl font-bold text-red-600">
-            {pluginStats.filter(p => p.health.status === 'error' || p.health.status === 'warning').length}
+            {
+              pluginStats.filter(p => p.health.status === 'error' || p.health.status === 'warning')
+                .length
+            }
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Updates Available</h3>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            Updates Available
+          </h3>
           <p className="text-2xl font-bold text-blue-600">{updates.length}</p>
         </div>
       </div>
@@ -148,9 +165,9 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">Plugin Status</h3>
             </div>
-            
+
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {pluginStats.map((plugin) => (
+              {pluginStats.map(plugin => (
                 <div
                   key={plugin.id}
                   className={`p-4 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
@@ -167,19 +184,13 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                           {plugin.name}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {plugin.id}
-                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{plugin.id}</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                      <span>
-                        {plugin.health.executionCount || 0} executions
-                      </span>
-                      <span>
-                        {plugin.health.responseTime?.toFixed(2) || 0}ms avg
-                      </span>
+                      <span>{plugin.health.executionCount || 0} executions</span>
+                      <span>{plugin.health.responseTime?.toFixed(2) || 0}ms avg</span>
                       {plugin.hasUpdates && (
                         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                           Update
@@ -187,7 +198,7 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
                       )}
                     </div>
                   </div>
-                  
+
                   {plugin.health.errorCount > 0 && (
                     <div className="mt-2 text-xs text-red-600">
                       {plugin.health.errorCount} error(s) - Last: {plugin.health.lastError}
@@ -206,20 +217,28 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
               {selectedPluginData ? selectedPluginData.name : 'Select a Plugin'}
             </h3>
           </div>
-          
+
           <div className="p-4">
             {selectedPluginData ? (
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Health Status</h4>
-                  <div className={`flex items-center space-x-2 ${getStatusColor(selectedPluginData.health.status)}`}>
-                    <span className="text-lg">{getStatusIcon(selectedPluginData.health.status)}</span>
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    Health Status
+                  </h4>
+                  <div
+                    className={`flex items-center space-x-2 ${getStatusColor(selectedPluginData.health.status)}`}
+                  >
+                    <span className="text-lg">
+                      {getStatusIcon(selectedPluginData.health.status)}
+                    </span>
                     <span className="capitalize">{selectedPluginData.health.status}</span>
                   </div>
                 </div>
-                
+
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Performance</h4>
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    Performance
+                  </h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span>Executions:</span>
@@ -231,7 +250,9 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
                     </div>
                     <div className="flex justify-between">
                       <span>Errors:</span>
-                      <span className={selectedPluginData.health.errorCount > 0 ? 'text-red-600' : ''}>
+                      <span
+                        className={selectedPluginData.health.errorCount > 0 ? 'text-red-600' : ''}
+                      >
                         {selectedPluginData.health.errorCount}
                       </span>
                     </div>
@@ -240,7 +261,9 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
 
                 {selectedPluginData.health.lastExecuted && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Last Activity</h4>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                      Last Activity
+                    </h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       {new Date(selectedPluginData.health.lastExecuted).toLocaleString()}
                     </p>
@@ -249,7 +272,9 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
 
                 {selectedPluginData.health.lastError && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Last Error</h4>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
+                      Last Error
+                    </h4>
                     <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
                       {selectedPluginData.health.lastError}
                     </p>
@@ -271,7 +296,7 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Available Updates</h3>
           </div>
-          
+
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {updates.map((update, index) => (
               <div key={index} className="p-4 flex items-center justify-between">
@@ -283,7 +308,7 @@ export function PluginAnalytics({ pluginManager }: PluginAnalyticsProps) {
                     {update.currentVersion} → {update.latestVersion}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {update.changelogUrl && (
                     <a

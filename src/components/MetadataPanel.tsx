@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+// No React imports needed
 import { Calendar, Clock, FileText, Hash, Link2, Folder, TrendingUp, User } from 'lucide-react';
 import { Note } from '@/lib/types';
 
