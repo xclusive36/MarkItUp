@@ -29,7 +29,7 @@ export class PKMSystem {
   private notes: Map<string, Note> = new Map();
   private commands: Map<string, Command> = new Map();
   private eventListeners: Map<string, Array<(event: SystemEvent) => void>> = new Map();
-  private uiCallbacks?: UICallbacks;
+  // private uiCallbacks?: UICallbacks; // Commented out: never read
 
   viewState: ViewState = {
     activeNoteId: undefined,
@@ -54,7 +54,7 @@ export class PKMSystem {
 
   // Set UI callbacks and recreate plugin manager with callbacks
   setUICallbacks(callbacks: UICallbacks): void {
-    this.uiCallbacks = callbacks;
+    // this.uiCallbacks = callbacks; // Commented out: stored but never read
     // Recreate plugin manager with UI callbacks
     this.pluginManager = new PluginManager(this, callbacks);
   }

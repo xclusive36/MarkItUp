@@ -77,7 +77,8 @@ export class PluginStorage {
     this.initPromise = (async () => {
       try {
         this.db = await openDB<PluginDB>(this.DB_NAME, this.DB_VERSION, {
-          upgrade(db, oldVersion, newVersion, transaction) {
+          upgrade(db, oldVersion, newVersion, _transaction) {
+            // transaction parameter unused
             console.log('[PluginStorage] Upgrading database from', oldVersion, 'to', newVersion);
 
             // Create object stores if they don't exist

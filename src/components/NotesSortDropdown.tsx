@@ -17,7 +17,7 @@ const NotesSortDropdown: React.FC<NotesSortDropdownProps> = ({
   sortBy,
   sortDirection,
   onSortChange,
-  theme = 'light',
+  // theme = 'light', // Commented out: theme parameter not used
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

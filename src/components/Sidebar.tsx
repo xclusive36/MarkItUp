@@ -23,7 +23,7 @@ const getFileIcon = (name: string) => {
   return <FileIcon className="w-4 h-4 mr-1 inline-block align-text-bottom" />;
 };
 import SearchBox from './SearchBox';
-import { Note, Tag, Graph } from '@/lib/types';
+import { Note, Tag } from '@/lib/types'; // Graph import removed - not used
 
 interface SidebarProps {
   fileName: string;
@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Collapsible sections state
   const [isStatsExpanded, setIsStatsExpanded] = useState(true);
   const [isNotesExpanded, setIsNotesExpanded] = useState(true);
-  const [showFolderTree, setShowFolderTree] = useState(false);
+  // const [showFolderTree, setShowFolderTree] = useState(false); // Commented out: not used
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;

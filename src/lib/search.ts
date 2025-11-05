@@ -102,7 +102,7 @@ export class SearchEngine {
 
   // Main search function
   search(query: string, options: SearchOptions = {}): SearchResult[] {
-    const { limit = 50, includeContent = true, tags = [], folders = [], fuzzy = false } = options;
+    const { limit = 50, includeContent = true, tags = [], folders = [] } = options; // fuzzy option removed - not used
 
     if (!query.trim()) return [];
 
@@ -212,7 +212,7 @@ export class SearchEngine {
   private scoreNote(note: Note, query: ParsedQuery, includeContent: boolean): SearchResult {
     let score = 0;
     const matches: SearchMatch[] = [];
-    const content = note.content.toLowerCase();
+    // const content = note.content.toLowerCase(); // Commented out: not used
     const name = note.name.toLowerCase();
 
     // Score term matches

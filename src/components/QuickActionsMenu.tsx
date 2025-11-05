@@ -18,7 +18,7 @@ export function QuickActionsMenu({
   onSearch,
   onGraphView,
   onAIChat,
-  onCommandPalette,
+  // onCommandPalette, // Commented out: not used
   onKeyboardHelp,
 }: QuickActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);

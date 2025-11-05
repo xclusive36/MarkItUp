@@ -132,7 +132,7 @@ export async function smartSearch<T extends FilterableItem>(
   const hasBoolean = /\b(AND|OR|NOT)\b/.test(query);
 
   // Detect if query uses filter syntax
-  const hasFilters = /(tag|created|modified|words|folder|haslinks|hasbacklinks):/.test(query);
+  // const hasFilters = /(tag|created|modified|words|folder|haslinks|hasbacklinks):/.test(query); // Commented out: not used
 
   return advancedSearch(items, {
     query,

@@ -10,14 +10,19 @@ export class PluginTestFramework {
       pluginId,
       testCases,
       lastRun: '',
-      status: 'pending'
+      status: 'pending',
     };
 
     this.tests.set(pluginId, pluginTest);
   }
 
   // Run tests for a specific plugin
-  async runTests(pluginId: string, pluginManifest: PluginManifest, api: PluginAPI): Promise<TestResult[]> {
+  async runTests(
+    pluginId: string,
+    _pluginManifest: PluginManifest,
+    api: PluginAPI
+  ): Promise<TestResult[]> {
+    // pluginManifest unused
     const pluginTest = this.tests.get(pluginId);
     if (!pluginTest) {
       throw new Error(`No tests found for plugin: ${pluginId}`);
@@ -28,11 +33,11 @@ export class PluginTestFramework {
 
     for (const testCase of pluginTest.testCases) {
       const startTime = performance.now();
-      
+
       try {
         // Create test environment
         const testEnv = this.createTestEnvironment(api);
-        
+
         // Run the test
         const passed = await testCase.test.call(testEnv);
         const duration = performance.now() - startTime;
@@ -43,22 +48,21 @@ export class PluginTestFramework {
           passed,
           duration,
           error: passed ? undefined : 'Test assertion failed',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         results.push(result);
         if (passed) passedCount++;
-
       } catch (error) {
         const duration = performance.now() - startTime;
-        
+
         const result: TestResult = {
           testId: testCase.id,
           name: testCase.name,
           passed: false,
           duration,
           error: (error as Error).message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         results.push(result);
@@ -76,7 +80,9 @@ export class PluginTestFramework {
   }
 
   // Run all tests
-  async runAllTests(plugins: Map<string, { manifest: PluginManifest; api: PluginAPI }>): Promise<Map<string, TestResult[]>> {
+  async runAllTests(
+    plugins: Map<string, { manifest: PluginManifest; api: PluginAPI }>
+  ): Promise<Map<string, TestResult[]>> {
     const allResults = new Map<string, TestResult[]>();
 
     for (const [pluginId, { manifest, api }] of plugins) {
@@ -140,7 +146,7 @@ export class PluginTestFramework {
     return {
       valid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -161,7 +167,7 @@ export class PluginTestFramework {
 
     for (let i = 0; i < iterations; i++) {
       const startTime = performance.now();
-      
+
       try {
         await performanceTest.test();
         const duration = performance.now() - startTime;
@@ -185,7 +191,7 @@ export class PluginTestFramework {
       minTime,
       maxTime,
       successRate,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -212,7 +218,7 @@ export class PluginTestFramework {
           if (value) {
             throw new Error(`Expected falsy value, got ${value}`);
           }
-        }
+        },
       },
       mock: {
         createNote: (name: string, content: string) => ({
@@ -225,9 +231,9 @@ export class PluginTestFramework {
           tags: [],
           metadata: {},
           wordCount: content.split(' ').length,
-          readingTime: Math.ceil(content.split(' ').length / 200)
-        })
-      }
+          readingTime: Math.ceil(content.split(' ').length / 200),
+        }),
+      },
     };
   }
 }
@@ -277,37 +283,37 @@ export const EXAMPLE_TESTS = {
       id: 'word-count-basic',
       name: 'Basic word counting',
       description: 'Test basic word counting functionality',
-      test: async function(this: TestEnvironment) {
+      test: async function (this: TestEnvironment) {
         const note = this.mock.createNote('Test Note', 'Hello world test');
         this.assert.equal(note.wordCount, 3);
         return true;
       },
-      expected: true
+      expected: true,
     },
     {
       id: 'word-count-empty',
       name: 'Empty content word count',
       description: 'Test word counting with empty content',
-      test: async function(this: TestEnvironment) {
+      test: async function (this: TestEnvironment) {
         const note = this.mock.createNote('Empty Note', '');
         this.assert.equal(note.wordCount, 0);
         return true;
       },
-      expected: true
-    }
+      expected: true,
+    },
   ],
   'daily-notes': [
     {
       id: 'daily-note-creation',
       name: 'Daily note creation',
       description: 'Test automatic daily note creation',
-      test: async function(this: TestEnvironment) {
+      test: async function (this: TestEnvironment) {
         const today = new Date().toISOString().split('T')[0];
         const note = this.mock.createNote(`Daily Note ${today}`, `# ${today}\n\nDaily tasks:`);
         this.assert.truthy(note.name.includes(today));
         return true;
       },
-      expected: true
-    }
-  ]
+      expected: true,
+    },
+  ],
 };

@@ -429,7 +429,8 @@ export class PluginManager {
             console.log(`[${type}] ${message}`);
           }
         },
-        showModal: async (title, content) => {
+        showModal: async (_title, _content) => {
+          // Parameters not used in stub
           // Implementation for modal display
           return Promise.resolve();
         },
@@ -570,9 +571,10 @@ export class PluginManager {
         },
       },
       ai: {
-        analyzeContent: async (content: string, noteId?: string) => {
+        analyzeContent: async (_content: string, _noteId?: string) => {
+          // Parameters not used in stub
           // Get AI settings from localStorage
-          const aiSettings = this.getAISettings();
+          // const aiSettings = this.getAISettings(); // Commented out: not used in stub
 
           // For now, return mock data as the actual AI analysis would need the provider
           return {

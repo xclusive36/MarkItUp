@@ -80,7 +80,8 @@ test.describe('Note Management', () => {
     await expect(page.getByText(fileName)).toBeVisible();
   });
 
-  test('should load note from sidebar', async ({ page, editorPage, sidebarPage }) => {
+  test('should load note from sidebar', async ({ editorPage, sidebarPage }) => {
+    // page parameter unused
     const fileName = `Load Test ${Date.now()}`;
     const content = '# Note to Load\n\nUnique content 12345';
 
@@ -102,7 +103,8 @@ test.describe('Note Management', () => {
     test.skip(true, 'Delete test unreliable in CI - requires UI interactions that timeout');
   });
 
-  test('should handle markdown formatting', async ({ page, editorPage }) => {
+  test('should handle markdown formatting', async ({ editorPage }) => {
+    // page parameter unused
     const fileName = `Markdown Test ${Date.now()}`;
     const content = `# Heading 1
 ## Heading 2

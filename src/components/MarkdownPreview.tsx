@@ -11,7 +11,9 @@ interface MarkdownPreviewProps {
   theme: string;
 }
 
-const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ markdown, theme }) => (
+const MarkdownPreview: React.FC<MarkdownPreviewProps> = (
+  { markdown } // theme parameter removed - not used
+) => (
   <div className="h-full p-4 lg:p-6 overflow-y-auto">
     <div className="prose prose-sm lg:prose prose-slate dark:prose-invert max-w-none">
       <ReactMarkdown

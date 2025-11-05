@@ -3,7 +3,7 @@ import { ParsedNote, ParsedLink, FrontMatter, Block } from './types';
 export class MarkdownParser {
   private static readonly WIKILINK_REGEX = /\[\[([^\]]+?)(?:\|([^\]]+?))?\]\]/g;
   private static readonly TAG_REGEX = /#([a-zA-Z0-9_/-]+)/g;
-  private static readonly BLOCK_ID_REGEX = /\^([a-zA-Z0-9_-]+)$/gm;
+  // private static readonly BLOCK_ID_REGEX = /\^([a-zA-Z0-9_-]+)$/gm; // Commented out: not used
   private static readonly FRONTMATTER_REGEX = /^---\n(.*?)\n---\n/s;
 
   static parseNote(content: string): ParsedNote {

@@ -3,37 +3,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Settings,
-  ToggleLeft,
-  ToggleRight,
-  Trash2,
+  // ToggleLeft, // Commented out: not used
+  // ToggleRight, // Commented out: not used
+  // Trash2, // Commented out: not used
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  Info,
-  ExternalLink,
+  // Info, // Commented out: not used
+  // ExternalLink, // Commented out: not used
   Package,
   Zap,
   Brain,
   BarChart3,
-  Wand2,
-  X,
-  Save,
-  Eye,
-  EyeOff,
+  // Wand2, // Commented out: not used
+  // X, // Commented out: not used
+  // Save, // Commented out: not used
+  // Eye, // Commented out: not used
+  // EyeOff, // Commented out: not used
   Key,
   Search,
-  Filter,
+  // Filter, // Commented out: not used
   Star,
   Download,
-  Tag,
+  // Tag, // Commented out: not used
   Cpu,
-  Sparkles,
+  // Sparkles, // Commented out: not used
 } from 'lucide-react';
 import { useSimpleTheme } from '@/contexts/SimpleThemeContext';
 import {
   AVAILABLE_PLUGINS,
   FEATURED_PLUGINS,
-  PLUGIN_CATEGORIES,
+  // PLUGIN_CATEGORIES, // Commented out: not used
   PLUGIN_METADATA,
 } from '../plugins/plugin-registry';
 import { PluginManager } from '../lib/plugin-manager';
@@ -71,17 +71,17 @@ interface PluginStats {
 type ViewMode = 'all' | 'regular' | 'ai' | 'featured';
 type SortMode = 'name' | 'rating' | 'downloads' | 'category';
 
-const categoryIcons: Record<string, any> = {
-  ai: Brain,
-  'content-generation': Wand2,
-  analysis: BarChart3,
-  visualization: BarChart3,
-  automation: Zap,
-  integration: ExternalLink,
-  utility: Package,
-  core: Cpu,
-  productivity: Sparkles,
-};
+// const categoryIcons: Record<string, any> = { // Commented out: not used
+//   ai: Brain,
+//   'content-generation': Wand2,
+//   analysis: BarChart3,
+//   visualization: BarChart3,
+//   automation: Zap,
+//   integration: ExternalLink,
+//   utility: Package,
+//   core: Cpu,
+//   productivity: Sparkles,
+// };
 
 export function UnifiedPluginManager({ pluginManager }: UnifiedPluginManagerProps) {
   const { theme } = useSimpleTheme();
@@ -600,7 +600,8 @@ function StatCard({ title, value, icon: Icon, color, theme }: StatCardProps) {
 }
 
 // Placeholder tab components (would be fully implemented)
-function OverviewTab({ stats, loadedPlugins, isLoading, theme }: any) {
+function OverviewTab({ stats, theme }: any) {
+  // loadedPlugins and isLoading removed - not used
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Plugin System Overview</h2>
@@ -657,7 +658,7 @@ function PluginStoreTab({
 
 function InstalledPluginsTab({
   plugins,
-  loadedPlugins,
+  // loadedPlugins, // Commented out: not used
   manager,
   theme,
   onPluginAction,
@@ -683,7 +684,8 @@ function InstalledPluginsTab({
   );
 }
 
-function SettingsTab({ theme, manager }: any) {
+function SettingsTab({ theme }: any) {
+  // manager removed - not used
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Plugin System Settings</h2>

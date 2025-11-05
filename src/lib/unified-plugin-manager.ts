@@ -371,7 +371,8 @@ export class UnifiedPluginManager {
       // AI extensions (only available for AI plugins)
       ...(isAI && {
         ai: {
-          analyzeContent: async (content: string, noteId?: string) => {
+          analyzeContent: async (_content: string, _noteId?: string) => {
+            // Parameters unused in stub
             const apiKey = this.getApiKey('openai');
             if (!apiKey) {
               throw new Error('AI API key not configured');
@@ -546,7 +547,8 @@ export class UnifiedPluginManager {
     return true;
   }
 
-  private async callPluginMethod(pluginId: string, method: string, ...args: any[]): Promise<any> {
+  private async callPluginMethod(pluginId: string, method: string, ..._args: any[]): Promise<any> {
+    // args parameter unused
     // Implementation for calling plugin methods would go here
     return Promise.resolve(`Method ${method} called on plugin ${pluginId}`);
   }
@@ -572,26 +574,26 @@ export class UnifiedPluginManager {
     return {};
   }
 
-  private async loadPersistedSettings(): Promise<void> {
-    try {
-      const storage = await getPluginStorage();
-      const allSettings = await storage.getAllSettings();
-      this.pluginSettings = allSettings;
+  // private async loadPersistedSettings(): Promise<void> { // Commented out: method not used
+  //   try {
+  //     const storage = await getPluginStorage();
+  //     const allSettings = await storage.getAllSettings();
+  //     this.pluginSettings = allSettings;
 
-      // Load API keys into memory
-      const providers = await storage.getAllApiKeyProviders();
-      for (const provider of providers) {
-        const apiKey = await storage.loadApiKey(provider);
-        if (apiKey) {
-          this.apiKeyManager.set(provider, apiKey);
-        }
-      }
+  //     // Load API keys into memory
+  //     const providers = await storage.getAllApiKeyProviders();
+  //     for (const provider of providers) {
+  //       const apiKey = await storage.loadApiKey(provider);
+  //       if (apiKey) {
+  //         this.apiKeyManager.set(provider, apiKey);
+  //       }
+  //     }
 
-      console.log('[UnifiedPluginManager] Loaded settings from IndexedDB');
-    } catch (error) {
-      console.error('Failed to load persisted plugin settings:', error);
-    }
-  }
+  //     console.log('[UnifiedPluginManager] Loaded settings from IndexedDB');
+  //   } catch (error) {
+  //     console.error('Failed to load persisted plugin settings:', error);
+  //   }
+  // }
 
   private async savePersistedSettings(): Promise<void> {
     try {

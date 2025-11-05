@@ -1,12 +1,12 @@
 import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { 
-  CollaborativeSession, 
-  Participant, 
-  CollaborativeOperation, 
-  CollaborativeEvent,
+import {
+  CollaborativeSession,
+  Participant,
+  CollaborativeOperation,
+  // CollaborativeEvent, // Commented out: not used
   CursorPosition,
-  SelectionRange 
+  SelectionRange,
 } from './types';
 
 interface ServerToClientEvents {
@@ -17,11 +17,14 @@ interface ServerToClientEvents {
   'cursor-moved': (participantId: string, cursor: CursorPosition) => void;
   'selection-changed': (participantId: string, selection: SelectionRange) => void;
   'document-saved': (timestamp: number) => void;
-  'error': (error: string) => void;
+  error: (error: string) => void;
 }
 
 interface ClientToServerEvents {
-  'join-session': (sessionId: string, participant: Omit<Participant, 'id' | 'lastSeen' | 'isActive'>) => void;
+  'join-session': (
+    sessionId: string,
+    participant: Omit<Participant, 'id' | 'lastSeen' | 'isActive'>
+  ) => void;
   'leave-session': (sessionId: string) => void;
   'send-operation': (operation: Omit<CollaborativeOperation, 'id' | 'timestamp'>) => void;
   'move-cursor': (cursor: CursorPosition) => void;
@@ -39,16 +42,22 @@ interface SocketData {
 }
 
 export class CollaborativeSocketServer {
-  private io: SocketIOServer<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
+  private io: SocketIOServer<
+    ClientToServerEvents,
+    ServerToClientEvents,
+    InterServerEvents,
+    SocketData
+  >;
   private sessions = new Map<string, CollaborativeSession>();
   private operations = new Map<string, CollaborativeOperation[]>(); // sessionId -> operations
-  
+
   constructor(httpServer: HTTPServer) {
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: process.env.NODE_ENV === 'production' 
-          ? process.env.FRONTEND_URL 
-          : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+        origin:
+          process.env.NODE_ENV === 'production'
+            ? process.env.FRONTEND_URL
+            : ['http://localhost:3000', 'http://127.0.0.1:3000'],
         methods: ['GET', 'POST'],
       },
     });
@@ -57,37 +66,51 @@ export class CollaborativeSocketServer {
   }
 
   private setupEventHandlers() {
-    this.io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
-      console.log(`Client connected: ${socket.id}`);
+    this.io.on(
+      'connection',
+      (
+        socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
+      ) => {
+        console.log(`Client connected: ${socket.id}`);
 
-      socket.on('join-session', (sessionId: string, participantData: Omit<Participant, 'id' | 'lastSeen' | 'isActive'>) => {
-        this.handleJoinSession(socket, sessionId, participantData);
-      });
+        socket.on(
+          'join-session',
+          (
+            sessionId: string,
+            participantData: Omit<Participant, 'id' | 'lastSeen' | 'isActive'>
+          ) => {
+            this.handleJoinSession(socket, sessionId, participantData);
+          }
+        );
 
-      socket.on('leave-session', (sessionId: string) => {
-        this.handleLeaveSession(socket, sessionId);
-      });
+        socket.on('leave-session', (sessionId: string) => {
+          this.handleLeaveSession(socket, sessionId);
+        });
 
-      socket.on('send-operation', (operationData: Omit<CollaborativeOperation, 'id' | 'timestamp'>) => {
-        this.handleOperation(socket, operationData);
-      });
+        socket.on(
+          'send-operation',
+          (operationData: Omit<CollaborativeOperation, 'id' | 'timestamp'>) => {
+            this.handleOperation(socket, operationData);
+          }
+        );
 
-      socket.on('move-cursor', (cursor: CursorPosition) => {
-        this.handleCursorMove(socket, cursor);
-      });
+        socket.on('move-cursor', (cursor: CursorPosition) => {
+          this.handleCursorMove(socket, cursor);
+        });
 
-      socket.on('change-selection', (selection: SelectionRange) => {
-        this.handleSelectionChange(socket, selection);
-      });
+        socket.on('change-selection', (selection: SelectionRange) => {
+          this.handleSelectionChange(socket, selection);
+        });
 
-      socket.on('save-document', (content: string) => {
-        this.handleDocumentSave(socket, content);
-      });
+        socket.on('save-document', (content: string) => {
+          this.handleDocumentSave(socket, content);
+        });
 
-      socket.on('disconnect', () => {
-        this.handleDisconnect(socket);
-      });
-    });
+        socket.on('disconnect', () => {
+          this.handleDisconnect(socket);
+        });
+      }
+    );
   }
 
   private handleJoinSession(
@@ -130,7 +153,7 @@ export class CollaborativeSocketServer {
 
     // Notify all participants about the new participant
     socket.to(sessionId).emit('participant-joined', participant);
-    
+
     // Send session info to the joining participant
     socket.emit('session-joined', session);
 
@@ -145,7 +168,7 @@ export class CollaborativeSocketServer {
     if (!participantId) return;
 
     socket.leave(sessionId);
-    
+
     const session = this.sessions.get(sessionId);
     if (session) {
       // Remove participant from session
@@ -243,7 +266,7 @@ export class CollaborativeSocketServer {
 
   private handleDocumentSave(
     socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
-    content: string
+    _content: string // content parameter unused in stub
   ) {
     const { sessionId } = socket.data;
     if (!sessionId) return;

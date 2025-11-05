@@ -82,7 +82,7 @@ export class FileSystemDBSync {
           // Create relative path from markdown dir
           const relativePath = path.relative(baseDir, fullPath);
           // const folder = path.dirname(relativePath) === '.' ? null : path.dirname(relativePath); // Commented out: folder not used
-          const name = path.basename(relativePath, '.md');
+          // const name = path.basename(relativePath, '.md'); // Commented out: name not used
 
           // ID is the full relative path
           const id = relativePath;
@@ -276,7 +276,7 @@ export class FileSystemDBSync {
 
       // Get all notes from database
       const dbNotes = await this.db.select().from(schema.notes).all();
-      const dbNoteIds = new Set(dbNotes.map(n => n.id));
+      // const dbNoteIds = new Set(dbNotes.map(n => n.id)); // Commented out: not used
 
       // Find files that need to be indexed/updated
       let addedCount = 0;
