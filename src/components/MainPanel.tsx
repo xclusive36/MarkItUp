@@ -26,7 +26,6 @@ interface MainPanelProps {
   // MainContent props
   markdown: string;
   viewMode: 'edit' | 'preview' | 'split';
-  setViewMode: (v: 'edit' | 'preview' | 'split') => void;
   handleMarkdownChange: (v: string) => void;
   processedMarkdown: string;
   theme: string;
@@ -52,7 +51,6 @@ const MainPanel: React.FC<MainPanelProps> = ({
   currentView,
   markdown,
   viewMode,
-  setViewMode,
   handleMarkdownChange,
   processedMarkdown,
   theme,
@@ -75,7 +73,6 @@ const MainPanel: React.FC<MainPanelProps> = ({
       <MainContent
         markdown={markdown}
         viewMode={viewMode}
-        setViewMode={setViewMode}
         handleMarkdownChange={handleMarkdownChange}
         processedMarkdown={processedMarkdown}
         theme={theme}

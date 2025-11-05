@@ -1,4 +1,3 @@
-import EditorModeToggle from './EditorModeToggle';
 import MarkdownEditor from './MarkdownEditor';
 import MarkdownPreview from './MarkdownPreview';
 import WysiwygEditor from './WysiwygEditor';
@@ -16,7 +15,6 @@ import { MoreVertical, FileText, Maximize2, Palette, Sparkles } from 'lucide-rea
 interface MainContentProps {
   markdown: string;
   viewMode: 'edit' | 'preview' | 'split';
-  setViewMode: (v: 'edit' | 'preview' | 'split') => void;
   handleMarkdownChange: (v: string) => void;
   processedMarkdown: string;
   theme: string;
@@ -30,7 +28,6 @@ const MainContent: React.FC<MainContentProps> = ({
   markdown,
   // setMarkdown removed
   viewMode,
-  setViewMode,
   handleMarkdownChange,
   processedMarkdown,
   theme,
@@ -271,7 +268,7 @@ const MainContent: React.FC<MainContentProps> = ({
                   {/* Dropdown Menu */}
                   {isEditorOptionsOpen && (
                     <div
-                      className="absolute left-0 top-full mt-1 min-w-[160px] rounded-lg shadow-lg border z-50 py-1"
+                      className="absolute left-0 top-full mt-1 min-w-40 rounded-lg shadow-lg border z-50 py-1"
                       style={{
                         backgroundColor: 'var(--bg-secondary)',
                         borderColor: 'var(--border-primary)',
@@ -372,21 +369,10 @@ const MainContent: React.FC<MainContentProps> = ({
               </>
             )}
           </div>
-          {viewMode !== 'edit' && <div />}
-
-          {/* View Mode Toggle (right side) */}
-          <EditorModeToggle
-            viewMode={viewMode}
-            setViewMode={mode => {
-              setViewMode(mode);
-              analytics.trackEvent('mode_switched', { mode });
-            }}
-            theme={theme}
-          />
         </div>
 
         {viewMode === 'edit' && (
-          <div className="flex-grow flex flex-col h-full relative">
+          <div className="grow flex flex-col h-full relative">
             {editorType === 'markdown' ? (
               <MarkdownEditor
                 ref={editorRef}

@@ -1480,7 +1480,6 @@ export default function Home() {
                     currentView={currentView}
                     markdown={markdown}
                     viewMode={viewMode}
-                    setViewMode={setViewMode}
                     handleMarkdownChange={handleMarkdownChange}
                     processedMarkdown={processedMarkdown}
                     theme={theme}
