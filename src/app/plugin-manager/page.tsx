@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import PluginManagerDashboard from '../../components/PluginManagerDashboard';
 
 export default function PluginManagerPage() {

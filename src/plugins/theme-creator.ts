@@ -113,12 +113,12 @@ Design custom color themes for MarkItUp with live preview and accessibility chec
 };
 
 export class ThemeCreatorPlugin {
-  private api?: PluginAPI;
+  // private api?: PluginAPI; // Not currently used
   private isCreatorOpen = false;
   private onOpenCreatorCallback?: () => void;
 
-  constructor(api?: PluginAPI) {
-    this.api = api;
+  constructor(_api?: PluginAPI) {
+    // this.api = api; // Not currently used
   }
 
   async onLoad(): Promise<void> {

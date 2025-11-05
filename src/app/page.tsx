@@ -184,10 +184,10 @@ export default function Home() {
   const setConnectionSuggestionsData = useAppStore(state => state.setConnectionSuggestionsData);
   const mocSuggestionsData = useAppStore(state => state.mocSuggestionsData);
   const setMOCSuggestionsData = useAppStore(state => state.setMocSuggestionsData);
-  const selectedText = useAppStore(state => state.selectedText);
-  const setSelectedText = useAppStore(state => state.setSelectedText);
-  const selectionPosition = useAppStore(state => state.selectionPosition);
-  const setSelectionPosition = useAppStore(state => state.setSelectionPosition);
+  // const selectedText = useAppStore(state => state.selectedText);
+  // const setSelectedText = useAppStore(state => state.setSelectedText);
+  // const selectionPosition = useAppStore(state => state.selectionPosition);
+  // const setSelectionPosition = useAppStore(state => state.setSelectionPosition);
   const lastEditTrack = useAppStore(state => state.lastEditTrack);
   const setLastEditTrack = useAppStore(state => state.setLastEditTrack);
 
@@ -245,14 +245,14 @@ export default function Home() {
     setShowMobileSidebar,
     toggleMobileSidebar,
     isLeftSidebarCollapsed,
-    setIsLeftSidebarCollapsed,
+    // setIsLeftSidebarCollapsed,
     toggleLeftSidebar,
     isRightPanelOpen,
     setIsRightPanelOpen,
     toggleRightPanel,
     isRightPanelCollapsed,
     setIsRightPanelCollapsed,
-    toggleRightPanelCollapse,
+    // toggleRightPanelCollapse,
     isMounted,
     isInitializing,
     setIsInitializing,
@@ -293,7 +293,7 @@ export default function Home() {
   // Save state management (consolidated)
   const saveState = useSaveState();
   const {
-    saveStatus,
+    // saveStatus,
     setSaveStatus,
     lastSaved,
     setLastSaved,

@@ -97,7 +97,7 @@ test.describe('Note Management', () => {
     await expect(editorPage.editor).toHaveValue(new RegExp('Unique content 12345'));
   });
 
-  test('should delete a note', async ({ page, editorPage, sidebarPage }) => {
+  test('should delete a note', async () => {
     // Skip this test - delete functionality timing out in CI environment
     test.skip(true, 'Delete test unreliable in CI - requires UI interactions that timeout');
   });
@@ -166,7 +166,7 @@ const x = 42;
     expect(resultVisible).toBeTruthy();
   });
 
-  test('should clear editor for new note', async ({ page, editorPage }) => {
+  test('should clear editor for new note', async () => {
     // Skip this test - new note button interaction timing out in CI
     test.skip(true, 'Clear editor test unreliable in CI - requires multiple UI interactions');
   });

@@ -270,15 +270,15 @@ class SmartAutoTaggerPlugin {
   }
 
   /**
-   * Save state to localStorage
+   * Save state to localStorage (unused - consider for future persistence)
    */
-  private saveState(): void {
-    try {
-      localStorage.setItem(this.SUGGESTIONS_KEY, JSON.stringify(this.pendingSuggestions));
-    } catch (error) {
-      console.error('Failed to save Smart Auto-Tagger state:', error);
-    }
-  }
+  // private saveState(): void {
+  //   try {
+  //     localStorage.setItem(this.SUGGESTIONS_KEY, JSON.stringify(this.pendingSuggestions));
+  //   } catch (error) {
+  //     console.error('Failed to save Smart Auto-Tagger state:', error);
+  //   }
+  // }
 
   /**
    * Add action to history for undo functionality

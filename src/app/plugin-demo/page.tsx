@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import UnifiedPluginStore from '../../components/UnifiedPluginStore';
 
 export default function PluginDemoPage() {
@@ -8,13 +7,11 @@ export default function PluginDemoPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            MarkItUp Plugin Ecosystem
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">MarkItUp Plugin Ecosystem</h1>
           <p className="text-xl text-gray-600 max-w-3xl">
-            Experience the unified plugin system that combines Phase 5 core functionality 
-            with AI-enhanced capabilities. Install, configure, and manage plugins seamlessly 
-            across both traditional and AI-powered features.
+            Experience the unified plugin system that combines Phase 5 core functionality with
+            AI-enhanced capabilities. Install, configure, and manage plugins seamlessly across both
+            traditional and AI-powered features.
           </p>
         </div>
 
@@ -26,8 +23,8 @@ export default function PluginDemoPage() {
               <h3 className="font-semibold text-lg">Phase 5 Core</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Full-featured plugins with commands, views, processors, and settings. 
-              Complete plugin lifecycle management with persistence.
+              Full-featured plugins with commands, views, processors, and settings. Complete plugin
+              lifecycle management with persistence.
             </p>
           </div>
 
@@ -37,8 +34,8 @@ export default function PluginDemoPage() {
               <h3 className="font-semibold text-lg">AI Enhanced</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              AI-powered plugins with content generation, analysis, and automation. 
-              Analytics tracking and intelligent capabilities.
+              AI-powered plugins with content generation, analysis, and automation. Analytics
+              tracking and intelligent capabilities.
             </p>
           </div>
 
@@ -48,8 +45,8 @@ export default function PluginDemoPage() {
               <h3 className="font-semibold text-lg">Unified Bridge</h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Seamless integration between Phase 5 and AI systems. 
-              Automatic enhancement detection and capability mapping.
+              Seamless integration between Phase 5 and AI systems. Automatic enhancement detection
+              and capability mapping.
             </p>
           </div>
         </div>
@@ -121,9 +118,9 @@ export default function PluginDemoPage() {
             <div>
               <h3 className="font-medium mb-2">Plugin Management</h3>
               <p className="text-gray-600 mb-3">
-                The unified system uses a bridge pattern to seamlessly integrate Phase 5 
-                core plugins with AI-enhanced capabilities. Plugins are automatically 
-                categorized and enhanced based on their functionality.
+                The unified system uses a bridge pattern to seamlessly integrate Phase 5 core
+                plugins with AI-enhanced capabilities. Plugins are automatically categorized and
+                enhanced based on their functionality.
               </p>
               <ul className="text-gray-600 space-y-1">
                 <li>• Phase 5 PluginManager for core functionality</li>
@@ -135,9 +132,9 @@ export default function PluginDemoPage() {
             <div>
               <h3 className="font-medium mb-2">AI Integration</h3>
               <p className="text-gray-600 mb-3">
-                AI capabilities are automatically detected and integrated based on plugin 
-                metadata and functionality. The system provides analytics, content 
-                generation tracking, and intelligent enhancement suggestions.
+                AI capabilities are automatically detected and integrated based on plugin metadata
+                and functionality. The system provides analytics, content generation tracking, and
+                intelligent enhancement suggestions.
               </p>
               <ul className="text-gray-600 space-y-1">
                 <li>• Automatic capability detection</li>

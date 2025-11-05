@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { initializePluginSystem, getPluginManager } from '../../lib/plugin-init';
 
 export default function PluginDebugPage() {
@@ -21,7 +21,7 @@ export default function PluginDebugPage() {
     if (typeof window !== 'undefined') {
       const saved = window.localStorage.getItem('markitup-enabled-plugins');
       setLocalStorage(saved || 'null');
-      
+
       const manager = getPluginManager();
       if (manager) {
         const plugins = manager.getLoadedPlugins();
@@ -51,7 +51,7 @@ export default function PluginDebugPage() {
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Plugin Debug Console</h1>
-      
+
       <div className="space-y-6">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">LocalStorage State</h2>
@@ -59,7 +59,7 @@ export default function PluginDebugPage() {
           <pre className="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm overflow-x-auto">
             {localStorage}
           </pre>
-          <button 
+          <button
             onClick={clearLocalStorage}
             className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
           >
@@ -73,15 +73,20 @@ export default function PluginDebugPage() {
             <p className="text-gray-500">No plugins loaded</p>
           ) : (
             <ul className="space-y-2">
-              {loadedPlugins.map((plugin) => (
-                <li key={plugin.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                  <span>{plugin.name} ({plugin.id})</span>
+              {loadedPlugins.map(plugin => (
+                <li
+                  key={plugin.id}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-2 rounded"
+                >
+                  <span>
+                    {plugin.name} ({plugin.id})
+                  </span>
                   <span className="text-xs text-gray-500">v{plugin.version}</span>
                 </li>
               ))}
             </ul>
           )}
-          <button 
+          <button
             onClick={clearAllPlugins}
             className="mt-2 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
           >
@@ -92,13 +97,13 @@ export default function PluginDebugPage() {
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-3">Actions</h2>
           <div className="space-x-2">
-            <button 
+            <button
               onClick={refreshState}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
               Refresh State
             </button>
-            <a 
+            <a
               href="/plugin-manager"
               className="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >

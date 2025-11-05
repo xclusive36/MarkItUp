@@ -1,15 +1,13 @@
-"use client";
+'use client';
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { CollaborativePage } from '../../../components/CollaborativePage';
-import { useCollaboration } from '../../../contexts/CollaborationContext';
 
 export default function CollaborateNotePage() {
   const params = useParams();
   const noteId = params.noteId as string;
-  const { settings } = useCollaboration();
-  
+
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -24,7 +22,7 @@ export default function CollaborateNotePage() {
     try {
       setLoading(true);
       const response = await fetch(`/api/files/${encodeURIComponent(noteId)}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setContent(data.content || '');

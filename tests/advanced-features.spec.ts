@@ -44,7 +44,7 @@ test.describe('Plugin System', () => {
       }
 
       // Should show some plugins (at least default ones)
-      const pluginCards = page.locator('[data-plugin-card], .plugin-card, article').all();
+      // const pluginCards = page.locator('[data-plugin-card], .plugin-card, article').all();
       // At least one plugin should be visible
     }
   });
@@ -108,12 +108,12 @@ test.describe('Search Functionality', () => {
     await expect(searchInput).toBeFocused({ timeout: 3000 });
   });
 
-  test('should filter notes by search query', async ({ page, editorPage }) => {
+  test('should filter notes by search query', async () => {
     // Skip this test - search functionality may not be available in all environments
     test.skip(true, 'Search functionality not consistently available in CI environment');
   });
 
-  test('should search by tags', async ({ page, editorPage }) => {
+  test('should search by tags', async () => {
     // Skip this test - search functionality may not be available in all environments
     test.skip(true, 'Tag search functionality not consistently available in CI environment');
   });
@@ -272,7 +272,7 @@ test.describe('Performance', () => {
     expect(loadTime).toBeLessThan(5000);
   });
 
-  test('should handle many notes efficiently', async ({ page, editorPage }) => {
+  test('should handle many notes efficiently', async ({ page }) => {
     // Simplified performance test - just verify basic responsiveness
     // Creating multiple notes in CI can be slow, so we test basic UI responsiveness instead
 

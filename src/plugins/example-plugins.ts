@@ -23,7 +23,7 @@ import { PluginManifest, ContentProcessor, Command, PluginSetting, PluginAPI } f
 // Global instances
 let wordCountInstance: WordCountPlugin | null = null;
 let markdownExportInstance: MarkdownExportPlugin | null = null;
-let darkThemeInstance: DarkThemePlugin | null = null;
+// let darkThemeInstance: DarkThemePlugin | null = null; // Not currently read - replaced by Theme Creator
 let dailyNotesInstance: DailyNotesPlugin | null = null;
 let tocInstance: TOCPlugin | null = null;
 let backupInstance: BackupPlugin | null = null;
@@ -237,7 +237,7 @@ export const darkThemePlugin: PluginManifest = {
 
   onLoad: (api?: PluginAPI) => {
     if (api) {
-      darkThemeInstance = new DarkThemePlugin(api);
+      // darkThemeInstance = new DarkThemePlugin(api); // Unused - replaced by Theme Creator
     }
     // Apply theme styles
     if (typeof document !== 'undefined') {
@@ -255,7 +255,7 @@ export const darkThemePlugin: PluginManifest = {
   },
 
   onUnload: () => {
-    darkThemeInstance = null;
+    // darkThemeInstance = null; // Unused - replaced by Theme Creator
     // Remove theme styles
     console.log('Dark theme unloaded');
   },
@@ -966,11 +966,11 @@ class MarkdownExportPlugin {
   }
 }
 
-class DarkThemePlugin {
-  constructor(private api: PluginAPI) {}
-
-  // Theme is handled in onLoad/onUnload
-}
+// Deprecated - replaced by Theme Creator plugin
+// class DarkThemePlugin {
+//   constructor(private api: PluginAPI) {}
+//   // Theme is handled in onLoad/onUnload
+// }
 
 class DailyNotesPlugin {
   constructor(private api: PluginAPI) {}

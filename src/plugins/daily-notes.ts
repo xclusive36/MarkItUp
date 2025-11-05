@@ -499,7 +499,7 @@ interface DailyAnalytics {
 export class DailyNotesPlugin {
   public api: PluginAPI;
   private settings: DailyNotesSettings;
-  private isActive: boolean = false;
+  // private isActive: boolean = false; // Not currently read
   private reminderInterval: NodeJS.Timeout | null = null;
   private streakData: StreakData;
 
@@ -525,7 +525,7 @@ export class DailyNotesPlugin {
   }
 
   async initialize() {
-    this.isActive = true;
+    // this.isActive = true; // Not currently read
 
     // Load streak data
     await this.loadStreakData();
@@ -1014,7 +1014,7 @@ export class DailyNotesPlugin {
   }
 
   dispose(): void {
-    this.isActive = false;
+    // this.isActive = false; // Not currently read
 
     if (this.reminderInterval) {
       clearInterval(this.reminderInterval);

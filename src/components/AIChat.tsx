@@ -2116,41 +2116,41 @@ function AISettingsPanel({
   const [showAdvancedOllama, setShowAdvancedOllama] = useState(false);
 
   // V3.0 Enhancement states
-  const [showPresetManager, setShowPresetManager] = useState(false);
-  const [showPerformancePanel, setShowPerformancePanel] = useState(false);
-  const [showModelLibrary, setShowModelLibrary] = useState(false);
-  const [showAutoDiscovery, setShowAutoDiscovery] = useState(false);
+  // const [showPresetManager, setShowPresetManager] = useState(false);
+  // const [showPerformancePanel, setShowPerformancePanel] = useState(false);
+  // const [showModelLibrary, setShowModelLibrary] = useState(false);
+  // const [showAutoDiscovery, setShowAutoDiscovery] = useState(false);
   const [showVectorSearchSettings, setShowVectorSearchSettings] = useState(false);
-  const [discovering, setDiscovering] = useState(false);
-  const [discoveredServers, setDiscoveredServers] = useState<
-    Array<{
-      url: string;
-      name?: string;
-      version?: string;
-      modelCount?: number;
-      responseTime: number;
-    }>
-  >([]);
+  // const [discovering, setDiscovering] = useState(false);
+  // const [discoveredServers, setDiscoveredServers] = useState<
+  //   Array<{
+  //     url: string;
+  //     name?: string;
+  //     version?: string;
+  //     modelCount?: number;
+  //     responseTime: number;
+  //   }>
+  // >([]);
   const [presetName, setPresetName] = useState('');
   const [presetDescription, setPresetDescription] = useState('');
-  const [modelLibrary, setModelLibrary] = useState<
-    Array<{
-      name: string;
-      displayName: string;
-      description: string;
-      tags: string[];
-      size?: string;
-      parameterSize?: string;
-      isInstalled: boolean;
-    }>
-  >([]);
-  const [loadingLibrary, setLoadingLibrary] = useState(false);
-  const [contextUsage, setContextUsage] = useState<{
-    used: number;
-    limit: number;
-    percentage: number;
-    warning: boolean;
-  } | null>(null);
+  // const [modelLibrary, setModelLibrary] = useState<
+  //   Array<{
+  //     name: string;
+  //     displayName: string;
+  //     description: string;
+  //     tags: string[];
+  //     size?: string;
+  //     parameterSize?: string;
+  //     isInstalled: boolean;
+  //   }>
+  // >([]);
+  // const [loadingLibrary, setLoadingLibrary] = useState(false);
+  // const [contextUsage, setContextUsage] = useState<{
+  //   used: number;
+  //   limit: number;
+  //   percentage: number;
+  //   warning: boolean;
+  // } | null>(null);
 
   // Sync formData with settings when settings change
   useEffect(() => {
@@ -2507,180 +2507,180 @@ function AISettingsPanel({
   }, [modelToPull, formData.ollamaUrl, fetchOllamaModels]);
 
   // V3.0 Enhancement Functions
-  const handleSavePreset = useCallback(() => {
-    if (!presetName.trim()) return;
+  // const handleSavePreset = useCallback(() => {
+  //   if (!presetName.trim()) return;
 
-    const newPreset = {
-      id: `preset_${Date.now()}`,
-      name: presetName.trim(),
-      url: formData.ollamaUrl || 'http://localhost:11434',
-      description: presetDescription.trim() || undefined,
-      createdAt: new Date().toISOString(),
-      isDefault: (formData.ollamaPresets || []).length === 0,
-    };
+  //   const newPreset = {
+  //     id: `preset_${Date.now()}`,
+  //     name: presetName.trim(),
+  //     url: formData.ollamaUrl || 'http://localhost:11434',
+  //     description: presetDescription.trim() || undefined,
+  //     createdAt: new Date().toISOString(),
+  //     isDefault: (formData.ollamaPresets || []).length === 0,
+  //   };
 
-    const updatedPresets = [...(formData.ollamaPresets || []), newPreset];
-    setFormData({ ...formData, ollamaPresets: updatedPresets, activeOllamaPreset: newPreset.id });
-    setPresetName('');
-    setPresetDescription('');
-  }, [presetName, presetDescription, formData]);
+  //   const updatedPresets = [...(formData.ollamaPresets || []), newPreset];
+  //   setFormData({ ...formData, ollamaPresets: updatedPresets, activeOllamaPreset: newPreset.id });
+  //   setPresetName('');
+  //   setPresetDescription('');
+  // }, [presetName, presetDescription, formData]);
 
-  const handleLoadPreset = useCallback(
-    (presetId: string) => {
-      const preset = formData.ollamaPresets?.find(p => p.id === presetId);
-      if (preset) {
-        setFormData({ ...formData, ollamaUrl: preset.url, activeOllamaPreset: presetId });
-        // Update lastUsed
-        const updatedPresets = formData.ollamaPresets?.map(p =>
-          p.id === presetId ? { ...p, lastUsed: new Date().toISOString() } : p
-        );
-        setFormData({
-          ...formData,
-          ollamaPresets: updatedPresets,
-          ollamaUrl: preset.url,
-          activeOllamaPreset: presetId,
-        });
-      }
-    },
-    [formData]
-  );
+  // const handleLoadPreset = useCallback(
+  //   (presetId: string) => {
+  //     const preset = formData.ollamaPresets?.find(p => p.id === presetId);
+  //     if (preset) {
+  //       setFormData({ ...formData, ollamaUrl: preset.url, activeOllamaPreset: presetId });
+  //       // Update lastUsed
+  //       const updatedPresets = formData.ollamaPresets?.map(p =>
+  //         p.id === presetId ? { ...p, lastUsed: new Date().toISOString() } : p
+  //       );
+  //       setFormData({
+  //         ...formData,
+  //         ollamaPresets: updatedPresets,
+  //         ollamaUrl: preset.url,
+  //         activeOllamaPreset: presetId,
+  //       });
+  //     }
+  //   },
+  //   [formData]
+  // );
 
-  const handleDeletePreset = useCallback(
-    (presetId: string) => {
-      const updatedPresets = formData.ollamaPresets?.filter(p => p.id !== presetId);
-      setFormData({
-        ...formData,
-        ollamaPresets: updatedPresets,
-        activeOllamaPreset:
-          formData.activeOllamaPreset === presetId ? undefined : formData.activeOllamaPreset,
-      });
-    },
-    [formData]
-  );
+  // const handleDeletePreset = useCallback(
+  //   (presetId: string) => {
+  //     const updatedPresets = formData.ollamaPresets?.filter(p => p.id !== presetId);
+  //     setFormData({
+  //       ...formData,
+  //       ollamaPresets: updatedPresets,
+  //       activeOllamaPreset:
+  //         formData.activeOllamaPreset === presetId ? undefined : formData.activeOllamaPreset,
+  //     });
+  //   },
+  //   [formData]
+  // );
 
-  const handleDiscoverServers = useCallback(async () => {
-    setDiscovering(true);
-    setDiscoveredServers([]);
+  // const handleDiscoverServers = useCallback(async () => {
+  //   setDiscovering(true);
+  //   setDiscoveredServers([]);
 
-    try {
-      // Simulate server discovery (in real implementation, use OllamaProvider.discoverServers())
-      const commonUrls = ['http://localhost:11434', 'http://127.0.0.1:11434'];
+  //   try {
+  //     // Simulate server discovery (in real implementation, use OllamaProvider.discoverServers())
+  //     const commonUrls = ['http://localhost:11434', 'http://127.0.0.1:11434'];
 
-      const results = await Promise.all(
-        commonUrls.map(async url => {
-          try {
-            const startTime = Date.now();
-            const response = await fetch(`${url}/api/tags`, {
-              method: 'GET',
-              signal: AbortSignal.timeout(3000),
-            });
+  //     const results = await Promise.all(
+  //       commonUrls.map(async url => {
+  //         try {
+  //           const startTime = Date.now();
+  //           const response = await fetch(`${url}/api/tags`, {
+  //             method: 'GET',
+  //             signal: AbortSignal.timeout(3000),
+  //           });
 
-            if (response.ok) {
-              const data = await response.json();
-              const responseTime = Date.now() - startTime;
+  //           if (response.ok) {
+  //             const data = await response.json();
+  //             const responseTime = Date.now() - startTime;
 
-              // Try to get version
-              let version: string | undefined;
-              try {
-                const versionResponse = await fetch(`${url}/api/version`);
-                if (versionResponse.ok) {
-                  const versionData = await versionResponse.json();
-                  version = versionData.version;
-                }
-              } catch {
-                // Ignore
-              }
+  //             // Try to get version
+  //             let version: string | undefined;
+  //             try {
+  //               const versionResponse = await fetch(`${url}/api/version`);
+  //               if (versionResponse.ok) {
+  //                 const versionData = await versionResponse.json();
+  //                 version = versionData.version;
+  //               }
+  //             } catch {
+  //               // Ignore
+  //             }
 
-              return {
-                url,
-                name: `Ollama Server (${new URL(url).hostname})`,
-                version,
-                modelCount: data.models?.length || 0,
-                responseTime,
-              };
-            }
-          } catch {
-            // Server not available
-          }
-          return null;
-        })
-      );
+  //             return {
+  //               url,
+  //               name: `Ollama Server (${new URL(url).hostname})`,
+  //               version,
+  //               modelCount: data.models?.length || 0,
+  //               responseTime,
+  //             };
+  //           }
+  //         } catch {
+  //           // Server not available
+  //         }
+  //         return null;
+  //       })
+  //     );
 
-      const found = results.filter((r): r is NonNullable<typeof r> => r !== null);
-      setDiscoveredServers(found);
-    } catch (error) {
-      console.error('Error discovering servers:', error);
-    } finally {
-      setDiscovering(false);
-    }
-  }, []);
+  //     const found = results.filter((r): r is NonNullable<typeof r> => r !== null);
+  //     setDiscoveredServers(found);
+  //   } catch (error) {
+  //     console.error('Error discovering servers:', error);
+  //   } finally {
+  //     setDiscovering(false);
+  //   }
+  // }, []);
 
-  const handleLoadModelLibrary = useCallback(async () => {
-    setLoadingLibrary(true);
-    try {
-      // Curated model library (in real implementation, use OllamaProvider.getModelLibrary())
-      const installedModels = ollamaModels.map(m => m.value);
+  // const handleLoadModelLibrary = useCallback(async () => {
+  //   setLoadingLibrary(true);
+  //   try {
+  //     // Curated model library (in real implementation, use OllamaProvider.getModelLibrary())
+  //     const installedModels = ollamaModels.map(m => m.value);
 
-      const library = [
-        {
-          name: 'llama3.2',
-          displayName: 'Llama 3.2',
-          description: "Meta's latest Llama model, excellent general-purpose AI",
-          tags: ['general', 'chat', 'recommended'],
-          size: '2.0 GB',
-          parameterSize: '3B',
-          isInstalled: installedModels.includes('llama3.2'),
-        },
-        {
-          name: 'codellama',
-          displayName: 'Code Llama',
-          description: 'Specialized for code generation and programming',
-          tags: ['code', 'programming'],
-          size: '3.8 GB',
-          parameterSize: '7B',
-          isInstalled: installedModels.includes('codellama'),
-        },
-        {
-          name: 'mistral',
-          displayName: 'Mistral 7B',
-          description: 'Efficient and powerful for general tasks',
-          tags: ['general', 'efficient'],
-          size: '4.1 GB',
-          parameterSize: '7B',
-          isInstalled: installedModels.includes('mistral'),
-        },
-        {
-          name: 'phi3',
-          displayName: 'Phi-3',
-          description: "Microsoft's compact but capable model",
-          tags: ['general', 'compact'],
-          size: '2.3 GB',
-          parameterSize: '3.8B',
-          isInstalled: installedModels.includes('phi3'),
-        },
-      ];
+  //     const library = [
+  //       {
+  //         name: 'llama3.2',
+  //         displayName: 'Llama 3.2',
+  //         description: "Meta's latest Llama model, excellent general-purpose AI",
+  //         tags: ['general', 'chat', 'recommended'],
+  //         size: '2.0 GB',
+  //         parameterSize: '3B',
+  //         isInstalled: installedModels.includes('llama3.2'),
+  //       },
+  //       {
+  //         name: 'codellama',
+  //         displayName: 'Code Llama',
+  //         description: 'Specialized for code generation and programming',
+  //         tags: ['code', 'programming'],
+  //         size: '3.8 GB',
+  //         parameterSize: '7B',
+  //         isInstalled: installedModels.includes('codellama'),
+  //       },
+  //       {
+  //         name: 'mistral',
+  //         displayName: 'Mistral 7B',
+  //         description: 'Efficient and powerful for general tasks',
+  //         tags: ['general', 'efficient'],
+  //         size: '4.1 GB',
+  //         parameterSize: '7B',
+  //         isInstalled: installedModels.includes('mistral'),
+  //       },
+  //       {
+  //         name: 'phi3',
+  //         displayName: 'Phi-3',
+  //         description: "Microsoft's compact but capable model",
+  //         tags: ['general', 'compact'],
+  //         size: '2.3 GB',
+  //         parameterSize: '3.8B',
+  //         isInstalled: installedModels.includes('phi3'),
+  //       },
+  //     ];
 
-      setModelLibrary(library);
-    } catch (error) {
-      console.error('Error loading model library:', error);
-    } finally {
-      setLoadingLibrary(false);
-    }
-  }, [ollamaModels]);
+  //     setModelLibrary(library);
+  //   } catch (error) {
+  //     console.error('Error loading model library:', error);
+  //   } finally {
+  //     setLoadingLibrary(false);
+  //   }
+  // }, [ollamaModels]);
 
-  const handleInstallFromLibrary = useCallback(
-    async (modelName: string) => {
-      setModelToPull(modelName);
-      await handlePullModel();
-    },
-    [handlePullModel]
-  );
+  // const handleInstallFromLibrary = useCallback(
+  //   async (modelName: string) => {
+  //     setModelToPull(modelName);
+  //     await handlePullModel();
+  //   },
+  //   [handlePullModel]
+  // );
 
   // Update context usage when session changes
   useEffect(() => {
     if (formData.provider === 'ollama') {
       // Context tracking placeholder for future session state integration
-      setContextUsage(null);
+      // setContextUsage(null); // Commented out - not currently used
     }
   }, [formData.provider]);
 

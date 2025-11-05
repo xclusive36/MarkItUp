@@ -1386,20 +1386,20 @@ Check console for full report or save it as a note.`;
   }
 
   /**
-   * Display connection discoveries
+   * Display connection discoveries (deprecated - use displayConnectionDiscoveriesActionable)
    */
-  private displayConnectionDiscoveries(
-    connections: Array<{ source: string; target: string; reason: string; similarity: number }>
-  ): void {
-    console.log('🔗 Hidden Connections Discovered:\n');
-    connections.forEach((conn, i) => {
-      const sourceNote = this.api.notes.get(conn.source);
-      const targetNote = this.api.notes.get(conn.target);
-      console.log(`${i + 1}. "${sourceNote?.name}" ↔ "${targetNote?.name}"`);
-      console.log(`   Similarity: ${(conn.similarity * 100).toFixed(0)}%`);
-      console.log(`   Reason: ${conn.reason}\n`);
-    });
-  }
+  // private displayConnectionDiscoveries(
+  //   connections: Array<{ source: string; target: string; reason: string; similarity: number }>
+  // ): void {
+  //   console.log('🔗 Hidden Connections Discovered:\n');
+  //   connections.forEach((conn, i) => {
+  //     const sourceNote = this.api.notes.get(conn.source);
+  //     const targetNote = this.api.notes.get(conn.target);
+  //     console.log(`${i + 1}. "${sourceNote?.name}" ↔ "${targetNote?.name}"`);
+  //     console.log(`   Similarity: ${(conn.similarity * 100).toFixed(0)}%`);
+  //     console.log(`   Reason: ${conn.reason}\n`);
+  //   });
+  // }
 
   /**
    * Display cluster analysis
@@ -1416,25 +1416,25 @@ Check console for full report or save it as a note.`;
   }
 
   /**
-   * Display MOC suggestions
+   * Display MOC suggestions (deprecated - use displayMOCSuggestionsActionable)
    */
-  private displayMOCSuggestions(
-    suggestions: Array<{
-      clusterNotes: string[];
-      suggestedTitle: string;
-      reason: string;
-      priority: string;
-    }>
-  ): void {
-    console.log('📚 MOC (Map of Content) Suggestions:\n');
-    suggestions.forEach((sug, i) => {
-      console.log(`${i + 1}. Create MOC: "${sug.suggestedTitle}" [${sug.priority} priority]`);
-      console.log(
-        `   Would connect: ${sug.clusterNotes.slice(0, 5).join(', ')}${sug.clusterNotes.length > 5 ? '...' : ''}`
-      );
-      console.log(`   Reason: ${sug.reason}\n`);
-    });
-  }
+  // private displayMOCSuggestions(
+  //   suggestions: Array<{
+  //     clusterNotes: string[];
+  //     suggestedTitle: string;
+  //     reason: string;
+  //     priority: string;
+  //   }>
+  // ): void {
+  //   console.log('📚 MOC (Map of Content) Suggestions:\n');
+  //   suggestions.forEach((sug, i) => {
+  //     console.log(`${i + 1}. Create MOC: "${sug.suggestedTitle}" [${sug.priority} priority]`);
+  //     console.log(
+  //       `   Would connect: ${sug.clusterNotes.slice(0, 5).join(', ')}${sug.clusterNotes.length > 5 ? '...' : ''}`
+  //     );
+  //     console.log(`   Reason: ${sug.reason}\n`);
+  //   });
+  // }
 
   /**
    * Display bridge suggestions

@@ -3,7 +3,7 @@ import { PluginManifest, PluginAPI } from '../lib/types';
 // Global plugin instances - will be set in onLoad
 let projectTrackerInstance: ProjectTrackerPlugin | null = null;
 let meetingNotesInstance: MeetingNotesPlugin | null = null;
-let blogTemplateInstance: BlogTemplatePlugin | null = null;
+// let blogTemplateInstance: BlogTemplatePlugin | null = null; // Not currently read
 let memoryKeeperInstance: MemoryKeeperPlugin | null = null;
 
 // Project Tracker Plugin - Track project progress and milestones
@@ -390,11 +390,11 @@ Your conclusion and call-to-action go here.
     }
 
     console.log('Blog Template Generator plugin loaded');
-    blogTemplateInstance = new BlogTemplatePlugin(api);
+    // blogTemplateInstance = new BlogTemplatePlugin(api); // Not currently read
   },
 
   onUnload: async () => {
-    blogTemplateInstance = null;
+    // blogTemplateInstance = null; // Not currently read
     console.log('Blog Template Generator plugin unloaded');
   },
 };

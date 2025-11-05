@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react'; // Not needed for functional usage
 import LinkSuggestionsPanel from '../components/LinkSuggestionsPanel';
 import BridgeNoteSuggestionPanel from '../components/BridgeNoteSuggestionPanel';
 import ConnectionMapPanel from '../components/ConnectionMapPanel';
@@ -228,7 +228,7 @@ function escapeRegex(str: string): string {
  * Record user decision for learning
  */
 function recordDecision(
-  api: any,
+  _api: any, // Prefixed with _ to indicate intentionally unused
   decision: 'accept' | 'reject',
   sourceNoteId: string,
   suggestion: { noteName: string; confidence: number }

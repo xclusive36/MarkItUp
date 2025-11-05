@@ -135,7 +135,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     icon: React.ReactNode;
     active: boolean;
     onClick: () => void;
-  }> = ({ id, label, icon, active, onClick }) => {
+  }> = ({ label, icon, active, onClick }) => {
     const [isHovered, setIsHovered] = React.useState(false);
 
     return (
@@ -178,7 +178,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     title: string;
     color: string;
     unit: string;
-  }> = ({ data, title, color, unit }) => {
+  }> = ({ data, title, unit }) => {
     const maxValue = Math.max(...data.map(d => d.value), 1);
 
     return (

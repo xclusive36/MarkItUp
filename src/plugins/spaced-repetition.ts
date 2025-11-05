@@ -963,7 +963,7 @@ class FlashcardManager {
 class SpacedRepetitionPlugin {
   private api: PluginAPI;
   private manager = new FlashcardManager();
-  private reviewPanelOpen = false;
+  // private reviewPanelOpen = false; // Not currently read
 
   constructor(api: PluginAPI) {
     this.api = api;
@@ -1032,12 +1032,12 @@ class SpacedRepetitionPlugin {
       // Create the review component
       const reviewComponent = React.createElement(EnhancedFlashcardReview, {
         onClose: () => {
-          this.reviewPanelOpen = false;
+          // this.reviewPanelOpen = false; // Not currently read
         },
         manager: this.manager,
       });
 
-      this.reviewPanelOpen = true;
+      // this.reviewPanelOpen = true; // Not currently read
       await this.api.ui.showModal('Flashcard Review', reviewComponent);
     } catch (error) {
       console.error('Error opening review panel:', error);

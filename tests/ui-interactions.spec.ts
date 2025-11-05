@@ -35,7 +35,7 @@ test.describe('Modal Interactions', () => {
     }
   });
 
-  test('should open command palette with keyboard shortcut', async ({ page, modalPage }) => {
+  test('should open command palette with keyboard shortcut', async () => {
     // Skip this test - command palette keyboard shortcut unreliable in CI
     test.skip(
       true,
@@ -69,7 +69,7 @@ test.describe('View Switching', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('should switch between editor and graph view', async ({ page, viewPage }) => {
+  test('should switch between editor and graph view', async ({ page }) => {
     // Click graph view button
     const graphButton = page.getByRole('button', { name: /graph/i }).first();
     if (await graphButton.isVisible()) {

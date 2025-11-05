@@ -2,10 +2,10 @@ import { PluginManifest, PluginAPI } from '../lib/types';
 
 // Global plugin instances
 let citationManagerInstance: CitationManagerPlugin | null = null;
-const researchPaperInstance: ResearchPaperPlugin | null = null;
-const noteTakingSystemInstance: NoteTakingSystemPlugin | null = null;
-const pdfAnnotatorInstance: PDFAnnotatorPlugin | null = null;
-const literatureReviewInstance: LiteratureReviewPlugin | null = null;
+// const researchPaperInstance: ResearchPaperPlugin | null = null;
+// const noteTakingSystemInstance: NoteTakingSystemPlugin | null = null;
+// const pdfAnnotatorInstance: PDFAnnotatorPlugin | null = null;
+// const literatureReviewInstance: LiteratureReviewPlugin | null = null;
 
 // Citation Manager Plugin - Auto-format citations and manage bibliography
 export const citationManagerPlugin: PluginManifest = {
@@ -520,21 +520,21 @@ Added to citation library ✅
 }
 
 export class ResearchPaperPlugin {
-  constructor(private api: PluginAPI) {}
+  // constructor(private api: PluginAPI) {}
   // Placeholder - implement based on actual commands needed
 }
 
 export class NoteTakingSystemPlugin {
-  constructor(private api: PluginAPI) {}
+  // constructor(private api: PluginAPI) {}
   // Placeholder - implement based on actual commands needed
 }
 
 export class PDFAnnotatorPlugin {
-  constructor(private api: PluginAPI) {}
+  // constructor(private api: PluginAPI) {}
   // Placeholder - implement based on actual commands needed
 }
 
 export class LiteratureReviewPlugin {
-  constructor(private api: PluginAPI) {}
+  // constructor(private api: PluginAPI) {}
   // Placeholder - implement based on actual commands needed
 }
