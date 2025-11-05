@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// No React hooks used
 import { Home, Search, PlusCircle, Network, MessageSquare } from 'lucide-react';
 
 interface BottomNavProps {
