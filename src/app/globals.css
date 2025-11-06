@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../styles/design-tokens.css';
+@import '../styles/ui-enhancements.css';
 
 :root {
   --background: #ffffff;
