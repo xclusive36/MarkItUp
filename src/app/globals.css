@@ -3,6 +3,7 @@
 @import '../styles/design-tokens.css';
 @import '../styles/ui-enhancements.css';
 @import '../styles/navigation-enhancements.css';
+@import '../styles/mobile-optimizations.css';
 
 :root {
   --background: #ffffff;
