@@ -181,15 +181,16 @@ const MainContent: React.FC<MainContentProps> = ({
       )}
 
       <div
-        className="rounded-lg shadow-sm border flex flex-col h-full min-h-screen"
+        className="rounded-lg border flex flex-col h-full min-h-screen transition-all"
         style={{
           backgroundColor: 'var(--bg-secondary)',
           borderColor: 'var(--border-primary)',
           minHeight: '100vh',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
-        {/* Editor Mode Toggle and WYSIWYG Toggle */}
-        <div className="flex justify-between items-center w-full px-4 pt-4 mb-4">
+        {/* Editor Mode Toggle and WYSIWYG Toggle - Refined spacing and visual hierarchy */}
+        <div className="flex justify-between items-center w-full px-6 pt-6 pb-4">
           {/* Left side buttons */}
           <div className="flex items-center gap-2">
             {/* Desktop: Individual Buttons (visible on md and up) */}
@@ -202,7 +203,7 @@ const MainContent: React.FC<MainContentProps> = ({
                     setEditorType(newType);
                     analytics.trackEvent('mode_switched', { mode: newType });
                   }}
-                  className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors`}
+                  className={`${desktopShowClass} items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-all hover:shadow-md`}
                   style={{
                     backgroundColor: 'var(--bg-tertiary)',
                     borderColor: 'var(--border-secondary)',
@@ -217,7 +218,7 @@ const MainContent: React.FC<MainContentProps> = ({
                 {isThemeCreatorPluginLoaded && (
                   <button
                     onClick={() => setIsThemeCreatorOpen(true)}
-                    className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80`}
+                    className={`${desktopShowClass} items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-all hover:shadow-md hover:scale-[1.02]`}
                     style={{
                       backgroundColor: 'var(--bg-tertiary)',
                       borderColor: 'var(--border-secondary)',
@@ -225,7 +226,7 @@ const MainContent: React.FC<MainContentProps> = ({
                     }}
                     title="Open Theme Creator (Ctrl+Shift+T)"
                   >
-                    <span>🎨</span>
+                    <Palette className="w-4 h-4" />
                     <span>Themes</span>
                   </button>
                 )}
@@ -236,7 +237,7 @@ const MainContent: React.FC<MainContentProps> = ({
                     setIsZenMode(true);
                     analytics.trackEvent('mode_switched', { mode: 'zen' });
                   }}
-                  className={`${desktopShowClass} items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors hover:opacity-80`}
+                  className={`${desktopShowClass} items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-all hover:shadow-md hover:scale-[1.02]`}
                   style={{
                     backgroundColor: 'var(--bg-tertiary)',
                     borderColor: 'var(--border-secondary)',
