@@ -13,6 +13,22 @@ import { dbLogger } from '@/lib/logger';
 // Development bypass - set to true to disable auth temporarily
 const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
 
+// CRITICAL: Prevent auth bypass in production
+if (process.env.NODE_ENV === 'production' && DISABLE_AUTH_DEV) {
+  throw new Error(
+    'CRITICAL SECURITY ERROR: DISABLE_AUTH must not be enabled in production. ' +
+      'This completely bypasses authentication. Set DISABLE_AUTH=false or remove it.'
+  );
+}
+
+// Warn in development if auth is disabled
+if (DISABLE_AUTH_DEV && process.env.NODE_ENV !== 'test') {
+  console.warn(
+    '⚠️  WARNING: Authentication is DISABLED. This is for development only. ' +
+      'All requests will use a development user with enterprise-level access.'
+  );
+}
+
 // Default development user (used when auth is disabled)
 const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
 
@@ -164,11 +180,9 @@ export async function optionalAuth(request: NextRequest): Promise<AuthResult | n
 export async function checkNoteOwnership(userId: string, noteId: string): Promise<boolean> {
   try {
     const db = getDatabase();
-    const note = await db.query.notes.findFirst({
-      where: eq(notes.id, noteId),
-    });
+    const result = await db.select().from(notes).where(eq(notes.id, noteId)).limit(1);
 
-    return note?.userId === userId;
+    return result[0]?.userId === userId;
   } catch (error) {
     dbLogger.error('Error checking note ownership', { userId, noteId }, error as Error);
     return false;
@@ -181,11 +195,9 @@ export async function checkNoteOwnership(userId: string, noteId: string): Promis
 export async function checkLinkOwnership(userId: string, linkId: number): Promise<boolean> {
   try {
     const db = getDatabase();
-    const link = await db.query.links.findFirst({
-      where: eq(links.id, linkId),
-    });
+    const result = await db.select().from(links).where(eq(links.id, linkId)).limit(1);
 
-    return link?.userId === userId;
+    return result[0]?.userId === userId;
   } catch (error) {
     dbLogger.error('Error checking link ownership', { userId, linkId }, error as Error);
     return false;

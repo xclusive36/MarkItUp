@@ -110,7 +110,13 @@ export class FileSystemDBSync {
    * Index a single note (insert or update)
    * Uses retry logic and circuit breaker for reliability
    */
-  async indexNote(noteId: string, content: string, createdAt?: Date, updatedAt?: Date) {
+  async indexNote(
+    noteId: string,
+    content: string,
+    userId: string = 'system',
+    createdAt?: Date,
+    updatedAt?: Date
+  ) {
     const metadata = this.extractMetadata(noteId, content);
     const folder = path.dirname(noteId) === '.' ? null : path.dirname(noteId);
     const name = path.basename(noteId, '.md');
@@ -119,6 +125,7 @@ export class FileSystemDBSync {
 
     const noteData = {
       id: noteId,
+      userId, // Add userId to note data
       name,
       folder,
       content,
@@ -156,7 +163,7 @@ export class FileSystemDBSync {
               .run();
 
             // Update links
-            await this.updateLinks(noteId, metadata.wikilinks);
+            await this.updateLinks(noteId, metadata.wikilinks, userId);
           },
           `indexNote:${noteId}`,
           { maxAttempts: 3 }
@@ -173,7 +180,7 @@ export class FileSystemDBSync {
   /**
    * Update links for a note
    */
-  private async updateLinks(sourceId: string, wikilinks: string[]) {
+  private async updateLinks(sourceId: string, wikilinks: string[], userId: string = 'system') {
     try {
       // Delete existing links from this note
       await this.db.delete(schema.links).where(eq(schema.links.sourceId, sourceId)).run();
@@ -187,6 +194,7 @@ export class FileSystemDBSync {
           await this.db
             .insert(schema.links)
             .values({
+              userId, // Add userId for links
               sourceId,
               targetId: targetNote.id,
               type: 'wikilink',
@@ -287,11 +295,17 @@ export class FileSystemDBSync {
 
         if (!dbNote) {
           // New file - add to database
-          await this.indexNote(file.id, file.content, file.stats.birthtime, file.stats.mtime);
+          await this.indexNote(
+            file.id,
+            file.content,
+            'system',
+            file.stats.birthtime,
+            file.stats.mtime
+          );
           addedCount++;
         } else if (file.stats.mtime > dbNote.updatedAt) {
           // File modified - update database
-          await this.indexNote(file.id, file.content, dbNote.createdAt, file.stats.mtime);
+          await this.indexNote(file.id, file.content, 'system', dbNote.createdAt, file.stats.mtime);
           updatedCount++;
         }
       }

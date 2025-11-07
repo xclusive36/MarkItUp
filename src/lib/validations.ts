@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sanitizeError } from './security/errorHandler';
 
 /**
  * Validation schemas for MarkItUp file operations
@@ -47,13 +48,23 @@ export const readFileParamsSchema = z.object({
 
 /**
  * Helper function to create standardized error responses
+ * Sanitizes error messages in production to avoid leaking system details
  */
 export function createErrorResponse(message: string, status: number = 400) {
-  return Response.json({ error: message }, { status });
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // In production, ensure we don't leak sensitive details in error messages
+  const safeMessage =
+    isProduction && status === 500
+      ? 'An internal error occurred. Please try again later.'
+      : message;
+
+  return Response.json({ error: safeMessage }, { status });
 }
 
 /**
  * Helper function to validate and parse request data
+ * Returns sanitized error messages in production
  */
 export async function validateRequest<T>(
   schema: z.ZodSchema<T>,
@@ -65,14 +76,16 @@ export async function validateRequest<T>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const firstError = error.issues[0];
+      // Validation errors are safe to show (they don't leak system details)
       return {
         success: false,
         error: firstError?.message || 'Validation error',
       };
     }
+    // Use sanitized error message for unexpected errors
     return {
       success: false,
-      error: 'Invalid request data',
+      error: sanitizeError(error, 'validation'),
     };
   }
 }

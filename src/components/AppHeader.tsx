@@ -13,7 +13,6 @@ import {
   BookOpen,
   Map,
   BarChart3,
-  User,
   LogOut,
   UserCircle,
   LayoutDashboard,
@@ -111,9 +110,15 @@ export function AppHeader({
       },
       {
         id: 'profile',
-        label: 'Profile',
+        label: 'User Profile',
         icon: <UserCircle className="w-4 h-4" />,
         onClick: () => onButtonClick('user-profile'),
+      },
+      {
+        id: 'collab-settings',
+        label: 'Collaboration Settings',
+        icon: <Users className="w-4 h-4" />,
+        onClick: () => onButtonClick('collab-settings'),
       },
       {
         id: 'logout',
@@ -208,21 +213,6 @@ export function AppHeader({
     },
   ];
 
-  const getCollabItems = () => [
-    {
-      id: 'user-profile',
-      label: 'User Profile',
-      icon: <User className="w-4 h-4" />,
-      onClick: () => onButtonClick('user-profile'),
-    },
-    {
-      id: 'collab-settings',
-      label: 'Collaboration Settings',
-      icon: <Settings className="w-4 h-4" />,
-      onClick: () => onButtonClick('collab-settings'),
-    },
-  ];
-
   const getCurrentViewIcon = () => {
     switch (currentView) {
       case 'graph':
@@ -275,16 +265,6 @@ export function AppHeader({
             title: 'AI Tools',
           }}
           items={getAIToolsItems()}
-          theme={theme}
-        />
-
-        {/* Collaboration Dropdown */}
-        <SimpleDropdown
-          trigger={{
-            icon: <Users className="w-4 h-4" />,
-            title: `Collaboration - ${settings.enableCollaboration ? 'Active' : 'Solo Mode'}`,
-          }}
-          items={getCollabItems()}
           theme={theme}
         />
 

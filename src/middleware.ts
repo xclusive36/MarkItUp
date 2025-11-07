@@ -3,10 +3,31 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * Security middleware
  * Adds security headers to all responses
+ *
+ * For self-hosted deployments:
+ * - HTTPS enforcement is OPTIONAL and controlled by ENFORCE_HTTPS env var
+ * - Administrators should only enable if they have proper SSL/TLS setup
+ * - Local/internal deployments can safely run on HTTP
  */
-export function middleware(_request: NextRequest) {
-  // request parameter unused
+export function middleware(request: NextRequest) {
   const response = NextResponse.next();
+
+  // Optional HTTPS enforcement for administrators who want it
+  // This is OFF by default for self-hosted flexibility
+  const enforceHttps = process.env.ENFORCE_HTTPS === 'true';
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  // Redirect HTTP to HTTPS if administrator explicitly enables it
+  if (enforceHttps && isProduction) {
+    const url = request.nextUrl.clone();
+    const proto = request.headers.get('x-forwarded-proto') || url.protocol;
+
+    // Only redirect if accessing via HTTP (not HTTPS or localhost)
+    if (proto === 'http' && !url.hostname.includes('localhost')) {
+      url.protocol = 'https';
+      return NextResponse.redirect(url, 301); // Permanent redirect
+    }
+  }
 
   // Content Security Policy
   // Allows inline scripts and styles (required for Next.js)
@@ -46,8 +67,10 @@ export function middleware(_request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), interest-cohort=()'
   );
 
-  // Strict Transport Security (only in production with HTTPS)
-  if (process.env.NODE_ENV === 'production') {
+  // Strict Transport Security (HSTS)
+  // Only set if HTTPS enforcement is enabled by administrator
+  // This tells browsers to only access the site via HTTPS in the future
+  if (enforceHttps && isProduction) {
     response.headers.set(
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'

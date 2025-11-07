@@ -268,7 +268,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Sync with database
     try {
       const syncService = getSyncService();
-      await syncService.indexNote(filenameSanitization.sanitized, sanitizedContent);
+      await syncService.indexNote(filenameSanitization.sanitized, sanitizedContent, userId);
       apiLogger.debug('Note synced to database', {
         noteId: filenameSanitization.sanitized,
         userId,

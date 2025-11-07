@@ -9,6 +9,7 @@ import { eq, and, gt } from 'drizzle-orm';
 import { generateToken } from './jwt';
 import { hashPassword, comparePassword, generateSecureToken } from './encryption';
 import { dbLogger } from '@/lib/logger';
+import { emailService } from '@/lib/services/emailService';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@/lib/db/schema';
 
@@ -64,11 +65,9 @@ export class AuthService {
     }
 
     // Check if user already exists
-    const existingUser = await this.db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    const existingUsers = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
 
-    if (existingUser) {
+    if (existingUsers.length > 0) {
       throw new Error('User already exists');
     }
 
@@ -101,8 +100,17 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     });
 
-    // TODO: Send verification email
-    dbLogger.info('Verification token created', { email, token: verificationToken });
+    // Send verification email
+    const emailSent = await emailService.sendVerificationEmail(email, verificationToken);
+
+    if (emailSent) {
+      dbLogger.info('Verification email sent', { email });
+    } else {
+      dbLogger.warn('Verification email not sent (SMTP not configured)', {
+        email,
+        token: verificationToken,
+      });
+    }
 
     return { userId: newUser.id, email: newUser.email };
   }
@@ -114,9 +122,9 @@ export class AuthService {
     const { email, password, ipAddress, userAgent } = params;
 
     // Find user
-    const user = await this.db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    const userResult = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    const user = userResult[0];
 
     if (!user || !user.passwordHash) {
       throw new Error('Invalid credentials');
@@ -179,20 +187,43 @@ export class AuthService {
       plan: string;
     };
   } | null> {
-    const session = await this.db.query.sessions.findFirst({
-      where: and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())),
-      with: {
-        user: true,
-      },
-    });
+    // Query session
+    const sessionResult = await this.db
+      .select()
+      .from(sessions)
+      .where(and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())))
+      .limit(1);
 
-    if (!session) {
+    if (!sessionResult || sessionResult.length === 0) {
       return null;
     }
 
+    const session = sessionResult[0]!;
+
+    // Query user separately
+    const userResult = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+
+    if (!userResult || userResult.length === 0) {
+      return null;
+    }
+
+    const user = userResult[0]!;
+
     return {
       userId: session.userId,
-      user: session.user,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        plan: user.plan,
+      },
     };
   }
 
@@ -208,9 +239,13 @@ export class AuthService {
    * Verify email address with token
    */
   async verifyEmail(token: string): Promise<boolean> {
-    const verification = await this.db.query.verificationTokens.findFirst({
-      where: and(eq(verificationTokens.token, token), gt(verificationTokens.expiresAt, new Date())),
-    });
+    const verificationResult = await this.db
+      .select()
+      .from(verificationTokens)
+      .where(and(eq(verificationTokens.token, token), gt(verificationTokens.expiresAt, new Date())))
+      .limit(1);
+
+    const verification = verificationResult[0];
 
     if (!verification) {
       throw new Error('Invalid or expired verification token');
@@ -227,6 +262,20 @@ export class AuthService {
 
     dbLogger.info('Email verified', { email: verification.email });
 
+    // Get user details for welcome email
+    const verifiedUserResult = await this.db
+      .select()
+      .from(users)
+      .where(eq(users.email, verification.email))
+      .limit(1);
+
+    const verifiedUser = verifiedUserResult[0];
+
+    // Send welcome email
+    if (verifiedUser) {
+      await emailService.sendWelcomeEmail(verification.email, verifiedUser.name || undefined);
+    }
+
     return true;
   }
 
@@ -234,9 +283,9 @@ export class AuthService {
    * Request password reset
    */
   async requestPasswordReset(email: string): Promise<{ success: boolean }> {
-    const user = await this.db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
+    const userResult = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
+
+    const user = userResult[0];
 
     if (!user) {
       // Don't reveal if user exists (security)
@@ -252,8 +301,17 @@ export class AuthService {
       used: false,
     });
 
-    // TODO: Send reset email
-    dbLogger.info('Password reset requested', { email, token: resetToken });
+    // Send password reset email
+    const emailSent = await emailService.sendPasswordResetEmail(email, resetToken);
+
+    if (emailSent) {
+      dbLogger.info('Password reset email sent', { email });
+    } else {
+      dbLogger.warn('Password reset email not sent (SMTP not configured)', {
+        email,
+        token: resetToken,
+      });
+    }
 
     return { success: true };
   }
@@ -263,13 +321,23 @@ export class AuthService {
    */
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
     // Find valid reset token
-    const resetToken = await this.db.query.passwordResetTokens.findFirst({
-      where: and(
-        eq(passwordResetTokens.token, token),
-        gt(passwordResetTokens.expiresAt, new Date()),
-        eq(passwordResetTokens.used, false)
-      ),
-    });
+    const resetTokenResult = await this.db
+      .select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.token, token),
+          gt(passwordResetTokens.expiresAt, new Date()),
+          eq(passwordResetTokens.used, false)
+        )
+      )
+      .limit(1);
+
+    const resetToken = resetTokenResult[0];
+
+    if (!resetToken) {
+      throw new Error('Invalid or expired reset token');
+    }
 
     if (!resetToken) {
       throw new Error('Invalid or expired reset token');
@@ -311,9 +379,9 @@ export class AuthService {
     newPassword: string
   ): Promise<boolean> {
     // Get user
-    const user = await this.db.query.users.findFirst({
-      where: eq(users.id, userId),
-    });
+    const userResult = await this.db.select().from(users).where(eq(users.id, userId)).limit(1);
+
+    const user = userResult[0];
 
     if (!user || !user.passwordHash) {
       throw new Error('User not found');

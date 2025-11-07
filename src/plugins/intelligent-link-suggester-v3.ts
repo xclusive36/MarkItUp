@@ -383,6 +383,7 @@ class IntelligentLinkSuggesterPlugin {
 
   /**
    * Clear panel
+   * Note: innerHTML = '' is safe here as we're clearing content, not setting user data
    */
   private clearPanel(): void {
     if (this.panelContainer) {

@@ -276,7 +276,7 @@ export async function POST(request: NextRequest) {
       const noteId = folder
         ? `${folder}/${filenameSanitization.sanitized}`
         : filenameSanitization.sanitized;
-      await syncService.indexNote(noteId, sanitizedContent);
+      await syncService.indexNote(noteId, sanitizedContent, userId);
       apiLogger.debug('Note synced to database', { noteId });
     } catch (dbError) {
       apiLogger.error('Database sync failed (non-fatal)', { noteId: filename }, dbError as Error);

@@ -5,10 +5,26 @@
 
 import crypto from 'crypto';
 
+// Validate ENCRYPTION_KEY is set in production
+if (process.env.NODE_ENV === 'production' && !process.env.ENCRYPTION_KEY) {
+  throw new Error(
+    'CRITICAL SECURITY ERROR: ENCRYPTION_KEY must be set in production. ' +
+      'Generate one with: openssl rand -hex 16'
+  );
+}
+
 // Encryption key from environment (must be 32 bytes)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'dev-key-change-in-prod-32bytes';
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
+
+// Warn if using default key in development
+if (!process.env.ENCRYPTION_KEY && process.env.NODE_ENV !== 'test') {
+  console.warn(
+    '⚠️  WARNING: Using default ENCRYPTION_KEY. This is only safe for development. ' +
+      'Set ENCRYPTION_KEY in .env for production.'
+  );
+}
 
 /**
  * Ensure key is exactly 32 bytes

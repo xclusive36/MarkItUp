@@ -49,7 +49,8 @@ export async function GET() {
   // Check file system
   const fsStart = Date.now();
   try {
-    await fileService.listFiles();
+    // Use a dev user ID for health check
+    await fileService.listFiles('health-check-user');
     health.checks.filesystem = {
       status: 'pass',
       message: 'File system accessible',

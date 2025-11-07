@@ -5,9 +5,25 @@
 
 import jwt from 'jsonwebtoken';
 
-// Use environment variable or fallback (should be set in production)
+// Validate JWT_SECRET is set in production
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error(
+    'CRITICAL SECURITY ERROR: JWT_SECRET must be set in production. ' +
+      'Generate one with: openssl rand -base64 32'
+  );
+}
+
+// Use environment variable or fallback for development only
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production-min-32-chars';
 const JWT_EXPIRY = '30d'; // 30 days
+
+// Warn if using default secret in development
+if (!process.env.JWT_SECRET && process.env.NODE_ENV !== 'test') {
+  console.warn(
+    '⚠️  WARNING: Using default JWT_SECRET. This is only safe for development. ' +
+      'Set JWT_SECRET in .env for production.'
+  );
+}
 
 export interface TokenPayload {
   userId: string;

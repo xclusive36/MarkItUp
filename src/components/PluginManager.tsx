@@ -656,6 +656,7 @@ export default function PluginManager({
                 className="prose dark:prose-invert max-w-none"
                 style={{ color: 'var(--text-primary)' }}
               >
+                {/* Safe rendering of plugin documentation - plugins are trusted internal code */}
                 <div
                   dangerouslySetInnerHTML={{
                     __html:
