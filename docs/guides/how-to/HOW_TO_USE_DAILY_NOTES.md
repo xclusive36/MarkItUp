@@ -12,8 +12,7 @@ The Daily Notes plugin creates automatic daily journal entries with templates, s
 
 1. **Navigate to Plugin Manager**
    - Go to your app at `http://localhost:3000`
-   - Look for a "Plugins" or "Plugin Manager" link in the navigation/header
-   - OR go directly to `http://localhost:3000/plugin-manager`
+   - Look for a "Plugins" or "Plugin Manager" option in the header dropdown menu
 
 2. **Find Daily Notes Enhanced**
    - Look for "Daily Notes Enhanced" in the plugin list
