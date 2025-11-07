@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface SuccessAnimationProps {
   /** Whether to show the success animation */

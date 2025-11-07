@@ -3,7 +3,6 @@
  * Demonstrates how to use the new design system components
  */
 
-import React from 'react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Save, Download, Trash2, Sparkles, Check } from 'lucide-react';
