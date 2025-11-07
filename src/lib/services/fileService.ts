@@ -7,7 +7,8 @@ const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
 
 /**
  * FileService - Handles all file system operations for markdown files
- * Provides a clean separation between business logic and API routes
+ * Supports multi-tenancy with user-scoped directories
+ * Directory structure: /markdown/user_{userId}/
  */
 export class FileService {
   private markdownDir: string;
@@ -27,12 +28,30 @@ export class FileService {
   }
 
   /**
-   * Safely join a filename with the markdown directory
+   * Get the user-specific directory path
+   */
+  private getUserDir(userId: number): string {
+    return path.join(this.markdownDir, `user_${userId}`);
+  }
+
+  /**
+   * Ensure the user directory exists
+   */
+  private ensureUserDirectoryExists(userId: number): void {
+    const userDir = this.getUserDir(userId);
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir, { recursive: true });
+    }
+  }
+
+  /**
+   * Safely join a filename with the user's markdown directory
    * Prevents path traversal attacks
    */
-  private safeJoinPath(filename: string): string | null {
-    const filePath = path.resolve(this.markdownDir, filename);
-    if (!filePath.startsWith(this.markdownDir)) {
+  private safeJoinPath(userId: number, filename: string): string | null {
+    const userDir = this.getUserDir(userId);
+    const filePath = path.resolve(userDir, filename);
+    if (!filePath.startsWith(userDir)) {
       return null;
     }
     return filePath;
@@ -43,32 +62,27 @@ export class FileService {
    */
   private findNotesRecursive(dir: string, folderPrefix: string = ''): Note[] {
     let results: Note[] = [];
-    
+
     if (!fs.existsSync(dir)) {
       return results;
     }
 
     const items = fs.readdirSync(dir);
-    
+
     for (const item of items) {
       const itemPath = path.join(dir, item);
       const stats = fs.statSync(itemPath);
-      
+
       if (stats.isDirectory()) {
-        results = results.concat(
-          this.findNotesRecursive(itemPath, path.join(folderPrefix, item))
-        );
+        results = results.concat(this.findNotesRecursive(itemPath, path.join(folderPrefix, item)));
       } else if (item.endsWith('.md')) {
         const content = fs.readFileSync(itemPath, 'utf-8');
         const parsed = MarkdownParser.parseNote(content);
         const wordCount = MarkdownParser.calculateWordCount(content);
         const readingTime = MarkdownParser.calculateReadingTime(wordCount);
-        
+
         const note: Note = {
-          id: MarkdownParser.generateNoteId(
-            item.replace('.md', ''),
-            folderPrefix || undefined
-          ),
+          id: MarkdownParser.generateNoteId(item.replace('.md', ''), folderPrefix || undefined),
           name: item,
           content,
           folder: folderPrefix || undefined,
@@ -79,32 +93,32 @@ export class FileService {
           wordCount,
           readingTime,
         };
-        
+
         results.push(note);
       }
     }
-    
+
     return results;
   }
 
   /**
-   * List all markdown files as Note objects
+   * List all markdown files as Note objects for a specific user
    */
-  async listFiles(): Promise<Note[]> {
-    const notes = this.findNotesRecursive(this.markdownDir, '');
-    
+  async listFiles(userId: number): Promise<Note[]> {
+    this.ensureUserDirectoryExists(userId);
+    const userDir = this.getUserDir(userId);
+    const notes = this.findNotesRecursive(userDir, '');
+
     // Sort by most recently updated
-    return notes.sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
+    return notes.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
   }
 
   /**
-   * Read a single file by filename
+   * Read a single file by filename for a specific user
    */
-  async readFile(filename: string): Promise<Note | null> {
-    const filePath = this.safeJoinPath(filename);
-    
+  async readFile(userId: number, filename: string): Promise<Note | null> {
+    const filePath = this.safeJoinPath(userId, filename);
+
     if (!filePath || !fs.existsSync(filePath)) {
       return null;
     }
@@ -129,39 +143,41 @@ export class FileService {
   }
 
   /**
-   * Check if a file exists
+   * Check if a file exists for a specific user
    */
-  async fileExists(filename: string): Promise<boolean> {
-    const filePath = this.safeJoinPath(filename);
+  async fileExists(userId: number, filename: string): Promise<boolean> {
+    const filePath = this.safeJoinPath(userId, filename);
     return filePath ? fs.existsSync(filePath) : false;
   }
 
   /**
-   * Create a new file
+   * Create a new file for a specific user
    */
   async createFile(
+    userId: number,
     filename: string,
     content: string,
     folder?: string
   ): Promise<{ success: boolean; message: string; fileName: string; folder: string }> {
+    this.ensureUserDirectoryExists(userId);
+
     // Ensure the filename ends with .md
     const fileName = filename.endsWith('.md') ? filename : `${filename}.md`;
-    
-    // Determine target directory
-    const targetDir = folder 
-      ? path.join(this.markdownDir, folder) 
-      : this.markdownDir;
-    
+
+    // Determine target directory (within user's directory)
+    const userDir = this.getUserDir(userId);
+    const targetDir = folder ? path.join(userDir, folder) : userDir;
+
     // Ensure target directory exists
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
-    
+
     const filePath = path.join(targetDir, fileName);
-    
+
     // Write file
     fs.writeFileSync(filePath, content, 'utf-8');
-    
+
     return {
       success: true,
       message: 'File created successfully',
@@ -171,21 +187,22 @@ export class FileService {
   }
 
   /**
-   * Update an existing file
+   * Update an existing file for a specific user
    */
   async updateFile(
+    userId: number,
     filename: string,
     content: string,
     overwrite: boolean = false
   ): Promise<{ success: boolean; message: string; requiresOverwrite?: boolean }> {
-    const filePath = this.safeJoinPath(filename);
-    
+    const filePath = this.safeJoinPath(userId, filename);
+
     if (!filePath) {
       return { success: false, message: 'Invalid filename' };
     }
 
     const fileExists = fs.existsSync(filePath);
-    
+
     if (fileExists && !overwrite) {
       return {
         success: false,
@@ -207,11 +224,14 @@ export class FileService {
   }
 
   /**
-   * Delete a file
+   * Delete a file for a specific user
    */
-  async deleteFile(filename: string): Promise<{ success: boolean; message: string }> {
-    const filePath = this.safeJoinPath(filename);
-    
+  async deleteFile(
+    userId: number,
+    filename: string
+  ): Promise<{ success: boolean; message: string }> {
+    const filePath = this.safeJoinPath(userId, filename);
+
     if (!filePath) {
       return { success: false, message: 'Invalid filename' };
     }
@@ -223,11 +243,12 @@ export class FileService {
     // Delete file
     fs.unlinkSync(filePath);
 
-    // Remove empty parent folders up to MARKDOWN_DIR
+    // Remove empty parent folders up to user directory
+    const userDir = this.getUserDir(userId);
     let dir = path.dirname(filePath);
-    while (dir !== this.markdownDir) {
+    while (dir !== userDir) {
       const files = fs.readdirSync(dir);
-      
+
       // Only remove if no files or folders left
       if (files.length === 0) {
         fs.rmdirSync(dir);
@@ -241,6 +262,37 @@ export class FileService {
       success: true,
       message: 'File deleted successfully',
     };
+  }
+
+  /**
+   * Calculate total storage used by a user in bytes
+   */
+  async calculateStorageUsed(userId: number): Promise<number> {
+    const userDir = this.getUserDir(userId);
+
+    if (!fs.existsSync(userDir)) {
+      return 0;
+    }
+
+    let totalBytes = 0;
+
+    const calculateDirSize = (dirPath: string): void => {
+      const items = fs.readdirSync(dirPath);
+
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        const stats = fs.statSync(itemPath);
+
+        if (stats.isDirectory()) {
+          calculateDirSize(itemPath);
+        } else {
+          totalBytes += stats.size;
+        }
+      }
+    };
+
+    calculateDirSize(userDir);
+    return totalBytes;
   }
 }
 
