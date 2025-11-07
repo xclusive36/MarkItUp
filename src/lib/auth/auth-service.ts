@@ -167,7 +167,18 @@ export class AuthService {
   /**
    * Verify session token and return user info
    */
-  async verifySession(token: string) {
+  async verifySession(token: string): Promise<{
+    userId: string;
+    user: {
+      id: string;
+      email: string;
+      name: string | null;
+      image: string | null;
+      isActive: boolean;
+      isEmailVerified: boolean;
+      plan: string;
+    };
+  } | null> {
     const session = await this.db.query.sessions.findFirst({
       where: and(eq(sessions.token, token), gt(sessions.expiresAt, new Date())),
       with: {
