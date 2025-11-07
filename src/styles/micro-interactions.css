@@ -1,0 +1,864 @@
+/**
+ * Micro-interactions CSS
+ * Phase 4: Polish & Delight
+ * 
+ * Subtle animations and interactions that add polish and delight to the UI.
+ * All animations respect prefers-reduced-motion.
+ */
+
+/* ============================================
+   1. MICRO-INTERACTION UTILITIES
+   ============================================ */
+
+/* Hover Scale */
+.hover-scale {
+  transition: transform var(--transition-normal);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-scale-sm:hover {
+  transform: scale(1.01);
+}
+
+.hover-scale-lg:hover {
+  transform: scale(1.05);
+}
+
+/* Hover Lift (subtle elevation) */
+.hover-lift {
+  transition:
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.hover-lift-sm:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Hover Glow */
+.hover-glow {
+  position: relative;
+  transition: box-shadow var(--transition-normal);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(var(--accent-primary-rgb), 0.3);
+}
+
+.hover-glow-secondary:hover {
+  box-shadow: 0 0 20px rgba(var(--accent-secondary-rgb), 0.3);
+}
+
+/* Click/Active States */
+.press-scale {
+  transition: transform var(--transition-fast);
+}
+
+.press-scale:active {
+  transform: scale(0.95);
+}
+
+.press-scale-sm:active {
+  transform: scale(0.98);
+}
+
+/* Ripple Effect Container */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Focus Ring Enhancement */
+.focus-ring-enhanced {
+  outline: none;
+  position: relative;
+}
+
+.focus-ring-enhanced::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  transition: border-color var(--transition-fast);
+}
+
+.focus-ring-enhanced:focus::before {
+  border-color: var(--accent-primary);
+  animation: focus-pulse 2s infinite;
+}
+
+@keyframes focus-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   2. FEEDBACK ANIMATIONS
+   ============================================ */
+
+/* Pulse (attention grabber) */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Heartbeat */
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  10%,
+  30% {
+    transform: scale(1.1);
+  }
+  20%,
+  40% {
+    transform: scale(1);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Bounce */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-bounce-once {
+  animation: bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Shake (error feedback) */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Wiggle */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+/* Jello (fun wobble) */
+@keyframes jello {
+  0%,
+  100% {
+    transform: scale3d(1, 1, 1);
+  }
+  30% {
+    transform: scale3d(1.25, 0.75, 1);
+  }
+  40% {
+    transform: scale3d(0.75, 1.25, 1);
+  }
+  50% {
+    transform: scale3d(1.15, 0.85, 1);
+  }
+  65% {
+    transform: scale3d(0.95, 1.05, 1);
+  }
+  75% {
+    transform: scale3d(1.05, 0.95, 1);
+  }
+}
+
+.animate-jello {
+  animation: jello 0.9s;
+}
+
+/* Rubber Band (playful stretch) */
+@keyframes rubberBand {
+  0% {
+    transform: scale3d(1, 1, 1);
+  }
+  30% {
+    transform: scale3d(1.25, 0.75, 1);
+  }
+  40% {
+    transform: scale3d(0.75, 1.25, 1);
+  }
+  50% {
+    transform: scale3d(1.15, 0.85, 1);
+  }
+  65% {
+    transform: scale3d(0.95, 1.05, 1);
+  }
+  75% {
+    transform: scale3d(1.05, 0.95, 1);
+  }
+  100% {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.animate-rubber-band {
+  animation: rubberBand 1s;
+}
+
+/* ============================================
+   3. LOADING MICRO-INTERACTIONS
+   ============================================ */
+
+/* Shimmer Effect (for loading states) */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-secondary) 0%,
+    var(--surface-tertiary) 50%,
+    var(--surface-secondary) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Skeleton Pulse Enhancement */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    var(--surface-secondary) 25%,
+    var(--surface-tertiary) 50%,
+    var(--surface-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Progress Bar Indeterminate */
+@keyframes indeterminate-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.progress-indeterminate {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-tertiary);
+}
+
+.progress-indeterminate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent-primary);
+  animation: indeterminate-progress 1.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
+
+/* ============================================
+   4. ENTRANCE ANIMATIONS
+   ============================================ */
+
+/* Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Slide In from directions */
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-in-down {
+  animation: slideInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scale In */
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Zoom In */
+@keyframes zoomIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   5. SUCCESS/COMPLETION ANIMATIONS
+   ============================================ */
+
+/* Success Checkmark */
+@keyframes draw-check {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.checkmark-svg {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+.checkmark-animate {
+  animation: draw-check 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+/* Success Glow */
+@keyframes success-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0);
+  }
+}
+
+.animate-success-glow {
+  animation: success-glow 1.5s ease-out;
+}
+
+/* Pop In (celebration) */
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Tada (celebration) */
+@keyframes tada {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  10%,
+  20% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  40%,
+  60%,
+  80% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.animate-tada {
+  animation: tada 1s;
+}
+
+/* ============================================
+   6. ATTENTION SEEKERS
+   ============================================ */
+
+/* Flash */
+@keyframes flash {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+.animate-flash {
+  animation: flash 1s;
+}
+
+/* Head Shake */
+@keyframes headShake {
+  0%,
+  50% {
+    transform: translateX(0);
+  }
+  6.5%,
+  18.5% {
+    transform: translateX(-6px) rotateY(-9deg);
+  }
+  12.5%,
+  25% {
+    transform: translateX(5px) rotateY(7deg);
+  }
+  31.5%,
+  43.5% {
+    transform: translateX(-3px) rotateY(-5deg);
+  }
+  37.5% {
+    transform: translateX(2px) rotateY(3deg);
+  }
+}
+
+.animate-head-shake {
+  animation: headShake 1s;
+}
+
+/* Swing */
+@keyframes swing {
+  20% {
+    transform: rotate(15deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  60% {
+    transform: rotate(5deg);
+  }
+  80% {
+    transform: rotate(-5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-swing {
+  transform-origin: top center;
+  animation: swing 1s;
+}
+
+/* ============================================
+   7. INTERACTIVE FEEDBACK
+   ============================================ */
+
+/* Button Press Feedback */
+.btn-press-feedback {
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.btn-press-feedback:active {
+  transform: scale(0.95);
+}
+
+.btn-press-feedback:active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: inherit;
+}
+
+/* Toggle Switch Animation */
+.toggle-switch-animated {
+  transition: background-color var(--transition-normal);
+}
+
+.toggle-switch-animated .toggle-thumb {
+  transition: transform var(--transition-normal) cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.toggle-switch-animated:checked .toggle-thumb {
+  transform: translateX(100%);
+}
+
+/* Checkbox Checkmark Animation */
+.checkbox-animated input:checked ~ .checkmark {
+  animation: checkmark-pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   8. STAGGER ANIMATIONS
+   ============================================ */
+
+/* Stagger Fade In (for lists) */
+.stagger-fade-in > * {
+  animation: fadeIn 0.5s ease-out backwards;
+}
+
+.stagger-fade-in > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-fade-in > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-fade-in > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-fade-in > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-fade-in > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.stagger-fade-in > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.stagger-fade-in > *:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.stagger-fade-in > *:nth-child(8) {
+  animation-delay: 0.4s;
+}
+.stagger-fade-in > *:nth-child(9) {
+  animation-delay: 0.45s;
+}
+.stagger-fade-in > *:nth-child(10) {
+  animation-delay: 0.5s;
+}
+
+/* Stagger Slide In */
+.stagger-slide-up > * {
+  animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.stagger-slide-up > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-slide-up > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-slide-up > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-slide-up > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-slide-up > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.stagger-slide-up > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.stagger-slide-up > *:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.stagger-slide-up > *:nth-child(8) {
+  animation-delay: 0.4s;
+}
+
+/* ============================================
+   9. REDUCED MOTION SUPPORT
+   ============================================ */
+
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Disable hover animations */
+  .hover-scale:hover,
+  .hover-scale-sm:hover,
+  .hover-scale-lg:hover {
+    transform: none;
+  }
+
+  .hover-lift:hover,
+  .hover-lift-sm:hover {
+    transform: none;
+  }
+
+  /* Keep only opacity changes for feedback */
+  .press-scale:active,
+  .press-scale-sm:active {
+    transform: none;
+    opacity: 0.8;
+  }
+}
+
+/* ============================================
+   10. UTILITY CLASSES
+   ============================================ */
+
+/* Animation Delays */
+.delay-50 {
+  animation-delay: 50ms;
+}
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-150 {
+  animation-delay: 150ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Animation Speeds */
+.animate-fast {
+  animation-duration: 0.15s;
+}
+.animate-normal {
+  animation-duration: 0.3s;
+}
+.animate-slow {
+  animation-duration: 0.5s;
+}
+.animate-slower {
+  animation-duration: 1s;
+}
+
+/* Animation Fill Modes */
+.animate-forwards {
+  animation-fill-mode: forwards;
+}
+.animate-backwards {
+  animation-fill-mode: backwards;
+}
+.animate-both {
+  animation-fill-mode: both;
+}
+
+/* Transition Utilities */
+.transition-all {
+  transition: all var(--transition-normal);
+}
+
+.transition-transform {
+  transition: transform var(--transition-normal);
+}
+
+.transition-opacity {
+  transition: opacity var(--transition-normal);
+}
+
+.transition-colors {
+  transition:
+    color var(--transition-normal),
+    background-color var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+/* Smooth Scroll */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smooth-scroll {
+    scroll-behavior: auto;
+  }
+}

@@ -255,10 +255,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </h2>
         <div className="space-y-3">
           <div>
-            <label
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: 'var(--text-secondary)' }}
-            >
+            <label className="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">
               Note Name
             </label>
             <input
@@ -271,17 +268,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 backgroundColor: 'var(--bg-tertiary)',
                 borderColor: 'var(--border-secondary)',
                 color: 'var(--text-primary)',
-                opacity: currentView !== 'editor' ? 0.5 : 1,
-                cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
               }}
-              disabled={currentView !== 'editor'}
             />
           </div>
           <div>
-            <label
-              className="block text-xs font-medium mb-1.5"
-              style={{ color: 'var(--text-secondary)' }}
-            >
+            <label className="block text-xs font-medium mb-1.5 text-gray-600 dark:text-gray-400">
               Folder Location
             </label>
             <input
@@ -294,26 +285,23 @@ const Sidebar: React.FC<SidebarProps> = ({
                 backgroundColor: 'var(--bg-tertiary)',
                 borderColor: 'var(--border-secondary)',
                 color: 'var(--text-primary)',
-                opacity: currentView !== 'editor' ? 0.5 : 1,
-                cursor: currentView !== 'editor' ? 'not-allowed' : 'auto',
               }}
-              disabled={currentView !== 'editor'}
             />
           </div>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Changes will be applied when you save the note (Cmd+S)
           </p>
-          <button
-            onClick={createNewNote}
-            className="w-full mt-3 py-2.5 px-4 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
-            disabled={currentView !== 'editor'}
-            style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            title="Create new note"
-          >
-            <Plus className="w-4 h-4" />
-            Create New Note
-          </button>
         </div>
+        <button
+          onClick={createNewNote}
+          className="w-full mt-3 py-2.5 px-4 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
+          disabled={currentView !== 'editor'}
+          style={currentView !== 'editor' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          title="Create new note"
+        >
+          <Plus className="w-4 h-4" />
+          Create New Note
+        </button>
       </div>
       {/* Quick Stats - moved from header for better UX */}
       <div
@@ -657,6 +645,11 @@ export default memo(Sidebar, (prevProps, nextProps) => {
 
   // Re-render if current view changes
   if (prevProps.currentView !== nextProps.currentView) {
+    return false;
+  }
+
+  // Re-render if fileName or folder changes
+  if (prevProps.fileName !== nextProps.fileName || prevProps.folder !== nextProps.folder) {
     return false;
   }
 

@@ -103,12 +103,6 @@ export default function PluginDebugPage() {
             >
               Refresh State
             </button>
-            <a
-              href="/plugin-manager"
-              className="inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Go to Plugin Manager
-            </a>
           </div>
         </div>
       </div>

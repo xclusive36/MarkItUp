@@ -1,0 +1,586 @@
+/* ============================================
+   PHASE 3: Mobile Optimizations
+   Touch-friendly UI patterns, gestures, and
+   native-like mobile experiences
+   ============================================ */
+
+/* ===========================
+   1. BOTTOM SHEET COMPONENT
+   =========================== */
+
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fade-in 0.2s ease-out;
+}
+
+.bottom-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.bottom-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  border: 1px solid;
+  border-bottom: none;
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.bottom-sheet-handle-area {
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  display: flex;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.bottom-sheet-handle-area:active {
+  cursor: grabbing;
+}
+
+.bottom-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  opacity: 0.4;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid;
+}
+
+.bottom-sheet-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0;
+}
+
+.bottom-sheet-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.bottom-sheet-close:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.bottom-sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  overscroll-behavior: contain;
+}
+
+/* ===========================
+   2. PULL TO REFRESH
+   =========================== */
+
+.pull-to-refresh {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.pull-to-refresh-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    height 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.pull-to-refresh-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}
+
+.pull-to-refresh-spinner.refreshing {
+  animation: spin 1s linear infinite;
+}
+
+.pull-to-refresh-content {
+  min-height: 100%;
+}
+
+/* ===========================
+   3. TOUCH TARGETS
+   =========================== */
+
+.touch-target {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.touch-target:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+/* Ensure minimum touch target size */
+@media (hover: none) and (pointer: coarse) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ===========================
+   4. SWIPEABLE ELEMENTS
+   =========================== */
+
+.swipeable {
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipeable-actions {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+}
+
+.swipeable-actions.left {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-tertiary), transparent);
+}
+
+.swipeable-actions.right {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-tertiary), transparent);
+}
+
+.swipeable-content {
+  position: relative;
+  background-color: var(--bg-primary);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===========================
+   5. MOBILE-SPECIFIC UTILITIES
+   =========================== */
+
+/* Safe area insets for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Disable text selection on touch */
+.no-select-mobile {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Better tap highlights */
+.tap-highlight {
+  -webkit-tap-highlight-color: rgba(var(--accent-primary-rgb), 0.1);
+}
+
+/* Momentum scrolling */
+.momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ===========================
+   6. MOBILE ANIMATIONS
+   =========================== */
+
+/* Spring animation */
+@keyframes spring-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.spring-in {
+  animation: spring-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Bounce animation */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Slide animations */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-in-bottom {
+  animation: slide-in-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===========================
+   7. MOBILE-SPECIFIC LAYOUTS
+   =========================== */
+
+/* Stack cards on mobile */
+@media (max-width: 768px) {
+  .mobile-stack > * {
+    width: 100%;
+    margin-bottom: var(--space-4);
+  }
+
+  /* Reduce padding on mobile */
+  .mobile-compact {
+    padding: var(--space-4) !important;
+  }
+
+  /* Hide on mobile */
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Sticky bottom on mobile */
+  .mobile-sticky-bottom {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-4);
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-primary);
+    z-index: var(--z-sticky);
+  }
+}
+
+/* ===========================
+   8. GESTURE FEEDBACK
+   =========================== */
+
+/* Ripple effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.6s,
+    height 0.6s;
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Press feedback */
+.press-feedback {
+  transition:
+    transform 0.1s ease,
+    opacity 0.1s ease;
+}
+
+.press-feedback:active {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
+/* ===========================
+   9. MOBILE MODALS & OVERLAYS
+   =========================== */
+
+/* Full-screen modal on mobile */
+@media (max-width: 768px) {
+  .modal-mobile-fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    animation: slide-in-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ===========================
+   10. MOBILE OPTIMIZATIONS
+   =========================== */
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Better touch scrolling performance */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .bottom-sheet,
+  .pull-to-refresh-spinner,
+  .spring-in,
+  .bounce-in,
+  .slide-in-left,
+  .slide-in-right,
+  .slide-in-bottom {
+    animation: none !important;
+  }
+}
+
+/* ===========================
+   11. TOUCH-OPTIMIZED BUTTONS
+   =========================== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Increase button sizes on touch devices */
+  button:not(.touch-target) {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Better tap feedback */
+  button,
+  a,
+  [role='button'] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:active,
+  a:active,
+  [role='button']:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* ===========================
+   12. HORIZONTAL SCROLLING
+   =========================== */
+
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* Scroll indicators */
+.horizontal-scroll::before,
+.horizontal-scroll::after {
+  content: '';
+  position: sticky;
+  width: var(--space-4);
+  height: 100%;
+  pointer-events: none;
+}
+
+.horizontal-scroll::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-primary), transparent);
+}
+
+.horizontal-scroll::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-primary), transparent);
+}
+
+/* ===========================
+   13. MOBILE FAB (Floating Action Button)
+   =========================== */
+
+.mobile-fab {
+  position: fixed;
+  bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  right: var(--space-6);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+  z-index: var(--z-sticky);
+}
+
+.mobile-fab:active {
+  transform: scale(0.9);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 769px) {
+  .mobile-fab {
+    display: none;
+  }
+}
