@@ -30,14 +30,14 @@ export class FileService {
   /**
    * Get the user-specific directory path
    */
-  private getUserDir(userId: number): string {
+  private getUserDir(userId: string): string {
     return path.join(this.markdownDir, `user_${userId}`);
   }
 
   /**
    * Ensure the user directory exists
    */
-  private ensureUserDirectoryExists(userId: number): void {
+  private ensureUserDirectoryExists(userId: string): void {
     const userDir = this.getUserDir(userId);
     if (!fs.existsSync(userDir)) {
       fs.mkdirSync(userDir, { recursive: true });
@@ -48,7 +48,7 @@ export class FileService {
    * Safely join a filename with the user's markdown directory
    * Prevents path traversal attacks
    */
-  private safeJoinPath(userId: number, filename: string): string | null {
+  private safeJoinPath(userId: string, filename: string): string | null {
     const userDir = this.getUserDir(userId);
     const filePath = path.resolve(userDir, filename);
     if (!filePath.startsWith(userDir)) {
@@ -104,7 +104,7 @@ export class FileService {
   /**
    * List all markdown files as Note objects for a specific user
    */
-  async listFiles(userId: number): Promise<Note[]> {
+  async listFiles(userId: string): Promise<Note[]> {
     this.ensureUserDirectoryExists(userId);
     const userDir = this.getUserDir(userId);
     const notes = this.findNotesRecursive(userDir, '');
@@ -116,7 +116,7 @@ export class FileService {
   /**
    * Read a single file by filename for a specific user
    */
-  async readFile(userId: number, filename: string): Promise<Note | null> {
+  async readFile(userId: string, filename: string): Promise<Note | null> {
     const filePath = this.safeJoinPath(userId, filename);
 
     if (!filePath || !fs.existsSync(filePath)) {
@@ -145,7 +145,7 @@ export class FileService {
   /**
    * Check if a file exists for a specific user
    */
-  async fileExists(userId: number, filename: string): Promise<boolean> {
+  async fileExists(userId: string, filename: string): Promise<boolean> {
     const filePath = this.safeJoinPath(userId, filename);
     return filePath ? fs.existsSync(filePath) : false;
   }
@@ -154,7 +154,7 @@ export class FileService {
    * Create a new file for a specific user
    */
   async createFile(
-    userId: number,
+    userId: string,
     filename: string,
     content: string,
     folder?: string
@@ -190,7 +190,7 @@ export class FileService {
    * Update an existing file for a specific user
    */
   async updateFile(
-    userId: number,
+    userId: string,
     filename: string,
     content: string,
     overwrite: boolean = false
@@ -227,7 +227,7 @@ export class FileService {
    * Delete a file for a specific user
    */
   async deleteFile(
-    userId: number,
+    userId: string,
     filename: string
   ): Promise<{ success: boolean; message: string }> {
     const filePath = this.safeJoinPath(userId, filename);
@@ -267,7 +267,7 @@ export class FileService {
   /**
    * Calculate total storage used by a user in bytes
    */
-  async calculateStorageUsed(userId: number): Promise<number> {
+  async calculateStorageUsed(userId: string): Promise<number> {
     const userDir = this.getUserDir(userId);
 
     if (!fs.existsSync(userDir)) {

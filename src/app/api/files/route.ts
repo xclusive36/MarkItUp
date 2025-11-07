@@ -15,10 +15,14 @@ import {
   sanitizeMarkdownContent,
 } from '@/lib/security/pathSanitizer';
 import { apiLogger } from '@/lib/logger';
+import { requireAuth } from '@/lib/auth/middleware';
+import { checkQuota } from '@/lib/usage/quotas';
+import { trackUsage, updateStorageUsage } from '@/lib/usage/tracker';
 
 /**
  * GET /api/files
  * List all markdown files with optional pagination
+ * Requires authentication - only returns files owned by the authenticated user
  * Query params:
  * - page: page number (default: 1)
  * - limit: items per page (default: 100, max: 500)
@@ -28,12 +32,16 @@ import { apiLogger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { userId } = auth;
     // Rate limiting
     const clientId = getClientIdentifier(request);
     const rateLimit = fileReadLimiter.check(clientId);
 
     if (!rateLimit.allowed) {
-      apiLogger.warn('Rate limit exceeded for file list', { clientId, operation: 'list' });
+      apiLogger.warn('Rate limit exceeded for file list', { clientId, userId, operation: 'list' });
       return createRateLimitResponse(rateLimit.resetTime);
     }
 
@@ -44,7 +52,8 @@ export async function GET(request: NextRequest) {
     const sortField = searchParams.get('sort') || 'modified';
     const sortOrder = searchParams.get('order') || 'desc';
 
-    const allNotes = await fileService.listFiles();
+    // Get files for authenticated user only
+    const allNotes = await fileService.listFiles(userId);
 
     // Sort notes
     const sortedNotes = [...allNotes].sort((a, b) => {
@@ -86,6 +95,7 @@ export async function GET(request: NextRequest) {
       total,
       page,
       limit,
+      userId,
       clientId,
     });
 
@@ -119,17 +129,37 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/files
  * Create a new markdown file
- * Includes rate limiting, path sanitization, and content validation
+ * Requires authentication
+ * Includes rate limiting, quota checking, path sanitization, and content validation
  */
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { userId } = auth;
+
     // Rate limiting
     const clientId = getClientIdentifier(request);
     const rateLimit = fileCreationLimiter.check(clientId);
 
     if (!rateLimit.allowed) {
-      apiLogger.warn('Rate limit exceeded for file creation', { clientId, operation: 'create' });
+      apiLogger.warn('Rate limit exceeded for file creation', {
+        clientId,
+        userId,
+        operation: 'create',
+      });
       return createRateLimitResponse(rateLimit.resetTime);
+    }
+
+    // Check notes quota
+    const notesQuota = await checkQuota(userId, 'notes');
+    if (!notesQuota.allowed) {
+      apiLogger.warn('Notes quota exceeded', { userId, quota: notesQuota });
+      return NextResponse.json(
+        { error: 'Quota Exceeded', message: notesQuota.message },
+        { status: 403 }
+      );
     }
 
     let body;
@@ -201,8 +231,27 @@ export async function POST(request: NextRequest) {
     // Sanitize markdown content to prevent XSS
     const sanitizedContent = sanitizeMarkdownContent(content);
 
+    // Check storage quota before creating file
+    const contentSize = Buffer.byteLength(sanitizedContent, 'utf8');
+    const currentStorage = await fileService.calculateStorageUsed(userId);
+    const storageQuota = await checkQuota(userId, 'storage');
+
+    if (currentStorage + contentSize > (storageQuota.limit || 0)) {
+      apiLogger.warn('Storage quota would be exceeded', {
+        userId,
+        currentStorage,
+        additionalBytes: contentSize,
+        limit: storageQuota.limit,
+      });
+      return NextResponse.json(
+        { error: 'Quota Exceeded', message: storageQuota.message },
+        { status: 403 }
+      );
+    }
+
     // Create the file with sanitized data
     const result = await fileService.createFile(
+      userId,
       filenameSanitization.sanitized,
       sanitizedContent,
       folder
@@ -212,8 +261,14 @@ export async function POST(request: NextRequest) {
       filename: filenameSanitization.sanitized,
       folder,
       size: sizeValidation.size,
+      userId,
       clientId,
     });
+
+    // Track usage and update storage
+    await trackUsage(userId, 'note_created');
+    const newStorage = await fileService.calculateStorageUsed(userId);
+    await updateStorageUsage(userId, newStorage);
 
     // Sync with database
     try {
