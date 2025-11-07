@@ -14,8 +14,13 @@ import {
   Map,
   BarChart3,
   User,
+  LogOut,
+  UserCircle,
+  LayoutDashboard,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { SimpleDropdown } from './SimpleDropdown';
 import ThemeToggle from './ThemeToggle';
 import { ViewMode, MainView, ButtonAction } from '@/types/ui';
@@ -45,6 +50,79 @@ export function AppHeader({
   onButtonClick,
   onAnalyticsTrack,
 }: HeaderProps) {
+  const router = useRouter();
+  const [user, setUser] = useState<{ name?: string; email: string } | null>(null);
+  const [isAuthEnabled, setIsAuthEnabled] = useState(true);
+
+  // Check if authentication is enabled and fetch user data
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Check if auth is disabled via env variable
+      const disableAuth = process.env.NEXT_PUBLIC_DISABLE_AUTH === 'true';
+      setIsAuthEnabled(!disableAuth);
+
+      if (disableAuth) {
+        return; // Don't fetch user if auth is disabled
+      }
+
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        router.push('/auth/login');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const getUserMenuItems = () => {
+    if (!isAuthEnabled) {
+      return []; // No user menu if auth is disabled
+    }
+
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: <LayoutDashboard className="w-4 h-4" />,
+        onClick: () => router.push('/dashboard'),
+      },
+      {
+        id: 'profile',
+        label: 'Profile',
+        icon: <UserCircle className="w-4 h-4" />,
+        onClick: () => onButtonClick('user-profile'),
+      },
+      {
+        id: 'logout',
+        label: 'Logout',
+        icon: <LogOut className="w-4 h-4" />,
+        onClick: handleLogout,
+      },
+    ];
+  };
   // Get dropdown items
   const getViewsItems = () => [
     {
@@ -236,6 +314,18 @@ export function AppHeader({
           >
             <span className="text-sm">📅</span>
           </button>
+        )}
+
+        {/* User Menu - Only show when auth is enabled */}
+        {isAuthEnabled && (
+          <SimpleDropdown
+            trigger={{
+              icon: <UserCircle className="w-4 h-4" />,
+              title: user ? user.email : 'Account',
+            }}
+            items={getUserMenuItems()}
+            theme={theme}
+          />
         )}
 
         {/* Theme Toggle */}

@@ -7,6 +7,7 @@ import { PluginSystemInitializer } from '@/components/PluginSystemInitializer';
 import { ToastProvider } from '@/components/ToastProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BrowserCompatibility } from '@/components/BrowserCompatibility';
+import { AuthGuard } from '@/components/AuthGuard';
 
 export const metadata: Metadata = {
   title: 'MarkItUp - Personal Knowledge Management',
@@ -86,17 +87,19 @@ export default function RootLayout({
           <ToastProvider>
             <SimpleThemeProvider>
               <CollaborationProvider>
-                {process.env.NODE_ENV === 'development' ? (
-                  <React.StrictMode>
-                    <PluginSystemInitializer />
-                    {children}
-                  </React.StrictMode>
-                ) : (
-                  <>
-                    <PluginSystemInitializer />
-                    {children}
-                  </>
-                )}
+                <AuthGuard>
+                  {process.env.NODE_ENV === 'development' ? (
+                    <React.StrictMode>
+                      <PluginSystemInitializer />
+                      {children}
+                    </React.StrictMode>
+                  ) : (
+                    <>
+                      <PluginSystemInitializer />
+                      {children}
+                    </>
+                  )}
+                </AuthGuard>
               </CollaborationProvider>
             </SimpleThemeProvider>
           </ToastProvider>
