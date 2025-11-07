@@ -321,12 +321,15 @@ export function closeDatabase() {
 
 /**
  * Full-text search using FTS5
+ * Optionally filter by userId for multi-tenant support
  */
-export async function searchNotes(query: string, limit = 20) {
+export async function searchNotes(query: string, limit = 20, userId?: string) {
   const database = getDatabase();
 
   try {
-    // Use FTS5 MATCH for full-text search
+    // Use FTS5 MATCH for full-text search with optional user filter
+    const userFilter = userId ? sql` AND notes.user_id = ${userId}` : sql``;
+
     const results = database
       .select({
         id: schema.notes.id,
@@ -338,7 +341,10 @@ export async function searchNotes(query: string, limit = 20) {
         updatedAt: schema.notes.updatedAt,
       })
       .from(schema.notes)
-      .innerJoin(sql`notes_fts`, sql`notes.rowid = notes_fts.rowid AND notes_fts MATCH ${query}`)
+      .innerJoin(
+        sql`notes_fts`,
+        sql`notes.rowid = notes_fts.rowid AND notes_fts MATCH ${query}${userFilter}`
+      )
       .limit(limit)
       .all();
 
@@ -346,10 +352,12 @@ export async function searchNotes(query: string, limit = 20) {
   } catch (error) {
     console.error('[DB] Search error:', error);
     // Fallback to simple LIKE search if FTS fails
+    const userFilter = userId ? sql` AND ${schema.notes.userId} = ${userId}` : sql``;
+
     const results = database
       .select()
       .from(schema.notes)
-      .where(sql`content LIKE ${'%' + query + '%'}`)
+      .where(sql`content LIKE ${'%' + query + '%'}${userFilter}`)
       .limit(limit)
       .all();
 
