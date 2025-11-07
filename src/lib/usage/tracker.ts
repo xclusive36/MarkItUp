@@ -25,7 +25,7 @@ export async function trackUsage(
   amount: number = 1
 ): Promise<void> {
   const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const today: string = new Date().toISOString().split('T')[0]!; // YYYY-MM-DD
 
   try {
     // Get or create today's metrics
@@ -63,7 +63,7 @@ export async function trackUsage(
       // Create new metrics record
       const newMetrics: typeof usageMetrics.$inferInsert = {
         userId,
-        date: today,
+        date: today as string, // Explicitly cast to string
         notesCreated: type === 'note_created' ? amount : 0,
         notesUpdated: type === 'note_updated' ? amount : 0,
         notesDeleted: type === 'note_deleted' ? amount : 0,
@@ -93,7 +93,7 @@ export async function updateStorageUsage(userId: string, bytes: number): Promise
     await db.update(users).set({ storageUsed: bytes }).where(eq(users.id, userId));
 
     // Also update today's metrics
-    const today = new Date().toISOString().split('T')[0];
+    const today: string = new Date().toISOString().split('T')[0]!; // YYYY-MM-DD
     const existing = await db.query.usageMetrics.findFirst({
       where: and(eq(usageMetrics.userId, userId), eq(usageMetrics.date, today)),
     });
@@ -116,7 +116,7 @@ export async function updateStorageUsage(userId: string, bytes: number): Promise
  */
 export async function getTodayUsage(userId: string) {
   const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today: string = new Date().toISOString().split('T')[0]!; // YYYY-MM-DD
 
   try {
     const metrics = await db.query.usageMetrics.findFirst({
