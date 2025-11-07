@@ -10,6 +10,12 @@ import { notes, links } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { dbLogger } from '@/lib/logger';
 
+// Development bypass - set to true to disable auth temporarily
+const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
+
+// Default development user (used when auth is disabled)
+const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
+
 export interface AuthenticatedUser {
   id: string;
   email: string;
@@ -33,6 +39,21 @@ export interface AuthResult {
  * const { userId, user } = auth; // Authenticated user
  */
 export async function requireAuth(request: NextRequest): Promise<AuthResult | NextResponse> {
+  // Development bypass - skip authentication if DISABLE_AUTH=true
+  if (DISABLE_AUTH_DEV) {
+    dbLogger.warn('⚠️  Authentication bypassed for development (DISABLE_AUTH=true)');
+    return {
+      userId: DEV_USER_ID,
+      user: {
+        id: DEV_USER_ID,
+        email: 'dev@localhost',
+        name: 'Development User',
+        plan: 'enterprise', // Give full access in dev mode
+        emailVerified: true,
+      },
+    };
+  }
+
   try {
     // Get token from Authorization header or cookie
     const authHeader = request.headers.get('authorization');
