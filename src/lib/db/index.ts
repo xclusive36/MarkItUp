@@ -46,10 +46,183 @@ export function getDatabase() {
 function initializeSchema() {
   if (!sqliteDb) return;
 
-  // Create notes table
+  // ============================================================================
+  // AUTHENTICATION & USER MANAGEMENT TABLES
+  // ============================================================================
+
+  // Create users table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      email_verified INTEGER,
+      name TEXT,
+      image TEXT,
+      password_hash TEXT,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      is_email_verified INTEGER NOT NULL DEFAULT 0,
+      plan TEXT NOT NULL DEFAULT 'free',
+      plan_expiry INTEGER,
+      storage_quota INTEGER NOT NULL DEFAULT ${100 * 1024 * 1024},
+      storage_used INTEGER NOT NULL DEFAULT 0,
+      notes_quota INTEGER NOT NULL DEFAULT 100,
+      ai_requests_quota INTEGER NOT NULL DEFAULT 20,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      last_login_at INTEGER
+    );
+  `);
+
+  sqliteDb.exec(`CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);`);
+
+  // Create sessions table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS sessions_token_idx ON sessions(token);
+    CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions(expires_at);
+  `);
+
+  // Create oauth_accounts table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS oauth_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      provider_account_id TEXT NOT NULL,
+      access_token TEXT,
+      refresh_token TEXT,
+      expires_at INTEGER,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS oauth_accounts_user_id_idx ON oauth_accounts(user_id);
+    CREATE INDEX IF NOT EXISTS oauth_accounts_provider_idx ON oauth_accounts(provider, provider_account_id);
+  `);
+
+  // Create verification_tokens table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS verification_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS verification_tokens_email_idx ON verification_tokens(email);
+    CREATE INDEX IF NOT EXISTS verification_tokens_token_idx ON verification_tokens(token);
+  `);
+
+  // Create password_reset_tokens table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS password_reset_tokens_token_idx ON password_reset_tokens(token);
+    CREATE INDEX IF NOT EXISTS password_reset_tokens_user_id_idx ON password_reset_tokens(user_id);
+  `);
+
+  // Create user_preferences table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS user_preferences (
+      user_id TEXT PRIMARY KEY,
+      editor_mode TEXT DEFAULT 'edit',
+      theme TEXT DEFAULT 'system',
+      font_size INTEGER DEFAULT 14,
+      font_family TEXT DEFAULT 'Inter',
+      line_height INTEGER DEFAULT 150,
+      left_panel_width INTEGER DEFAULT 280,
+      right_panel_width INTEGER DEFAULT 320,
+      left_panel_collapsed INTEGER DEFAULT 0,
+      right_panel_collapsed INTEGER DEFAULT 1,
+      enable_collaboration INTEGER DEFAULT 0,
+      enable_semantic_search INTEGER DEFAULT 1,
+      enable_ai INTEGER DEFAULT 1,
+      ai_provider TEXT DEFAULT 'ollama',
+      ai_model TEXT,
+      ai_temperature INTEGER DEFAULT 70,
+      ai_max_tokens INTEGER DEFAULT 2000,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Create user_api_keys table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS user_api_keys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      encrypted_key TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      last_used_at INTEGER,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS user_api_keys_user_provider_idx ON user_api_keys(user_id, provider);
+  `);
+
+  // Create usage_metrics table
+  sqliteDb.exec(`
+    CREATE TABLE IF NOT EXISTS usage_metrics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      notes_created INTEGER NOT NULL DEFAULT 0,
+      notes_updated INTEGER NOT NULL DEFAULT 0,
+      notes_deleted INTEGER NOT NULL DEFAULT 0,
+      ai_requests INTEGER NOT NULL DEFAULT 0,
+      collaboration_minutes INTEGER NOT NULL DEFAULT 0,
+      search_queries INTEGER NOT NULL DEFAULT 0,
+      storage_used INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `);
+
+  sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS usage_metrics_user_date_idx ON usage_metrics(user_id, date);
+  `);
+
+  // ============================================================================
+  // NOTES & KNOWLEDGE BASE TABLES
+  // ============================================================================
+
+  // Create notes table (updated with user_id)
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS notes (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
       name TEXT NOT NULL,
       folder TEXT,
       content TEXT NOT NULL,
@@ -60,26 +233,30 @@ function initializeSchema() {
       word_count INTEGER NOT NULL DEFAULT 0,
       character_count INTEGER NOT NULL DEFAULT 0,
       link_count INTEGER NOT NULL DEFAULT 0,
-      backlink_count INTEGER NOT NULL DEFAULT 0
+      backlink_count INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `);
 
   // Create indexes
   sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS notes_user_id_idx ON notes(user_id);
     CREATE INDEX IF NOT EXISTS folder_idx ON notes(folder);
     CREATE INDEX IF NOT EXISTS updated_at_idx ON notes(updated_at);
     CREATE INDEX IF NOT EXISTS name_idx ON notes(name);
   `);
 
-  // Create links table
+  // Create links table (updated with user_id)
   sqliteDb.exec(`
     CREATE TABLE IF NOT EXISTS links (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
       source_id TEXT NOT NULL,
       target_id TEXT NOT NULL,
       type TEXT NOT NULL,
       context TEXT,
       created_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (source_id) REFERENCES notes(id) ON DELETE CASCADE,
       FOREIGN KEY (target_id) REFERENCES notes(id) ON DELETE CASCADE
     );
@@ -87,6 +264,7 @@ function initializeSchema() {
 
   // Create link indexes
   sqliteDb.exec(`
+    CREATE INDEX IF NOT EXISTS links_user_id_idx ON links(user_id);
     CREATE INDEX IF NOT EXISTS source_idx ON links(source_id);
     CREATE INDEX IF NOT EXISTS target_idx ON links(target_id);
     CREATE INDEX IF NOT EXISTS unique_link_idx ON links(source_id, target_id, type);
