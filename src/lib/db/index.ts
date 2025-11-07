@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle, BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 import path from 'path';
@@ -10,9 +10,9 @@ import fs from 'fs';
  * Database file stored in project root as 'markitup.db'
  */
 let sqliteDb: Database.Database | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
+let db: BetterSQLite3Database<typeof schema> | null = null;
 
-export function getDatabase() {
+export function getDatabase(): BetterSQLite3Database<typeof schema> {
   if (!db) {
     // Determine database path (project root)
     const dbPath = path.join(process.cwd(), 'markitup.db');

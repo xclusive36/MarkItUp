@@ -9,6 +9,8 @@ import { eq, and, gt } from 'drizzle-orm';
 import { generateToken } from './jwt';
 import { hashPassword, comparePassword, generateSecureToken } from './encryption';
 import { dbLogger } from '@/lib/logger';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import * as schema from '@/lib/db/schema';
 
 export interface RegisterParams {
   email: string;
@@ -37,7 +39,11 @@ export interface LoginResult {
 }
 
 export class AuthService {
-  private db = getDatabase();
+  private db: BetterSQLite3Database<typeof schema>;
+
+  constructor() {
+    this.db = getDatabase();
+  }
 
   /**
    * Register new user with email/password
@@ -151,7 +157,7 @@ export class AuthService {
         name: user.name,
         image: user.image,
         plan: user.plan,
-        emailVerified: user.isEmailVerified === 1,
+        emailVerified: user.isEmailVerified || false,
       },
       sessionToken,
       expiresAt,
