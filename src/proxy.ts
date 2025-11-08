@@ -9,8 +9,21 @@ import { NextRequest, NextResponse } from 'next/server';
  * - Administrators should only enable if they have proper SSL/TLS setup
  * - Local/internal deployments can safely run on HTTP
  */
+function generateNonce(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
+  // Base64-encode for CSP nonce format
+  return btoa(binary);
+}
+
 export function proxy(request: NextRequest) {
-  const response = NextResponse.next();
+  // Generate a per-request nonce and forward it so server components can consume it
+  const nonce = generateNonce();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-csp-nonce', nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Optional HTTPS enforcement for administrators who want it
   // This is OFF by default for self-hosted flexibility
@@ -32,10 +45,32 @@ export function proxy(request: NextRequest) {
   // Content Security Policy
   // Allows inline scripts and styles (required for Next.js)
   // In production, consider using nonces for better security
+  // In development, some tooling may require 'unsafe-eval'. Avoid it in production.
+  const allowUnsafeEval = process.env.NODE_ENV !== 'production';
+  const scriptDirectives = [
+    "'self'",
+    // Keep inline for now to avoid breaking changes; components can adopt nonces progressively
+    "'unsafe-inline'",
+    // Nonce for inline scripts where adopted
+    `'nonce-${nonce}'`,
+    ...(allowUnsafeEval ? ["'unsafe-eval'"] : []),
+    'https://cdn.jsdelivr.net',
+  ].join(' ');
+
+  const styleDirectives = [
+    "'self'",
+    // Keep inline for now to avoid breaking changes; components can adopt nonces progressively
+    "'unsafe-inline'",
+    // Nonce for inline styles where adopted
+    `'nonce-${nonce}'`,
+    'https://fonts.googleapis.com',
+    'https://cdn.jsdelivr.net',
+  ].join(' ');
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+    script-src ${scriptDirectives};
+    style-src ${styleDirectives};
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: blob: https:;
     connect-src 'self' http://localhost:* https:;
@@ -48,6 +83,7 @@ export function proxy(request: NextRequest) {
     .trim();
 
   response.headers.set('Content-Security-Policy', cspHeader);
+  response.headers.set('X-CSP-Nonce', nonce);
 
   // Prevent clickjacking
   response.headers.set('X-Frame-Options', 'DENY');

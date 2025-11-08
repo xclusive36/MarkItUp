@@ -8,12 +8,18 @@ import { ToastProvider } from '@/components/ToastProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BrowserCompatibility } from '@/components/BrowserCompatibility';
 import { AuthGuard } from '@/components/AuthGuard';
+import { headers } from 'next/headers';
+import { CspNonceProvider } from '@/components/CspNonceProvider';
+
+// Base site URL for metadata (used to resolve OG/Twitter images)
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
 export const metadata: Metadata = {
   title: 'MarkItUp - Personal Knowledge Management',
   description:
     'A powerful Markdown-based personal knowledge management system with AI integration, graph visualization, and advanced search',
   manifest: '/manifest.json',
+  metadataBase: new URL(siteUrl),
   keywords: [
     'markdown',
     'knowledge management',
@@ -30,7 +36,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://github.com/xclusive36/MarkItUp',
+    url: siteUrl,
     title: 'MarkItUp - Personal Knowledge Management',
     description:
       'Self-hosted PKM system with AI-powered features, bidirectional linking, and knowledge graph visualization',
@@ -68,11 +74,14 @@ export const viewport: Viewport = {
   themeColor: '#3b82f6',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get('x-csp-nonce');
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -88,17 +97,19 @@ export default function RootLayout({
             <SimpleThemeProvider>
               <CollaborationProvider>
                 <AuthGuard>
-                  {process.env.NODE_ENV === 'development' ? (
-                    <React.StrictMode>
-                      <PluginSystemInitializer />
-                      {children}
-                    </React.StrictMode>
-                  ) : (
-                    <>
-                      <PluginSystemInitializer />
-                      {children}
-                    </>
-                  )}
+                  <CspNonceProvider nonce={nonce}>
+                    {process.env.NODE_ENV === 'development' ? (
+                      <React.StrictMode>
+                        <PluginSystemInitializer />
+                        {children}
+                      </React.StrictMode>
+                    ) : (
+                      <>
+                        <PluginSystemInitializer />
+                        {children}
+                      </>
+                    )}
+                  </CspNonceProvider>
                 </AuthGuard>
               </CollaborationProvider>
             </SimpleThemeProvider>
