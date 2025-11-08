@@ -28,9 +28,7 @@ interface HeaderProps {
   theme: 'light' | 'dark';
   currentView: MainView;
   viewMode: ViewMode;
-  settings: {
-    enableCollaboration: boolean;
-  };
+  // Removed unused settings prop to fix TS error
   isMounted: boolean;
   isDailyNotesLoaded?: boolean; // Whether Daily Notes plugin is loaded
   onViewChange: (view: MainView) => void;
@@ -42,7 +40,6 @@ interface HeaderProps {
 export function AppHeader({
   theme,
   currentView,
-  settings,
   isDailyNotesLoaded = false,
   // isMounted, // Currently unused
   onViewChange,

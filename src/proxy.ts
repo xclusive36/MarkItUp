@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
- * Security middleware
+ * Security proxy (formerly middleware)
  * Adds security headers to all responses
  *
  * For self-hosted deployments:
@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * - Administrators should only enable if they have proper SSL/TLS setup
  * - Local/internal deployments can safely run on HTTP
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const response = NextResponse.next();
 
   // Optional HTTPS enforcement for administrators who want it
@@ -80,7 +80,7 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Configure which routes to apply middleware to
+// Configure which routes to apply proxy to
 export const config = {
   matcher: [
     /*

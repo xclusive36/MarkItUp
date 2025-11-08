@@ -1329,7 +1329,6 @@ export default function Home() {
                 theme={theme}
                 currentView={currentView}
                 viewMode={viewMode}
-                settings={settings}
                 isMounted={isMounted}
                 isDailyNotesLoaded={isDailyNotesLoaded}
                 onViewChange={(view: MainView) => setCurrentView(view)}

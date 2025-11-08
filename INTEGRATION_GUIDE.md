@@ -223,15 +223,19 @@ export function startFileWatcher() {
 ## Troubleshooting
 
 ### Command Palette not showing files?
+
 Make sure `/api/files/list` endpoint is accessible.
 
 ### Auto-save not working?
+
 Check browser console for errors. Make sure your `/api/files` PUT endpoint accepts content updates.
 
 ### Daily notes not creating?
+
 Check that the `/markdown/journal/` directory can be created. Verify permissions.
 
 ### Keyboard shortcuts not working?
+
 Ensure KeyboardShortcuts component is added to your root layout.
 
 ## Next Steps
