@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
+import { promises as fsp } from 'fs';
 import path from 'path';
 
 const DAILY_NOTES_DIR = path.join(process.cwd(), 'markdown', 'journal');
@@ -52,17 +53,25 @@ export async function POST(request: NextRequest) {
     const fileName = `${date}.md`;
     const filePath = path.join(DAILY_NOTES_DIR, fileName);
 
-    // Check if file already exists
-    if (fs.existsSync(filePath)) {
-      return NextResponse.json(
-        { error: 'Daily note already exists', path: `journal/${fileName}` },
-        { status: 409 }
-      );
+    // Atomic create: open with exclusive flag to avoid race (TOCTOU safe)
+    try {
+      const handle = await fsp.open(filePath, 'wx');
+      try {
+        const noteContent = content || getDailyNoteTemplate(date);
+        await handle.writeFile(noteContent, { encoding: 'utf-8' });
+      } finally {
+        await handle.close();
+      }
+    } catch (createErr: any) {
+      if (createErr && createErr.code === 'EEXIST') {
+        return NextResponse.json(
+          { error: 'Daily note already exists', path: `journal/${fileName}` },
+          { status: 409 }
+        );
+      }
+      console.error('Daily note atomic create failed:', createErr);
+      return NextResponse.json({ error: 'Failed to create daily note' }, { status: 500 });
     }
-
-    // Create the file
-    const noteContent = content || getDailyNoteTemplate(date);
-    fs.writeFileSync(filePath, noteContent, 'utf-8');
 
     return NextResponse.json({
       success: true,

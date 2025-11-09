@@ -2389,8 +2389,10 @@ function AISettingsPanel({
           });
 
           // ALSO save directly to localStorage (since server-side localStorage doesn't work)
-          localStorage.setItem('markitup-ai-settings', JSON.stringify(normalizedSettings));
-          console.log('[AIChat] Auto-saved Ollama settings to localStorage:', normalizedSettings);
+          // IMPORTANT: Do not persist API keys in localStorage
+          const { apiKey: _omitApiKey, ...safeSettings } = normalizedSettings as any;
+          localStorage.setItem('markitup-ai-settings', JSON.stringify(safeSettings));
+          console.log('[AIChat] Auto-saved Ollama settings to localStorage:', safeSettings);
         } catch (error) {
           console.error('[AIChat] Failed to auto-save settings:', error);
         }
@@ -2770,8 +2772,10 @@ function AISettingsPanel({
 
     // Always persist locally regardless of server/API auth issues
     try {
-      localStorage.setItem('markitup-ai-settings', JSON.stringify(normalized));
-      console.log('[AIChat] (local) Persisted AI settings:', normalized);
+      // Do not persist API keys in localStorage
+      const { apiKey: _omitApiKey, ...safe } = normalized as any;
+      localStorage.setItem('markitup-ai-settings', JSON.stringify(safe));
+      console.log('[AIChat] (local) Persisted AI settings:', safe);
     } catch (storageErr) {
       console.error('[AIChat] Failed to write settings to localStorage:', storageErr);
     }

@@ -414,7 +414,22 @@ export class AIService {
     if (typeof window === 'undefined') return;
 
     try {
-      const sessions = Array.from(this.chatSessions.entries());
+      const sessions = Array.from(this.chatSessions.entries()).map(([id, data]) => {
+        // Avoid persisting full raw model outputs if marked sensitive
+        const { messages, ...rest } = data;
+        const safeMessages = messages.map(m => {
+          if (m.role === 'assistant') {
+            // Truncate very long assistant outputs to reduce exposure
+            const text = typeof m.content === 'string' ? m.content : '';
+            return {
+              ...m,
+              content: text.length > 4000 ? text.slice(0, 4000) + '… [truncated]' : text,
+            };
+          }
+          return m;
+        });
+        return [id, { ...rest, messages: safeMessages }];
+      });
       localStorage.setItem('markitup-ai-sessions', JSON.stringify(sessions));
     } catch (error) {
       console.warn('Failed to save chat sessions:', error);
@@ -425,7 +440,8 @@ export class AIService {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.setItem('markitup-ai-settings', JSON.stringify(this.settings));
+      const { apiKey: _omitApiKey, ...safe } = this.settings as any;
+      localStorage.setItem('markitup-ai-settings', JSON.stringify(safe));
     } catch (error) {
       console.warn('Failed to save AI settings:', error);
     }
@@ -439,7 +455,10 @@ export class AIService {
     try {
       const saved = localStorage.getItem('markitup-ai-settings');
       if (saved) {
-        return { ...AIService.getDefaultSettings(), ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        // Ensure apiKey isn't loaded from localStorage (only from secure sources)
+        if ('apiKey' in parsed) delete parsed.apiKey;
+        return { ...AIService.getDefaultSettings(), ...parsed };
       }
     } catch (error) {
       console.warn('Failed to load AI settings:', error);
