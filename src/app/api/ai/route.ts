@@ -2,9 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAIService } from '@/lib/ai/ai-service';
 import { ChatRequest } from '@/lib/ai/types';
 import { findNoteById, findRelatedNotes, getAllNotes } from '@/lib/file-helpers';
+import { requireAuth } from '@/lib/auth/middleware';
+import { checkQuota } from '@/lib/usage/quotas';
+import { trackUsage } from '@/lib/usage/tracker';
+import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+    const { userId } = auth;
+
+    // Check AI quota before processing
+    const aiQuota = await checkQuota(userId, 'ai_requests');
+    if (!aiQuota.allowed) {
+      apiLogger.warn('AI quota exceeded', { userId, quota: aiQuota });
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'QUOTA_EXCEEDED',
+            message: aiQuota.message,
+          },
+        },
+        { status: 403 }
+      );
+    }
+
     const body: ChatRequest & { stream?: boolean } = await request.json();
 
     // Validate request
@@ -164,6 +189,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Track AI usage
+        await trackUsage(userId, 'ai_request');
+
+        apiLogger.info('AI request completed (Ollama)', { userId, model: settings.model });
+
         // Format the response (wrapped in success format for plugin API)
         return NextResponse.json({
           success: true,
@@ -182,7 +212,7 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (error) {
-        console.error('Ollama proxy error:', error);
+        apiLogger.error('Ollama proxy error', { userId }, error as Error);
         return NextResponse.json(
           {
             success: false,
@@ -204,6 +234,16 @@ export async function POST(request: NextRequest) {
     // Process chat request for other providers
     const response = await aiService.chat(body);
 
+    // Track AI usage on success
+    if (response.success) {
+      await trackUsage(userId, 'ai_request');
+      apiLogger.info('AI request completed', {
+        userId,
+        provider: settings.provider,
+        model: settings.model,
+      });
+    }
+
     // Add context note count to response
     if (response.success && response.data) {
       response.data.contextNoteCount = contextNoteCount;
@@ -211,7 +251,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('AI Chat API error:', error);
+    apiLogger.error('AI Chat API error', { userId: 'unknown' }, error as Error);
     return NextResponse.json(
       {
         success: false,
@@ -227,6 +267,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication for reading AI settings/sessions
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
@@ -254,7 +298,7 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('AI API GET error:', error);
+    apiLogger.error('AI API GET error', { operation: 'get' }, error as Error);
     return NextResponse.json(
       {
         success: false,
@@ -270,6 +314,10 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Require authentication for updating AI settings
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
@@ -288,7 +336,7 @@ export async function PUT(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('AI API PUT error:', error);
+    apiLogger.error('AI API PUT error', { operation: 'update' }, error as Error);
     return NextResponse.json(
       {
         success: false,
@@ -304,6 +352,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Require authentication for deleting AI sessions
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
 
@@ -326,7 +378,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('AI API DELETE error:', error);
+    apiLogger.error('AI API DELETE error', { operation: 'delete' }, error as Error);
     return NextResponse.json(
       {
         success: false,

@@ -689,34 +689,36 @@ function SettingsTab({ theme }: any) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Plugin System Settings</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div
-          className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
-        >
-          <h3 className="font-semibold mb-4">API Configuration</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">OpenAI API Key</label>
-              <input
-                type="password"
-                placeholder="sk-..."
-                className={`w-full px-3 py-2 border rounded-md ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-                }`}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Anthropic API Key</label>
-              <input
-                type="password"
-                placeholder="sk-ant-..."
-                className={`w-full px-3 py-2 border rounded-md ${
-                  theme === 'dark' ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
-                }`}
-              />
-            </div>
+
+      {/* AI Settings Notice */}
+      <div
+        className={`p-4 rounded-lg border-l-4 border-blue-500 ${
+          theme === 'dark' ? 'bg-blue-900/20 border-blue-400' : 'bg-blue-50 border-blue-500'
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <span className="text-2xl shrink-0">ℹ️</span>
+          <div>
+            <h3
+              className={`font-semibold text-sm mb-1 ${theme === 'dark' ? 'text-blue-100' : 'text-blue-900'}`}
+            >
+              AI Provider Configuration
+            </h3>
+            <p
+              className={`text-xs leading-relaxed ${theme === 'dark' ? 'text-blue-200' : 'text-blue-800'}`}
+            >
+              To configure your AI provider (OpenAI, Anthropic, Gemini, or Ollama) and API
+              credentials, please use the <strong>AI Assistant</strong> panel. You can access it by
+              clicking the
+              <strong> AI Chat icon</strong> in the bottom menu, then click the{' '}
+              <strong>Settings button (⚙️)</strong>
+              in the AI Assistant panel header.
+            </p>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div
           className={`p-4 rounded-lg border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
         >

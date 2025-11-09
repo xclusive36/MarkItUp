@@ -4,6 +4,7 @@
  */
 
 import path from 'path';
+import DOMPurify from 'isomorphic-dompurify';
 
 const ALLOWED_EXTENSIONS = ['.md', '.markdown'];
 const MAX_FILENAME_LENGTH = 255;
@@ -140,7 +141,7 @@ export function sanitizeFolderPath(folderPath: string | undefined): Sanitization
  */
 export function validateContentSize(
   content: string,
-  maxSize: number = 10 * 1024 * 1024
+  maxSize: number = 10 * 1024 * 1024 // 10MB to match Next.js default body limit
 ): { valid: boolean; error?: string; size: number } {
   const size = Buffer.byteLength(content, 'utf8');
 
@@ -170,20 +171,79 @@ function formatBytes(bytes: number): string {
 
 /**
  * Sanitize markdown content to prevent XSS
- * Basic sanitization - for production, consider using a library like DOMPurify
+ * Uses DOMPurify for robust sanitization
  */
 export function sanitizeMarkdownContent(content: string): string {
-  // Remove any script tags
-  let sanitized = content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  // First, remove dangerous URL schemes from markdown links before HTML conversion
+  // Match markdown link syntax: [text](url) or [text](url "title")
+  let sanitized = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+    const urlPart = url.trim().split(/\s+/)[0]; // Get URL without title
+    const title = url.substring(urlPart.length).trim(); // Get title if present
 
-  // Remove dangerous HTML attributes
-  sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
+    // Remove dangerous protocols
+    if (/^(javascript|data|vbscript|file|about):/i.test(urlPart)) {
+      // Replace with safe placeholder or just remove the link
+      return title ? `[${text}](#)` : `[${text}](#)`;
+    }
 
-  // Remove javascript: protocol
-  sanitized = sanitized.replace(/javascript:/gi, '');
+    return match; // Keep safe links unchanged
+  });
 
-  // Remove data: protocol (can be used for XSS)
-  sanitized = sanitized.replace(/data:text\/html/gi, '');
+  // Configure DOMPurify for markdown content
+  const config = {
+    // Allow markdown-friendly tags
+    ALLOWED_TAGS: [
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'p',
+      'a',
+      'ul',
+      'ol',
+      'li',
+      'blockquote',
+      'code',
+      'pre',
+      'em',
+      'strong',
+      'del',
+      'ins',
+      'table',
+      'thead',
+      'tbody',
+      'tr',
+      'th',
+      'td',
+      'img',
+      'br',
+      'hr',
+      'div',
+      'span',
+      'input', // For task lists
+    ],
+    ALLOWED_ATTR: [
+      'href',
+      'title',
+      'alt',
+      'src',
+      'class',
+      'id',
+      'type',
+      'checked',
+      'disabled', // For task lists
+    ],
+    // Keep relative URLs
+    ALLOW_DATA_ATTR: false,
+    // Prevent javascript: and data: URLs
+    ALLOWED_URI_REGEXP:
+      /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  };
+
+  // Sanitize the content
+  sanitized = DOMPurify.sanitize(sanitized, config);
 
   return sanitized;
 }

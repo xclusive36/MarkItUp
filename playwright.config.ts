@@ -72,6 +72,7 @@ export default defineConfig({
     timeout: 120 * 1000,
     env: {
       PLAYWRIGHT_TEST: 'true',
+      DISABLE_AUTH: process.env.DISABLE_AUTH || 'false',
     },
   },
 });

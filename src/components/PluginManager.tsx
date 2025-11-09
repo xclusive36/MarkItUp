@@ -243,6 +243,45 @@ export default function PluginManager({
           </div>
 
           <div className="p-6 space-y-6">
+            {/* AI Settings Notice for AI-related plugins or plugins that require API keys */}
+            {(selectedPlugin.id.includes('ai-') ||
+              selectedPlugin.id.includes('ml-') ||
+              selectedPlugin.metadata.category === 'ai-assistant' ||
+              selectedPlugin.metadata.category === 'content-generation' ||
+              selectedPlugin.metadata.aiRequirements?.requiresApiKey ||
+              Object.values(selectedPlugin.metadata.settings || {}).some(
+                (s: any) => s.type === 'apikey'
+              )) && (
+              <div
+                className="p-4 rounded-lg border-l-4"
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)',
+                  borderColor: '#3b82f6',
+                }}
+              >
+                <div className="flex items-start gap-3">
+                  <HelpCircle className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
+                  <div>
+                    <h3
+                      className="font-medium text-sm mb-1"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      AI Provider Configuration
+                    </h3>
+                    <p
+                      className="text-xs leading-relaxed"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      This plugin uses AI features that require provider configuration. Please
+                      configure your AI provider (OpenAI, Anthropic, Gemini, or Ollama) and API
+                      credentials in the <strong>AI Assistant</strong> panel in the sidebar. The
+                      settings below are plugin-specific preferences only.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {Object.entries(settings).map(([key, setting]) => (
               <div key={key}>
                 <label
@@ -463,6 +502,45 @@ export default function PluginManager({
               </div>
             ) : (
               <div className="space-y-4">
+                {/* AI Settings Notice - show if any AI plugins are present */}
+                {plugins.some(
+                  p =>
+                    p.id.includes('ai-') ||
+                    p.id.includes('ml-') ||
+                    p.metadata.category === 'ai-assistant' ||
+                    p.metadata.category === 'content-generation'
+                ) && (
+                  <div
+                    className="p-4 rounded-lg border-l-4"
+                    style={{
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderColor: '#3b82f6',
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Brain className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
+                      <div>
+                        <h3
+                          className="font-medium text-sm mb-1"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          AI Plugin Configuration
+                        </h3>
+                        <p
+                          className="text-xs leading-relaxed"
+                          style={{ color: 'var(--text-secondary)' }}
+                        >
+                          AI plugins use the centralized <strong>AI Assistant</strong> settings for
+                          provider configuration (OpenAI, Anthropic, Gemini, or Ollama) and API
+                          credentials. Access AI Assistant from the sidebar to configure your AI
+                          provider. Plugin-specific settings can be configured using the settings
+                          button below each plugin.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {plugins.map(plugin => {
                   const CategoryIcon = categoryIcons[plugin.metadata.category] || Package;
 
@@ -613,7 +691,7 @@ export default function PluginManager({
       {/* Documentation Modal */}
       {showDocumentation && documentationPlugin && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60"
           onClick={e => e.target === e.currentTarget && setShowDocumentation(false)}
         >
           <div
@@ -656,6 +734,7 @@ export default function PluginManager({
                 className="prose dark:prose-invert max-w-none"
                 style={{ color: 'var(--text-primary)' }}
               >
+                {/* Safe rendering of plugin documentation - plugins are trusted internal code */}
                 <div
                   dangerouslySetInnerHTML={{
                     __html:

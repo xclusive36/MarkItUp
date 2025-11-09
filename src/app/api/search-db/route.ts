@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchNotes, getBacklinks, getTagsWithCounts } from '@/lib/db';
+import { optionalAuth } from '@/lib/auth/middleware';
+import { trackUsage } from '@/lib/usage/tracker';
+import { apiLogger } from '@/lib/logger';
 
 /**
  * Database-powered search API
  * Uses SQLite FTS5 for blazing-fast full-text search
+ * Optional authentication - if authenticated, only returns user's notes
  *
  * GET /api/search-db?q=query&limit=20&mode=fts
  */
 export async function GET(request: NextRequest) {
   try {
+    // Optional authentication - filter by user if logged in
+    const auth = await optionalAuth(request);
+    const userId = auth?.userId;
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q') || '';
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -51,8 +59,20 @@ export async function GET(request: NextRequest) {
         }
 
         const startTime = Date.now();
-        const results = await searchNotes(query, limit);
+        const results = await searchNotes(query, limit, userId);
         const duration = Date.now() - startTime;
+
+        // Track usage if authenticated
+        if (userId) {
+          await trackUsage(userId, 'search_query');
+        }
+
+        apiLogger.debug('Search completed', {
+          query,
+          resultCount: results.length,
+          duration,
+          userId: userId || 'anonymous',
+        });
 
         // Transform results to match expected format
         const searchResults = results.map(note => {
@@ -104,7 +124,7 @@ export async function GET(request: NextRequest) {
         });
     }
   } catch (error) {
-    console.error('[DB Search] Error:', error);
+    apiLogger.error('Search failed', { operation: 'search' }, error as Error);
     return NextResponse.json(
       {
         error: 'Search failed',

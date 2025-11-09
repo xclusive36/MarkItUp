@@ -7,7 +7,7 @@
  * Usage: npm run db:init
  */
 
-import { getSyncService } from './src/lib/db/sync.js';
+import { getSyncService } from '../src/lib/db/sync.js';
 
 async function main() {
   console.log('🔄 Initializing MarkItUp database...\n');
