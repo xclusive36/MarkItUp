@@ -165,6 +165,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Early size check using Content-Length header (if provided)
+    const contentLengthHeader = request.headers.get('content-length');
+    if (contentLengthHeader) {
+      const contentLength = parseInt(contentLengthHeader, 10);
+      // Rough threshold: if raw JSON body exceeds ~11MB we know content will exceed 10MB limit after parsing
+      const MAX_RAW_SIZE = 11 * 1024 * 1024; // 11MB buffer
+      if (contentLength > MAX_RAW_SIZE) {
+        apiLogger.warn('Raw request size exceeds maximum expected size', {
+          clientId,
+          contentLength,
+        });
+        return createErrorResponse(
+          `Content too large (${Math.round(contentLength / (1024 * 1024))}MB). Maximum size: 10MB`,
+          413
+        );
+      }
+    }
+
     let body;
     try {
       body = await request.json();
