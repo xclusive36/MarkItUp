@@ -141,7 +141,7 @@ export function sanitizeFolderPath(folderPath: string | undefined): Sanitization
  */
 export function validateContentSize(
   content: string,
-  maxSize: number = 15 * 1024 * 1024 // 15MB to match Next.js config
+  maxSize: number = 10 * 1024 * 1024 // 10MB to match Next.js default body limit
 ): { valid: boolean; error?: string; size: number } {
   const size = Buffer.byteLength(content, 'utf8');
 
