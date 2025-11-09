@@ -174,6 +174,21 @@ function formatBytes(bytes: number): string {
  * Uses DOMPurify for robust sanitization
  */
 export function sanitizeMarkdownContent(content: string): string {
+  // First, remove dangerous URL schemes from markdown links before HTML conversion
+  // Match markdown link syntax: [text](url) or [text](url "title")
+  let sanitized = content.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+    const urlPart = url.trim().split(/\s+/)[0]; // Get URL without title
+    const title = url.substring(urlPart.length).trim(); // Get title if present
+
+    // Remove dangerous protocols
+    if (/^(javascript|data|vbscript|file|about):/i.test(urlPart)) {
+      // Replace with safe placeholder or just remove the link
+      return title ? `[${text}](#)` : `[${text}](#)`;
+    }
+
+    return match; // Keep safe links unchanged
+  });
+
   // Configure DOMPurify for markdown content
   const config = {
     // Allow markdown-friendly tags
@@ -228,7 +243,7 @@ export function sanitizeMarkdownContent(content: string): string {
   };
 
   // Sanitize the content
-  const sanitized = DOMPurify.sanitize(content, config);
+  sanitized = DOMPurify.sanitize(sanitized, config);
 
   return sanitized;
 }
