@@ -10,5 +10,13 @@ services:
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+      # REQUIRED: Generate secure secrets before deploying
+      # JWT_SECRET: openssl rand -base64 32
+      # ENCRYPTION_KEY: openssl rand -hex 16
+      - JWT_SECRET=CHANGE_ME_RUN_openssl_rand_base64_32
+      - ENCRYPTION_KEY=CHANGE_ME_RUN_openssl_rand_hex_16
+      # Optional: Disable auth for testing (NOT FOR PRODUCTION)
+      # - DISABLE_AUTH=false
     restart: unless-stopped
     image: ghcr.io/xclusive36/markitup:latest

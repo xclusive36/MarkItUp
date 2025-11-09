@@ -339,7 +339,19 @@ Vote on features, suggest new ones, or help build them! Join the discussion:
 
 ### Docker Compose (Recommended)
 
+**⚠️ REQUIRED (v4.0.0+): Generate secure secrets before deploying:**
+
 ```bash
+# Generate JWT_SECRET (copy the output)
+openssl rand -base64 32
+
+# Generate ENCRYPTION_KEY (copy the output)  
+openssl rand -hex 16
+```
+
+**Then update your `docker-compose.yml`:**
+
+```yaml
 version: "3.8"
 
 services:
@@ -352,6 +364,12 @@ services:
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+      # REQUIRED: Replace with your generated secrets
+      - JWT_SECRET=your-generated-jwt-secret-here
+      - ENCRYPTION_KEY=your-generated-encryption-key-here
+      # Optional: Disable auth for testing (NOT FOR PRODUCTION)
+      # - DISABLE_AUTH=false
     restart: unless-stopped
     image: ghcr.io/xclusive36/markitup:latest
 ```
@@ -360,12 +378,21 @@ services:
 docker compose up -d
 ```
 
-
 ### Docker CLI
 
 ```bash
+# Generate secrets first
+JWT_SECRET=$(openssl rand -base64 32)
+ENCRYPTION_KEY=$(openssl rand -hex 16)
+
+# Run container with required secrets
 docker run --name markitup -p 3000:3000 \
   -v ./markdown:/app/markdown \
+  -e PORT=3000 \
+  -e HOSTNAME=0.0.0.0 \
+  -e NODE_ENV=production \
+  -e JWT_SECRET="$JWT_SECRET" \
+  -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
   --restart unless-stopped \
   ghcr.io/xclusive36/markitup:latest
 ```
