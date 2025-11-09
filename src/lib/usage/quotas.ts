@@ -19,10 +19,24 @@ export interface QuotaCheckResult {
   remaining?: number;
 }
 
+// Development bypass - same as in auth middleware
+const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
+const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
+
 /**
  * Check if user has quota available for an operation
  */
 export async function checkQuota(userId: string, type: QuotaType): Promise<QuotaCheckResult> {
+  // Bypass quota checks for development user when auth is disabled
+  if (DISABLE_AUTH_DEV && userId === DEV_USER_ID) {
+    return {
+      allowed: true,
+      current: 0,
+      limit: 999999,
+      remaining: 999999,
+    };
+  }
+
   const db = getDatabase();
 
   try {
