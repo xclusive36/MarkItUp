@@ -5,8 +5,12 @@
 
 import jwt from 'jsonwebtoken';
 
-// Validate JWT_SECRET is set in production
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+// Validate JWT_SECRET is set in production (but allow builds to proceed)
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.JWT_SECRET &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
   throw new Error(
     'CRITICAL SECURITY ERROR: JWT_SECRET must be set in production. ' +
       'Generate one with: openssl rand -base64 32'

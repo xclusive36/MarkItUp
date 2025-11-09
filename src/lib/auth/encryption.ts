@@ -5,8 +5,12 @@
 
 import crypto from 'crypto';
 
-// Validate ENCRYPTION_KEY is set in production
-if (process.env.NODE_ENV === 'production' && !process.env.ENCRYPTION_KEY) {
+// Validate ENCRYPTION_KEY is set in production (but allow builds to proceed)
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.ENCRYPTION_KEY &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
   throw new Error(
     'CRITICAL SECURITY ERROR: ENCRYPTION_KEY must be set in production. ' +
       'Generate one with: openssl rand -hex 16'
