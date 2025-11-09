@@ -33,6 +33,7 @@ jobs:
       run: npm run test
       env:
         CI: true
+        DISABLE_AUTH: true
     
     - name: Upload test report
       uses: actions/upload-artifact@v4
