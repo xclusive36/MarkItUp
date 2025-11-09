@@ -169,8 +169,8 @@ export async function POST(request: NextRequest) {
     const contentLengthHeader = request.headers.get('content-length');
     if (contentLengthHeader) {
       const contentLength = parseInt(contentLengthHeader, 10);
-      // Rough threshold: if raw JSON body exceeds ~11MB we know content will exceed 10MB limit after parsing
-      const MAX_RAW_SIZE = 11 * 1024 * 1024; // 11MB buffer
+      // If raw JSON body exceeds 10MB, reject early to align with Next.js limit
+      const MAX_RAW_SIZE = 10 * 1024 * 1024; // 10MB
       if (contentLength > MAX_RAW_SIZE) {
         apiLogger.warn('Raw request size exceeds maximum expected size', {
           clientId,
