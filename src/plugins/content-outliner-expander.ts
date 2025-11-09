@@ -114,11 +114,11 @@ export const contentStructurerPlugin: PluginManifest = {
       description: 'Track all expansions and compressions for undo functionality',
     },
     {
-      id: 'custom-templates',
-      name: 'Custom Expansion Templates',
+      id: 'custom-templates-lines',
+      name: 'Custom Expansion Templates (Lines)',
       type: 'textarea',
       default: '',
-      description: 'Custom templates (one per line). Use {{topic}} and {{style}} variables.',
+      description: 'One template per line. You can use {{topic}} and {{style}} placeholders.',
     },
     {
       id: 'enable-notifications',
@@ -214,7 +214,7 @@ export const contentStructurerPlugin: PluginManifest = {
     },
     // === NEW v3.2 SETTINGS - Advanced Features ===
     {
-      id: 'custom-templates',
+      id: 'custom-templates-json',
       name: 'Custom Templates (JSON)',
       type: 'textarea',
       default: '[]',
@@ -3350,7 +3350,7 @@ Format as structured analysis.`;
       createdAt: string;
     }> = [];
     try {
-      const templatesJson = (settings['custom-templates'] as string) || '[]';
+      const templatesJson = (settings['custom-templates-json'] as string) || '[]';
       customTemplates = JSON.parse(templatesJson);
     } catch {
       customTemplates = [];
@@ -3360,7 +3360,7 @@ Format as structured analysis.`;
 
     this.api.settings.set('ai-content-structurer', {
       ...settings,
-      'custom-templates': JSON.stringify(customTemplates, null, 2),
+      'custom-templates-json': JSON.stringify(customTemplates, null, 2),
     });
 
     this.showNotification(`✨ Template "${templateName}" created!`, 'info');
@@ -3380,7 +3380,7 @@ Format as structured analysis.`;
     }> = [];
 
     try {
-      const templatesJson = (settings['custom-templates'] as string) || '[]';
+      const templatesJson = (settings['custom-templates-json'] as string) || '[]';
       customTemplates = JSON.parse(templatesJson);
     } catch {
       customTemplates = [];

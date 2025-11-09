@@ -6,6 +6,30 @@
 
 ## 🆕 What's New
 
+### v4.0.0 - November 2025 🚀
+
+- 🔐 User Authentication & Authorization (major release)
+  - All core routes now run under authenticated context
+  - Optional guest mode can be enabled for local/self-hosted scenarios
+  - Clear 401/403 handling and improved error messages
+- 🧭 Unified AI Settings
+  - Centralized AI Assistant settings apply across chat, analysis, and plugins
+  - Plugin Manager settings page now points to the AI Assistant for provider/API configuration
+- 🧩 Plugin Manager UX
+  - Deprecated duplicate API key inputs removed from Plugin System settings
+  - Context notice added to guide users to AI Assistant settings
+- 🛡️ Security Headers & CSP
+  - Broader default connect-src to support self-hosted Docker/LAN Ollama without custom allowlists
+  - Permissions-Policy cleaned up to remove deprecated flags
+- 🤖 Ollama & AI Robustness
+  - More resilient JSON parsing for AI analysis responses
+  - Enhanced proxy diagnostics for containerized setups
+- 🔧 DevX
+  - `.env.example` added to the repo for easier setup
+  - See [docs/MIGRATION_4_0.md](docs/MIGRATION_4_0.md) and AUTHENTICATION_SETUP.md for required environment variables and migration notes
+
+> Breaking changes: If you relied on unauthenticated access, review [docs/MIGRATION_4_0.md](docs/MIGRATION_4_0.md) and AUTHENTICATION_SETUP.md to configure auth or enable guest mode.
+
 ### v3.6.0 - October 2025 🛑
 
 - **🛑 AI Chat Stop Button** - Take control of streaming responses:
@@ -201,7 +225,7 @@ MarkItUp features the most comprehensive Ollama integration in any PKM system:
 
 **🔗 Built for Connection:** Native wikilinks, backlinks, and graph visualization
 
-**⚡ Modern Stack:** Built with Next.js 15 and TypeScript for speed and reliability
+**⚡ Modern Stack:** Built with Next.js 16 and TypeScript for speed and reliability
 
 **🆓 Truly Free:** Open-source with no licensing fees or feature restrictions
 

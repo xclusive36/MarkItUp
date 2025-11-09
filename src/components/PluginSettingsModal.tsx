@@ -110,8 +110,33 @@ function PluginSettingsModal({ plugin, isOpen, onClose, onSave }: PluginSettings
             </div>
           ) : (
             <div className="space-y-6">
-              {plugin.settings.map(setting => (
-                <div key={setting.id} className="space-y-2">
+              {/* AI Settings Notice for AI-related plugins */}
+              {(plugin.id.includes('ai-') ||
+                plugin.id.includes('ml-') ||
+                plugin.id.includes('chatbot') ||
+                plugin.id.includes('neural') ||
+                plugin.id.includes('writing-assistant') ||
+                plugin.id.includes('summarizer')) && (
+                <div className="p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl shrink-0">ℹ️</span>
+                    <div>
+                      <h3 className="font-semibold text-sm mb-1 text-blue-900 dark:text-blue-100">
+                        AI Provider Configuration
+                      </h3>
+                      <p className="text-xs leading-relaxed text-blue-800 dark:text-blue-200">
+                        This plugin uses AI features that require provider configuration. Please
+                        configure your AI provider (OpenAI, Anthropic, Gemini, or Ollama) and API
+                        credentials in the <strong>AI Assistant</strong> panel in the sidebar. The
+                        settings below are plugin-specific preferences only.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {plugin.settings.map((setting, idx) => (
+                <div key={`${setting.id}-${idx}`} className="space-y-2">
                   <label className="block">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {setting.name}
