@@ -18,6 +18,9 @@ import { apiLogger } from '@/lib/logger';
 import { requireAuth } from '@/lib/auth/middleware';
 import { checkQuota } from '@/lib/usage/quotas';
 import { trackUsage, updateStorageUsage } from '@/lib/usage/tracker';
+// Dev auth bypass constants (duplicated from auth middleware for isolation)
+const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
+const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
 
 /**
  * GET /api/files
@@ -265,22 +268,36 @@ export async function POST(request: NextRequest) {
       clientId,
     });
 
-    // Track usage and update storage
-    await trackUsage(userId, 'note_created');
-    const newStorage = await fileService.calculateStorageUsed(userId);
-    await updateStorageUsage(userId, newStorage);
+    // Track usage and update storage (skip for dev bypass user to avoid FK errors)
+    if (!(DISABLE_AUTH_DEV && userId === DEV_USER_ID)) {
+      try {
+        await trackUsage(userId, 'note_created');
+        const newStorage = await fileService.calculateStorageUsed(userId);
+        await updateStorageUsage(userId, newStorage);
+      } catch (usageError) {
+        apiLogger.warn('Usage tracking failed (non-fatal)', {
+          userId,
+          context: 'trackUsage',
+          error: (usageError as Error).message,
+        });
+      }
 
-    // Sync with database
-    try {
-      const syncService = getSyncService();
-      const noteId = folder
-        ? `${folder}/${filenameSanitization.sanitized}`
-        : filenameSanitization.sanitized;
-      await syncService.indexNote(noteId, sanitizedContent, userId);
-      apiLogger.debug('Note synced to database', { noteId });
-    } catch (dbError) {
-      apiLogger.error('Database sync failed (non-fatal)', { noteId: filename }, dbError as Error);
-      // Don't fail the request if DB sync fails - this needs improvement in future
+      // Sync with database (non-fatal)
+      try {
+        const syncService = getSyncService();
+        const noteId = folder
+          ? `${folder}/${filenameSanitization.sanitized}`
+          : filenameSanitization.sanitized;
+        await syncService.indexNote(noteId, sanitizedContent, userId);
+        apiLogger.debug('Note synced to database', { noteId });
+      } catch (dbError) {
+        apiLogger.warn('Database sync failed (non-fatal)', {
+          noteId: filename,
+          error: (dbError as Error).message,
+        });
+      }
+    } else {
+      apiLogger.debug('Dev auth bypass active - skipped usage tracking & DB sync');
     }
 
     // Add rate limit headers to response
