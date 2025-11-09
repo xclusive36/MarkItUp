@@ -1,4 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'node:fs';
+
+function isRunningInDocker(): boolean {
+  try {
+    if (fs.existsSync('/.dockerenv')) return true;
+    const cgroup = fs.readFileSync('/proc/self/cgroup', 'utf8');
+    return /docker|kubepods|containerd/i.test(cgroup);
+  } catch {
+    // Not Linux or no access; best-effort detection
+    return false;
+  }
+}
+
+function buildDockerHelp(ollamaUrl: string): string {
+  try {
+    const url = new URL(ollamaUrl);
+    const host = url.hostname;
+    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+    if (isRunningInDocker() && isLocalHost) {
+      return 'Running inside Docker? Use http://host.docker.internal:11434 to reach the host machine from the container.';
+    }
+  } catch {}
+  return '';
+}
 
 /**
  * Proxy endpoint for Ollama API calls
@@ -81,15 +105,29 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof Error) {
       errorMessage = error.message;
-
       if (errorMessage.includes('ECONNREFUSED')) {
-        helpText = 'Make sure Ollama is running: `ollama serve`';
+        helpText =
+          'Connection refused. Ensure the Ollama container is reachable and listening on the provided host/port.';
       } else if (errorMessage.includes('ENOTFOUND')) {
-        helpText = 'Check the hostname/URL';
+        helpText =
+          'Hostname not found. Check the URL or use an IP/host accessible from the server environment.';
       } else if (errorMessage.includes('ETIMEDOUT')) {
-        helpText = 'Check network connection and firewall settings';
+        helpText = 'Connection timed out. Check network routes, container networks, and firewalls.';
       }
     }
+
+    // Add container-specific guidance if applicable
+    try {
+      const reqBody = await request
+        .clone()
+        .json()
+        .catch(() => null);
+      const targetBase = reqBody?.ollamaUrl || '';
+      const dockerHint = buildDockerHelp(targetBase);
+      if (dockerHint) {
+        helpText = helpText ? `${helpText} ${dockerHint}` : dockerHint;
+      }
+    } catch {}
 
     return NextResponse.json(
       {
@@ -150,15 +188,26 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof Error) {
       errorMessage = error.message;
-
       if (errorMessage.includes('ECONNREFUSED')) {
-        helpText = 'Make sure Ollama is running: `ollama serve`';
+        helpText =
+          'Connection refused. Ensure the Ollama container is reachable and listening on the provided host/port.';
       } else if (errorMessage.includes('ENOTFOUND')) {
-        helpText = 'Check the hostname/URL';
+        helpText =
+          'Hostname not found. Check the URL or use an IP/host accessible from the server environment.';
       } else if (errorMessage.includes('ETIMEDOUT')) {
-        helpText = 'Check network connection and firewall settings';
+        helpText = 'Connection timed out. Check network routes, container networks, and firewalls.';
       }
     }
+
+    // Add container-specific guidance if applicable
+    try {
+      const { searchParams } = new URL(request.url);
+      const targetBase = searchParams.get('ollamaUrl') || '';
+      const dockerHint = buildDockerHelp(targetBase);
+      if (dockerHint) {
+        helpText = helpText ? `${helpText} ${dockerHint}` : dockerHint;
+      }
+    } catch {}
 
     return NextResponse.json(
       {

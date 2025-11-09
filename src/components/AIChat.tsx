@@ -2746,30 +2746,56 @@ function AISettingsPanel({
   };
 
   const handleSave = async () => {
+    // Normalize + sanitize before saving
+    const normalized: AISettings = {
+      ...formData,
+      // Ensure ollama URL has protocol and no trailing slash
+      ollamaUrl:
+        formData.provider === 'ollama'
+          ? (() => {
+              let url = (formData.ollamaUrl || 'http://localhost:11434').trim();
+              if (!/^https?:\/\//i.test(url)) {
+                url = 'http://' + url; // default to http for local
+              }
+              // remove trailing slash
+              url = url.replace(/\/$/, '');
+              return url;
+            })()
+          : formData.ollamaUrl,
+      // Ollama never needs an API key
+      apiKey: formData.provider === 'ollama' ? '' : formData.apiKey,
+      // Provide a safe default model if blank when switching to Ollama
+      model: formData.provider === 'ollama' && !formData.model ? 'llama3.2' : formData.model,
+    };
+
+    // Always persist locally regardless of server/API auth issues
     try {
-      // Save to server
-      const response = await fetch('/api/ai?action=settings', {
+      localStorage.setItem('markitup-ai-settings', JSON.stringify(normalized));
+      console.log('[AIChat] (local) Persisted AI settings:', normalized);
+    } catch (storageErr) {
+      console.error('[AIChat] Failed to write settings to localStorage:', storageErr);
+    }
+
+    // Fire change callback immediately for responsive UI
+    onSettingsChange(normalized);
+    analytics.trackEvent('ai_settings_changed', {
+      provider: normalized.provider,
+      model: normalized.model,
+      enableContext: normalized.enableContext,
+    });
+
+    // Best-effort server persistence (may fail if auth not present); ignore errors
+    try {
+      await fetch('/api/ai?action=settings', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(normalized),
       });
-
-      if (response.ok) {
-        // ALSO save directly to localStorage (since server-side localStorage doesn't work)
-        localStorage.setItem('markitup-ai-settings', JSON.stringify(formData));
-        console.log('[AIChat] Saved settings to localStorage:', formData);
-
-        onSettingsChange(formData);
-        analytics.trackEvent('ai_settings_changed', {
-          provider: formData.provider,
-          model: formData.model,
-          enableContext: formData.enableContext,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to save settings:', error);
+    } catch (serverErr) {
+      console.warn(
+        '[AIChat] Server settings save failed (continuing with local settings):',
+        serverErr
+      );
     }
   };
 

@@ -134,58 +134,127 @@ Respond with valid JSON only.`;
 
       const assistanceData = await assistanceResponse.json();
 
-      // Parse the responses - strip markdown code blocks if present
-      try {
-        // Helper function to extract JSON from markdown code blocks
-        const extractJSON = (text: string) => {
-          // Remove markdown code blocks if present
-          let cleaned = text.trim();
+      // Parse and normalize responses robustly (Ollama may include prose or code fences)
+      const flexibleParse = (raw: string) => {
+        const original = raw || '';
+        let cleaned = original.trim();
 
-          // Handle various prefixes that Ollama might add - be very flexible!
-          // Match anything like "Here is...", "Here's...", "JSON...", etc. before the actual JSON
-          const prefixPatterns = [
-            /^Here\s+is\s+(?:a\s+|the\s+)?JSON(?:\s+response)?(?:\s+based\s+on[^:]*)?:\s*/i,
-            /^Here's\s+(?:a\s+|the\s+)?JSON(?:\s+response)?:\s*/i,
-            /^JSON\s*(?:Output|Response):\s*/i,
-            /^Json\s*(?:Output|Response):\s*/i,
-          ];
+        // Trim to first JSON object boundaries if extra prose is present
+        const firstBrace = cleaned.indexOf('{');
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+        }
 
-          for (const pattern of prefixPatterns) {
-            if (pattern.test(cleaned)) {
-              cleaned = cleaned.replace(pattern, '').trim();
-              break;
-            }
+        // Remove Markdown code fences
+        cleaned = cleaned
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/```$/i, '')
+          .trim();
+
+        // Ensure we end at the last closing brace
+        const trailingIndex = cleaned.lastIndexOf('}');
+        if (trailingIndex !== -1) cleaned = cleaned.slice(0, trailingIndex + 1);
+
+        try {
+          return JSON.parse(cleaned);
+        } catch {
+          // Heuristic fallback: extract simple key:"value" pairs
+          const fallback: Record<string, any> = {};
+          const kvRegex = /"(\w+)"\s*:\s*"([^"]+)"/g;
+          let m: RegExpExecArray | null;
+          while ((m = kvRegex.exec(cleaned)) !== null) {
+            fallback[m[1]!] = m[2];
           }
+          return Object.keys(fallback).length ? fallback : null;
+        }
+      };
 
-          // Remove markdown code blocks (```json or just ```)
-          if (cleaned.startsWith('```')) {
-            // Remove opening ```json or ``` (with optional newline)
-            cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
-            // Remove closing ``` (with optional newline)
-            cleaned = cleaned.replace(/\n?\s*```\s*$/, '');
-          }
+      const analysisObj = flexibleParse(analysisData.response);
+      const assistanceObj = flexibleParse(assistanceData.response);
 
-          return cleaned.trim();
-        };
-
-        const analysisJSON = extractJSON(analysisData.response);
-        const assistanceJSON = extractJSON(assistanceData.response);
-
-        const analysis = JSON.parse(analysisJSON);
-        const assistance = JSON.parse(assistanceJSON);
-
-        setAnalysis(analysis);
-        setAssistance(assistance);
-
-        analytics.trackEvent('ai_analysis', {
-          noteId: noteId || 'unknown',
-          contentLength: content.length,
-          analysisType: 'writing_assistant',
-          provider: 'ollama',
-        });
-      } catch (parseError) {
+      if (!analysisObj || !assistanceObj) {
         throw new Error('AI returned invalid format. Please try again.');
       }
+
+      // Normalize analysis result
+      const normalizedAnalysis: ContentAnalysis = {
+        summary: analysisObj.summary || analysisObj.overview || 'No summary provided',
+        keyTopics: Array.isArray(analysisObj.keyTopics)
+          ? analysisObj.keyTopics
+          : Array.isArray(analysisObj.topics)
+            ? analysisObj.topics
+            : [],
+        suggestedTags: Array.isArray(analysisObj.suggestedTags)
+          ? analysisObj.suggestedTags
+          : Array.isArray(analysisObj.tags)
+            ? analysisObj.tags
+            : [],
+        suggestedConnections: Array.isArray(analysisObj.suggestedConnections)
+          ? analysisObj.suggestedConnections
+          : [],
+        sentiment: analysisObj.sentiment || 'neutral',
+        complexity: typeof analysisObj.complexity === 'number' ? analysisObj.complexity : 0,
+        readabilityScore:
+          typeof analysisObj.readabilityScore === 'number'
+            ? analysisObj.readabilityScore
+            : typeof analysisObj.readability === 'number'
+              ? analysisObj.readability
+              : 0,
+        writingStyle: {
+          tone: analysisObj.writingStyle?.tone || analysisObj.tone || 'mixed',
+          formality: analysisObj.writingStyle?.formality || analysisObj.formality || 'mixed',
+          perspective: analysisObj.writingStyle?.perspective || analysisObj.perspective || 'mixed',
+        },
+        improvements: Array.isArray(analysisObj.improvements) ? analysisObj.improvements : [],
+      };
+
+      // Normalize assistance result
+      const suggestionsRaw = assistanceObj.suggestions || assistanceObj.improvements || [];
+      const normalizedSuggestions = Array.isArray(suggestionsRaw)
+        ? suggestionsRaw.map((s: any) => {
+            if (typeof s === 'string') {
+              return {
+                type: 'content',
+                original: '',
+                suggestion: s,
+                explanation: 'Model suggestion',
+                position: { start: 0, end: 0 },
+              };
+            }
+            return {
+              type: s.type || 'content',
+              original: s.original || s.originalText || '',
+              suggestion: s.suggestion || s.replacement || s.text || '',
+              explanation: s.explanation || s.reason || s.detail || 'Improvement suggested',
+              position: s.position || { start: 0, end: 0 },
+            };
+          })
+        : [];
+
+      const normalizedAssistance: WritingAssistance = {
+        suggestions: normalizedSuggestions,
+        expandablePoints: Array.isArray(assistanceObj.expandablePoints)
+          ? assistanceObj.expandablePoints
+          : Array.isArray(assistanceObj.expansions)
+            ? assistanceObj.expansions
+            : [],
+        strengthenArguments: Array.isArray(assistanceObj.strengthenArguments)
+          ? assistanceObj.strengthenArguments
+          : Array.isArray(assistanceObj.arguments)
+            ? assistanceObj.arguments
+            : [],
+      };
+
+      setAnalysis(normalizedAnalysis);
+      setAssistance(normalizedAssistance);
+
+      analytics.trackEvent('ai_analysis', {
+        noteId: noteId || 'unknown',
+        contentLength: content.length,
+        analysisType: 'writing_assistant',
+        provider: 'ollama',
+      });
     } catch (error) {
       console.error('Ollama analysis error:', error);
 
@@ -547,7 +616,8 @@ Respond with valid JSON only.`;
                   />
                   <MetricCard
                     title="Readability"
-                    value={`${analysis.readabilityScore}/10`}
+                    // readabilityScore originates as 0-100 from prompt; display correctly
+                    value={`${analysis.readabilityScore}/100`}
                     icon={<BookOpen className="w-4 h-4" />}
                     theme={theme}
                   />
