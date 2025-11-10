@@ -1,5 +1,5 @@
 FROM node:lts-alpine AS base
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 
@@ -16,6 +16,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
+# Rebuild better-sqlite3 for production
+RUN npm rebuild better-sqlite3 --build-from-source
+
 FROM gcr.io/distroless/nodejs20-debian12:nonroot AS runner
 WORKDIR /app
 
@@ -30,6 +33,8 @@ COPY --from=builder --chown=nonroot:nonroot /app/public ./public
 
 # Copy better-sqlite3 native bindings (required for database)
 COPY --from=builder --chown=nonroot:nonroot /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+COPY --from=builder --chown=nonroot:nonroot /app/node_modules/bindings ./node_modules/bindings
+COPY --from=builder --chown=nonroot:nonroot /app/node_modules/file-uri-to-path ./node_modules/file-uri-to-path
 
 # Ensure markdown directory always exists and is owned by nonroot
 COPY --from=builder --chown=nonroot:nonroot /app/markdown ./markdown
