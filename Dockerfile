@@ -28,6 +28,9 @@ COPY --from=builder --chown=nonroot:nonroot /app/.next/standalone ./
 COPY --from=builder --chown=nonroot:nonroot /app/.next/static ./.next/static
 COPY --from=builder --chown=nonroot:nonroot /app/public ./public
 
+# Copy better-sqlite3 native bindings (required for database)
+COPY --from=builder --chown=nonroot:nonroot /app/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+
 # Ensure markdown directory always exists and is owned by nonroot
 COPY --from=builder --chown=nonroot:nonroot /app/markdown ./markdown
 
