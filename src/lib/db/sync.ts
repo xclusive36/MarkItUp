@@ -73,6 +73,17 @@ export class FileSystemDBSync {
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
 
+        // Skip hidden files, dotfiles, and sensitive files
+        if (
+          entry.name.startsWith('.') ||
+          entry.name.includes('.env') ||
+          entry.name.endsWith('.env') ||
+          entry.name === 'node_modules' ||
+          entry.name === '.git'
+        ) {
+          continue;
+        }
+
         if (entry.isDirectory()) {
           await scanDir(fullPath, baseDir);
         } else if (entry.name.endsWith('.md')) {
