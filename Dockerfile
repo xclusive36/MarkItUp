@@ -48,6 +48,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules/file-uri-to-path ./n
 # Ensure markdown directory always exists and is owned by nodejs
 COPY --from=builder --chown=nodejs:nodejs /app/markdown ./markdown
 
+# Ensure /app directory is writable by nodejs user (for database file)
+RUN chown -R nodejs:nodejs /app
+
 USER nodejs
 
 EXPOSE $PORT
