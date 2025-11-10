@@ -16,6 +16,8 @@ services:
       # ENCRYPTION_KEY: openssl rand -hex 16
       - JWT_SECRET=CHANGE_ME_RUN_openssl_rand_base64_32
       - ENCRYPTION_KEY=CHANGE_ME_RUN_openssl_rand_hex_16
+      # Optional: Set to "true" only if you have SSL/TLS configured
+      - ENFORCE_HTTPS=false
       # Optional: Disable auth for testing (NOT FOR PRODUCTION)
       # - DISABLE_AUTH=false
     restart: unless-stopped

@@ -65,9 +65,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Set session cookie (httpOnly for security)
+    // Use secure cookies only if HTTPS is enforced (not all self-hosted setups have SSL)
+    const useSecureCookies =
+      process.env.NODE_ENV === 'production' && process.env.ENFORCE_HTTPS === 'true';
+
     response.cookies.set('session-token', result.sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: useSecureCookies,
       sameSite: 'lax',
       expires: result.expiresAt,
       path: '/',
