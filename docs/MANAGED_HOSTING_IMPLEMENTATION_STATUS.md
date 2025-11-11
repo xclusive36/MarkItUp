@@ -415,7 +415,8 @@ const db: BetterSQLite3Database<typeof schema> = getDatabase()
 - Enable HTTPS in production
 - Configure SMTP for email verification
 - Set up rate limiting (not yet implemented)
-- Add CAPTCHA for registration (optional)
+<!-- CAPTCHA bullet intentionally removed: not implemented / not required in current workflow -->
+
 
 ---
 

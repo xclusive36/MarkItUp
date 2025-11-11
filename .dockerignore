@@ -12,9 +12,17 @@ out/
 build/
 dist/
 
-# Local environment variables
+# Local environment & secret files
+# Exclude every .env variant from build context except the example template.
+# This prevents accidental inclusion of real secrets in Docker images.
+.env*
+!.env.example
+
+# Explicit legacy patterns (redundant but kept for clarity)
 .env*.local
-.env
+.env.production
+.env.development
+.env.test
 
 # Logs
 logs

@@ -2,8 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { FileOperation, FileOperationResult } from '@/lib/ai/types';
+import { requireAuth } from '@/lib/auth/middleware';
 
 const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
+
+// Forbidden folder/file names that could contain sensitive data
+const FORBIDDEN_NAMES = [
+  'env', // prevent creating an env folder under markdown
+  '.env',
+  'config',
+  'secret',
+  'password',
+  'key',
+  'token',
+  'credential',
+  'node_modules',
+  '.git',
+  '.next',
+];
 
 // Ensure the markdown directory exists
 if (!fs.existsSync(MARKDOWN_DIR)) {
@@ -15,6 +31,12 @@ if (!fs.existsSync(MARKDOWN_DIR)) {
  * POST /api/ai/file-operations
  */
 export async function POST(request: NextRequest) {
+  // Require authentication
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult; // Return 401 response
+  }
+
   try {
     const { operations, approved } = await request.json();
 
@@ -77,6 +99,19 @@ async function executeOperation(operation: FileOperation): Promise<FileOperation
   // Sanitize path to prevent directory traversal attacks
   const sanitizedPath = operation.path.replace(/\.\./g, '').replace(/^\/+/, '');
   const fullPath = path.join(MARKDOWN_DIR, sanitizedPath);
+
+  // Check for forbidden folder/file names
+  const pathParts = sanitizedPath.toLowerCase().split(path.sep);
+  for (const part of pathParts) {
+    // Disallow exact match or substring of forbidden terms
+    if (FORBIDDEN_NAMES.some(forbidden => part === forbidden || part.includes(forbidden))) {
+      return {
+        success: false,
+        operation,
+        error: `Forbidden path component: "${part}". Cannot create files/folders with sensitive names.`,
+      };
+    }
+  }
 
   // Ensure the path is within the markdown directory
   if (!fullPath.startsWith(MARKDOWN_DIR)) {

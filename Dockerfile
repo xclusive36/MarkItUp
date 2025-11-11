@@ -1,4 +1,6 @@
 FROM node:20-bookworm-slim AS base
+# Base stage installs build tooling only. Secrets must NEVER be copied into the build context;
+# they are injected at runtime via environment variables. Ensure .dockerignore excludes all .env files.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
@@ -9,7 +11,15 @@ FROM base AS builder
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-COPY . .
+# Whitelist copy only required sources (avoid sweeping in stray secret files):
+COPY tsconfig.json tsconfig.build.json next-env.d.ts tailwind.config.js postcss.config.mjs eslint.config.mjs next.config.ts ./
+COPY src ./src
+COPY public ./public
+COPY server.js ./
+COPY markdown ./markdown
+COPY scripts ./scripts
+
+# NOTE: .env* are excluded by .dockerignore; .env.example (template) may be present but is harmless.
 
 # Ensure markdown directory always exists in build context
 RUN mkdir -p /app/markdown

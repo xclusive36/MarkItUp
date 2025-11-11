@@ -79,8 +79,11 @@ export class FileSystemDBSync {
           entry.name.includes('.env') ||
           entry.name.endsWith('.env') ||
           entry.name === 'node_modules' ||
-          entry.name === '.git'
+          entry.name === '.git' ||
+          entry.name.toLowerCase() === 'env'
         ) {
+          // Explicitly ignore any directory or file named 'env' to prevent accidental
+          // indexing of environment-related content accidentally placed under markdown.
           continue;
         }
 
