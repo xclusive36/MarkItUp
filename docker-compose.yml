@@ -6,6 +6,8 @@ services:
     ports:
       - 3000:3000
     volumes:
+      # Markdown files storage - folder created automatically if it doesn't exist
+      # This bind mount persists your notes on the host filesystem
       - ./markdown:/app/markdown
     environment:
       - PORT=3000
