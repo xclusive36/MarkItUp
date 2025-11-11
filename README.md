@@ -360,6 +360,8 @@ services:
     ports:
       - 3000:3000
     volumes:
+      # Markdown files storage - folder created automatically if it doesn't exist
+      # This bind mount persists your notes on the host filesystem
       - ./markdown:/app/markdown
     environment:
       - PORT=3000
@@ -377,6 +379,8 @@ services:
 ```bash
 docker compose up -d
 ```
+
+**Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
 
 ### Docker CLI
 
@@ -396,6 +400,8 @@ docker run --name markitup -p 3000:3000 \
   --restart unless-stopped \
   ghcr.io/xclusive36/markitup:latest
 ```
+
+**Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
 
 > **Important:** The `markdown` folder on your host must be writable by the container user (UID 65532, used by distroless images). If you get a permission error when creating notes, run:
 
