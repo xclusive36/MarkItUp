@@ -359,10 +359,11 @@ services:
     container_name: markitup
     ports:
       - 3000:3000
-    volumes:
-      # Markdown files storage - folder created automatically if it doesn't exist
-      # This bind mount persists your notes on the host filesystem
-      - ./markdown:/app/markdown
+    # volumes:
+      # Optional: Uncomment to persist markdown files on host filesystem
+      # Note: Requires chmod 777 ./markdown for write permissions
+      # For managed hosting or ephemeral deployments, leave commented
+      # - ./markdown:/app/markdown
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
@@ -380,9 +381,13 @@ services:
 docker compose up -d
 ```
 
-**Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
+**Volume Mount (Optional):**
 
-> **Important:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get a permission error when creating notes or user folders, run:
+- **Commented out by default** - Data lives in container, no permission issues
+- **For self-hosting:** Uncomment the volume mount to persist data on your host filesystem
+- **For managed hosting:** Leave commented - you'll implement alternative storage solutions
+
+> **If you uncomment the volume mount:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get permission errors when creating notes or user folders, run:
 
 ```sh
 # Option 1: Set full write permissions (easier, works for all users)
@@ -399,7 +404,17 @@ sudo chown -R 1001:1001 ./markdown
 JWT_SECRET=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 16)
 
-# Run container with required secrets
+# Run container (without persistent storage)
+docker run --name markitup -p 3000:3000 \
+  -e PORT=3000 \
+  -e HOSTNAME=0.0.0.0 \
+  -e NODE_ENV=production \
+  -e JWT_SECRET="$JWT_SECRET" \
+  -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
+  --restart unless-stopped \
+  ghcr.io/xclusive36/markitup:latest
+
+# OR with persistent storage (add volume mount)
 docker run --name markitup -p 3000:3000 \
   -v ./markdown:/app/markdown \
   -e PORT=3000 \
@@ -411,9 +426,12 @@ docker run --name markitup -p 3000:3000 \
   ghcr.io/xclusive36/markitup:latest
 ```
 
-**Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
+**Volume Mount (Optional):**
 
-> **Important:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get a permission error when creating notes or user folders, run:
+- **Default (no `-v` flag)** - Data lives in container, no permission issues
+- **With `-v ./markdown:/app/markdown`** - Data persists on your host filesystem
+
+> **If using the volume mount:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get permission errors, run:
 
 ```sh
 # Option 1: Set full write permissions (easier, works for all users)

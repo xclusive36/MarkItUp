@@ -5,10 +5,11 @@ services:
     container_name: markitup
     ports:
       - 3000:3000
-    volumes:
-      # Markdown files storage - folder created automatically if it doesn't exist
-      # This bind mount persists your notes on the host filesystem
-      - ./markdown:/app/markdown
+    # volumes:
+      # Optional: Uncomment to persist markdown files on host filesystem
+      # Note: Requires chmod 777 ./markdown for write permissions
+      # For managed hosting, leave commented (data stored in container)
+      # - ./markdown:/app/markdown
     environment:
       - PORT=3000
       - HOSTNAME=0.0.0.0
