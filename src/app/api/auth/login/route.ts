@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthService } from '@/lib/auth/auth-service';
+import { fileService } from '@/lib/services/fileService';
 import { apiLogger } from '@/lib/logger';
 import { z } from 'zod';
 
@@ -54,6 +55,17 @@ export async function POST(request: NextRequest) {
       userId: result.user.id,
       email: result.user.email,
     });
+
+    // CRITICAL: Ensure user markdown folder exists on login
+    try {
+      fileService.ensureUserDirExists(result.user.id);
+      apiLogger.info('User markdown folder verified/created on login', { userId: result.user.id });
+    } catch (folderError) {
+      apiLogger.error('Failed to create user folder on login', {
+        userId: result.user.id,
+        error: folderError instanceof Error ? folderError.message : String(folderError),
+      });
+    }
 
     // Create response with session token
     const response = NextResponse.json({
