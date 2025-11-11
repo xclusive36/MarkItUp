@@ -382,6 +382,16 @@ docker compose up -d
 
 **Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
 
+> **Important:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get a permission error when creating notes or user folders, run:
+
+```sh
+# Option 1: Set full write permissions (easier, works for all users)
+chmod -R 777 ./markdown
+
+# Option 2: Set ownership to container user (more secure)
+sudo chown -R 1001:1001 ./markdown
+```
+
 ### Docker CLI
 
 ```bash
@@ -403,10 +413,14 @@ docker run --name markitup -p 3000:3000 \
 
 **Note:** Docker will automatically create the `./markdown` folder on your host if it doesn't exist. The application then creates user-specific subfolders (`user_<id>`) inside it when users log in or create their first note.
 
-> **Important:** The `markdown` folder on your host must be writable by the container user (UID 65532, used by distroless images). If you get a permission error when creating notes, run:
+> **Important:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get a permission error when creating notes or user folders, run:
 
 ```sh
-sudo chown -R 65532:65532 ./markdown
+# Option 1: Set full write permissions (easier, works for all users)
+chmod -R 777 ./markdown
+
+# Option 2: Set ownership to container user (more secure)
+sudo chown -R 1001:1001 ./markdown
 ```
 
 This ensures the container can write notes to the `markdown` directory.
