@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthService } from './auth-service';
+import { fileService } from '@/lib/services/fileService';
 import { getDatabase } from '@/lib/db';
 import { notes, links } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -58,7 +59,7 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
   // Development bypass - skip authentication if DISABLE_AUTH=true
   if (DISABLE_AUTH_DEV) {
     dbLogger.warn('⚠️  Authentication bypassed for development (DISABLE_AUTH=true)');
-    return {
+    const authResult = {
       userId: DEV_USER_ID,
       user: {
         id: DEV_USER_ID,
@@ -68,6 +69,18 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
         emailVerified: true,
       },
     };
+
+    // Proactively ensure user directory exists in development bypass mode
+    try {
+      fileService.ensureUserDirExists(authResult.userId);
+    } catch (e) {
+      dbLogger.warn('Failed to ensure user directory in dev bypass', {
+        userId: authResult.userId,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    return authResult;
   }
 
   try {
@@ -116,7 +129,7 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
       );
     }
 
-    return {
+    const authResult = {
       userId: session.userId,
       user: {
         id: session.user.id,
@@ -126,6 +139,18 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
         emailVerified: session.user.isEmailVerified === true,
       },
     };
+
+    // Ensure a markdown directory exists for this user upon successful auth
+    try {
+      fileService.ensureUserDirExists(authResult.userId);
+    } catch (e) {
+      dbLogger.warn('Failed to ensure user directory after auth', {
+        userId: authResult.userId,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
+
+    return authResult;
   } catch (error) {
     dbLogger.error('Auth middleware error', {}, error as Error);
     return NextResponse.json(

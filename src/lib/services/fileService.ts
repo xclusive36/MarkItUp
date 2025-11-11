@@ -45,6 +45,14 @@ export class FileService {
   }
 
   /**
+   * Public method: Ensure a user's markdown directory exists.
+   * Useful for callers that need the directory created before any operations.
+   */
+  public ensureUserDirExists(userId: string): void {
+    this.ensureUserDirectoryExists(userId);
+  }
+
+  /**
    * Safely join a filename with the user's markdown directory
    * Prevents path traversal attacks
    */
