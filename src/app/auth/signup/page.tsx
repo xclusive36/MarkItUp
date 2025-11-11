@@ -77,6 +77,14 @@ export default function SignupPage() {
         });
 
         if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+
+          // Store session token in localStorage as backup (in case cookies don't work)
+          if (loginData.sessionToken) {
+            localStorage.setItem('session-token', loginData.sessionToken);
+            console.log('✅ Session token stored after signup');
+          }
+
           // Redirect to home
           router.push('/');
           router.refresh();

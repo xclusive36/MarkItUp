@@ -75,6 +75,14 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       expires: result.expiresAt,
       path: '/',
+      // Don't set domain to allow cookies to work on any hostname (localhost, IP, domain)
+    });
+
+    apiLogger.info('Session cookie set', {
+      userId: result.user.id,
+      tokenLength: result.sessionToken.length,
+      expiresAt: result.expiresAt.toISOString(),
+      secure: useSecureCookies,
     });
 
     return response;

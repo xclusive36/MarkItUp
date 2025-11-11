@@ -8,6 +8,9 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 // MainContent import
 import MainPanel from '@/components/MainPanel';
 
+// Authentication utilities
+import { authenticatedFetch } from '@/lib/auth/client';
+
 // Component imports
 // ...existing code...
 import { CollaborationSettings } from '@/components/CollaborationSettings';
@@ -447,7 +450,7 @@ export default function Home() {
       setFolder: setFolder,
       refreshNotes: async () => {
         // Refresh notes from API
-        const notesResponse = await fetch('/api/files?limit=1000');
+        const notesResponse = await authenticatedFetch('/api/files?limit=1000');
         if (notesResponse.ok) {
           const responseData = await notesResponse.json();
           // Handle both old array format and new pagination format for backward compatibility
@@ -1039,7 +1042,7 @@ export default function Home() {
         const cleanMarkdown =
           typeof currentMarkdown === 'string' ? currentMarkdown : String(currentMarkdown);
 
-        const response = await fetch(`/api/files/${encodeURIComponent(fullPath)}`, {
+        const response = await authenticatedFetch(`/api/files/${encodeURIComponent(fullPath)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -30,6 +30,12 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        // Store session token in localStorage as backup (in case cookies don't work)
+        if (data.sessionToken) {
+          localStorage.setItem('session-token', data.sessionToken);
+          console.log('✅ Session token stored after login');
+        }
+
         // Login successful - redirect to home
         router.push('/');
         router.refresh();
@@ -72,7 +78,7 @@ export default function LoginPage() {
           {error && (
             <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
               <div className="flex">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <svg
                     className="h-5 w-5 text-red-400"
                     xmlns="http://www.w3.org/2000/svg"
