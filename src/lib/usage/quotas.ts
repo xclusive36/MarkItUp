@@ -21,7 +21,7 @@ export interface QuotaCheckResult {
 
 // Development bypass - same as in auth middleware
 const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
-const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
+const DEV_USER_ID = ''; // Empty string signals development mode
 
 /**
  * Check if user has quota available for an operation

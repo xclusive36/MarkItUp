@@ -29,15 +29,25 @@ export class FileService {
 
   /**
    * Get the user-specific directory path
+   * If userId is empty string (DISABLE_AUTH=true), returns root markdown directory
    */
   private getUserDir(userId: string): string {
+    // Empty userId means development mode - use root markdown directory
+    if (userId === '') {
+      return this.markdownDir;
+    }
     return path.join(this.markdownDir, `user_${userId}`);
   }
 
   /**
    * Ensure the user directory exists
+   * If userId is empty (development mode), root directory already exists
    */
   private ensureUserDirectoryExists(userId: string): void {
+    // Skip for empty userId (development mode) - root dir already exists
+    if (userId === '') {
+      return;
+    }
     const userDir = this.getUserDir(userId);
     if (!fs.existsSync(userDir)) {
       fs.mkdirSync(userDir, { recursive: true });

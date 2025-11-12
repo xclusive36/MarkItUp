@@ -20,7 +20,7 @@ import { checkQuota } from '@/lib/usage/quotas';
 import { trackUsage, updateStorageUsage } from '@/lib/usage/tracker';
 // Dev auth bypass constants (duplicated from auth middleware for isolation)
 const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
-const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
+const DEV_USER_ID = ''; // Empty string signals root /markdown directory usage
 
 /**
  * GET /api/files

@@ -31,7 +31,10 @@ if (DISABLE_AUTH_DEV && process.env.NODE_ENV !== 'test') {
 }
 
 // Default development user (used when auth is disabled)
-const DEV_USER_ID = 'dev-user-00000000-0000-0000-0000-000000000000';
+// Development user ID when auth is disabled
+// Empty string signals fileService to use root /markdown directory
+// This allows development without database user creation and matches legacy behavior
+const DEV_USER_ID = '';
 
 export interface AuthenticatedUser {
   id: string;
@@ -59,6 +62,7 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
   // Development bypass - skip authentication if DISABLE_AUTH=true
   if (DISABLE_AUTH_DEV) {
     dbLogger.warn('⚠️  Authentication bypassed for development (DISABLE_AUTH=true)');
+    dbLogger.warn('⚠️  Using root /markdown directory (no user isolation)');
     const authResult = {
       userId: DEV_USER_ID,
       user: {
@@ -69,16 +73,6 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
         emailVerified: true,
       },
     };
-
-    // Proactively ensure user directory exists in development bypass mode
-    try {
-      fileService.ensureUserDirExists(authResult.userId);
-    } catch (e) {
-      dbLogger.warn('Failed to ensure user directory in dev bypass', {
-        userId: authResult.userId,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
 
     return authResult;
   }
