@@ -1,9 +1,5 @@
-import fs from 'fs';
-import path from 'path';
 import { Note } from './types';
-import { MarkdownParser } from './parser';
-
-const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
+import { fileService } from './services/fileService';
 
 export interface FileNote {
   id: string;
@@ -12,77 +8,52 @@ export interface FileNote {
   filePath: string;
 }
 
-export function findNoteById(noteId: string): FileNote | null {
-  function findNoteRecursive(dir: string): FileNote | null {
-    const items = fs.readdirSync(dir);
-    for (const item of items) {
-      const itemPath = path.join(dir, item);
-      const stats = fs.statSync(itemPath);
-      if (stats.isDirectory()) {
-        const result = findNoteRecursive(itemPath);
-        if (result) return result;
-      } else if (item.endsWith('.md')) {
-        const fileId = path.relative(MARKDOWN_DIR, itemPath).replace(/\\/g, '/');
-        if (
-          fileId === noteId ||
-          fileId === `${noteId}.md` ||
-          item === noteId ||
-          item === `${noteId}.md`
-        ) {
-          return {
-            id: fileId,
-            name: item.replace('.md', ''),
-            content: fs.readFileSync(itemPath, 'utf-8'),
-            filePath: itemPath,
-          };
-        }
-      }
+/**
+ * Find a note by ID for a specific user
+ * @param userId - The user ID to scope the search to
+ * @param noteId - The note ID to find
+ */
+export async function findNoteById(userId: string, noteId: string): Promise<FileNote | null> {
+  const allNotes = await getAllNotes(userId);
+
+  // Try to match by various ID formats
+  for (const note of allNotes) {
+    const noteName = note.name.replace('.md', '');
+    const noteIdWithoutExt = noteId.replace('.md', '');
+
+    if (
+      note.id === noteId ||
+      note.id === noteIdWithoutExt ||
+      noteName === noteId ||
+      noteName === noteIdWithoutExt ||
+      (note.folder ? `${note.folder}/${noteName}` : noteName) === noteIdWithoutExt
+    ) {
+      return {
+        id: note.id,
+        name: noteName,
+        content: note.content,
+        filePath: note.folder ? `${note.folder}/${note.name}` : note.name,
+      };
     }
-    return null;
   }
 
-  return findNoteRecursive(MARKDOWN_DIR);
+  return null;
 }
 
-export function getAllNotes(): Note[] {
-  function findNotesRecursive(dir: string, folderPrefix: string = ''): Note[] {
-    let results: Note[] = [];
-    const items = fs.readdirSync(dir);
-    for (const item of items) {
-      const itemPath = path.join(dir, item);
-      const stats = fs.statSync(itemPath);
-      if (stats.isDirectory()) {
-        results = results.concat(findNotesRecursive(itemPath, path.join(folderPrefix, item)));
-      } else if (item.endsWith('.md')) {
-        const content = fs.readFileSync(itemPath, 'utf-8');
-        const parsed = MarkdownParser.parseNote(content);
-        const wordCount = MarkdownParser.calculateWordCount(content);
-        const readingTime = MarkdownParser.calculateReadingTime(wordCount);
-
-        const note: Note = {
-          id: MarkdownParser.generateNoteId(item.replace('.md', ''), folderPrefix || undefined),
-          name: item,
-          content,
-          folder: folderPrefix || undefined,
-          createdAt: stats.ctime.toISOString(),
-          updatedAt: stats.mtime.toISOString(),
-          tags: parsed.tags,
-          metadata: parsed.frontmatter,
-          wordCount,
-          readingTime,
-        };
-
-        results.push(note);
-      }
-    }
-    return results;
-  }
-
-  return findNotesRecursive(MARKDOWN_DIR, '');
+/**
+ * Get all notes for a specific user
+ * @param userId - The user ID to scope the search to
+ */
+export async function getAllNotes(userId: string): Promise<Note[]> {
+  return await fileService.listFiles(userId);
 }
 
-export function getAllTags(): string[] {
-  const notes = getAllNotes();
+/**
+ * Get all tags for a specific user
+ * @param userId - The user ID to scope the search to
+ */
+export async function getAllTags(userId: string): Promise<string[]> {
+  const notes = await getAllNotes(userId);
   const tags = new Set<string>();
 
   notes.forEach(note => {
@@ -110,12 +81,19 @@ export interface RelatedNote {
  * - Shared tags
  * - Wikilinks (bidirectional)
  * - Content similarity (keyword matching)
+ * @param userId - The user ID to scope the search to
+ * @param noteId - The note ID to find related notes for
+ * @param maxResults - Maximum number of results to return
  */
-export function findRelatedNotes(noteId: string, maxResults: number = 5): RelatedNote[] {
-  const currentNote = findNoteById(noteId);
+export async function findRelatedNotes(
+  userId: string,
+  noteId: string,
+  maxResults: number = 5
+): Promise<RelatedNote[]> {
+  const currentNote = await findNoteById(userId, noteId);
   if (!currentNote) return [];
 
-  const allNotes = getAllNotes();
+  const allNotes = await getAllNotes(userId);
   const relatedNotes: RelatedNote[] = [];
 
   // Extract tags from current note

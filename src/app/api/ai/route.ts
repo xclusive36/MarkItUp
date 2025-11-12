@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const aiService = getAIService();
 
     // Check for file operation requests first
-    const allNotes = getAllNotes();
+    const allNotes = await getAllNotes(userId);
     const fileOperations = await aiService.detectFileOperations(body.message, allNotes);
 
     if (fileOperations && fileOperations.operations.length > 0) {
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     if (body.noteContext && body.includeContext !== false) {
       try {
         console.log('[AI API] Attempting to find note:', body.noteContext);
-        const note = findNoteById(body.noteContext);
+        const note = await findNoteById(userId, body.noteContext);
         console.log('[AI API] Note found:', {
           found: !!note,
           name: note?.name,
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
           contextNoteCount++;
 
           // Find and add related notes for enhanced context
-          const relatedNotes = findRelatedNotes(body.noteContext, 4); // Get top 4 related notes
+          const relatedNotes = await findRelatedNotes(userId, body.noteContext, 4); // Get top 4 related notes
           console.log('[AI API] Found related notes:', relatedNotes.length);
 
           if (relatedNotes.length > 0) {
