@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { FileOperation, FileOperationResult } from '@/lib/ai/types';
 import { requireAuth } from '@/lib/auth/middleware';
-
-const MARKDOWN_DIR = path.join(process.cwd(), 'markdown');
+import { fileService } from '@/lib/services/fileService';
+import { apiLogger } from '@/lib/logger';
+import { sanitizeFilename, sanitizeFolderPath } from '@/lib/security/pathSanitizer';
+import path from 'path';
 
 // Forbidden folder/file names that could contain sensitive data
 const FORBIDDEN_NAMES = [
@@ -21,11 +21,6 @@ const FORBIDDEN_NAMES = [
   '.next',
 ];
 
-// Ensure the markdown directory exists
-if (!fs.existsSync(MARKDOWN_DIR)) {
-  fs.mkdirSync(MARKDOWN_DIR, { recursive: true });
-}
-
 /**
  * Execute approved file operations
  * POST /api/ai/file-operations
@@ -37,10 +32,13 @@ export async function POST(request: NextRequest) {
     return authResult; // Return 401 response
   }
 
+  const { userId } = authResult;
+
   try {
     const { operations, approved } = await request.json();
 
     if (!approved) {
+      apiLogger.warn('AI file operations not approved', { userId });
       return NextResponse.json(
         { success: false, message: 'Operations not approved', results: [] },
         { status: 400 }
@@ -48,19 +46,35 @@ export async function POST(request: NextRequest) {
     }
 
     if (!operations || !Array.isArray(operations)) {
+      apiLogger.warn('Invalid operations array in AI file operations', { userId });
       return NextResponse.json(
         { success: false, message: 'Invalid operations array', results: [] },
         { status: 400 }
       );
     }
 
+    apiLogger.info('Processing AI file operations', {
+      userId,
+      operationCount: operations.length,
+      operationTypes: operations.map((op: FileOperation) => op.type),
+    });
+
     const results: FileOperationResult[] = [];
 
     for (const operation of operations as FileOperation[]) {
       try {
-        const result = await executeOperation(operation);
+        const result = await executeOperation(operation, userId);
         results.push(result);
       } catch (error) {
+        apiLogger.error(
+          'AI file operation failed',
+          {
+            userId,
+            operation: operation.type,
+            path: operation.path,
+          },
+          error as Error
+        );
         results.push({
           success: false,
           operation,
@@ -70,6 +84,14 @@ export async function POST(request: NextRequest) {
     }
 
     const allSucceeded = results.every(r => r.success);
+    const successCount = results.filter(r => r.success).length;
+
+    apiLogger.info('AI file operations completed', {
+      userId,
+      total: results.length,
+      succeeded: successCount,
+      failed: results.length - successCount,
+    });
 
     return NextResponse.json({
       success: allSucceeded,
@@ -79,7 +101,7 @@ export async function POST(request: NextRequest) {
         : 'Some operations failed. Check results for details.',
     });
   } catch (error) {
-    console.error('File operations error:', error);
+    apiLogger.error('File operations error', { userId }, error as Error);
     return NextResponse.json(
       {
         success: false,
@@ -93,12 +115,14 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Execute a single file operation
+ * Execute a single file operation using fileService for user-scoped access
  */
-async function executeOperation(operation: FileOperation): Promise<FileOperationResult> {
+async function executeOperation(
+  operation: FileOperation,
+  userId: string
+): Promise<FileOperationResult> {
   // Sanitize path to prevent directory traversal attacks
   const sanitizedPath = operation.path.replace(/\.\./g, '').replace(/^\/+/, '');
-  const fullPath = path.join(MARKDOWN_DIR, sanitizedPath);
 
   // Check for forbidden folder/file names
   const pathParts = sanitizedPath.toLowerCase().split(path.sep);
@@ -113,27 +137,28 @@ async function executeOperation(operation: FileOperation): Promise<FileOperation
     }
   }
 
-  // Ensure the path is within the markdown directory
-  if (!fullPath.startsWith(MARKDOWN_DIR)) {
+  // Validate the path components
+  const pathValidation = validatePathComponents(sanitizedPath);
+  if (!pathValidation.valid) {
     return {
       success: false,
       operation,
-      error: 'Invalid path: operation must be within markdown directory',
+      error: pathValidation.error || 'Invalid path',
     };
   }
 
   switch (operation.type) {
     case 'create':
-      return await createFile(operation, fullPath, sanitizedPath);
+      return await createFile(operation, sanitizedPath, userId);
 
     case 'modify':
-      return await modifyFile(operation, fullPath, sanitizedPath);
+      return await modifyFile(operation, sanitizedPath, userId);
 
     case 'delete':
-      return await deleteFile(operation, fullPath, sanitizedPath);
+      return await deleteFile(operation, sanitizedPath, userId);
 
     case 'create-folder':
-      return await createFolder(operation, fullPath, sanitizedPath);
+      return await createFolder(operation, sanitizedPath, userId);
 
     default:
       return {
@@ -145,24 +170,47 @@ async function executeOperation(operation: FileOperation): Promise<FileOperation
 }
 
 /**
- * Create a new file
+ * Validate path components for security
+ */
+function validatePathComponents(sanitizedPath: string): { valid: boolean; error?: string } {
+  const fileName = path.basename(sanitizedPath);
+  const folderPath = path.dirname(sanitizedPath);
+
+  // Validate filename if it's a file path
+  if (fileName && fileName !== '.') {
+    const filenameSanitization = sanitizeFilename(fileName);
+    if (!filenameSanitization.valid) {
+      return {
+        valid: false,
+        error: `Invalid filename: ${filenameSanitization.errors.join(', ')}`,
+      };
+    }
+  }
+
+  // Validate folder path if present
+  if (folderPath && folderPath !== '.') {
+    const folderSanitization = sanitizeFolderPath(folderPath);
+    if (!folderSanitization.valid) {
+      return {
+        valid: false,
+        error: `Invalid folder path: ${folderSanitization.errors.join(', ')}`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Create a new file using fileService
  */
 async function createFile(
   operation: FileOperation,
-  fullPath: string,
-  sanitizedPath: string
+  sanitizedPath: string,
+  userId: string
 ): Promise<FileOperationResult> {
-  // Check if file already exists
-  if (fs.existsSync(fullPath)) {
-    return {
-      success: false,
-      operation,
-      error: 'File already exists. Use modify operation to update existing files.',
-    };
-  }
-
   // Ensure filename ends with .md
-  const fileName = path.basename(fullPath);
+  const fileName = path.basename(sanitizedPath);
   if (!fileName.endsWith('.md')) {
     return {
       success: false,
@@ -171,32 +219,63 @@ async function createFile(
     };
   }
 
-  // Create parent directory if it doesn't exist
-  const dir = path.dirname(fullPath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  // Extract folder path (if any)
+  const folderPath = path.dirname(sanitizedPath);
+  const folder = folderPath && folderPath !== '.' ? folderPath : undefined;
+
+  // Check if file already exists for this user
+  const exists = await fileService.fileExists(userId, sanitizedPath);
+  if (exists) {
+    return {
+      success: false,
+      operation,
+      error: 'File already exists. Use modify operation to update existing files.',
+    };
   }
 
-  // Write the file
-  fs.writeFileSync(fullPath, operation.content || '', 'utf-8');
+  try {
+    // Create the file using fileService
+    await fileService.createFile(userId, fileName, operation.content || '', folder);
 
-  return {
-    success: true,
-    operation,
-    path: sanitizedPath,
-  };
+    apiLogger.info('AI created file', {
+      userId,
+      path: sanitizedPath,
+      folder,
+    });
+
+    return {
+      success: true,
+      operation,
+      path: sanitizedPath,
+    };
+  } catch (error) {
+    apiLogger.error(
+      'AI file creation failed',
+      {
+        userId,
+        path: sanitizedPath,
+      },
+      error as Error
+    );
+    return {
+      success: false,
+      operation,
+      error: error instanceof Error ? error.message : 'Failed to create file',
+    };
+  }
 }
 
 /**
- * Modify an existing file
+ * Modify an existing file using fileService
  */
 async function modifyFile(
   operation: FileOperation,
-  fullPath: string,
-  sanitizedPath: string
+  sanitizedPath: string,
+  userId: string
 ): Promise<FileOperationResult> {
-  // Check if file exists
-  if (!fs.existsSync(fullPath)) {
+  // Check if file exists for this user
+  const exists = await fileService.fileExists(userId, sanitizedPath);
+  if (!exists) {
     return {
       success: false,
       operation,
@@ -204,26 +283,61 @@ async function modifyFile(
     };
   }
 
-  // Write the updated content
-  fs.writeFileSync(fullPath, operation.content || '', 'utf-8');
+  try {
+    // Update the file using fileService (with overwrite=true)
+    const result = await fileService.updateFile(
+      userId,
+      sanitizedPath,
+      operation.content || '',
+      true
+    );
 
-  return {
-    success: true,
-    operation,
-    path: sanitizedPath,
-  };
+    if (!result.success) {
+      return {
+        success: false,
+        operation,
+        error: result.message,
+      };
+    }
+
+    apiLogger.info('AI modified file', {
+      userId,
+      path: sanitizedPath,
+    });
+
+    return {
+      success: true,
+      operation,
+      path: sanitizedPath,
+    };
+  } catch (error) {
+    apiLogger.error(
+      'AI file modification failed',
+      {
+        userId,
+        path: sanitizedPath,
+      },
+      error as Error
+    );
+    return {
+      success: false,
+      operation,
+      error: error instanceof Error ? error.message : 'Failed to modify file',
+    };
+  }
 }
 
 /**
- * Delete a file
+ * Delete a file using fileService
  */
 async function deleteFile(
   operation: FileOperation,
-  fullPath: string,
-  sanitizedPath: string
+  sanitizedPath: string,
+  userId: string
 ): Promise<FileOperationResult> {
-  // Check if file exists
-  if (!fs.existsSync(fullPath)) {
+  // Check if file exists for this user
+  const exists = await fileService.fileExists(userId, sanitizedPath);
+  if (!exists) {
     return {
       success: false,
       operation,
@@ -231,49 +345,107 @@ async function deleteFile(
     };
   }
 
-  // Ensure it's a file, not a directory
-  const stats = fs.statSync(fullPath);
-  if (!stats.isFile()) {
+  try {
+    // Delete the file using fileService
+    const result = await fileService.deleteFile(userId, sanitizedPath);
+
+    if (!result.success) {
+      return {
+        success: false,
+        operation,
+        error: result.message,
+      };
+    }
+
+    apiLogger.info('AI deleted file', {
+      userId,
+      path: sanitizedPath,
+    });
+
+    return {
+      success: true,
+      operation,
+      path: sanitizedPath,
+    };
+  } catch (error) {
+    apiLogger.error(
+      'AI file deletion failed',
+      {
+        userId,
+        path: sanitizedPath,
+      },
+      error as Error
+    );
     return {
       success: false,
       operation,
-      error: 'Path is not a file',
+      error: error instanceof Error ? error.message : 'Failed to delete file',
     };
   }
-
-  // Delete the file
-  fs.unlinkSync(fullPath);
-
-  return {
-    success: true,
-    operation,
-    path: sanitizedPath,
-  };
 }
 
 /**
  * Create a new folder
+ * Note: fileService doesn't have a specific createFolder method,
+ * but folders are created automatically when creating files.
+ * We'll handle this by ensuring the user directory structure exists.
  */
 async function createFolder(
   operation: FileOperation,
-  fullPath: string,
-  sanitizedPath: string
+  sanitizedPath: string,
+  userId: string
 ): Promise<FileOperationResult> {
-  // Check if folder already exists
-  if (fs.existsSync(fullPath)) {
+  try {
+    // Ensure the user directory exists (this creates the folder structure)
+    fileService.ensureUserDirExists(userId);
+
+    // Check if the folder already has files
+    const notes = await fileService.listFiles(userId);
+    const folderHasFiles = notes.some(note => note.folder && note.folder.startsWith(sanitizedPath));
+
+    if (folderHasFiles) {
+      apiLogger.debug('AI folder already exists with content', {
+        userId,
+        path: sanitizedPath,
+      });
+      return {
+        success: true,
+        operation,
+        path: sanitizedPath,
+      };
+    }
+
+    // Create a placeholder file to ensure the folder exists
+    await fileService.createFile(
+      userId,
+      '.gitkeep',
+      '# This file keeps the folder structure',
+      sanitizedPath
+    );
+
+    apiLogger.info('AI created folder', {
+      userId,
+      path: sanitizedPath,
+    });
+
+    return {
+      success: true,
+      operation,
+      path: sanitizedPath,
+    };
+  } catch (error) {
+    apiLogger.error(
+      'AI folder creation failed',
+      {
+        userId,
+        path: sanitizedPath,
+      },
+      error as Error
+    );
     return {
       success: false,
       operation,
-      error: 'Folder already exists',
+      error: error instanceof Error ? error.message : 'Failed to create folder',
     };
   }
-
-  // Create the folder
-  fs.mkdirSync(fullPath, { recursive: true });
-
-  return {
-    success: true,
-    operation,
-    path: sanitizedPath,
-  };
 }
