@@ -267,6 +267,80 @@ sudo chown -R 1001:1001 ./markdown
 
 > For managed hosting, skip volume mounts and implement alternative storage (S3, database, etc.)
 
+## 🔐 Authentication Configuration
+
+MarkItUp supports both **multi-user authenticated mode** (default, recommended) and **single-user unauthenticated mode** for personal self-hosted deployments.
+
+### Default: Multi-User Mode (Recommended)
+
+**Features:**
+
+- ✅ Secure user isolation - each user has their own `/markdown/user_{id}/` directory
+- ✅ User management with signup, login, and session handling
+- ✅ Per-user quotas and usage tracking
+- ✅ Audit logs showing who modified what
+- ✅ Collaborative features (sharing, permissions)
+
+**Requirements:**
+
+- Set `JWT_SECRET` and `ENCRYPTION_KEY` environment variables
+- Users must sign up and log in
+
+### Single-User Mode (DISABLE_AUTH=true)
+
+For personal self-hosted instances where you're the only user:
+
+```yaml
+# docker-compose.yml
+environment:
+  - DISABLE_AUTH=true
+```
+
+**What This Does:**
+
+- ✅ No signup/login required - instant access
+- ✅ All files stored in `/markdown/` root directory
+- ✅ Simpler setup for single-user scenarios
+- ⚠️ **No user isolation** - all data is shared
+- ⚠️ **No access control** - anyone with network access can read/write
+- ⚠️ **No audit trail** - can't track who changed what
+- ⚠️ **Limited features** - collaboration and sharing disabled
+
+**⚠️ SECURITY WARNINGS:**
+
+```text
+🚨 DISABLE_AUTH=true means:
+   • Anyone who can reach your server can access ALL your notes
+   • No password protection whatsoever
+   • No way to restrict who can create, edit, or delete files
+   • All AI Chat file operations affect the shared directory
+   • Should ONLY be used for:
+     - Personal single-user deployments
+     - Localhost-only access
+     - Development/testing
+     - Networks you completely trust
+```
+
+**When to Use Each Mode:**
+
+| Scenario | Recommended Mode |
+|----------|-----------------|
+| Personal use, only you access it | Either (DISABLE_AUTH is fine) |
+| Exposing to the internet | **Multi-user ONLY** |
+| Sharing with family/team | **Multi-user ONLY** |
+| Untrusted network | **Multi-user ONLY** |
+| Development/testing | DISABLE_AUTH is convenient |
+
+**Best Practices for DISABLE_AUTH=true:**
+
+1. **Network Isolation:** Only expose on localhost or trusted LAN
+2. **Firewall Rules:** Block external access at network level
+3. **Reverse Proxy:** Use nginx/Caddy with basic auth if internet-facing
+4. **Regular Backups:** No audit log means you can't recover from mistakes
+5. **Single User Only:** Never use for multi-user scenarios
+
+**Migration:** You can switch between modes anytime. Existing data in `/markdown/` will work in both modes, though user-specific folders (`/markdown/user_*/`) are only used in multi-user mode.
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [contribution guidelines](CONTRIBUTING.md) for details.

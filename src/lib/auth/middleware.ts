@@ -14,19 +14,20 @@ import { dbLogger } from '@/lib/logger';
 // Development bypass - set to true to disable auth temporarily
 const DISABLE_AUTH_DEV = process.env.DISABLE_AUTH === 'true';
 
-// CRITICAL: Prevent auth bypass in production
-if (process.env.NODE_ENV === 'production' && DISABLE_AUTH_DEV) {
-  throw new Error(
-    'CRITICAL SECURITY ERROR: DISABLE_AUTH must not be enabled in production. ' +
-      'This completely bypasses authentication. Set DISABLE_AUTH=false or remove it.'
-  );
-}
-
-// Warn in development if auth is disabled
+// Warn if auth is disabled (in any environment)
 if (DISABLE_AUTH_DEV && process.env.NODE_ENV !== 'test') {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const warningLevel = isProduction ? '🚨 CRITICAL SECURITY WARNING' : '⚠️  WARNING';
+
   console.warn(
-    '⚠️  WARNING: Authentication is DISABLED. This is for development only. ' +
-      'All requests will use a development user with enterprise-level access.'
+    `${warningLevel}: Authentication is DISABLED (DISABLE_AUTH=true)\n` +
+      `  - All API endpoints are accessible without credentials\n` +
+      `  - All users share the same /markdown root directory\n` +
+      `  - No user isolation or access control\n` +
+      `  - No audit trail of who modified what\n` +
+      `  ${isProduction ? '- THIS IS NOT RECOMMENDED FOR PRODUCTION DEPLOYMENTS\n' : ''}` +
+      `  - This should only be used for single-user self-hosted instances\n` +
+      `  - Consider enabling authentication for better security and features`
   );
 }
 
