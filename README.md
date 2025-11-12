@@ -8,99 +8,24 @@
 
 ### v4.0.0 - November 2025 🚀
 
-- 🔐 User Authentication & Authorization (major release)
-  - All core routes now run under authenticated context
-  - Optional guest mode can be enabled for local/self-hosted scenarios
-  - Clear 401/403 handling and improved error messages
-- 🧭 Unified AI Settings
-  - Centralized AI Assistant settings apply across chat, analysis, and plugins
-  - Plugin Manager settings page now points to the AI Assistant for provider/API configuration
-- 🧩 Plugin Manager UX
-  - Deprecated duplicate API key inputs removed from Plugin System settings
-  - Context notice added to guide users to AI Assistant settings
-- 🛡️ Security Headers & CSP
-  - Broader default connect-src to support self-hosted Docker/LAN Ollama without custom allowlists
-  - Permissions-Policy cleaned up to remove deprecated flags
-- 🤖 Ollama & AI Robustness
-  - More resilient JSON parsing for AI analysis responses
-  - Enhanced proxy diagnostics for containerized setups
-- 🔧 DevX
-  - `.env.example` added to the repo for easier setup
-  - See [docs/MIGRATION_4_0.md](docs/MIGRATION_4_0.md) and AUTHENTICATION_SETUP.md for required environment variables and migration notes
+- 🔐 **User Authentication & Authorization** - Secure multi-user support with JWT sessions
+- 🧭 **Unified AI Settings** - Centralized configuration across all AI features
+- 🛡️ **Enhanced Security** - Improved CSP headers and Docker/Ollama compatibility
+- 🤖 **AI Robustness** - Better JSON parsing and proxy diagnostics
+- � **Optional Volume Mounts** - Simplified deployment for managed hosting scenarios
 
-> Breaking changes: If you relied on unauthenticated access, review [docs/MIGRATION_4_0.md](docs/MIGRATION_4_0.md) and AUTHENTICATION_SETUP.md to configure auth or enable guest mode.
+> **Breaking Change:** Authentication now required by default. See [docs/MIGRATION_4_0.md](docs/MIGRATION_4_0.md) for migration guide or set `DISABLE_AUTH=true` for single-user mode.
 
-### v3.6.0 - October 2025 🛑
+### Recent Highlights
 
-- **🛑 AI Chat Stop Button** - Take control of streaming responses:
-  - ⏹️ **Stop Generation** - Halt streaming output mid-generation with dedicated stop button
-  - 💾 **Save Partial Content** - Automatically saves partial responses with user-stopped indicator
-  - 🔄 **Dynamic UI** - Button transforms between Send, Loading, and Stop states
-  - ⌨️ **Keyboard Support** - ESC key to cancel during streaming
-  - 🚫 **Smart Error Handling** - Gracefully handles aborted requests without false errors
-  - 🔒 **Context Preserved** - Note context injection now working perfectly with Ollama
-  - 📡 **AbortController Pattern** - Standard Fetch API cancellation for reliable control
+- ✨ **WYSIWYG Editor** - Rich text editing with TipTap
+- � **Intelligent Link Suggester** - AI-powered wikilink suggestions with real-time analysis
+- 📚 **Spaced Repetition** - Scientific flashcard system with FSRS algorithm
+- 🤖 **Universal AI Support** - OpenAI, Anthropic, Gemini, or Ollama (100% local/private)
+- � **Semantic Search** - Browser-based ML for meaning-based discovery
+- 🤝 **Real-time Collaboration** - Multi-user editing with WebSocket sync
 
-### v3.5.1 - October 2025 🎓
-
-- **📚 Spaced Repetition Plugin v1.2.1** - Professional flashcard system with major enhancements:
-  - 🎨 **Enhanced Modal Interface** - Beautiful full-screen review with 3D card flip animations
-  - 📊 **Interactive Dashboard** - Statistics with gradient cards and animated progress charts
-  - 🧩 **Cloze Deletions** - Fill-in-the-blank style cards with `{deletion}` syntax
-  - 💾 **Export/Import** - Save and share flashcard decks in JSON or CSV formats
-  - ⌨️ **Keyboard Shortcuts** - Efficient review workflow (Space, 1-4 for ratings)
-  - 🎯 **Session Summaries** - Track accuracy and progress after each review session
-  - 🤖 **Improved AI Generation** - Fixed Ollama integration with enhanced response parsing
-  - 🧠 **FSRS Algorithm** - Scientific spaced repetition scheduling for optimal retention
-
-### v3.5.0 - October 2025 🎉
-
-- **🌐 Universal Multi-Provider AI Support** - All AI features now work with any provider:
-  - ✅ **Ollama Support Everywhere** - Writing Assistant, Research Assistant, Knowledge Discovery now work with local Ollama
-  - 🔑 **No API Key for Ollama** - Self-hosted AI works without configuration across all features
-  - 🔄 **Unified Provider Settings** - One configuration applies to all AI features (chat, analysis, suggestions)
-  - 🌍 **Provider Flexibility** - Switch between OpenAI, Anthropic, Gemini, or Ollama for any feature
-  - 🛡️ **CORS-Free Ollama** - New proxy endpoint eliminates CORS errors when connecting to Ollama
-  - 📡 **Seamless Testing** - Test Ollama connection, fetch models, and pull models without browser errors
-  - 💬 **Improved Error Messages** - Clear, provider-agnostic guidance with helpful setup instructions
-  - 🔒 **Privacy-First Option** - Use 100% local AI (Ollama) for all features including content analysis
-
-### v3.4.0 - October 2025
-
-- **🤖 Google Gemini Feature Parity** - Gemini provider enhanced to match OpenAI/Anthropic:
-  - 🌊 **Streaming Support** - Real-time token streaming with Server-Sent Events (SSE)
-  - 📊 **Performance Tracking** - Comprehensive metrics (response time, tokens/sec, success rate)
-  - 🔍 **Connection Health Checks** - API validation and available models discovery
-  - ⚙️ **Advanced Options** - Fine-tuned control (top_k, top_p, safety_settings, stop_sequences)
-  - 💰 **Enhanced Cost Tracking** - Separate input/output token cost calculation
-  - 📚 **Complete Documentation** - Full guides, quick start, and test suite
-  - 🎯 **Production Ready** - Fully backward compatible, zero breaking changes
-
-### v3.3.0 - October 2025
-
-- **🎨 Enhanced UI/UX** - Refined interface for better workflow:
-  - 📐 **Right Panel Collapsed by Default** - More screen space for your content on startup
-  - 🔄 **Consistent Chevron Icons** - Unified expand/collapse controls across both sidebars
-  - ⚡ **Improved Layout Balance** - Better default workspace configuration
-
-### v3.2 - October 2025
-
-- **🔗 Intelligent Link Suggester v3.2** - The most advanced link suggestion system in the PKM space:
-  - 📜 **Suggestion History & Undo** - Track all link decisions with one-click undo (Cmd+Shift+H)
-  - 📥 **Export Suggestions Report** - Download link opportunities as markdown with confidence scores
-  - ⚙️ **Custom Debounce Timing** - Configure real-time delay (1-10 seconds) for your typing speed
-  - 📊 **Visual Status Indicator** - Floating status showing when real-time analysis is active
-  - 🚀 **Batch Orphan Analysis** - Find link opportunities across all unconnected notes at once
-  - 💡 **Link Context Visualization** - See exactly where and why links are suggested with visual excerpts
-  - ⚡ **Real-Time Suggestions** - Optional auto-analysis while typing (Cmd+Shift+R to toggle)
-  - 🧠 **Pattern Learning** - System learns from your accept/reject decisions to improve suggestions
-  - 🌉 **Bridge Note Generation** - AI suggests notes to connect isolated knowledge clusters
-
-### Previous Updates
-
-- **✨ WYSIWYG Editor** - Rich text editing with TipTap, toggle between markdown and visual editing
-- **🤖 Multi-Provider AI** - Choose from 4 AI providers: OpenAI, Anthropic Claude, Google Gemini, or Ollama (local)
-- **🐳 Optimized Docker Builds** - Improved build process with system fonts for faster deployment
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
 ## 🚀 Quick Start
 
@@ -256,100 +181,21 @@ MarkItUp offers the most flexible AI integration in any PKM system:
 - **Gemini** - Most cost-effective with massive 1M token context (Gemini 1.5 Pro/Flash)
 - **Ollama** - Complete privacy, zero cost, offline capable (50+ models)
 
-## 🔮 Future Enhancements
-
-We're constantly improving MarkItUp. Here's what's on the roadmap:
-
-### 🔗 Intelligent Link Suggester Enhancements
-
-- **Batch Accept for Orphans** - One-click to apply all suggestions to unconnected notes
-- **Priority Scoring** - AI ranks orphans by importance and potential impact
-- **Pause/Resume Batch Analysis** - Better control over long-running operations
-- **Analytics Dashboard** - Acceptance rate trends, confidence distribution, most-suggested notes
-- **Batch Undo** - Undo last N suggestions, by note, or by date range
-- **Smart Notifications** - Desktop alerts when analysis completes with summary
-
-### 📚 Knowledge Base Features
-
-- **Advanced Graph View** - 3D visualization, clustering, and interactive filtering
-- **Template System** - Quick note creation with customizable templates
-- **Folder-based Contexts** - Different AI personalities per folder
-- **Version History** - Git-style versioning with diff viewer
-- **Advanced Search Operators** - Regex support, proximity search, and more
-- **Citation Management** - BibTeX integration and automatic bibliography
-
-### 🤖 AI Enhancements
-
-- **Multi-Note Context** - AI analyzes relationships across multiple notes
-- **Smart Summarization** - Automatic note summaries and highlights
-- **Content Outliner** - AI-powered document structure suggestions
-- **Knowledge Graph Auto-Mapper** - Automatic relationship detection
-- **Writing Style Analysis** - Consistency checking and style suggestions
-- **Language Translation** - Real-time note translation
-
-### 🤝 Collaboration Features
-
-- **Comment Threads** - Inline discussions on specific content
-- **Change Tracking** - Detailed edit history with user attribution
-- **Role-Based Permissions** - Fine-grained access control
-- **Workspace Sharing** - Team workspaces with shared knowledge bases
-- **Review Workflow** - Approval process for collaborative editing
-
-### 🔌 Plugin Ecosystem
-
-- **Plugin Marketplace** - Discover and install community plugins
-- **Visual Plugin Builder** - No-code plugin creation interface
-- **Plugin Analytics** - Usage statistics and performance monitoring
-- **Plugin Testing Framework** - Automated testing for plugin developers
-- **Hot Module Reloading** - Develop plugins without restart
-
-### 📱 Platform Extensions
-
-- **Mobile Apps** - Native iOS and Android applications
-- **Desktop App** - Electron-based desktop client
-- **Browser Extension** - Clip web content directly to MarkItUp
-- **Email Integration** - Forward emails as notes
-- **API Webhooks** - Integration with third-party services
-
-### 🎨 Customization
-
-- **Advanced Theme Builder** - Visual theme editor with preview
-- **Custom Font Support** - Upload and use custom fonts
-- **Layout Presets** - Save and share custom workspace layouts
-- **Keyboard Shortcuts Editor** - Fully customizable keybindings
-- **CSS Snippets** - User stylesheets for advanced customization
-
-### 📊 Analytics & Insights
-
-- **Knowledge Map** - Visualize topic coverage and gaps
-- **Writing Analytics** - Track productivity and habits
-- **Link Quality Score** - Measure knowledge base connectivity
-- **Reading Time Estimates** - Automatic reading duration calculation
-- **Progress Tracking** - Goals and milestones for knowledge building
-
-### Want to Contribute?
-
-Vote on features, suggest new ones, or help build them! Join the discussion:
-
-- 💬 [GitHub Discussions](https://github.com/xclusive36/MarkItUp/discussions)
-- 🐛 [Feature Requests](https://github.com/xclusive36/MarkItUp/issues/new?labels=enhancement)
-- 🤝 [Contributing Guide](CONTRIBUTING.md)
-
 ## 🐳 Quick Deploy
 
 ### Docker Compose (Recommended)
 
-**⚠️ REQUIRED (v4.0.0+): Generate secure secrets before deploying:**
+**⚠️ REQUIRED: Generate secure secrets before deploying:**
 
 ```bash
-# Generate JWT_SECRET (copy the output)
+# Generate JWT_SECRET
 openssl rand -base64 32
 
-# Generate ENCRYPTION_KEY (copy the output)  
+# Generate ENCRYPTION_KEY
 openssl rand -hex 16
 ```
 
-**Then update your `docker-compose.yml`:**
+**Create `docker-compose.yml`:**
 
 ```yaml
 version: "3.8"
@@ -381,68 +227,45 @@ services:
 docker compose up -d
 ```
 
-**Volume Mount (Optional):**
-
-- **Commented out by default** - Data lives in container, no permission issues
-- **For self-hosting:** Uncomment the volume mount to persist data on your host filesystem
-- **For managed hosting:** Leave commented - you'll implement alternative storage solutions
-
-> **If you uncomment the volume mount:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get permission errors when creating notes or user folders, run:
-
-```sh
-# Option 1: Set full write permissions (easier, works for all users)
-chmod -R 777 ./markdown
-
-# Option 2: Set ownership to container user (more secure)
-sudo chown -R 1001:1001 ./markdown
-```
-
 ### Docker CLI
 
 ```bash
-# Generate secrets first
+# Generate secrets
 JWT_SECRET=$(openssl rand -base64 32)
 ENCRYPTION_KEY=$(openssl rand -hex 16)
 
-# Run container (without persistent storage)
+# Run without persistent storage (default)
 docker run --name markitup -p 3000:3000 \
-  -e PORT=3000 \
-  -e HOSTNAME=0.0.0.0 \
-  -e NODE_ENV=production \
   -e JWT_SECRET="$JWT_SECRET" \
   -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
   --restart unless-stopped \
   ghcr.io/xclusive36/markitup:latest
 
-# OR with persistent storage (add volume mount)
+# OR with persistent storage
 docker run --name markitup -p 3000:3000 \
   -v ./markdown:/app/markdown \
-  -e PORT=3000 \
-  -e HOSTNAME=0.0.0.0 \
-  -e NODE_ENV=production \
   -e JWT_SECRET="$JWT_SECRET" \
   -e ENCRYPTION_KEY="$ENCRYPTION_KEY" \
   --restart unless-stopped \
   ghcr.io/xclusive36/markitup:latest
 ```
 
-**Volume Mount (Optional):**
+### 📦 Data Persistence (Optional)
 
-- **Default (no `-v` flag)** - Data lives in container, no permission issues
-- **With `-v ./markdown:/app/markdown`** - Data persists on your host filesystem
+By default, data lives in the container. To persist data on your host:
 
-> **If using the volume mount:** The `markdown` folder on your host must have full write permissions for the container user (UID 1001:nodejs). If you get permission errors, run:
+1. **Uncomment the volume mount** in docker-compose.yml or add `-v ./markdown:/app/markdown` to docker run
+2. **Set permissions:**
 
-```sh
-# Option 1: Set full write permissions (easier, works for all users)
+```bash
+# Easy method (all users can write)
 chmod -R 777 ./markdown
 
-# Option 2: Set ownership to container user (more secure)
+# Secure method (container user only)
 sudo chown -R 1001:1001 ./markdown
 ```
 
-This ensures the container can write notes to the `markdown` directory.
-Change the User and Group to your needs. 65532 is for user and group 'Nobody' for example
+> For managed hosting, skip volume mounts and implement alternative storage (S3, database, etc.)
 
 ## 🤝 Contributing
 
