@@ -267,6 +267,7 @@ async function createFile(
 
 /**
  * Modify an existing file using fileService
+ * Note: Will create the file if it doesn't exist (upsert behavior)
  */
 async function modifyFile(
   operation: FileOperation,
@@ -275,16 +276,42 @@ async function modifyFile(
 ): Promise<FileOperationResult> {
   // Check if file exists for this user
   const exists = await fileService.fileExists(userId, sanitizedPath);
-  if (!exists) {
-    return {
-      success: false,
-      operation,
-      error: 'File does not exist. Use create operation for new files.',
-    };
-  }
 
   try {
-    // Update the file using fileService (with overwrite=true)
+    if (!exists) {
+      // File doesn't exist - create it instead
+      const fileName = path.basename(sanitizedPath);
+
+      // Ensure filename ends with .md
+      if (!fileName.endsWith('.md')) {
+        return {
+          success: false,
+          operation,
+          error: 'File must have .md extension',
+        };
+      }
+
+      // Extract folder path (if any)
+      const folderPath = path.dirname(sanitizedPath);
+      const folder = folderPath && folderPath !== '.' ? folderPath : undefined;
+
+      // Create the file using fileService
+      await fileService.createFile(userId, fileName, operation.content || '', folder);
+
+      apiLogger.info('AI created file (via modify operation)', {
+        userId,
+        path: sanitizedPath,
+        folder,
+      });
+
+      return {
+        success: true,
+        operation,
+        path: sanitizedPath,
+      };
+    }
+
+    // File exists - update it
     const result = await fileService.updateFile(
       userId,
       sanitizedPath,
