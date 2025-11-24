@@ -91,7 +91,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mathjax": "^0.0.40",
     "@types/node": "^24",
-    "@types/nodemailer": "^7.0.3",
+    "@types/nodemailer": "^7.0.4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.6",
