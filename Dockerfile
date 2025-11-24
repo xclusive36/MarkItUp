@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 # Base stage installs build tooling only. Secrets must NEVER be copied into the build context;
 # they are injected at runtime via environment variables. Ensure .dockerignore excludes all .env files.
 RUN apt-get update \
@@ -31,7 +31,7 @@ RUN npm run build
 # Ensure native module (better-sqlite3) is compiled against glibc (Debian)
 RUN npm rebuild better-sqlite3 --build-from-source
 
-FROM node:20-bookworm-slim AS runner
+FROM node:25-bookworm-slim AS runner
 WORKDIR /app
 
 # Install sqlite3 CLI for database management
