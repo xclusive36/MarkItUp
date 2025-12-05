@@ -73,7 +73,7 @@
     "remark-math": "^6.0.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "three": "^0.181.1",
+    "three": "^0.181.2",
     "tiptap-markdown": "^0.9.0",
     "ws": "^8.18.3",
     "y-websocket": "^3.0.0",
