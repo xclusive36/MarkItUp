@@ -65,7 +65,7 @@
     "react-dom": "19.2.0",
     "react-markdown": "^10.1.0",
     "react-window": "^2.2.3",
-    "recharts": "^3.3.0",
+    "recharts": "^3.5.0",
     "rehype-highlight": "^7.0.2",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
