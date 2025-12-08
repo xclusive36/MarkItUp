@@ -50,7 +50,7 @@
     "better-sqlite3": "^12.4.6",
     "chokidar": "^4.0.3",
     "d3": "^7.9.0",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.0",
     "framer-motion": "^12.23.24",
     "idb": "^8.0.3",
     "isomorphic-dompurify": "^2.31.0",
