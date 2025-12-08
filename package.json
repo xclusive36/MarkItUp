@@ -79,7 +79,7 @@
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.20",
     "zod": "^4.1.13",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
