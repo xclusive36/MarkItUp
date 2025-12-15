@@ -96,9 +96,9 @@
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.7",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1",
+    "eslint-config-next": "16.0.10",
     "husky": "^9.1.7",
-    "prettier": "^3.6.2",
+    "prettier": "^3.7.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
